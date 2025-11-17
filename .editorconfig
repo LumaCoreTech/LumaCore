@@ -1,0 +1,17 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = tabs
+indent_size = 4
+
+# Markdown: keep intentional trailing spaces
+[*.md]
+trim_trailing_whitespace = false
+
+# Windows scripts use CRLF
+[*.{bat,cmd,ps1,psm1,psd1}]
+end_of_line = crlf
