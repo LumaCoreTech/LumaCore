@@ -1,0 +1,54 @@
+<Project>
+
+	<!-- Repository roots -->
+	<PropertyGroup>
+		<!-- Resolve repo root one level above /src -->
+		<RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\'))</RepoRoot>
+		<ArtifactsRoot>$(RepoRoot)artifacts\</ArtifactsRoot>
+	</PropertyGroup>
+
+	<!-- Redirect all bin/obj output to /artifacts -->
+	<PropertyGroup>
+		<BaseOutputPath>$(ArtifactsRoot)bin\$(Configuration)\</BaseOutputPath>
+		<BaseIntermediateOutputPath>$(ArtifactsRoot)obj\$(Configuration)\</BaseIntermediateOutputPath>
+	</PropertyGroup>
+
+	<!-- Language & code style defaults (applied to all projects) -->
+	<PropertyGroup>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<LangVersion>latestMajor</LangVersion>
+
+		<!-- Docs + debugging -->
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<DebugType>portable</DebugType>
+		<ContinuousIntegrationBuild>$(CI)</ContinuousIntegrationBuild>
+	</PropertyGroup>
+
+	<!-- Assembly and repository metadata -->
+	<PropertyGroup>
+		<Company>LumaCoreTech</Company>
+		<Product>LumaCore</Product>
+		<Authors>LumaCoreTech</Authors>
+		<RepositoryUrl>https://github.com/LumaCoreTech/LumaCore</RepositoryUrl>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+	</PropertyGroup>
+
+	<!-- Central package management -->
+	<ItemGroup>
+		<!-- Automatic semantic versioning -->
+		<PackageReference
+			Include="Nerdbank.GitVersioning"
+			Version="[3.9.50,4.0.0)"
+			PrivateAssets="all"
+			IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+
+		<!-- SourceLink for GitHub -->
+		<PackageReference
+			Include="Microsoft.SourceLink.GitHub"
+			Version="8.0.0"
+			PrivateAssets="all" />
+	</ItemGroup>
+
+</Project>

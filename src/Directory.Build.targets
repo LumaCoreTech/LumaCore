@@ -1,0 +1,21 @@
+<Project>
+
+	<!-- Optional: clean up /artifacts via 'dotnet clean /p:RemoveArtifacts=true' -->
+	<Target Name="CleanArtifacts"
+	        AfterTargets="Clean"
+	        Condition="'$(RemoveArtifacts)' == 'true' and Exists('$(ArtifactsRoot)')">
+		<Message Text="Removing $(ArtifactsRoot)" Importance="high" />
+		<RemoveDir Directories="$(ArtifactsRoot)" />
+	</Target>
+
+	<!-- Optional: label publish outputs with semantic version -->
+	<Target Name="SetArtifactName" BeforeTargets="Publish">
+		<PropertyGroup>
+			<_SemVer>$(NBGV_SemVer2)</_SemVer>
+			<_Suffix Condition="'$(NBGV_IsPublicRelease)' != 'true'">-ci</_Suffix>
+			<ArtifactName>$(MSBuildProjectName)-$(_SemVer)$(_Suffix)</ArtifactName>
+			<PublishDir>$(ArtifactsRoot)bin\$(Configuration)\$(TargetFramework)\publish\$(ArtifactName)\</PublishDir>
+		</PropertyGroup>
+	</Target>
+
+</Project>
