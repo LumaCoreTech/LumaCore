@@ -1,0 +1,4 @@
+[submodule "build.net"]
+	path = build.net
+	url = https://github.com/LumaCoreTech/build.net
+	branch = main
