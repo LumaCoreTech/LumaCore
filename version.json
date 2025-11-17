@@ -1,0 +1,26 @@
+{
+    "$schema": "https://raw.githubusercontent.com/dotnet/Nerdbank.GitVersioning/main/src/NerdBank.GitVersioning/version.schema.json",
+
+    // Base version for the next development cycle.
+    "version": "0.1",
+
+    // All untagged builds (including 'main') are prerelease CI builds.
+    "prerelease": {
+        "tag": "ci",
+        "versionIncrement": "build"
+    },
+
+    // Only version tags (e.g., v0.1.0) produce public release builds.
+    "publicReleaseRefSpec": [
+        "^refs/tags/v\\d+\\.\\d+\\.\\d+$"
+    ],
+
+    // CI metadata: include commit SHA and set build variables automatically.
+    "cloudBuild": {
+        "setVersionVariables": true,
+        "buildNumber": {
+            "enabled": true,
+            "includeCommitId": true
+        }
+    }
+}
