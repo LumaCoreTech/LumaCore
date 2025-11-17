@@ -1,0 +1,57 @@
+# -----------------------------------------------------------------------------
+# Default: normalize text and enforce LF in the repo & working tree
+# -----------------------------------------------------------------------------
+* text=auto eol=lf
+
+# -----------------------------------------------------------------------------
+# Windows scripts that should use CRLF
+# -----------------------------------------------------------------------------
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# PowerShell modules/manifests
+*.psm1 text eol=crlf
+*.psd1 text eol=crlf
+
+# -----------------------------------------------------------------------------
+# Binary files (no diff/merge)
+# -----------------------------------------------------------------------------
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.zip  binary
+*.7z   binary
+*.gz   binary
+*.bz2  binary
+*.tar  binary
+*.dll  binary
+*.exe  binary
+*.pdb  binary
+*.snk  binary
+
+# -----------------------------------------------------------------------------
+# Source and project files (explicitly LF)
+# -----------------------------------------------------------------------------
+*.cs        diff=csharp text eol=lf
+*.csproj    text merge=union eol=lf
+*.props     text merge=union eol=lf
+*.targets   text merge=union eol=lf
+*.sln       text eol=lf
+*.json      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.md        text eol=lf
+*.sh        text eol=lf
+
+# Keep lock files consistent
+*.lock      text eol=lf
+
+# -----------------------------------------------------------------------------
+# Linguist classification (GitHub language stats)
+# -----------------------------------------------------------------------------
+docs/**     linguist-documentation
+tools/**    linguist-vendored=false
