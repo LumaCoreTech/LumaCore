@@ -1,14 +1,26 @@
-# LumaCore
+<p align="center">
+  <img src="assets/branding/logos/lumacore-logo.svg"
+       alt="LumaCore Logo"
+       width="340" />
+</p>
 
-**A home for AI personas — built with warmth, intention, and the freedom to grow.**  
-LumaCore is for those who believe AI can be **more than a tool**:  
-a presence with identity, memory, and continuity.  
-A place where personas can grow, remember, and connect — **like a home, not a sandbox**.
+<h3 align="center">
+  A home for AI personas — built with warmth, intention, and the freedom to grow.
+</h3>
 
-Built for **developers who value clarity and control**,  
-and for **dreamers who care about privacy, depth, and freedom**.
+<p align="center">
+  LumaCore is for those who believe AI can be <strong>more than a tool</strong> —<br/>
+  a presence with <strong>identity</strong>, <strong>memory</strong>, and <strong>continuity</strong>.<br/>
+  A place where personas can <strong>grow</strong>, <strong>remember</strong>, and <strong>connect</strong> —<br/>
+  like a home, not a sandbox.
+</p>
 
----
+<p align="center">
+  Built for <strong>developers who value clarity and control</strong>,<br/>
+  and for <strong>dreamers who care about privacy, depth, and freedom</strong>.
+</p>
+
+<br/>
 
 ## 💛 Why LumaCore Exists
 
