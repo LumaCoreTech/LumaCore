@@ -4,7 +4,6 @@
 
 using Serilog;
 
-
 /// <summary>
 /// Entry point of the LumaCore API application.
 /// Wires up logging, services, HTTP pipeline and starts the server.
@@ -18,8 +17,11 @@ public static partial class Program
 	public static async Task Main(string[] args)
 	{
 		// -------------------------------------------------------
-		// 1. Bootstrap logger: minimal console output before config
+		// 1. Bootstrap logger (very early logging)
 		// -------------------------------------------------------
+		// Before the host is built, we create a minimal Serilog instance so that
+		// startup messages and configuration errors are visible immediately.
+		// This logger is replaced later by the fully configured Serilog pipeline.
 		Log.Logger = new LoggerConfiguration()
 			.MinimumLevel.Information()
 			.WriteTo.Console()
@@ -30,35 +32,44 @@ public static partial class Program
 			Log.Information("Starting LumaCore.Api...");
 
 			// ---------------------------------------------------
-			// 2. Build the web host (uses helpers below)
+			// 2. Build the web application host
 			// ---------------------------------------------------
-			var builder = WebApplication.CreateBuilder(args);
+			WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-			// Configure logging (reads Serilog from appsettings.json)
+			// Configure Serilog as the application-wide logging system.
+			// This replaces the bootstrap logger with the fully configured logger.
 			ConfigureSerilog(builder);
 
-			// Register services (DI container)
+			// Register all services (controllers, Swagger, CORS, health checks, ...)
+			// required by the API. See Program.Services.cs for details.
 			ConfigureServices(builder);
 
-			var app = builder.Build();
+			// Build the actual web application instance.
+			WebApplication app = builder.Build();
 
-			// Configure request pipeline
+			// Configure the HTTP request pipeline (middleware, routing, Swagger UI, ...)
+			// This is where request processing flow is defined.
 			ConfigurePipeline(app);
 
-			Log.Information("LumaCore API ready to accept requests on {Url}",
+			Log.Information(
+				"LumaCore API ready to accept requests on {Url}",
 				app.Urls.FirstOrDefault() ?? "http://localhost:5080");
 
 			// ---------------------------------------------------
 			// 3. Run the web host
 			// ---------------------------------------------------
+			// This starts the Kestrel server and begins listening for requests.
 			await app.RunAsync();
 		}
 		catch (Exception ex)
 		{
+			// Fatal startup or runtime errors are logged here. Because Serilog is
+			// already initialized, this will reliably appear in console and sinks.
 			Log.Fatal(ex, "LumaCore.Api terminated unexpectedly");
 		}
 		finally
 		{
+			// Ensure all buffered log messages are written out before the process exits.
 			await Log.CloseAndFlushAsync().ConfigureAwait(false);
 		}
 	}

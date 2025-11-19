@@ -14,21 +14,29 @@ public static partial class Program
 	/// <param name="builder">The web application builder to attach Serilog to.</param>
 	private static void ConfigureSerilog(WebApplicationBuilder builder)
 	{
-		// Optional: enable self-diagnostics for configuration issues (DEV only).
+		// In development, enable Serilog's self-diagnostics so that configuration
+		// or sink issues are written to stderr. This is very useful for debugging
+		// logging problems, but should not be enabled in production.
 		if (builder.Environment.IsDevelopment())
 		{
 			SelfLog.Enable(msg => Console.Error.WriteLine($"[Serilog-SelfLog] {msg}"));
 		}
 
-		// Clear default logging providers to avoid duplicate console output.
+		// Remove all default logging providers (Console, Debug, EventSource, ...)
+		// so that Serilog becomes the single, authoritative logging pipeline.
+		// This avoids duplicate log entries and keeps output formatting consistent.
 		builder.Logging.ClearProviders();
 
-		// Hook Serilog into the generic host.
+		// Configure Serilog as the host logger. The configuration is read from
+		// appsettings.json (and environment-specific variants) and can leverage
+		// services from the DI container (for enrichers, sinks, etc.).
 		builder.Host.UseSerilog((context, services, configuration) =>
 		{
 			configuration
-				.ReadFrom.Configuration(context.Configuration) // Use appsettings.json
-				.ReadFrom.Services(services);                  // Support for DI-based enrichers
+				// Load sinks, minimum levels, enrichers, etc. from configuration.
+				.ReadFrom.Configuration(context.Configuration)
+				// Allow DI-registered components (e.g. enrichers) to participate.
+				.ReadFrom.Services(services);
 		});
 	}
 }
