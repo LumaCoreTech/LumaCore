@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<AssemblyName>LumaCore.Api</AssemblyName>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<ImplicitUsings>enable</ImplicitUsings>
@@ -11,12 +11,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Swagger for .NET 8 -->
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+		<!-- Swagger for .NET 8+ -->
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- Serilog packages compatible with .NET 8 -->
+		<!-- Serilog packages compatible with .NET 8+ -->
 		<PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
 		<PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
