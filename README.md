@@ -138,13 +138,13 @@ dotnet run --project src/LumaCore.Server
 
 Then open:
 
-- http://localhost:8090  
+- http://localhost:5080  
   The API root — the **core of your LumaCore server**.  
-  (Default port: 8090. Configure it in `appsettings.json` — it’s **your space**.)
+  (Default port: 5080. Configure it in `appsettings.json` — it’s **your space**.)
 
-- http://localhost:8090/ui  
+- http://localhost:5080/ui  
   The Web UI — where you **interact with your personas** as the project grows.  
-  (Default port: 8090. Change it in `appsettings.json` — it’s **your space**.)
+  (Default port: 5080. Change it in `appsettings.json` — it’s **your space**.)
 
 ---
 
