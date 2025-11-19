@@ -21,22 +21,28 @@ public static partial class Program
 	///         <item>CORS policy for development</item>
 	///         <item>Swagger/OpenAPI documentation</item>
 	///         <item>Configuration options with validation</item>
-	///         <item>Health check implementations for all subsystems</item>
+	///         <item>Health check infrastructure for all subsystems</item>
 	///     </list>
 	///     </para>
 	/// </remarks>
 	private static void ConfigureServices(WebApplicationBuilder builder)
 	{
-		// Controllers
+		// Register MVC-style controllers so that attribute-routed API endpoints
+		// (e.g. [ApiController] + [Route]) are discovered and exposed by the app.
 		builder.Services.AddControllers();
 
-		// Response compression for reduced bandwidth
+		// Enable HTTP response compression to reduce payload size for JSON and other
+		// textual responses. This improves bandwidth usage and perceived latency.
+		// Compression is explicitly enabled for HTTPS traffic only.
 		builder.Services.AddResponseCompression(options =>
 		{
 			options.EnableForHttps = true; // Enable for HTTPS (careful with sensitive data!)
 		});
 
-		// CORS policy for development: allow any origin/header/method
+		// Configure a permissive CORS policy for local development: all origins,
+		// headers and methods are allowed. This makes it easy to call the API from
+		// browser-based tools and frontends during development, but must not be
+		// reused as-is for production environments.
 		builder.Services.AddCors(options =>
 		{
 			options.AddPolicy(
@@ -51,23 +57,68 @@ public static partial class Program
 		builder.Services.AddEndpointsApiExplorer();
 		builder.Services.AddSwaggerGen(o =>
 		{
+			// Register the primary OpenAPI document ("v1") and attach basic metadata
+			// such as title, version, description, contact and license information.
+			// This metadata is shown in Swagger UI and consumed by tools that import
+			// the LumaCore API definition.
 			o.SwaggerDoc(
 				"v1",
 				new OpenApiInfo
 				{
 					Title = "LumaCore API",
 					Version = "v1",
-					Description = "LumaCore API Description" // TODO: Add more detailed description.
+					Description = "API surface of the LumaCore server (self-hosted, persona-focused AI runtime).",
+					Contact = new OpenApiContact
+					{
+						Name = "LumaCore Project",
+						Url = new Uri("https://lumacore.tech")
+					},
+					License = new OpenApiLicense
+					{
+						Name = "MIT License",
+						Url = new Uri("https://github.com/LumaCoreTech/LumaCore/blob/main/LICENSE")
+					}
 				});
 
-			// Include XML docs if enabled in the project file.
+			// Include XML documentation from the compiled assembly so that controller and model
+			// comments (///) appear in the generated OpenAPI specification and Swagger UI.
 			string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
 			string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
 			if (File.Exists(xmlPath))
 				o.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+
+			// Align OpenAPI schema generation with C# nullable reference types:
+			// non-nullable reference types are treated as required, nullable ones as optional.
+			o.SupportNonNullableReferenceTypes();
+
+			// Define a reusable HTTP bearer security scheme so that Swagger/OpenAPI
+			// knows about JWT-based authentication via the Authorization header.
+			// This scheme is later referenced by the global security requirement.
+			o.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
+			{
+				In = ParameterLocation.Header,
+				Description = "Please enter JWT",
+				Name = "Authorization",
+				Type = SecuritySchemeType.Http,
+				Scheme = "bearer",
+				BearerFormat = "JWT"
+			});
+
+			// Attach a global security requirement so that all operations in this OpenAPI document
+			// use the "Bearer" security scheme defined above. The dictionary key is an
+			// OpenApiSecuritySchemeReference that resolves to components.securitySchemes["Bearer"]
+			// in the generated document; the empty string list indicates that no specific
+			// OAuth2 scopes are required – only the presence of a valid bearer token.
+			o.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
+			{
+				[new OpenApiSecuritySchemeReference("Bearer", doc)] = []
+			});
 		});
 
-		// Health checks
+		// Register the health checks infrastructure so that individual subsystems
+		// (e.g. database, vector store, model backends) can expose their status via
+		// the centralized health endpoint. Concrete checks are added in separate
+		// extension methods or feature modules.
 		builder.Services.AddHealthChecks();
 	}
 }
