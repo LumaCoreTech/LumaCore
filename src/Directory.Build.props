@@ -9,8 +9,11 @@
 
 	<!-- Redirect all bin/obj output to /artifacts -->
 	<PropertyGroup>
-		<BaseOutputPath>$(ArtifactsRoot)bin\$(Configuration)\</BaseOutputPath>
-		<BaseIntermediateOutputPath>$(ArtifactsRoot)obj\$(Configuration)\</BaseIntermediateOutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<BaseOutputPath>$(ArtifactsRoot)bin\$(MSBuildProjectName)\</BaseOutputPath>
+		<OutputPath>$(BaseOutputPath)$(Platform).$(Configuration)\$(TargetFramework)\</OutputPath>
+		<BaseIntermediateOutputPath>$(ArtifactsRoot)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+		<IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Platform).$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>
 	</PropertyGroup>
 
 	<!-- Language & code style defaults (applied to all projects) -->
