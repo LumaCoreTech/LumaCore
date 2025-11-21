@@ -11,11 +11,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- ASP.NET Core Packages -->
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+
 		<!-- Swagger for .NET 8+ -->
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
-	</ItemGroup>
 
-	<ItemGroup>
 		<!-- Serilog packages compatible with .NET 8+ -->
 		<PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
 		<PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />

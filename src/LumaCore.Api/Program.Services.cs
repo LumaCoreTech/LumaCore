@@ -4,6 +4,8 @@
 
 using System.Reflection;
 
+using LumaCore.Api.Features.Auth;
+
 using Microsoft.OpenApi;
 
 public static partial class Program
@@ -38,6 +40,9 @@ public static partial class Program
 		{
 			options.EnableForHttps = true; // Enable for HTTPS (careful with sensitive data!)
 		});
+
+		// Register authentication and authorization services and configure JWT bearer.
+		builder.AddAuthFeature();
 
 		// Configure a permissive CORS policy for local development: all origins,
 		// headers and methods are allowed. This makes it easy to call the API from
@@ -94,15 +99,17 @@ public static partial class Program
 			// Define a reusable HTTP bearer security scheme so that Swagger/OpenAPI
 			// knows about JWT-based authentication via the Authorization header.
 			// This scheme is later referenced by the global security requirement.
-			o.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
-			{
-				In = ParameterLocation.Header,
-				Description = "Please enter JWT",
-				Name = "Authorization",
-				Type = SecuritySchemeType.Http,
-				Scheme = "bearer",
-				BearerFormat = "JWT"
-			});
+			o.AddSecurityDefinition(
+				"Bearer",
+				new OpenApiSecurityScheme
+				{
+					In = ParameterLocation.Header,
+					Description = "Please enter JWT",
+					Name = "Authorization",
+					Type = SecuritySchemeType.Http,
+					Scheme = "bearer",
+					BearerFormat = "JWT"
+				});
 
 			// Attach a global security requirement so that all operations in this OpenAPI document
 			// use the "Bearer" security scheme defined above. The dictionary key is an
