@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Api.Features.Admin;
+using LumaCore.Api.Features.Auth;
+
 using Microsoft.OpenApi;
 
 using Serilog;
@@ -59,6 +62,10 @@ public static partial class Program
 		// can match incoming requests to the appropriate handlers.
 		app.UseRouting();
 
+		// Enable authentication and authorization middleware to protect endpoints
+		app.UseAuthentication();
+		app.UseAuthorization();
+
 		// In development, apply the permissive CORS policy configured as "DevOpen".
 		// This allows frontends and tools running on arbitrary origins to call the
 		// API without CORS issues. For production, a stricter policy should be used.
@@ -78,6 +85,12 @@ public static partial class Program
 		// Apply response compression (as configured in ConfigureServices) to reduce
 		// payload sizes and improve perceived latency for clients.
 		app.UseResponseCompression();
+
+		// Map authentication-related endpoints (e.g. /auth/login) into the endpoint routing table.
+		app.MapAuthFeature();
+
+		// Map admin endpoints (e.g. /admin/*) into the endpoint routing table.
+		app.MapAdminFeature();
 
 		// Map attribute-routed controllers (e.g. [ApiController]) into the endpoint
 		// routing table so that they can handle incoming HTTP requests.
