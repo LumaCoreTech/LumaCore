@@ -78,6 +78,11 @@ public static partial class Program
 		// See https://docs.microsoft.com/aspnet/core/security/cors
 		app.UseCorsFeature();
 
+		// Enable static file handling and Blazor framework files for the SPA.
+		// Placed before auth so assets don't run through authentication middleware.
+		app.UseBlazorFrameworkFiles();
+		app.UseStaticFiles();
+
 		// Enable routing so that endpoint definitions (controllers, minimal APIs)
 		// can match incoming requests to the appropriate handlers.
 		app.UseRouting();
@@ -85,10 +90,6 @@ public static partial class Program
 		// Enable authentication and authorization middleware to protect endpoints
 		app.UseAuthentication();
 		app.UseAuthorization();
-
-		// Enable static file handling and Blazor framework files for the SPA.
-		app.UseBlazorFrameworkFiles();
-		app.UseStaticFiles();
 
 		// Add structured request logging for each HTTP request. This writes a single
 		// summary log entry per request including method, path, status code and
