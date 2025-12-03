@@ -63,20 +63,6 @@ public static partial class Program
 		// Register admin feature services and options.
 		builder.AddAdminFeature();
 
-		// Configure a permissive CORS policy for local development: all origins,
-		// headers and methods are allowed. This makes it easy to call the API from
-		// browser-based tools and frontends during development, but must not be
-		// reused as-is for production environments.
-		builder.Services.AddCors(options =>
-		{
-			options.AddPolicy(
-				"DevOpen",
-				policy =>
-					policy.AllowAnyOrigin()
-						.AllowAnyHeader()
-						.AllowAnyMethod());
-		});
-
 		// Swagger/OpenAPI
 		builder.Services.AddEndpointsApiExplorer();
 		builder.Services.AddSwaggerGen(o =>
