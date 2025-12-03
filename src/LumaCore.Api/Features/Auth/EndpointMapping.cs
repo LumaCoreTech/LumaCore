@@ -4,109 +4,29 @@
 
 using System.Collections.ObjectModel;
 using System.Security.Claims;
-using System.Text;
 
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using LumaCore.Api.Features.Auth.Contracts;
+
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 
 namespace LumaCore.Api.Features.Auth;
 
 /// <summary>
-/// Provides registration and endpoint wiring for the authentication subsystem of LumaCore.
+/// Provides extension methods for mapping authentication endpoints to the application's routing pipeline.
 /// </summary>
-public static class AuthFeature
+/// <remarks>
+///     <para>
+///     This class is part of the Auth feature and exposes endpoints for login,
+///     identity introspection, and token diagnostics.
+///     </para>
+/// </remarks>
+public static class EndpointMapping
 {
-	/// <summary>
-	/// Registers JWT authentication, authorization, options binding, and supporting services.
-	/// </summary>
-	/// <remarks>
-	///     <para>
-	///     This method wires up the complete authentication stack for the LumaCore HTTP API:
-	///     it binds <see cref="JwtOptions"/>, configures the JWT bearer handler, and registers
-	///     authorization services and the <see cref="IJwtTokenFactory"/>.
-	///     </para>
-	///     <para>
-	///     The method is intended to be called once during application startup from the main
-	///     <c>Program</c> configuration.
-	///     </para>
-	/// </remarks>
-	/// <param name="builder">The application builder.</param>
-	/// <returns>The modified application builder.</returns>
-	public static WebApplicationBuilder AddAuthFeature(this WebApplicationBuilder builder)
-	{
-		// Bind and validate JWT options at startup so misconfiguration fails fast.
-		builder.Services
-			.AddOptions<JwtOptions>()
-			.Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
-			.ValidateDataAnnotations()
-			.ValidateOnStart();
-
-		// Read raw values for token validation configuration. These are used both for
-		// issuing tokens and for validating incoming tokens in the JWT bearer middleware.
-		IConfigurationSection jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
-
-		// Read required JWT configuration value 'Issuer' or throw an exception if any are missing.
-		string issuer = jwtSection["Issuer"]
-		                ?? throw new InvalidOperationException(
-			                "Missing configuration value 'Jwt:Issuer'. " +
-			                "Configure it via appsettings (\"Jwt\": { \"Issuer\": \"...\" }) " +
-			                "or environment variable 'Jwt__Issuer'.");
-
-		// Read required JWT configuration value 'Audience' or throw an exception if any are missing.
-		string audience = jwtSection["Audience"]
-		                  ?? throw new InvalidOperationException(
-			                  "Missing configuration value 'Jwt:Audience'. " +
-			                  "Configure it via appsettings (\"Jwt\": { \"Audience\": \"...\" }) " +
-			                  "or environment variable 'Jwt__Audience'.");
-
-		// Read required JWT configuration value 'SigningKey' or throw an exception if any are missing.
-		string signingKey = jwtSection["SigningKey"]
-		                    ?? throw new InvalidOperationException(
-			                    "Missing configuration value 'Jwt:SigningKey'. " +
-			                    "Configure it via appsettings (\"Jwt\": { \"SigningKey\": \"...\" }) " +
-			                    "or environment variable 'Jwt__SigningKey'.");
-
-		byte[] signingKeyBytes = Encoding.UTF8.GetBytes(signingKey);
-
-		// Configure JWT bearer authentication for incoming requests.
-		builder.Services
-			.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-			.AddJwtBearer(options =>
-			{
-				options.TokenValidationParameters = new TokenValidationParameters
-				{
-					// Validate the JWT issuer (iss claim).
-					ValidateIssuer = true,
-					ValidIssuer = issuer,
-
-					// Validate the JWT audience (aud claim).
-					ValidateAudience = true,
-					ValidAudience = audience,
-
-					// Validate the token signature.
-					ValidateIssuerSigningKey = true,
-					IssuerSigningKey = new SymmetricSecurityKey(signingKeyBytes),
-
-					// Validate the token expiry (exp claim) and reject expired tokens.
-					ValidateLifetime = true,
-
-					// Allow a small clock skew to account for minor time differences
-					// between clients and the server.
-					ClockSkew = TimeSpan.FromSeconds(30)
-				};
-			});
-
-		// Register authorization and the token factory used by the login endpoint.
-		builder.Services.AddAuthorization();
-		builder.Services.AddSingleton<IJwtTokenFactory, JwtTokenFactory>();
-
-		return builder;
-	}
-
 	/// <summary>
 	/// Maps authentication-related endpoints.
 	/// </summary>
+	/// <param name="app">The <see cref="IEndpointRouteBuilder"/> used to define HTTP endpoints.</param>
+	/// <returns>The modified application.</returns>
 	/// <remarks>
 	///     <para>
 	///     Currently this feature exposes:
@@ -114,20 +34,20 @@ public static class AuthFeature
 	///     <list type="bullet">
 	///         <item>
 	///             <description>
-	///             <c>POST /auth/login</c> – accepts a <see cref="LoginRequest"/> and returns a
+	///             <c>POST /api/auth/login</c> – accepts a <see cref="LoginRequest"/> and returns a
 	///             <see cref="LoginResponse"/> containing a short-lived access token.
 	///             </description>
 	///         </item>
 	///         <item>
 	///             <description>
-	///             <c>GET /auth/whoami</c> – returns information about the currently authenticated
+	///             <c>GET /api/auth/whoami</c> – returns information about the currently authenticated
 	///             principal (name, roles, and raw claims). This endpoint is available to any
 	///             authenticated user.
 	///             </description>
 	///         </item>
 	///         <item>
 	///             <description>
-	///             <c>GET /auth/introspect</c> – returns information about the current authenticated
+	///             <c>GET /api/auth/introspect</c> – returns information about the current authenticated
 	///             principal and token, including expiry information.
 	///             </description>
 	///         </item>
@@ -138,11 +58,11 @@ public static class AuthFeature
 	///     store is available.
 	///     </para>
 	/// </remarks>
-	/// <param name="app">The application.</param>
-	/// <returns>The modified application.</returns>
-	public static WebApplication MapAuthFeature(this WebApplication app)
+	public static IEndpointRouteBuilder MapAuthFeature(this IEndpointRouteBuilder app)
 	{
-		RouteGroupBuilder group = app.MapGroup("/auth")
+		RouteGroupBuilder group = app
+			.MapGroup("/api")
+			.MapGroup("/auth")
 			.WithTags("Auth");
 
 		// -----------------------------------------------------------------------------
@@ -151,19 +71,19 @@ public static class AuthFeature
 		// This endpoint group hosts all authentication-related routes of the LumaCore
 		// API. At the current stage of development the feature provides:
 		//
-		//   - POST /auth/login
+		//   - POST /api/auth/login
 		//     Issues a short-lived JWT access token for the built-in administrator
 		//     account. This is a temporary bootstrap mechanism until LumaCore has a
 		//     persistent user store (for example a database-backed authentication
 		//     system with proper password hashing and user management).
 		//
-		//   - GET /auth/whoami
+		//   - GET /api/auth/whoami
 		//     Returns basic information about the currently authenticated principal,
 		//     including effective name, roles, and raw claims. This endpoint is useful
 		//     for debugging authentication and authorization behavior and is available
 		//     to any authenticated user, not only administrators.
 		//
-		//   - GET /auth/introspect
+		//   - GET /api/auth/introspect
 		//     Returns diagnostic information about the current principal and token
 		//     (subject, roles, issuer, audience, expiry, remaining lifetime, etc.).
 		//     This endpoint is primarily intended for development and debugging of
@@ -183,11 +103,22 @@ public static class AuthFeature
 
 		group.MapPost(
 				"/login",
-				(LoginRequest request, IJwtTokenFactory tokenFactory) =>
+				(
+					LoginRequest     request,
+					IJwtTokenFactory tokenFactory,
+					ILoggerFactory   loggerFactory) =>
 				{
+					// Create a logger for this feature.
+					ILogger logger = loggerFactory.CreateLogger("LumaCore.Auth");
+
 					// Temporary bootstrap authentication: single hard-coded administrator account.
 					if (!IsValidAdmin(request.Username, request.Password))
 					{
+						// Log failed authentication attempt for diagnostics. Do not log the password.
+						logger.LogWarning(
+							"Authentication failed for administrator login attempt with username '{Username}'.",
+							request.Username);
+
 						// Deliberately return a generic 401 without details to avoid
 						// leaking information about valid user names.
 						return Results.Unauthorized();
@@ -203,6 +134,13 @@ public static class AuthFeature
 
 					// Issue a signed JWT that the client can present in subsequent API calls.
 					string token = tokenFactory.CreateToken(request.Username, claims);
+
+					// Log successful authentication for auditing purposes.
+					logger.LogInformation(
+						"Administrator '{Username}' successfully authenticated and issued a JWT access token.",
+						request.Username);
+
+					// Return the access token to the caller.
 					return Results.Ok(new LoginResponse(token));
 				})
 			.AllowAnonymous()
@@ -221,19 +159,27 @@ public static class AuthFeature
 				"/whoami",
 				(ClaimsPrincipal user) =>
 				{
+					// Extract the effective user name from the identity.
+					// If no name is available, return "(anonymous)".
 					string name = user.Identity?.Name ?? "(anonymous)";
 
+					// Extract roles from claims.
+					// The 'role' claim is the standard JWT claim for user roles.
 					ReadOnlyCollection<string> roles = user
 						.FindAll(ClaimTypes.Role)
 						.Select(r => r.Value)
 						.ToList()
 						.AsReadOnly();
 
+					// Extract all claims as raw type/value pairs.
+					// This allows clients to inspect the full set of claims.
+					// The claims are returned in no particular order.
 					ReadOnlyCollection<AuthClaimItem> claims = user.Claims
 						.Select(c => new AuthClaimItem(c.Type, c.Value))
 						.ToList()
 						.AsReadOnly();
 
+					// Build and return the whoami response.
 					var response = new AuthWhoAmIResponse(
 						Name: name,
 						Roles: roles,
@@ -256,44 +202,73 @@ public static class AuthFeature
 		// intended for diagnostics and development.
 		group.MapGet(
 				"/introspect",
-				(ClaimsPrincipal user, IOptions<JwtOptions> jwtOptionsAccessor) =>
+				(
+					ClaimsPrincipal      user,
+					IOptions<JwtOptions> jwtOptionsAccessor,
+					ILoggerFactory       loggerFactory) =>
 				{
+					// Create a logger for this feature.
+					ILogger logger = loggerFactory.CreateLogger("LumaCore.Auth");
+
+					// Capture the current time in UTC for lifetime calculations.
 					DateTime utcNow = DateTime.UtcNow;
 
+					// Retrieve JWT configuration options.
 					JwtOptions jwtOptions = jwtOptionsAccessor.Value;
 
+					// Extract the subject claim
+					// The 'sub' claim is the standard JWT subject claim.
+					// If it's not present, we fall back to the Identity Name.
+					// If that's also not available, we use "(unknown)".
 					string subject = user.FindFirst("sub")?.Value
 					                 ?? user.Identity?.Name
 					                 ?? "(unknown)";
 
+					// Extract the name claim (if present).
+					// The 'name' claim is a standard JWT claim for the user's full name.
 					string? name = user.Identity?.Name;
 
 					// Extract roles from claims.
+					// The 'role' claim is the standard JWT claim for user roles.
 					ReadOnlyCollection<string> roles = user.FindAll(ClaimTypes.Role)
 						.Select(r => r.Value)
 						.ToList()
 						.AsReadOnly();
 
 					// Extract token timing claims (if present).
+					// The 'nbf' (not before) and 'exp' (expiry) claims are standard JWT claims.
+					// They are represented as Unix timestamps in seconds.
 					string? nbfClaim = user.FindFirst("nbf")?.Value;
 					string? expClaim = user.FindFirst("exp")?.Value;
 
-					// Parse timing claims into UTC DateTime values.
+					// Parse timing claims into UTC DateTime values where possible.
+					// If parsing fails or the claim is missing, the result is null.
+					// This allows us to represent optional timing information.
 					DateTime? notBeforeUtc = TryParseUnixTimeSeconds(nbfClaim);
 					DateTime? expiresUtc = TryParseUnixTimeSeconds(expClaim);
 
-					// Calculate remaining lifetime (if expiry is known).
-					TimeSpan? expiresIn =
-						expiresUtc is null
-							? null
-							: expiresUtc.Value - utcNow;
+					// Calculate remaining lifetime (ExpiresIn) if expiry is known.
+					// If the token has already expired, ExpiresIn is set to zero.
+					// If expiry is unknown, ExpiresIn remains null.
+					TimeSpan? expiresIn = null;
+					if (expiresUtc.HasValue)
+					{
+						expiresIn = expiresUtc.Value - utcNow;
+						if (expiresIn < TimeSpan.Zero)
+							expiresIn = TimeSpan.Zero;
+					}
 
 					// Extract other standard JWT claims.
+					// The 'jti' (JWT ID), 'iss' (issuer), and 'aud' (audience) claims
+					// are standard JWT claims that may be present.
+					// They are optional and may be null.
 					string? jwtId = user.FindFirst("jti")?.Value;
 					string? issuer = user.FindFirst("iss")?.Value;
 					string? audience = user.FindFirst("aud")?.Value;
 
 					// Build and return the introspection response.
+					// This includes all extracted information about the token
+					// and the configured access token lifetime for reference.
 					var response = new AuthIntrospectResponse(
 						Subject: subject,
 						Name: name,
@@ -306,18 +281,23 @@ public static class AuthFeature
 						Audience: audience,
 						ConfiguredAccessTokenLifetimeMinutes: jwtOptions.AccessTokenLifetimeMinutes);
 
+					// Log the introspection request for diagnostics.
+					logger.LogDebug(
+						"Introspection requested for subject '{Subject}'.",
+						subject);
+
+					// Return the introspection response.
 					return Results.Ok(response);
 				})
 			.RequireAuthorization()
 			.Produces<AuthIntrospectResponse>(StatusCodes.Status200OK)
 			.Produces(StatusCodes.Status401Unauthorized)
-			.WithSummary("Introspects the current JWT and principal.")
+			.WithSummary("Introspects the current JWT and returns details about the token.")
 			.WithDescription(
-				"Returns diagnostic information about the current authenticated principal and " +
-				"its JWT token, including issuer, audience, not-before time, expiry and remaining " +
-				"lifetime. Primarily intended for development and troubleshooting rather than " +
-				"normal client-side UI logic.")
-			.WithName("AuthIntrospect");
+				"Provides diagnostic information about the currently used JWT access token, " +
+				"including subject, roles, expiry and configured lifetime. This endpoint is " +
+				"intended primarily for debugging and support scenarios.")
+			.WithName("Introspect");
 
 		return app;
 	}
@@ -338,7 +318,7 @@ public static class AuthFeature
 	/// <see langword="true"/> if the credentials match the built-in admin account;
 	/// otherwise, <see langword="false"/>.
 	/// </returns>
-	private static bool IsValidAdmin(string username, string password)
+	private static bool IsValidAdmin(string? username, string? password)
 	{
 		// NOTE:
 		// This is intentionally simple bootstrap logic. It is not meant for production

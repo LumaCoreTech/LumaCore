@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 
 /// <summary>

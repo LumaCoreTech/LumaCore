@@ -1,0 +1,83 @@
+/* Clickable wrapper that hosts the small health indicator dot next to the logo */
+.lc-logo-health-indicator {
+    align-items: center; /* Vertically center the dot */
+    cursor: pointer; /* Make it clear that the indicator is clickable */
+    display: inline-flex; /* Align dot nicely with the logo */
+    justify-content: center; /* Keep the dot centered inside the wrapper */
+    margin-left: 0.5rem; /* Space between logo and health indicator */
+}
+
+/* Base style for the backend health dot */
+
+.lc-logo-health-dot {
+    background-color: #888888; /* Neutral default color (used as fallback) */
+    border-radius: 50%; /* Turn the square into a circle */
+    height: 10px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease; /* Smooth transitions between states */
+    width: 10px; /* Compact circular indicator */
+}
+
+/* Unknown state: neutral, slightly dimmed dot to indicate no information yet */
+
+.lc-logo-health-dot-unknown {
+    background-color: #b0b0b0; /* Light gray for "unknown" */
+}
+
+/* Checking state: warm yellow with a subtle pulsing animation to show activity */
+
+.lc-logo-health-dot-checking {
+    animation: lc-health-pulse-checking 1s infinite ease-in-out; /* Soft, quick pulse */
+    background-color: #f1c40f; /* Yellow to illustrate "in progress" */
+}
+
+/* Healthy state: green dot with a soft glow to confirm everything is OK */
+
+.lc-logo-health-dot-ok {
+    background-color: #2ecc71; /* Green for healthy */
+    box-shadow: 0 0 6px rgba(46, 204, 113, 0.5); /* Subtle green glow */
+}
+
+/* Error state: red dot with a slower, stronger pulse to indicate a problem */
+
+.lc-logo-health-dot-error {
+    animation: lc-health-pulse-error 1.5s infinite ease-in-out; /* Attention-grabbing pulse */
+    background-color: #e74c3c; /* Red for error */
+}
+
+/* Pulse animation for the "checking" state (quick, subtle breathing effect) */
+
+@keyframes lc-health-pulse-checking {
+    0% {
+        box-shadow: 0 0 0 rgba(241, 196, 15, 0.0);
+        transform: scale(1.0);
+    }
+
+    50% {
+        box-shadow: 0 0 6px rgba(241, 196, 15, 0.6);
+        transform: scale(1.15);
+    }
+
+    100% {
+        box-shadow: 0 0 0 rgba(241, 196, 15, 0.0);
+        transform: scale(1.0);
+    }
+}
+
+/* Pulse animation for the "error" state (slower, stronger emphasis) */
+
+@keyframes lc-health-pulse-error {
+    0% {
+        box-shadow: 0 0 0 rgba(231, 76, 60, 0.0);
+        transform: scale(1.0);
+    }
+
+    50% {
+        box-shadow: 0 0 8px rgba(231, 76, 60, 0.8);
+        transform: scale(1.2);
+    }
+
+    100% {
+        box-shadow: 0 0 0 rgba(231, 76, 60, 0.0);
+        transform: scale(1.0);
+    }
+}

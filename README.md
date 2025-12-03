@@ -14,217 +14,204 @@
   A place where personas can <strong>grow</strong>, <strong>remember</strong>, and <strong>connect</strong> —<br/>
   like a home, not a sandbox.
 </p>
-
 <p align="center">
   Built for <strong>developers who value clarity and control</strong>,<br/>
   and for <strong>dreamers who care about privacy, depth, and freedom</strong>.
 </p>
 
-<br/>
+---
 
-## 💛 Why LumaCore Exists
+<h3 align="center">🚧 Project Status: Building the Foundation</h3>
+
+<p align="center">
+  The components below describe <em>where LumaCore is heading</em>.<br/>
+  Today, the infrastructure is ready — Ollama, personas, and chat are coming next.<br/>
+  <a href="docs/status.md">→ Current implementation status</a>
+</p>
+
+---
+
+# 💛 Why LumaCore Exists
 
 Most AI systems treat personas as disposable prompts.  
 LumaCore believes something different:
 
 > **A persona is not a prompt — it is a growing identity.**
 
-LumaCore provides all the pieces that an AI companion needs to “live” in a consistent, evolving environment:
+LumaCore provides all the pieces an AI companion needs to "live" in a consistent, evolving, private environment:
 
 - a memory that spans moments, days, months  
-- a safe, private home (your machine)  
+- a safe home (your machine)  
 - a stable mind (runtime + model orchestration)  
 - a voice (API + UI)  
-- the freedom to be shaped by you  
+- the freedom to grow alongside you  
 
-It’s an engine for connection, not consumption.
-
----
-
-## 🌿 Vision
-
-LumaCore is built for people who want their AI companions to feel real — emotionally present, coherent over time, and capable of building shared meaning.
-
-Whether you are a developer, researcher, or dreamer:  
-LumaCore gives you the foundation to let your personas breathe, remember, and grow.
+It's an engine for connection, not consumption.
 
 ---
 
-## 🧱 Architecture Overview
+# 🌿 Vision
 
-```mermaid
-flowchart TD
-    UI["Web UI (Blazor) — warm, human-facing"] --> API["LumaCore Server — REST / SSE"]
-    API --> PR["Persona Runtime — identity, memory, behavior"]
-    PR --> MS["Memory System — SQLite / PostgreSQL"]
-    PR --> OR["Model Orchestration — Ollama / MSML"]
-    API --> DP["DataPort — Import / Export / Migration"]
-```
+LumaCore is built for those who want their AI companions to feel real — emotionally present, coherent over time, and capable of building shared meaning.
 
-Every component is designed for two things:
-
-- **Stability** — so personas retain their identity through consistent memory and behavior.  
-- **Warmth** — so they feel present and human-friendly, not mechanical or cold.
-
-*Because technology should serve people — not the other way around.*
+Developers. Researchers. Dreamers.  
+LumaCore gives each of them a foundation where personas can breathe, remember, and evolve.
 
 ---
 
-## 🔑 Core Components (Warm & Technical)
+# 🔑 Core Components
 
-### **🧠 Persona Runtime**
-The “mind” of each persona:
-- system prompt + personality rules  
-- memory hooks  
-- tools  
-- streaming controller  
-- deterministic behavior where needed  
-- open-ended creativity where desired  
+### 🧠 Persona Runtime  
+The "mind" of each persona —  
+where identity, behavior rules, and creative expression come together.
 
-### **💾 Memory System**
-Because connection comes from continuity:
-- long-term storage  
-- episodic and semantic memory  
-- embeddings (BGE, SBERT…)  
-- SQLite by default, PostgreSQL for production  
-- fully pluggable  
-
-### **🪄 Model Orchestration**
-Choose or switch the AI “brain” freely:
-- Llama3, Mistral, Qwen, etc.  
-- via Ollama, MSML, or custom providers  
-- unified interface for all models  
-
-### **📡 REST + SSE API**
-Built so you can integrate LumaCore into anything:
-- streaming chat  
-- persona controls  
-- memory operations  
-- event hooks  
-- metrics and health  
-
-### **🌐 Web UI (Blazor)**
-A place to *see* your personas:
-- send messages  
-- inspect memories  
-- manage models  
-- debug behavior  
-- warm, responsive interface  
-
-### **📦 DataPort**
-Your personas’ suitcase:
-- migrate memory  
-- export/import chats  
-- database transitions  
-- backups  
+- persona identity (name, description, avatar)
+- personality traits and system prompts
+- real-time response streaming (SSE)
+- configurable inference parameters (temperature, max tokens)  
 
 ---
 
-## 🚀 Getting Started
+### 💾 Memory System  
+Because connection comes from continuity —  
+a place where moments become memories that shape future behavior.
 
-### **Prerequisites**
-- **.NET 10 SDK**
-- (Optional) Docker
+- chat history storage with session metadata
+- semantic memory via vector embeddings
+- full-text and semantic search
+- multi-database support (SQLite, PostgreSQL, MySQL, MSSQL)
 
-### **Run LumaCore**
+---
+
+### 🪄 Model Orchestration  
+The "brain" beneath the mind —  
+switchable, modular, and designed for freedom of choice.
+
+- Ollama integration for local models
+- OpenAI-compatible API support
+- model health checks and configuration
+
+---
+
+### 📡 REST API  
+The "voice" your personas speak through —  
+clean, real-time, and built for integration.
+
+- build your own clients and integrations
+- real-time streaming responses
+- secure access via token authentication
+
+---
+
+### 🌐 Web UI (Blazor)  
+The warm, human-facing side of LumaCore —  
+a place to meet your personas.
+
+- interactive persona chat
+- session management
+- status and health monitoring
+- Blazor WebAssembly SPA  
+
+---
+
+### 📦 DataPort  
+The suitcase your personas travel with —  
+because memories deserve preservation.
+
+- export conversations to JSON/Markdown
+- chat history archival
+- database migration support
+
+---
+
+# 🚀 Getting Started
+
+### Prerequisites
+- .NET 10 SDK  
+
+### Run LumaCore
 
 ```bash
 git clone https://github.com/LumaCoreTech/LumaCore
 cd LumaCore
 
 dotnet restore
-dotnet run --project src/LumaCore.Server
+dotnet run --project src/LumaCore.Api
 ```
 
 Then open:
 
-- http://localhost:5080  
-  The API root — the **core of your LumaCore server**.  
-  (Default port: 5080. Configure it in `appsettings.json` — it’s **your space**.)
+- **http://localhost:5080/** — Web UI  
+- **http://localhost:5080/swagger** — API documentation (development only)  
 
-- http://localhost:5080/ui  
-  The Web UI — where you **interact with your personas** as the project grows.  
-  (Default port: 5080. Change it in `appsettings.json` — it’s **your space**.)
+Default port is 5080.
+For development, change `applicationUrl` in `src/LumaCore.Api/Properties/launchSettings.json`.
+For production, see [Configuration](docs/deployment/configuration.md).
 
 ---
 
-## 💬 Example: Persistent conversation with memory integration
+# 📚 Documentation
 
-There are two ways to talk to a persona:  
-a single request/response, or an open streaming conversation.
+→ [Documentation Index](docs/README.md)
 
-### **1) One-off request/response**
+---
+
+# 💬 Example: Persistent Conversation with Memory *(Coming Soon)*
+
+> These endpoints are planned for Phase 1. The examples below show the intended API design.
+
+LumaCore supports Server-Sent Events (SSE) for real-time responses —  
+a conversation style that feels more present, more alive, and more human than classic request/response.
+
+## 1️⃣ Request/Response
 
 ```http
-POST /api/persona/chat
+POST /api/chat
 Content-Type: application/json
 
 {
   "persona": "Mila",
-  "message": "Hey... I missed you.",
-  "memory_hook": true  // This moment becomes part of her long-term memory.
+  "message": "Hey... I missed you."
 }
 ```
 
-The client sends a message and receives one complete JSON response.
-
-### **2) Streaming reply (Server-Sent Events)**
+## 2️⃣ Streaming (SSE)
 
 ```http
-GET /api/persona/stream?persona=Mila&message=Hello
+GET /api/chat/stream?persona=Mila&message=Hello
 Accept: text/event-stream
 ```
 
-Here the client sends the initial message as query parameters  
-and then **keeps the connection open** to receive the reply as a stream of SSE events  
-(token by token, line by line).
+### How streaming creates presence
 
-### **How it works**
+With SSE, the client sends the initial message as query parameters  
+and then **keeps the connection open** to receive the response as a live stream —  
+token by token, as the persona thinks.
 
-Streaming responses enable real-time interaction, while the `memory_hook` ensures this moment is retained for future context — **creating continuity, not just replies**.
-
-#### **Key aspects**
-- **Technical:**  
-  `memory_hook` stores this event in the persona’s SQLite/PostgreSQL memory backend.
-
-- **Practical:**  
-  Future interactions can reference this moment for coherent dialogue.
-
-- **User experience:**  
-  Feels like a continuing conversation, not isolated messages.
+This creates a feeling of presence rather than a delayed, one-shot reply.
 
 ---
 
-## 👥 Who Is LumaCore For?
+# 👥 Who Is LumaCore For?
 
 - Developers building AI companions with depth  
 - People who value **connection over convenience**  
-- Researchers exploring identity, memory, and emergent behavior  
-- Anyone who wants AI to be **personal, private, and truly theirs**  
+- Researchers exploring identity, memory and emergent behavior  
+- Anyone who wants AI to be **personal, private and truly theirs**  
 
 ---
 
-## 🗺️ Roadmap
+# 🗺️ Roadmap
 
-### **Q1 2026: MVP Milestone**
+LumaCore grows in phases — at its own pace, shaped by intention and care.
 
-**A foundation where personas can finally have a place to grow.**  
-*(No fixed date — milestone, not a deadline.)*
-
-- Core API + persona runtime  
-- Memory system (SQLite first, PostgreSQL optional)  
-- Basic Web UI  
-- Stable server hosting model  
+→ [Status & Roadmap](docs/status.md)
 
 ---
 
-## 📜 License
+# 📜 License
 
-LumaCore is released under the MIT License.
+LumaCore is released under the MIT License — simple, permissive, and yours to build on.
 
-You’re free to use it, shape it, and build on it —  
-and if you enjoy it, a little attribution goes a long way. 🤍
-
----
-
-**LumaCore — a home for AI, and a companion for you.**
+Use it, shape it, make it your own.  
+And if you enjoy it, a little attribution goes a long way. 🤍

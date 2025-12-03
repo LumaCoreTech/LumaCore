@@ -1,0 +1,16 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><defs>
+    <linearGradient id="lgOuter" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="45%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#f472b6"/>
+    </linearGradient>
+
+    <linearGradient id="lgHex" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fcd34d"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+</defs>
+    <path d="M128 12 C164 60 216 108 216 158 C216 206 176 244 128 244 C80 244 40 206 40 158 C40 108 92 60 128 12 Z" fill="url(#lgOuter)"/>
+    <path d="M128 60 C154 92 184 130 184 160 C184 190 160 210 128 210 C96 210 72 190 72 160 C72 130 102 92 128 60 Z" fill="#ffffff"/>
+    <polygon points="128,132 156,148 156,176 128,192 100,176 100,148" fill="url(#lgHex)"/>
+</svg>
