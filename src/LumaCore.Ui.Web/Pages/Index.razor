@@ -1,0 +1,41 @@
+@page "/"
+
+@* Landing page for the LumaCore Web UI preview.
+   Gives a short overview of what this UI is and where it is heading. *@
+
+<h1>Welcome to the LumaCore UI (Preview)</h1>
+
+<p>
+    This is an early preview of the LumaCore Web UI.
+    It is intentionally minimal: a small, self-hosted shell that will grow together
+    with the orchestrator and the personas that live inside it.
+</p>
+
+<section class="lc-section">
+    @* High-level expectations for what this UI will eventually offer *@
+    <h2>What you can expect here</h2>
+    <ul>
+        <li>Basic status views for your LumaCore instance</li>
+        <li>Simple controls to trigger test generations</li>
+        <li>A home for your personas: overview, details, memory, and more</li>
+        <li>Configuration and tooling focused on clarity, self-hosting, and control</li>
+    </ul>
+</section>
+
+<section class="lc-section">
+    @* Short explanation of how the UI connects to the backend orchestrator *@
+    <h2>Backend connection</h2>
+    <p>
+        The UI is designed to talk to a running LumaCore orchestrator instance.
+        In the next steps, we will:
+    </p>
+    <ol>
+        <li>Configure the backend base URL</li>
+        <li>Add a small health/status call</li>
+        <li>Wire in JWT authentication for protected endpoints</li>
+    </ol>
+    <p>
+        You can already visit the <a href="status">Status</a> page to see a live health check
+        once your backend is reachable.
+    </p>
+</section>

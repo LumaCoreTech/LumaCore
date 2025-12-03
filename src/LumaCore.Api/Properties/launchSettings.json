@@ -1,43 +1,40 @@
 {
-    "$schema": "https://json.schemastore.org/launchsettings.json",
-    "iisSettings": {
-        "windowsAuthentication": false,
-        "anonymousAuthentication": true,
-        "iisExpress": {
-            "applicationUrl": "http://localhost:5080",
-            "sslPort": 0
+    "profiles": {
+        "http only": {
+            "commandName": "Project",
+            "launchBrowser": true,
+            "environmentVariables": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "DOTNET_RUNNING_IN_CONTAINER": "false"
+            },
+            "dotnetRunMessages": true,
+            "applicationUrl": "http://localhost:5080"
+        },
+        "https only": {
+            "commandName": "Project",
+            "launchBrowser": true,
+            "launchUrl": "swagger",
+            "environmentVariables": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "DOTNET_RUNNING_IN_CONTAINER": "false",
+                "ASPNETCORE_HTTPS_PORT": "5443"
+            },
+            "dotnetRunMessages": true,
+            "applicationUrl": "https://localhost:5443"
+        },
+        "http+https": {
+            "commandName": "Project",
+            "launchBrowser": true,
+            "launchUrl": "swagger",
+            "environmentVariables": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "DOTNET_RUNNING_IN_CONTAINER": "false",
+                "ASPNETCORE_HTTPS_PORT": "5443"
+                // "Https__RedirectEnabled": "true"
+            },
+            "dotnetRunMessages": true,
+            "applicationUrl": "http://localhost:5080;https://localhost:5443"
         }
     },
-    "profiles": {
-        "LumaCore.Api": {
-            "commandName": "Project",
-            "dotnetRunMessages": true,
-            "launchBrowser": true,
-            "launchUrl": "swagger",
-            "applicationUrl": "http://localhost:5080",
-            "environmentVariables": {
-                "ASPNETCORE_ENVIRONMENT": "Development",
-                "DOTNET_RUNNING_IN_CONTAINER": "false"
-            }
-        },
-        "http": {
-            "commandName": "Project",
-            "dotnetRunMessages": true,
-            "launchBrowser": false,
-            "applicationUrl": "http://localhost:5080",
-            "environmentVariables": {
-                "ASPNETCORE_ENVIRONMENT": "Development",
-                "DOTNET_RUNNING_IN_CONTAINER": "false"
-            }
-        },
-        "IIS Express": {
-            "commandName": "IISExpress",
-            "launchBrowser": true,
-            "launchUrl": "swagger",
-            "environmentVariables": {
-                "ASPNETCORE_ENVIRONMENT": "Development",
-                "DOTNET_RUNNING_IN_CONTAINER": "false"
-            }
-        }
-    }
+    "$schema": "https://json.schemastore.org/launchsettings.json"
 }

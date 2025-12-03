@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11205.157 d18.0
+VisualStudioVersion = 18.0.11205.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LumaCore.Core", "src\LumaCore.Core\LumaCore.Core.csproj", "{3AC3DC74-2A12-01DC-94F2-4C45752D6D21}"
 EndProject
@@ -33,6 +33,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build.net", "build.net", "{
 		build.net\ReSharper.DotSettings = build.net\ReSharper.DotSettings
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LumaCore.Ui.Web", "src\LumaCore.Ui.Web\LumaCore.Ui.Web.csproj", "{3DD886D4-EFDE-476E-AD78-BE1ABE68EA48}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{071DD012-4C05-440B-BC6E-4F6A5A456A59}"
+	ProjectSection(SolutionItems) = preProject
+		docs\status.md = docs\status.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deployment", "deployment", "{8DE4F24D-5531-4CE4-9844-F401D8FA6C4D}"
+	ProjectSection(SolutionItems) = preProject
+		docs\deployment\configuration.md = docs\deployment\configuration.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,12 +59,17 @@ Global
 		{E7D88D21-AAAC-E3E9-CD24-BB7145D7FBEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7D88D21-AAAC-E3E9-CD24-BB7145D7FBEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7D88D21-AAAC-E3E9-CD24-BB7145D7FBEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3DD886D4-EFDE-476E-AD78-BE1ABE68EA48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3DD886D4-EFDE-476E-AD78-BE1ABE68EA48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3DD886D4-EFDE-476E-AD78-BE1ABE68EA48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3DD886D4-EFDE-476E-AD78-BE1ABE68EA48}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1D4B4646-0707-4C47-848B-9BCCB7D1436A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{8DE4F24D-5531-4CE4-9844-F401D8FA6C4D} = {071DD012-4C05-440B-BC6E-4F6A5A456A59}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FF91DAF1-41D5-4766-9080-7F9DFFA42F7E}

@@ -4,7 +4,13 @@
 
 using System.Reflection;
 
+using LumaCore.Api.Features.Admin;
 using LumaCore.Api.Features.Auth;
+using LumaCore.Api.Features.Cors;
+using LumaCore.Api.Features.Health;
+using LumaCore.Api.Features.HttpsRedirection;
+using LumaCore.Api.Features.ProxyHeaders;
+using LumaCore.Api.Features.SecurityHeaders;
 
 using Microsoft.OpenApi;
 
@@ -41,8 +47,21 @@ public static partial class Program
 			options.EnableForHttps = true; // Enable for HTTPS (careful with sensitive data!)
 		});
 
+		// Register and configure the Proxy Headers feature to correctly handle
+		// X-Forwarded-* headers when the API is running behind a reverse proxy.
+		builder.AddProxyHeadersFeature();
+
+		// Register and configure the CORS feature for cross-origin requests.
+		builder.AddCorsFeature();
+
+		// Register and configure the Security Headers feature for HTTP security.
+		builder.AddSecurityHeadersFeature();
+
 		// Register authentication and authorization services and configure JWT bearer.
 		builder.AddAuthFeature();
+
+		// Register admin feature services and options.
+		builder.AddAdminFeature();
 
 		// Configure a permissive CORS policy for local development: all origins,
 		// headers and methods are allowed. This makes it easy to call the API from
@@ -126,6 +145,10 @@ public static partial class Program
 		// (e.g. database, vector store, model backends) can expose their status via
 		// the centralized health endpoint. Concrete checks are added in separate
 		// extension methods or feature modules.
-		builder.Services.AddHealthChecks();
+		builder.AddHealthFeature();
+
+		// Register HTTPS redirection feature.
+		// Redirects HTTP requests to HTTPS when enabled in configuration.
+		builder.AddHttpsRedirectionFeature();
 	}
 }

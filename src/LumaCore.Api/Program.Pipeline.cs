@@ -4,6 +4,11 @@
 
 using LumaCore.Api.Features.Admin;
 using LumaCore.Api.Features.Auth;
+using LumaCore.Api.Features.Cors;
+using LumaCore.Api.Features.Health;
+using LumaCore.Api.Features.HttpsRedirection;
+using LumaCore.Api.Features.ProxyHeaders;
+using LumaCore.Api.Features.SecurityHeaders;
 
 using Microsoft.OpenApi;
 
@@ -19,6 +24,20 @@ public static partial class Program
 	/// <param name="app">The <see cref="WebApplication"/> used to define the HTTP pipeline.</param>
 	private static void ConfigurePipeline(WebApplication app)
 	{
+		// Process proxy-related headers (e.g. X-Forwarded-For, X-Forwarded-Proto) first.
+		// This must be the earliest middleware to ensure all subsequent middleware sees
+		// the correct client IP, scheme, and host when running behind a reverse proxy.
+		// Without this, HTTPS redirection would see HTTP and cause redirect loops.
+		app.UseProxyHeadersFeature();
+
+		// Enforce HTTPS by redirecting HTTP requests to their HTTPS counterparts.
+		// Must come AFTER proxy headers so the scheme is correctly detected.
+		app.UseHttpsRedirectionFeature();
+
+		// Add HTTP security headers (HSTS, X-Frame-Options, CSP, etc.) to all responses.
+		// This must be early in the pipeline to ensure headers are set before any response.
+		app.UseSecurityHeadersFeature();
+
 		if (app.Environment.IsDevelopment())
 		{
 			// Show detailed exception information and a developer-friendly error page
@@ -54,9 +73,10 @@ public static partial class Program
 			});
 		}
 
-		// Enforce HTTPS by redirecting HTTP requests to their HTTPS counterparts.
-		// This improves security by ensuring traffic is encrypted in transit.
-		app.UseHttpsRedirection();
+		// Apply CORS policy based on configuration to control cross-origin requests.
+		// This must be done BEFORE UseRouting() to properly handle preflight requests.
+		// See https://docs.microsoft.com/aspnet/core/security/cors
+		app.UseCorsFeature();
 
 		// Enable routing so that endpoint definitions (controllers, minimal APIs)
 		// can match incoming requests to the appropriate handlers.
@@ -66,13 +86,9 @@ public static partial class Program
 		app.UseAuthentication();
 		app.UseAuthorization();
 
-		// In development, apply the permissive CORS policy configured as "DevOpen".
-		// This allows frontends and tools running on arbitrary origins to call the
-		// API without CORS issues. For production, a stricter policy should be used.
-		if (app.Environment.IsDevelopment())
-		{
-			app.UseCors("DevOpen");
-		}
+		// Enable static file handling and Blazor framework files for the SPA.
+		app.UseBlazorFrameworkFiles();
+		app.UseStaticFiles();
 
 		// Add structured request logging for each HTTP request. This writes a single
 		// summary log entry per request including method, path, status code and
@@ -92,26 +108,15 @@ public static partial class Program
 		// Map admin endpoints (e.g. /admin/*) into the endpoint routing table.
 		app.MapAdminFeature();
 
+		// Map health-related endpoints (e.g. /health, /api/health/live, ...)
+		app.MapHealthFeature();
+
 		// Map attribute-routed controllers (e.g. [ApiController]) into the endpoint
 		// routing table so that they can handle incoming HTTP requests.
 		app.MapControllers();
 
-		// Register a standard health check endpoint that integrates with the
-		// health checks infrastructure. This is suitable for readiness probes,
-		// because it can aggregate the state of multiple subsystems and fail
-		// if any of them is unhealthy.
-		app.MapHealthChecks("/health");
-
-		// Provide a very lightweight liveness probe that always returns "ok".
-		// This is intentionally decoupled from the main health checks to avoid
-		// cascading failures and keep liveness semantics simple for orchestrators
-		// such as Kubernetes or Docker.
-		app.MapGet("/health/live", () => Results.Ok(new { status = "ok" }))
-			.WithName("HealthLive")
-			.WithDescription("Liveness probe (static OK).");
-
-		// Minimal fallback for the root URL to confirm that the API host is up.
-		// This is convenient for quick manual checks and smoke tests.
-		app.MapGet("/", () => Results.Text("LumaCore API is running.", "text/plain"));
+		// Fallback: if no API/other endpoint matches, serve the Blazor index.html.
+		// This enables client-side routing for the SPA.
+		app.MapFallbackToFile("index.html");
 	}
 }

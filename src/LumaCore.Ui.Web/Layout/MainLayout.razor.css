@@ -1,0 +1,158 @@
+/* Root container for the entire LumaCore UI layout */
+.lc-root {
+    background-color: #0b0b12; /* Subtle dark background for the whole UI */
+    color: #f5f5f5; /* Light text for readability on dark background */
+    display: flex; /* Stack header, main, and footer vertically */
+    flex-direction: column;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh; /* Ensure the layout fills the full viewport height */
+}
+
+/* Top application header containing logo, title block, and navigation */
+
+.lc-header {
+    align-items: center;
+    background: radial-gradient(circle at top left, #252545 0%, #131322 55%, #0b0b12 100%);
+    border-bottom: 1px solid #26263a;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); /* Soft drop shadow below the header */
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 1.75rem; /* Horizontal breathing room */
+}
+
+/* Left side of the header: logo + title block */
+
+.lc-header-left {
+    align-items: center;
+    display: flex;
+    gap: 1.25rem; /* Space between logo block and title block */
+}
+
+/* Wraps the LumaCore logo and the backend health indicator */
+
+.lc-logo-wrapper {
+    align-items: center;
+    display: inline-flex; /* Align logo and indicator on the same baseline */
+    gap: 0.5rem; /* Space between the logo image and the indicator */
+}
+
+/* LumaCore logo image styling */
+
+.lc-logo-img {
+    display: block;
+    height: 40px; /* Stable logo size in the header */
+    width: auto;
+}
+
+/* Container for the title and subtitle text next to the logo */
+
+.lc-title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem; /* Tight vertical spacing between title and subtitle */
+}
+
+/* Main title "LumaCore" */
+
+.lc-title {
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+/* Subtitle line with the LumaCore tagline */
+
+.lc-subtitle {
+    color: #ccccdd; /* Slightly muted to avoid overpowering the title */
+    font-size: 0.86rem;
+    font-weight: 400;
+    max-width: 36rem; /* Limit line length for readability */
+}
+
+/* Main navigation area on the right side of the header */
+
+.lc-nav {
+    align-items: center;
+    display: flex;
+    font-size: 0.95rem;
+    gap: 1.25rem; /* Spacing between navigation links */
+}
+
+/* Navigation links in the header */
+
+.lc-nav a {
+    color: #f5f5ff;
+    padding-bottom: 0.1rem;
+    position: relative; /* Enable pseudo-element underline animation */
+    text-decoration: none;
+}
+
+/* Subtle underline effect on hover/focus for navigation links */
+
+.lc-nav a::after {
+    background: linear-gradient(90deg, #ffb347, #ffcc33);
+    bottom: 0;
+    content: "";
+    height: 2px;
+    left: 0;
+    position: absolute;
+    transition: width 0.2s ease-out;
+    width: 0;
+}
+
+.lc-nav a:hover::after,
+.lc-nav a:focus-visible::after {
+    width: 100%; /* Slide underline in from left to right */
+}
+
+/* Distinct styling for external link to the project site */
+
+.lc-nav a[href^="https://"] { opacity: 0.9; }
+
+.lc-nav a[href^="https://"]:hover { opacity: 1.0; }
+
+/* Main content area; grows to fill remaining space between header and footer */
+
+.lc-main {
+    box-sizing: border-box;
+    flex: 1; /* Take up all available vertical space */
+    padding: 1.5rem 1.75rem 2rem; /* Top, horizontal, bottom padding */
+}
+
+/* Footer at the bottom of the page with a short, calm message */
+
+.lc-footer {
+    align-items: center;
+    background-color: #0f0f18;
+    border-top: 1px solid #26263a;
+    color: #aaaacc;
+    display: flex;
+    font-size: 0.8rem;
+    justify-content: space-between;
+    padding: 0.75rem 1.75rem;
+}
+
+/* On narrow screens, stack footer lines vertically and center them */
+
+@media (max-width: 640px) {
+    .lc-header {
+        align-items: flex-start;
+        flex-direction: column; /* Stack logo/title and nav vertically */
+        gap: 0.75rem;
+    }
+
+    .lc-nav {
+        flex-wrap: wrap; /* Allow nav items to wrap on small screens */
+        gap: 0.75rem;
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .lc-footer {
+        align-items: flex-start;
+        flex-direction: column; /* Stack footer information */
+        gap: 0.25rem;
+    }
+
+    .lc-main { padding: 1rem 1.25rem 1.5rem; }
+}

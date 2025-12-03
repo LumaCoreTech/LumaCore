@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-namespace LumaCore.Api.Features.Admin;
+namespace LumaCore.Api.Features.Admin.Contracts;
 
 /// <summary>
 /// Represents the high-level status of the running LumaCore instance as
-/// returned by the <c>/admin/status</c> endpoint.
+/// returned by the <c>/api/admin/status</c> endpoint.
 /// </summary>
 /// <param name="Environment">The logical environment of the application (for example 'Development' or 'Production').</param>
 /// <param name="ApiVersion">The advertised API version.</param>
