@@ -38,6 +38,14 @@ public static partial class Program
 		// This must be early in the pipeline to ensure headers are set before any response.
 		app.UseSecurityHeadersFeature();
 
+		// Add structured request logging early in the pipeline to capture all requests,
+		// including 404s on static assets. This writes a single summary log entry per
+		// request including method, path, status code and elapsed time.
+		app.UseSerilogRequestLogging(options =>
+		{
+			options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+		});
+
 		if (app.Environment.IsDevelopment())
 		{
 			// Show detailed exception information and a developer-friendly error page
@@ -90,14 +98,6 @@ public static partial class Program
 		// Enable authentication and authorization middleware to protect endpoints
 		app.UseAuthentication();
 		app.UseAuthorization();
-
-		// Add structured request logging for each HTTP request. This writes a single
-		// summary log entry per request including method, path, status code and
-		// elapsed time, which is very helpful for diagnostics and monitoring.
-		app.UseSerilogRequestLogging(options =>
-		{
-			options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
-		});
 
 		// Apply response compression (as configured in ConfigureServices) to reduce
 		// payload sizes and improve perceived latency for clients.
