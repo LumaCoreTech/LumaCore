@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LumaCore.Core", "src\LumaCo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LumaCore.Api", "src\LumaCore.Api\LumaCore.Api.csproj", "{E7D88D21-AAAC-E3E9-CD24-BB7145D7FBEB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LumaCore.HealthCheck", "src\LumaCore.HealthCheck\LumaCore.HealthCheck.csproj", "{7C8F2D91-B5A4-4E3F-9D12-A1C6E8F4D2B7}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repository Files", "Repository Files", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
@@ -59,6 +61,10 @@ Global
 		{E7D88D21-AAAC-E3E9-CD24-BB7145D7FBEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7D88D21-AAAC-E3E9-CD24-BB7145D7FBEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7D88D21-AAAC-E3E9-CD24-BB7145D7FBEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C8F2D91-B5A4-4E3F-9D12-A1C6E8F4D2B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C8F2D91-B5A4-4E3F-9D12-A1C6E8F4D2B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C8F2D91-B5A4-4E3F-9D12-A1C6E8F4D2B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C8F2D91-B5A4-4E3F-9D12-A1C6E8F4D2B7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3DD886D4-EFDE-476E-AD78-BE1ABE68EA48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3DD886D4-EFDE-476E-AD78-BE1ABE68EA48}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3DD886D4-EFDE-476E-AD78-BE1ABE68EA48}.Release|Any CPU.ActiveCfg = Release|Any CPU
