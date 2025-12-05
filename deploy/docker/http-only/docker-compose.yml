@@ -1,0 +1,33 @@
+# ==============================================================================
+# Docker Compose - LumaCore (HTTP-only)
+# ==============================================================================
+# Simple setup for local use or trusted networks. No TLS.
+#
+# Setup:
+#   cp .env.example .env
+#
+# Usage:
+#   docker-compose up --build              # Build and start
+#   docker-compose up --build --pull       # Update base images
+#   docker-compose up -d                   # Start in background
+#   docker-compose down                    # Stop and remove
+#   docker-compose logs -f                 # View logs
+#
+# Endpoint:
+#   http://localhost:5080                  # LumaCore Web UI
+# ==============================================================================
+
+services:
+  lumacore:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile
+    image: lumacore:latest
+    container_name: lumacore
+    env_file:
+      - .env
+    ports:
+      - "5080:5080"
+    environment:
+      - Kestrel__Endpoints__Http__Url=http://+:5080
+    restart: unless-stopped

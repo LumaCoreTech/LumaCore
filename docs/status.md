@@ -192,8 +192,8 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 ### Deployment  
 | Capability         | Stage        | Functional Target (Phase) | Hardened Target (Phase) |
 |--------------------|--------------|---------------------------|-----------------|
-| **Docker Runtime**<br/>_Dockerfile builds and container runs LumaCore API._ | 🟡 Prototype | P1 | P2 |
-| **Docker Compose**<br/>_Multi-container orchestration (LumaCore + Ollama) with volumes, networks, and env config._ | 🟡 Prototype | P1 | P2 |
+| **Docker Runtime**<br/>_Dockerfile builds LumaCore API + Blazor UI with native health check tool (.NET 10)._ | 🟡 Prototype | P1 | P2 |
+| **Docker Compose**<br/>_Single-container orchestration for LumaCore with volumes and env config. Ollama integration planned._ | 🟡 Prototype | P1 | P2 |
 | **Windows Service (SCM)**<br/>_Run as Windows Service with SCM integration, automatic startup, and recovery options._ | ❌ None | P2 | P3 |
 | **Linux systemd Service**<br/>_Run as systemd service with Restart=always, Type=notify, and proper service management._ | ❌ None | P2 | P3 |
 
@@ -232,7 +232,7 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - ✅ Structured logging with correlation IDs
 - ✅ HTTPS works (Kestrel) — documentation needed
 - ✅ appsettings.json fully documented with comments
-- 🟡 Docker files exist, untested
+- 🟡 Docker ready (Dockerfile, docker-compose.yml, native HealthCheck tool)
 - ⚠️ Hardcoded admin/changeme (bootstrap only, removed in P1)
 
 **Phase 1 (Next):** Make it **useful**

@@ -6,13 +6,15 @@
 		<OutputType>Exe</OutputType>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-		<!-- Optimize for size: this is a tiny diagnostic tool -->
-		<PublishTrimmed>false</PublishTrimmed>
-		<PublishSingleFile>false</PublishSingleFile>
-		<SelfContained>false</SelfContained>
-
 		<!-- Tool metadata -->
 		<Description>Lightweight health check client for Docker HEALTHCHECK instructions. Returns exit code 0 for healthy, 1 for unhealthy.</Description>
 	</PropertyGroup>
+
+	<!--
+	Note: This tool is framework-dependent (default) by design.
+	The .NET runtime is already present in the Docker container (aspnet:10.0),
+	so there's no need for SelfContained deployment. This keeps the tool at
+	just a few KB instead of ~60-80MB with embedded runtime.
+	-->
 
 </Project>

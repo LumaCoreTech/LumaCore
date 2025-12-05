@@ -6,9 +6,18 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<!--
+		Include Blazor UI via project reference (default: true).
+		Set to false when building the API without UI, e.g. for Docker:
+		  dotnet publish /p:IncludeBlazorUi=false
+		-->
+		<IncludeBlazorUi Condition="'$(IncludeBlazorUi)' == ''">true</IncludeBlazorUi>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\LumaCore.Core\LumaCore.Core.csproj" />
-		<ProjectReference Include="..\LumaCore.Ui.Web\LumaCore.Ui.Web.csproj" />
+		<ProjectReference Include="..\LumaCore.Ui.Web\LumaCore.Ui.Web.csproj" Condition="'$(IncludeBlazorUi)' == 'true'" />
 	</ItemGroup>
 
 	<ItemGroup>

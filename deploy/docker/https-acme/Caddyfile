@@ -1,0 +1,18 @@
+# ==============================================================================
+# Caddyfile - LumaCore Reverse Proxy
+# ==============================================================================
+# Caddy automatically obtains and renews TLS certificates via ACME.
+# By default, Caddy uses Let's Encrypt with ZeroSSL as fallback.
+#
+# The {$DOMAIN} variable comes from docker-compose (.env file).
+# ==============================================================================
+
+# Optional global settings (uncomment to enable):
+# {
+#     email admin@example.com                                 # Expiry warnings
+#     acme_ca https://acme-v02.api.letsencrypt.org/directory  # Force Let's Encrypt
+# }
+
+{$DOMAIN} {
+	reverse_proxy lumacore:5080
+}
