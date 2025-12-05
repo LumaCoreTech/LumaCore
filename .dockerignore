@@ -1,0 +1,102 @@
+# ==============================================================================
+# .dockerignore
+# ==============================================================================
+# Excludes files and directories from the Docker build context to improve
+# build performance and reduce image size.
+# ==============================================================================
+
+# Git (keep .git for Nerdbank.GitVersioning, exclude metadata files)
+.gitignore
+.gitattributes
+.gitmodules
+
+# Build outputs
+**/bin/
+**/obj/
+**/publish/
+artifacts/
+
+# IDE and editor files
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.DotSettings
+*.slnLaunch.user
+.editorconfig
+*.swp
+*~
+
+# Documentation and assets (not needed in image)
+docs/
+assets/
+*.md
+LICENSE
+
+# Build templates (ReSharper/Rider settings)
+build.net/
+
+# Tools (debug utilities)
+tools/
+
+# Test projects (not needed in production image)
+**/tests/
+**/*Tests/
+**/*.Tests.csproj
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# Node (if any frontend assets)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database files (shouldn't be in image)
+*.db
+*.db-shm
+*.db-wal
+
+# Certificates (mount at runtime, don't bake into image)
+*.pfx
+*.pem
+*.key
+*.crt
+certs/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker files themselves
+Dockerfile
+.dockerignore
+docker-compose*.yml
+env.example
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+azure-pipelines.yml
+
+# Environment files (secrets should never be in image)
+.env
+.env.*
+appsettings.*.json
+!appsettings.json
+!appsettings.Production.json

@@ -1,0 +1,61 @@
+# ==============================================================================
+# Docker Compose - LumaCore (HTTPS via ACME)
+# ==============================================================================
+# Production setup with automatic TLS certificates via Caddy.
+# Caddy obtains certificates from Let's Encrypt (or ZeroSSL) automatically.
+#
+# Requirements:
+#   - A public domain pointing to this server
+#   - Ports 80 and 443 open
+#
+# Setup:
+#   1. cp .env.example .env
+#   2. Edit .env: set DOMAIN and generate a secure JWT key
+#
+# Usage:
+#   docker-compose up --build              # Build and start
+#   docker-compose up --build --pull       # Update base images
+#   docker-compose up -d                   # Start in background
+#   docker-compose down                    # Stop and remove
+#   docker-compose logs -f                 # View logs
+#
+# Endpoint:
+#   https://your-domain.com                # LumaCore Web UI
+# ==============================================================================
+
+services:
+  lumacore:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile
+    image: lumacore:latest
+    container_name: lumacore
+    env_file:
+      - .env
+    environment:
+      - Kestrel__Endpoints__Http__Url=http://+:5080
+      # Tell LumaCore it's behind a proxy
+      - ProxyHeaders__Mode=Cloud
+    expose:
+      - "5080"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      - lumacore
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

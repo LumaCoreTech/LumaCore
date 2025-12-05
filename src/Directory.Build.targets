@@ -9,7 +9,8 @@
 	</Target>
 
 	<!-- Optional: label publish outputs with semantic version -->
-	<Target Name="SetArtifactName" BeforeTargets="Publish">
+	<!-- Skip with /p:SkipArtifactNaming=true (e.g., in Docker builds) -->
+	<Target Name="SetArtifactName" BeforeTargets="Publish" Condition="'$(SkipArtifactNaming)' != 'true'">
 		<PropertyGroup>
 			<_SemVer>$(NBGV_SemVer2)</_SemVer>
 			<_Suffix Condition="'$(NBGV_IsPublicRelease)' != 'true'">-ci</_Suffix>

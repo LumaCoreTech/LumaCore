@@ -126,10 +126,20 @@ because memories deserve preservation.
 
 # 🚀 Getting Started
 
-### Prerequisites
-- .NET 10 SDK  
+### Option A: Docker (Recommended)
 
-### Run LumaCore
+```bash
+git clone https://github.com/LumaCoreTech/LumaCore
+cd LumaCore
+
+cd deploy/docker/http-only
+cp .env.example .env
+docker-compose up --build
+```
+
+### Option B: .NET SDK
+
+Prerequisites: .NET 10 SDK
 
 ```bash
 git clone https://github.com/LumaCoreTech/LumaCore
@@ -139,14 +149,12 @@ dotnet restore
 dotnet run --project src/LumaCore.Api
 ```
 
-Then open:
+### Then open:
 
 - **http://localhost:5080/** — Web UI  
 - **http://localhost:5080/swagger** — API documentation (development only)  
 
-Default port is 5080.
-For development, change `applicationUrl` in `src/LumaCore.Api/Properties/launchSettings.json`.
-For production, see [Configuration](docs/deployment/configuration.md).
+For configuration options, see [Configuration](docs/deployment/configuration.md).
 
 ---
 
