@@ -1,0 +1,371 @@
+# Project Structure
+
+**Audience:** Architects and Developers seeking to understand LumaCore's design
+
+This document explains how the LumaCore repository is organized, how the build system works, and how versioning is managed.
+
+---
+
+## Repository Layout
+
+```
+LumaCore/
+├── src/                          → Source Code Organization
+│   ├── LumaCore.Api/
+│   ├── LumaCore.Core/
+│   ├── LumaCore.Ui.Web/
+│   ├── Directory.Build.props
+│   └── Directory.Build.targets
+│
+├── artifacts/                    → Build Outputs (not in source control)
+│   ├── bin/
+│   └── obj/
+│
+├── docs/                         → Documentation Organization
+│   ├── architecture/
+│   ├── features/
+│   ├── deployment/
+│   ├── development/
+│   └── overview.md
+│
+├── assets/                       → Assets
+│   └── branding/
+│
+├── build.net/                    → Build.Net Submodule
+│
+├── LumaCore.sln                  → Solution File
+├── global.json                   → SDK Configuration
+├── version.json                  → Versioning
+├── LICENSE
+└── README.md
+```
+
+**Quick Navigation:**
+- [Source Code Organization](#source-code-organization) - `/src` projects and structure
+- [Build System](#build-system) - `Directory.Build.props` and artifacts
+- [Versioning](#versioning) - `version.json` and semantic versioning
+- [SDK Configuration](#sdk-configuration) - `global.json` and .NET SDK
+- [Solution File](#solution-file) - `LumaCore.sln`
+- [Documentation Organization](#documentation-organization) - `/docs` structure
+- [Assets](#assets) - `/assets` contents
+
+---
+
+## Source Code Organization
+
+The `/src` folder contains all source code projects.
+
+### Projects
+
+#### LumaCore.Api
+**Type:** `Microsoft.NET.Sdk.Web` (ASP.NET Core application)  
+**Purpose:** Main HTTP API with authentication, routing, and features  
+**Status:** Operational with foundational infrastructure
+
+**Key responsibilities:**
+- HTTP request handling (Kestrel)
+- Feature-based modules (see `Features/` folder)
+- Middleware pipeline (HTTPS, CORS, logging, compression)
+- JWT authentication and authorization
+- Blazor UI hosting
+
+**Dependencies:**
+- `LumaCore.Core` (project reference)
+- `LumaCore.Ui.Web` (project reference)
+
+---
+
+#### LumaCore.Core
+**Type:** `Microsoft.NET.Sdk` (class library)  
+**Purpose:** Core persona logic, memory, and intelligence  
+**Status:** Empty - reserved for future implementation
+
+**Planned responsibilities:**
+- Persona runtime and state management
+- Memory system (long-term conversation storage)
+- Vector store integration (semantic search)
+- LLM orchestration (Ollama, custom backends)
+
+**Why separate?**
+- **Testability** - Core logic can be unit tested without HTTP
+- **Reusability** - Could be used by CLI, desktop app, or other frontends
+- **Clarity** - Clear separation between communication (API) and intelligence (Core)
+
+---
+
+#### LumaCore.Ui.Web
+**Type:** `Microsoft.NET.Sdk.BlazorWebAssembly` (Blazor WebAssembly)  
+**Purpose:** Single-page application UI for LumaCore  
+**Status:** Hosted by LumaCore.Api
+
+**What it is:**
+- Blazor WebAssembly compiles to **static files** (HTML, JS, WebAssembly DLLs)
+- Runs entirely in the browser (client-side)
+- No server-side .NET runtime required after deployment
+
+**Current Deployment:**
+- Served as static files by LumaCore.Api
+- Same-origin deployment (API and UI on same domain)
+- No CORS configuration needed
+
+**Alternative Deployment Options:**
+
+The UI can be deployed separately from the API:
+
+1. **Static web server** (nginx, Apache, Caddy)
+   - Deploy static files to any web server
+   - No .NET runtime needed on UI server
+   - Example: UI on `app.example.com`, API on `api.example.com`
+
+2. **CDN / Static hosting** (Azure Static Web Apps, Cloudflare Pages, Netlify, Vercel)
+   - Deploy directly to static hosting platforms
+   - Global CDN distribution
+   - Automatic HTTPS
+
+3. **Docker with nginx**
+   - Create Docker image with nginx hosting the Blazor files
+   - Lightweight container (no .NET runtime)
+   - Easy to deploy alongside API container
+
+**Requirements for separate deployment:**
+- ✅ CORS configuration on API (see [CORS Feature](../features/cors.md))
+- ✅ HTTPS for both API and UI
+- ✅ Update `appsettings.json` with API base URL
+
+---
+
+### Feature-Based Directory Structure
+
+Features are organized in self-contained folders under `LumaCore.Api/Features/`:
+
+**Common components (not every feature has all):**
+```
+Features/{FeatureName}/
+├── ServiceRegistration.cs              # Registers services and configuration with DI
+├── EndpointMapping.cs                  # HTTP endpoints (if feature exposes API)
+├── MiddlewareIntegration.cs            # Pipeline middleware (if needed)
+├── Contracts/                          # Request/Response DTOs (if feature has endpoints)
+│   ├── {EndpointName}Request.cs        # Endpoint input
+│   ├── {EndpointName}Response.cs       # Endpoint output
+│   └── {SharedType}.cs                 # Shared types used by multiple DTOs
+├── {FeatureName}Options.cs             # Configuration class
+└── *.cs                                # Implementation (factories, services, validators, etc.)
+```
+
+Each feature contains only what it needs. No mandatory structure beyond ServiceRegistration.cs.
+
+👉 **[Read more: Feature Pattern](feature-pattern.md)** - Complete guide to the feature architecture
+
+---
+
+## Build System
+
+### Artifacts Organization
+
+LumaCore centralizes all build outputs in a single `/artifacts` folder at the repository root, instead of scattering `bin/` and `obj/` folders throughout each project.
+
+**Structure:**
+```
+artifacts/
+├── bin/                          # Compiled outputs
+│   ├── LumaCore.Api/
+│   │   └── AnyCPU.Release/net10.0/
+│   └── LumaCore.Core/
+│       └── AnyCPU.Release/net10.0/
+└── obj/                          # Intermediate build files
+    ├── LumaCore.Api/
+    └── LumaCore.Core/
+```
+
+**Why centralized artifacts?**
+- **Cleaner repository** - No `bin/obj` clutter in source folders
+- **Easier cleanup** - Single command: `rm -rf artifacts/`
+- **CI/CD friendly** - Predictable output locations for build pipelines
+- **Git-safe** - Single `.gitignore` entry covers all outputs
+
+**How it's configured:**
+This redirection is configured in `Directory.Build.props` (see below).
+
+---
+
+### Directory.Build.props
+
+The `src/Directory.Build.props` file provides shared configuration for all projects.
+
+#### Language & Code Style
+
+All projects use consistent language settings:
+
+```xml
+<Nullable>enable</Nullable>                       <!-- Nullable reference types -->
+<ImplicitUsings>enable</ImplicitUsings>           <!-- Automatic using directives -->
+<LangVersion>latestMajor</LangVersion>            <!-- Latest C# version -->
+<GenerateDocumentationFile>true</GenerateDocumentationFile>  <!-- XML docs -->
+```
+
+**Result:**
+- Modern C# 13 features available in all projects
+- Nullable reference types catch null-related bugs at compile time
+- XML documentation is generated for IntelliSense
+
+---
+
+#### Assembly Metadata
+
+All assemblies share common metadata:
+
+```xml
+<Company>LumaCoreTech</Company>
+<Product>LumaCore</Product>
+<Authors>LumaCoreTech</Authors>
+<RepositoryUrl>https://github.com/LumaCoreTech/LumaCore</RepositoryUrl>
+```
+
+This appears in compiled DLLs and helps identify the source.
+
+---
+
+### Directory.Build.targets
+
+The `src/Directory.Build.targets` file contains shared build targets:
+
+**CleanArtifacts Target:**
+Enables complete artifact cleanup with:
+```bash
+dotnet clean /p:RemoveArtifacts=true
+```
+This removes the entire `/artifacts` folder, not just the current project's outputs.
+
+**SetArtifactName Target:**
+Automatically names publish outputs with semantic versioning:
+```
+LumaCore.Api-0.1.42-ci/      # Prerelease build
+LumaCore.Api-1.0.0/          # Public release
+```
+
+This ensures published artifacts are clearly versioned for deployment tracking.
+
+---
+
+### Build.Net Submodule
+
+The `build.net/` folder is a **Git submodule** pointing to:  
+`https://github.com/LumaCoreTech/build.net`
+
+**Purpose:** Shared configuration and tooling reused across multiple LumaCoreTech repositories:
+- ReSharper/Rider code style settings
+- Git configuration templates
+- Build scripts and utilities
+
+The submodule points to a specific commit of the build.net repository, ensuring consistent tooling across all builds. Updates to the submodule are managed through the main repository's version control.
+
+---
+
+## Versioning
+
+### version.json
+
+Defines the base version (`0.1`) used by Nerdbank.GitVersioning for automatic version calculation based on Git history.
+
+```json
+{
+  "version": "0.1",
+  "publicReleaseRefSpec": [
+    "^refs/tags/v\\d+\\.\\d+\\.\\d+"
+  ]
+}
+```
+
+**Version format:**
+- Prerelease builds: `0.1.{commits}-ci` (e.g., `0.1.42-ci`)
+- Public releases: Triggered by Git tags (e.g., `v1.0.0` → `1.0.0`)
+
+Versioning is managed by **Nerdbank.GitVersioning**, integrated via `Directory.Build.props`.
+
+---
+
+## SDK Configuration
+
+### global.json
+
+Locks the .NET SDK version to ensure consistent builds across all environments:
+
+```json
+{
+  "sdk": {
+    "version": "10.0.0",
+    "rollForward": "latestFeature",
+    "allowPrerelease": false
+  }
+}
+```
+
+**What this means:**
+- Requires .NET 10.0.0 SDK or newer
+- `rollForward: latestFeature` - Can use newer feature releases (10.1, 10.2, etc.) but not major versions (11.0)
+- `allowPrerelease: false` - Only stable SDK releases
+
+**Why lock the SDK version?**
+- Reproducible builds (same SDK = same results)
+- Prevents breaking changes from new SDK releases
+- Developers see exactly which SDK the project targets
+
+---
+
+## Solution File
+
+### LumaCore.sln
+
+The Visual Studio solution file references all projects:
+
+```
+LumaCore.sln
+├── LumaCore.Api
+├── LumaCore.Core
+└── LumaCore.Ui.Web
+```
+
+---
+
+## Documentation Organization
+
+The `/docs` folder is organized by audience and topic:
+
+### By Audience
+
+- **[Architecture](architecture/README.md)** - For architects: the "why" (design decisions)
+- **[Features](features/README.md)** - For developers: the "what" and "how it works" (implementation)
+- **[Development](development/README.md)** - For contributors: setup, coding standards, workflow
+- **[Deployment](deployment/README.md)** - For operators: the "how to run it" (configuration, production)
+
+Navigate to the relevant section based on your role.
+
+---
+
+## Assets
+
+The `/assets` folder contains non-code project assets:
+
+### Branding
+- Logos (SVG, PNG)
+- Icons
+- Brand guidelines
+
+**Usage:** Referenced in documentation, UI, and marketing materials.
+
+---
+
+## Next Steps
+
+### For New Developers
+👉 **[Getting Started](../getting-started.md)** - Setup guide and first steps  
+👉 **[Feature Pattern](feature-pattern.md)** - Learn the core architecture pattern  
+👉 **[Development Workflow](../development/workflow.md)** - How to add features
+
+### For Architects
+👉 **[Design Principles](principles.md)** - Why the structure is designed this way  
+👉 **[Architecture Overview](README.md)** - High-level architectural decisions
+
+---
+
+© 2025 LumaCoreTech • MIT License
