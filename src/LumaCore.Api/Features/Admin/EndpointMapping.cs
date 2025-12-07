@@ -150,6 +150,7 @@ public static class EndpointMapping
 				})
 			.Produces<AdminStatusResponse>(StatusCodes.Status200OK)
 			.Produces(StatusCodes.Status401Unauthorized)
+			.Produces(StatusCodes.Status403Forbidden)
 			.WithSummary("Returns high-level status information about the API.")
 			.WithDescription(
 				"Returns a small, non-sensitive snapshot of the running LumaCore instance, " +
