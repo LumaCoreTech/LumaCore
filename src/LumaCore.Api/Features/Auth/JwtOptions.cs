@@ -86,7 +86,7 @@ public sealed class JwtOptions
 	///     <para>
 	///     The audience is written to the <c>aud</c> claim of each token and is validated when tokens
 	///     are received by the API. It should identify the intended recipients of the token, for example
-	///     <c>"LumaCore-AdminUi"</c>.
+	///     <c>"LumaCore"</c>.
 	///     </para>
 	///     <para>
 	///     This value is bound from configuration key <c>Jwt:Audience</c> (or environment variable
