@@ -36,10 +36,10 @@ public static class EndpointMapping
 	///     pipeline configuration in <c>Program.Pipeline.cs</c>.
 	///     </para>
 	///     <para>
-	///     At the current stage of development the feature exposes a single liveness
-	///     endpoint (<c>GET /api/health/live</c>). Additional health or diagnostics
-	///     endpoints can be added here in the future while keeping all health-related
-	///     routes clearly grouped under the same path prefix.
+	///     The feature exposes two endpoints: <c>GET /health</c> for readiness probes
+	///     (standard ASP.NET Core health checks) and <c>GET /api/health/live</c> for
+	///     lightweight liveness probes. Additional health or diagnostics endpoints can
+	///     be added here in the future.
 	///     </para>
 	/// </remarks>
 	public static IEndpointRouteBuilder MapHealthFeature(this IEndpointRouteBuilder app)
@@ -52,17 +52,15 @@ public static class EndpointMapping
 		//
 		// The endpoints are currently organized as follows:
 		//
+		//   - GET /health
+		//     The standard ASP.NET Core health check endpoint for readiness probes.
+		//     Aggregates all registered health checks and returns Healthy/Degraded/Unhealthy.
+		//
 		//   - GET /api/health/live
 		//     A lightweight JSON-based liveness probe that returns an instance of
 		//     ApiHealthLiveResponse. It is designed to be safe for frequent polling
 		//     and is intentionally kept anonymous so that the UI can display whether
 		//     the backend is reachable even before authentication is configured.
-		//
-		// In addition to these feature-specific endpoints, the application may expose
-		// a more detailed health check endpoint (for example /health) using the
-		// standard ASP.NET Core health check middleware. That endpoint typically
-		// reflects the readiness of the application by aggregating all registered
-		// health checks.
 		//
 		// NOT YET IMPLEMENTED:
 		//
@@ -73,6 +71,16 @@ public static class EndpointMapping
 		// These additional capabilities can be added here in the future while keeping
 		// all health-related routes grouped under the /api/health prefix.
 		// -----------------------------------------------------------------------------
+
+		// -------------------------------------------------------------------------
+		// GET /health (ASP.NET Core Standard Health Check)
+		// -------------------------------------------------------------------------
+		// Maps the standard ASP.NET Core health check endpoint for readiness probes.
+		// This endpoint aggregates all registered health checks and returns a simple
+		// status (Healthy, Degraded, Unhealthy). Container orchestrators like
+		// Kubernetes typically use this for readiness probes.
+		app.MapHealthChecks("/health")
+			.AllowAnonymous();
 
 		RouteGroupBuilder group = app.MapGroup("/api/health")
 			.WithTags("Health");
