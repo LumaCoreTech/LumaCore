@@ -132,36 +132,22 @@ LumaCore's architecture consists of three layers, each with clear responsibiliti
 
 ### Features
 
-LumaCore includes these major capabilities:
+LumaCore is built around self-contained feature modules. Each feature owns its endpoints, services, configuration, and contracts.
 
-| Feature | Purpose |
-|---------|---------|
-| **[Auth](../features/auth.md)** | JWT authentication, token management, user identity |
-| **[Admin](../features/admin.md)** | System management and status endpoints |
-| **[Health](../features/health.md)** | Liveness/readiness checks for monitoring |
-| **[ProxyHeaders](../features/proxy-headers.md)** | Reverse proxy header handling (X-Forwarded-*) |
-| **[CORS](../features/cors.md)** | Cross-origin resource sharing configuration |
-| **[HttpsRedirection](../features/https-redirection.md)** | Automatic HTTP to HTTPS redirection |
-| **[SecurityHeaders](../features/security-headers.md)** | Security headers (CSP, X-Frame-Options, etc.) |
-| **Persona Engine** | Runtime for persona behavior, tool execution, state management |
-| **Memory System** | Long-term conversation storage and semantic recall |
-| **Vector Store Integration** | Semantic search using embeddings |
-| **Model Integration** | LLM orchestration (Ollama, custom backends) |
-| **SSE Streaming** | Real-time token-by-token response streaming |
-| **Database Layer** | Persistent storage for personas and conversations |
+👉 **[See all features](../features/README.md)** — Complete list with documentation links
+
+The feature-based architecture is explained in detail in the [Feature Pattern](feature-pattern.md) document.
 
 > 📊 **For current implementation status**, see **[Status & Roadmap](../status.md)**
 
-**Note:** Features have their own dedicated folder structure under `Features/` within `LumaCore.Api` with service registration, configuration, and endpoints.
-
-#### Cross-Cutting Concerns
+### Cross-Cutting Concerns
 
 These foundational capabilities support all features:
 
-- **Structured Logging** - Serilog infrastructure (file rotation, multiple outputs)
-- **Response Compression** - Gzip/Brotli
-- **OpenAPI/Swagger** - Interactive API documentation
-- **Fail-Fast Config** - Validation at startup  
+- **Structured Logging** — Serilog with file rotation and multiple outputs
+- **Response Compression** — Gzip/Brotli for reduced bandwidth
+- **OpenAPI/Swagger** — Interactive API documentation
+- **Fail-Fast Configuration** — Validation at startup
 
 ---
 
