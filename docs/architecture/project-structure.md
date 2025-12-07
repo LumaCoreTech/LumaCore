@@ -23,10 +23,9 @@ LumaCore/
 │
 ├── docs/                         → Documentation Organization
 │   ├── architecture/
-│   ├── features/
 │   ├── deployment/
 │   ├── development/
-│   └── overview.md
+│   └── features/
 │
 ├── assets/                       → Assets
 │   └── branding/
@@ -41,13 +40,13 @@ LumaCore/
 ```
 
 **Quick Navigation:**
-- [Source Code Organization](#source-code-organization) - `/src` projects and structure
-- [Build System](#build-system) - `Directory.Build.props` and artifacts
-- [Versioning](#versioning) - `version.json` and semantic versioning
-- [SDK Configuration](#sdk-configuration) - `global.json` and .NET SDK
-- [Solution File](#solution-file) - `LumaCore.sln`
-- [Documentation Organization](#documentation-organization) - `/docs` structure
-- [Assets](#assets) - `/assets` contents
+- [Source Code Organization](#source-code-organization) — `/src` projects and structure
+- [Build System](#build-system) — `Directory.Build.props` and artifacts
+- [Versioning](#versioning) — `version.json` and semantic versioning
+- [SDK Configuration](#sdk-configuration) — `global.json` and .NET SDK
+- [Solution File](#solution-file) — `LumaCore.sln`
+- [Documentation Organization](#documentation-organization) — `/docs` structure
+- [Assets](#assets) — `/assets` contents
 
 ---
 
@@ -78,7 +77,7 @@ The `/src` folder contains all source code projects.
 #### LumaCore.Core
 **Type:** `Microsoft.NET.Sdk` (class library)  
 **Purpose:** Core persona logic, memory, and intelligence  
-**Status:** Empty - reserved for future implementation
+**Status:** Empty — reserved for future implementation
 
 **Planned responsibilities:**
 - Persona runtime and state management
@@ -87,9 +86,9 @@ The `/src` folder contains all source code projects.
 - LLM orchestration (Ollama, custom backends)
 
 **Why separate?**
-- **Testability** - Core logic can be unit tested without HTTP
-- **Reusability** - Could be used by CLI, desktop app, or other frontends
-- **Clarity** - Clear separation between communication (API) and intelligence (Core)
+- **Testability** — Core logic can be unit tested without HTTP
+- **Reusability** — Could be used by CLI, desktop app, or other frontends
+- **Clarity** — Clear separation between communication (API) and intelligence (Core)
 
 ---
 
@@ -98,39 +97,7 @@ The `/src` folder contains all source code projects.
 **Purpose:** Single-page application UI for LumaCore  
 **Status:** Hosted by LumaCore.Api
 
-**What it is:**
-- Blazor WebAssembly compiles to **static files** (HTML, JS, WebAssembly DLLs)
-- Runs entirely in the browser (client-side)
-- No server-side .NET runtime required after deployment
-
-**Current Deployment:**
-- Served as static files by LumaCore.Api
-- Same-origin deployment (API and UI on same domain)
-- No CORS configuration needed
-
-**Alternative Deployment Options:**
-
-The UI can be deployed separately from the API:
-
-1. **Static web server** (nginx, Apache, Caddy)
-   - Deploy static files to any web server
-   - No .NET runtime needed on UI server
-   - Example: UI on `app.example.com`, API on `api.example.com`
-
-2. **CDN / Static hosting** (Azure Static Web Apps, Cloudflare Pages, Netlify, Vercel)
-   - Deploy directly to static hosting platforms
-   - Global CDN distribution
-   - Automatic HTTPS
-
-3. **Docker with nginx**
-   - Create Docker image with nginx hosting the Blazor files
-   - Lightweight container (no .NET runtime)
-   - Easy to deploy alongside API container
-
-**Requirements for separate deployment:**
-- ✅ CORS configuration on API (see [CORS Feature](../features/cors.md))
-- ✅ HTTPS for both API and UI
-- ✅ Update `appsettings.json` with API base URL
+Blazor WebAssembly compiles to static files (HTML, JS, WebAssembly DLLs) and runs entirely in the browser. It is currently served by LumaCore.Api on the same origin, so no CORS configuration is needed.
 
 ---
 
@@ -154,7 +121,7 @@ Features/{FeatureName}/
 
 Each feature contains only what it needs. No mandatory structure beyond ServiceRegistration.cs.
 
-👉 **[Read more: Feature Pattern](feature-pattern.md)** - Complete guide to the feature architecture
+👉 **[Read more: Feature Pattern](feature-pattern.md)** — Complete guide to the feature architecture
 
 ---
 
@@ -178,10 +145,10 @@ artifacts/
 ```
 
 **Why centralized artifacts?**
-- **Cleaner repository** - No `bin/obj` clutter in source folders
-- **Easier cleanup** - Single command: `rm -rf artifacts/`
-- **CI/CD friendly** - Predictable output locations for build pipelines
-- **Git-safe** - Single `.gitignore` entry covers all outputs
+- **Cleaner repository** — No `bin/obj` clutter in source folders
+- **Easier cleanup** — Single command: `rm -rf artifacts/`
+- **CI/CD friendly** — Predictable output locations for build pipelines
+- **Git-safe** — Single `.gitignore` entry covers all outputs
 
 **How it's configured:**
 This redirection is configured in `Directory.Build.props` (see below).
@@ -302,8 +269,8 @@ Locks the .NET SDK version to ensure consistent builds across all environments:
 
 **What this means:**
 - Requires .NET 10.0.0 SDK or newer
-- `rollForward: latestFeature` - Can use newer feature releases (10.1, 10.2, etc.) but not major versions (11.0)
-- `allowPrerelease: false` - Only stable SDK releases
+- `rollForward: latestFeature` — Can use newer feature releases (10.1, 10.2, etc.) but not major versions (11.0)
+- `allowPrerelease: false` — Only stable SDK releases
 
 **Why lock the SDK version?**
 - Reproducible builds (same SDK = same results)
@@ -333,10 +300,10 @@ The `/docs` folder is organized by audience and topic:
 
 ### By Audience
 
-- **[Architecture](architecture/README.md)** - For architects: the "why" (design decisions)
-- **[Features](features/README.md)** - For developers: the "what" and "how it works" (implementation)
-- **[Development](development/README.md)** - For contributors: setup, coding standards, workflow
-- **[Deployment](deployment/README.md)** - For operators: the "how to run it" (configuration, production)
+- **[Architecture](README.md)** — For architects: design decisions and patterns
+- **[Features](../features/README.md)** — For developers: feature implementation details
+- **[Development](../development/README.md)** — For contributors: setup, coding standards, workflow
+- **[Deployment](../deployment/README.md)** — For operators: configuration and production setup
 
 Navigate to the relevant section based on your role.
 
@@ -358,13 +325,13 @@ The `/assets` folder contains non-code project assets:
 ## Next Steps
 
 ### For New Developers
-👉 **[Getting Started](../getting-started.md)** - Setup guide and first steps  
-👉 **[Feature Pattern](feature-pattern.md)** - Learn the core architecture pattern  
-👉 **[Development Workflow](../development/workflow.md)** - How to add features
+👉 **[Getting Started](../getting-started.md)** — Setup guide and first steps  
+👉 **[Feature Pattern](feature-pattern.md)** — Learn the core architecture pattern  
+👉 **[Development Workflow](../development/workflow.md)** — How to add features
 
 ### For Architects
-👉 **[Design Principles](principles.md)** - Why the structure is designed this way  
-👉 **[Architecture Overview](README.md)** - High-level architectural decisions
+👉 **[Design Principles](principles.md)** — Why the structure is designed this way  
+👉 **[Architecture Overview](README.md)** — High-level architectural decisions
 
 ---
 

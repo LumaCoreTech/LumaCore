@@ -168,6 +168,9 @@ Core operational lifelines: probes ensure survival, observability makes debuggin
 | Capability      | Stage       | Functional Target (Phase) | Hardened Target (Phase) |
 |-----------------|-------------|---------------------------|-----------------|
 | **Static File Hosting**<br/>_Serves Blazor WebAssembly UI as static files from API root._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
+
+---
+
 ## 🖥 Web Interface — User Interaction
 
 The web interface is where users **experience** LumaCore — chat with personas, manage conversations.
@@ -232,6 +235,7 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - ✅ Structured logging with correlation IDs
 - ✅ HTTPS works (Kestrel) — documentation needed
 - ✅ appsettings.json fully documented with comments
+- 🎯 OpenAPI documentation generator (C# tool → openapi.json + openapi.md at build time)
 - 🟡 Docker ready (Dockerfile, docker-compose.yml, native HealthCheck tool)
 - ⚠️ Hardcoded admin/changeme (bootstrap only, removed in P1)
 

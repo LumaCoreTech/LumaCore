@@ -210,9 +210,9 @@ LumaCore uses industry-standard patterns and modern .NET technologies:
 
 ## Questions?
 
-- 📖 **[Overview](../overview.md)** - High-level system overview
-- 💻 **[Development](../development/README.md)** - Development guides
-- 🚀 **[Deployment](../deployment/README.md)** - Deployment guides
+- 📖 **[Documentation Index](../README.md)** — Main documentation hub
+- 💻 **[Development](../development/README.md)** — Development guides
+- 🚀 **[Deployment](../deployment/README.md)** — Deployment guides
 
 ---
 

@@ -105,6 +105,8 @@ The most important files are the **core integration files** - they connect the f
 
 - **`EndpointMapping.cs`** maps HTTP routes to handlers. This file defines which URLs the feature responds to and connects them to the code that handles the requests.
 
+> 💡 **Naming Convention:** Endpoints typically follow the pattern `/api/<feature>/*`. For example, `/api/auth/login` comes from `Features/Auth/EndpointMapping.cs`. This makes it easy to locate the code for any endpoint. The OpenAPI documentation at `/swagger` also groups endpoints by feature.
+
 - **`MiddlewareIntegration.cs`** integrates middleware into the HTTP pipeline. Features that need to inspect or modify requests/responses before they reach handlers use this file to plug into the pipeline.
 
 ### Why Separate Files?
