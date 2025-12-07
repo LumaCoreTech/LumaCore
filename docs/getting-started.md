@@ -138,7 +138,7 @@ curl -H "Authorization: Bearer $TOKEN" \
   "expiresIn": "00:04:09",
   "jwtId": "120ad484f92d4839b4fed8aef3311d74",
   "issuer": "LumaCore",
-  "audience": "LumaCore-AdminUi"
+  "audience": "LumaCore"
 }
 ```
 
