@@ -5,6 +5,7 @@
 using LumaCore.Api.Features.Admin;
 using LumaCore.Api.Features.Auth;
 using LumaCore.Api.Features.Cors;
+using LumaCore.Api.Features.ErrorHandling;
 using LumaCore.Api.Features.Health;
 using LumaCore.Api.Features.HttpsRedirection;
 using LumaCore.Api.Features.OpenApi;
@@ -42,6 +43,11 @@ public static partial class Program
 		// Unhandled exceptions, validation errors, and status codes are automatically
 		// transformed into structured JSON responses with type, title, status, and detail.
 		builder.Services.AddProblemDetails();
+
+		// Register the Error Handling feature for centralized exception handling.
+		// This adds LumaCoreExceptionHandler which converts unhandled exceptions into
+		// ProblemDetails responses with LumaCore-specific URN error types and trace IDs.
+		builder.AddErrorHandlingFeature();
 
 		// Enable HTTP response compression to reduce payload size for JSON and other
 		// textual responses. This improves bandwidth usage and perceived latency.

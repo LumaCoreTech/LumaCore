@@ -160,7 +160,7 @@ Core operational lifelines: probes ensure survival, observability makes debuggin
 ### Logging & Observability
 | Capability      | Stage      | Functional Target (Phase) | Hardened Target (Phase) |
 |-----------------|------------|---------------------------|-----------------|
-| **Structured Logging**<br/>_JSON-formatted logs with correlation IDs._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
+| **Structured Logging**<br/>_JSON-formatted logs with TraceId correlation across all requests._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
 | **Request Logging**<br/>_Middleware logs all HTTP requests with method, path, status, duration, IP._ | 🟡 Prototype | P1 | P2 |
 | **Performance Metrics**<br/>_Track response times, token counts, model latency._ | ❌ None | P2 | P3 |
 
@@ -232,7 +232,8 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - ✅ Status page works (shows backend health, refresh button)
 - ✅ JWT Auth functional
 - ✅ Config validation on startup
-- ✅ Structured logging with correlation IDs
+- ✅ Structured logging with TraceId correlation
+- ✅ Error handling with RFC 7807 ProblemDetails and TraceId
 - ✅ HTTPS works (Kestrel) — documentation needed
 - ✅ appsettings.json fully documented with comments
 - 🎯 OpenAPI documentation generator (C# tool → openapi.json + openapi.md at build time)

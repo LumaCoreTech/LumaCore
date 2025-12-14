@@ -23,6 +23,7 @@ Request → ProxyHeaders → HTTPS → SecurityHeaders → CORS → Auth → Rou
 | Feature | Category | Purpose |
 |---------|----------|---------|
 | [CORS](cors.md) | Infrastructure | Cross-origin request policies with credential support |
+| [Error Handling](error-handling.md) | Infrastructure | RFC 7807 ProblemDetails with URN-based error types |
 | [HttpsRedirection](https-redirection.md) | Infrastructure | Automatic HTTP to HTTPS redirect |
 | [ProxyHeaders](proxy-headers.md) | Infrastructure | X-Forwarded-* header processing for reverse proxy setups |
 | [SecurityHeaders](security-headers.md) | Infrastructure | HSTS, CSP, X-Frame-Options, and other security headers |

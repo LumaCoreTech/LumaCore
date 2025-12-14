@@ -2,14 +2,34 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.ComponentModel.DataAnnotations;
+
 namespace LumaCore.Api.Features.Auth.Contracts;
 
 /// <summary>
 /// Represents login credentials submitted by a client in order to obtain a JWT.
 /// </summary>
 /// <remarks>
-/// This record is consumed by the <c>POST /api/auth/login</c> endpoint in <see cref="EndpointMapping"/>.
+///     <para>
+///     This record is consumed by the <c>POST /api/auth/login</c> endpoint in <see cref="EndpointMapping"/>.
+///     </para>
+///     <para>
+///     Validation is performed automatically by the <see cref="Validation.ValidationFilter"/>
+///     when this record is used as an endpoint parameter. Invalid requests receive a
+///     <c>400 Bad Request</c> response with detailed validation errors.
+///     </para>
 /// </remarks>
-/// <param name="Username">The username.</param>
-/// <param name="Password">The password.</param>
-public sealed record LoginRequest(string Username, string Password);
+/// <param name="Username">
+/// The username for authentication. Must be between 1 and 100 characters.
+/// </param>
+/// <param name="Password">
+/// The password for authentication. Must be at least 8 characters.
+/// </param>
+public sealed record LoginRequest(
+	[Required(ErrorMessage = "Username is required.")]
+	[StringLength(100, ErrorMessage = "Username must not exceed 100 characters.")]
+	string Username,
+
+	[Required(ErrorMessage = "Password is required.")]
+	[MinLength(8, ErrorMessage = "Password must be at least 8 characters.")]
+	string Password);

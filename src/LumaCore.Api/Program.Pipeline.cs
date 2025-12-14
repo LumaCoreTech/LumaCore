@@ -5,6 +5,7 @@
 using LumaCore.Api.Features.Admin;
 using LumaCore.Api.Features.Auth;
 using LumaCore.Api.Features.Cors;
+using LumaCore.Api.Features.ErrorHandling;
 using LumaCore.Api.Features.Health;
 using LumaCore.Api.Features.HttpsRedirection;
 using LumaCore.Api.Features.ProxyHeaders;
@@ -39,21 +40,9 @@ public static partial class Program
 		}
 
 		// Convert non-exception error status codes (e.g. 404 Not Found, 401 Unauthorized)
-		// into ProblemDetails responses, but ONLY for API routes. Non-API routes (Blazor SPA,
-		// static files) should fall through to their normal handlers. Without this check,
-		// client-side SPA routes would receive JSON errors instead of index.html.
-		app.UseStatusCodePages(async context =>
-		{
-			// Only generate ProblemDetails for API endpoints.
-			// Non-API paths (Blazor routes, static files) are handled elsewhere.
-			if (!context.HttpContext.Request.Path.StartsWithSegments("/api"))
-				return;
-
-			// Generate a ProblemDetails response for the status code.
-			context.HttpContext.Response.ContentType = "application/problem+json";
-			await Results.Problem(statusCode: context.HttpContext.Response.StatusCode)
-				.ExecuteAsync(context.HttpContext);
-		});
+		// into ProblemDetails responses with LumaCore-specific error type URNs.
+		// Only applies to /api/* paths; Blazor SPA routes are unaffected.
+		app.UseErrorHandlingFeature();
 
 		// Enforce HTTPS by redirecting HTTP requests to their HTTPS counterparts.
 		// Must come AFTER proxy headers so the scheme is correctly detected.
