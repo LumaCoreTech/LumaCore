@@ -87,7 +87,7 @@ builder.Services
     .AddOptions<JwtOptions>()
     .Bind(builder.Configuration.GetSection("Jwt"))
     .ValidateDataAnnotations()      // Check annotations
-    .ValidateOnStart();              // ← Fail immediately if invalid
+    .ValidateOnStart();             // ← Fail immediately if invalid
 ```
 
 The `ValidateOnStart()` call means:
