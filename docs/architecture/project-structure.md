@@ -326,8 +326,7 @@ The `/assets` folder contains non-code project assets:
 
 ### For New Developers
 👉 **[Getting Started](../getting-started.md)** — Setup guide and first steps  
-👉 **[Feature Pattern](feature-pattern.md)** — Learn the core architecture pattern  
-👉 **[Development Workflow](../development/workflow.md)** — How to add features
+👉 **[Feature Pattern](feature-pattern.md)** — Learn the core architecture pattern
 
 ### For Architects
 👉 **[Design Principles](principles.md)** — Why the structure is designed this way  

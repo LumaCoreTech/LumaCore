@@ -196,7 +196,6 @@ LumaCore uses industry-standard patterns and modern .NET technologies:
 ### For Developers
 👉 **[Project Structure](project-structure.md)** - Learn the codebase layout  
 👉 **[Feature Pattern](feature-pattern.md)** - Master the core pattern  
-👉 **[Development Workflow](../development/workflow.md)** - Start coding  
 
 ### For Architects
 👉 **[Design Principles](principles.md)** - Deep dive into decisions  

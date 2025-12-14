@@ -246,7 +246,6 @@ Or continue with related topics:
 
 **Development:**
 - [Building Features: Developer Guide](../development/building-features.md) - Implementation details (Contracts, Options, Patterns, Testing)
-- [Development Workflow](../development/workflow.md) - Add your first feature
 - [Auth Feature](../features/auth.md) - Complete implementation example
 
 ---

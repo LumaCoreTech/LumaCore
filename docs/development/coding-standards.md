@@ -1911,8 +1911,8 @@ LumaCore relies on several layers of analyzers:
 
 ### Internal Resources
 
-- [Architecture Principles](docs/architecture/principles.md) — Why LumaCore is structured the way it is
-- [Feature Pattern](docs/architecture/feature-pattern.md) — How features are organized and wired
+- [Architecture Principles](../architecture/principles.md) — Why LumaCore is structured the way it is
+- [Feature Pattern](../architecture/feature-pattern.md) — How features are organized and wired
 
 ### External Resources
 
