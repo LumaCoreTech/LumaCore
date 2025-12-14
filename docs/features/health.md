@@ -2,6 +2,9 @@
 
 The *Health* feature provides lightweight endpoints for monitoring and orchestration systems. It enables container orchestrators, reverse proxies, and uptime monitors to verify that LumaCore is running and responsive. The feature is designed to be minimal but extensible — additional checks for databases, vector stores, or LLM backends can be added over time without breaking existing consumers.
 
+> [!NOTE]
+> **Infrastructure Feature:** Unlike business API features (Auth, Admin, etc.), the Health feature is mapped directly to the application root, not via the central `/api` route group. This means it maps **absolute paths** in code, while business features map relative paths. However, the liveness endpoint still uses the `/api/health` prefix for API surface consistency.
+
 ---
 
 ## Endpoints

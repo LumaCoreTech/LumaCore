@@ -195,10 +195,15 @@ Features that expose HTTP endpoints define them here. This file maps routes to h
 
 ```csharp
 public static IEndpointRouteBuilder Map<Feature>Feature(
-    this IEndpointRouteBuilder app)
+    this IEndpointRouteBuilder endpoints)
 ```
 
-**Example:**
+> [!IMPORTANT]
+> **Business API features** are mounted on the central `/api` route group in `Program.Pipeline.cs`. This group applies the `ValidationFilter` globally, so features should map **relative paths** (e.g., `/myfeature`, not `/api/myfeature`). The `/api` prefix is added automatically by the parent group.
+>
+> **Infrastructure features** (like Health) are mapped directly to the root and should include their full path.
+
+**Example (Business API Feature):**
 
 ```csharp
 /// <summary>
@@ -213,21 +218,23 @@ public static class EndpointMapping
     /// <summary>
     /// Maps the MyFeature endpoints into the application's endpoint routing table.
     /// </summary>
-    /// <param name="app">
-    /// The <see cref="IEndpointRouteBuilder"/> used to define HTTP endpoints for the application.
+    /// <param name="endpoints">
+    /// The <see cref="IEndpointRouteBuilder"/> to map endpoints to. This is typically the
+    /// <c>/api</c> route group from <c>Program.Pipeline.cs</c>, not the root application.
     /// </param>
-    /// <returns>
-    /// The same <see cref="IEndpointRouteBuilder"/> instance to enable fluent endpoint configuration.
-    /// </returns>
+    /// <returns>The <paramref name="endpoints"/> builder for method chaining.</returns>
     /// <remarks>
-    /// This method groups the feature's endpoints under a common prefix (<c>/api/myfeature</c>)
-    /// and attaches metadata such as tags and OpenAPI documentation. It is intended to be called
-    /// once during startup from <c>Program.Pipeline.cs</c>.
+    /// This method groups the feature's endpoints under a common prefix (<c>/myfeature</c>)
+    /// relative to the parent route group. The full path becomes <c>/api/myfeature</c> when
+    /// mounted on the central API group. It is intended to be called once during startup
+    /// from <c>Program.Pipeline.cs</c>.
     /// </remarks>
-    public static IEndpointRouteBuilder MapMyFeature(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapMyFeature(this IEndpointRouteBuilder endpoints)
     {
-        RouteGroupBuilder group = app
-            .MapGroup("/api/myfeature")
+        // Note: Map relative paths only. The /api prefix is provided by the central
+        // route group in Program.Pipeline.cs which also applies global validation.
+        RouteGroupBuilder group = endpoints
+            .MapGroup("/myfeature")
             .WithTags("MyFeature");
         
         group.MapGet("/items", HandleGetItems)
@@ -242,7 +249,7 @@ public static class EndpointMapping
             .Produces<ItemResponse>(StatusCodes.Status201Created)
             .Produces(StatusCodes.Status401Unauthorized);
         
-        return app;
+        return endpoints;
     }
     
     // Handler methods...
@@ -251,15 +258,17 @@ public static class EndpointMapping
 
 **Key Points:**
 
-1. **Route groups organize related endpoints:** Features use `MapGroup()` to create a common prefix (e.g., `/api/myfeature`) that applies to all endpoints, reducing repetition and improving organization
+1. **Central `/api` route group:** Business API features are mounted on a central `/api` group in `Program.Pipeline.cs` that applies the `ValidationFilter` globally. Features map relative paths (e.g., `/myfeature`) and the `/api` prefix is added automatically
 
-2. **Minimal API style is preferred in LumaCore:** Direct route-to-handler mappings give good performance, less ceremony, and a clear code flow for the size and goals of this project. For large, existing MVC applications other trade-offs might make sense, but for LumaCore we standardize on Minimal APIs
+2. **Route groups organize related endpoints:** Features use `MapGroup()` to create a common prefix (e.g., `/myfeature`) that applies to all endpoints, reducing repetition and improving organization
 
-3. **Authorization is explicit per endpoint:** Each endpoint explicitly declares its security requirements with `RequireAuthorization()` or `AllowAnonymous()`, making security visible and intentional
+3. **Minimal API style is preferred in LumaCore:** Direct route-to-handler mappings give good performance, less ceremony, and a clear code flow for the size and goals of this project. For large, existing MVC applications other trade-offs might make sense, but for LumaCore we standardize on Minimal APIs
 
-4. **OpenAPI metadata enables documentation:** Attributes like `WithName()`, `WithSummary()`, and `Produces()` generate Swagger documentation automatically, making the API self-documenting
+4. **Authorization is explicit per endpoint:** Each endpoint explicitly declares its security requirements with `RequireAuthorization()` or `AllowAnonymous()`, making security visible and intentional
 
-5. **Dependencies are injected as parameters:** Handlers receive services directly as method parameters, not through constructor injection, keeping handlers focused and testable
+5. **OpenAPI metadata enables documentation:** Attributes like `WithName()`, `WithSummary()`, and `Produces()` generate Swagger documentation automatically, making the API self-documenting
+
+6. **Dependencies are injected as parameters:** Handlers receive services directly as method parameters, not through constructor injection, keeping handlers focused and testable
 
 #### Handler Patterns
 
@@ -740,7 +749,7 @@ Document all possible responses, not just the happy path. This helps API consume
 .ProducesProblem(StatusCodes.Status500InternalServerError)
 ```
 
-> 💡 You don't need to document `400 Bad Request` or `401 Unauthorized` manually — LumaCore adds these automatically for endpoints with request bodies or authorization requirements. Endpoints with roles or policies also get `403 Forbidden` documented.
+> 💡 You don't need to document `400 Bad Request` or `401 Unauthorized` manually — LumaCore adds these automatically for endpoints with request bodies or authentication requirements. Endpoints with roles or policies also get `403 Forbidden` documented (authorization).
 
 **Request Documentation**
 
@@ -1272,9 +1281,10 @@ public static class ServiceRegistration
 public static class EndpointMapping
 {
     public static IEndpointRouteBuilder MapAuthFeature(
-        this IEndpointRouteBuilder app)
+        this IEndpointRouteBuilder endpoints)
     {
-        RouteGroupBuilder group = app.MapGroup("/api/auth")
+        // Note: Map relative paths. The /api prefix comes from the central route group.
+        RouteGroupBuilder group = endpoints.MapGroup("/auth")
             .WithTags("Auth");
         
         group.MapPost("/login", HandleLogin)
@@ -1288,7 +1298,7 @@ public static class EndpointMapping
             .WithSummary("Returns the current user's identity and claims.")
             .Produces<AuthWhoAmIResponse>();
         
-        return app;
+        return endpoints;
     }
     
     private static IResult HandleLogin(
@@ -1312,7 +1322,10 @@ public static class EndpointMapping
 builder.AddAuthFeature();  // ← One line!
 
 // Program.Pipeline.cs
-app.MapAuthFeature();       // ← One line!
+RouteGroupBuilder api = app.MapGroup("/api")
+    .WithValidation();  // ← Central validation for all API features
+
+api.MapAuthFeature();   // ← Maps to /api/auth/*
 ```
 
 **That's it!** The feature is completely integrated and working.
