@@ -1,23 +1,25 @@
-# Development Guide
+# Development Documentation
 
-> [!NOTE]
-> This documentation is planned for a future release.
-
-Development documentation will cover:
-
-- Setting up your development environment
-- Coding standards and conventions
+This section contains everything you need to contribute to LumaCore:
+- Coding standards and style guidelines
 - How to add new features
-- Testing guidelines
-- Contributing workflow
 
 ---
 
-## Related Documentation
+## Available Documentation
 
-- **[Architecture Overview](../architecture/README.md)** — Understand the design
-- **[Feature Pattern](../architecture/feature-pattern.md)** — Learn the core pattern
-- **[Features](../features/README.md)** — See implemented features
+### Standards & Guidelines
+- **[Engineering Guidelines](engineering-guidelines.md)** — Principles and the "why" behind our standards
+- **[Coding Standards](coding-standards.md)** — C# style, naming conventions, patterns
+- **[Building Features](building-features.md)** — Hands-on guide for implementing features
+
+---
+
+## Quick Links
+
+👉 **[Getting Started](../getting-started.md)** — Quick start for new developers  
+👉 **[Project Structure](../architecture/project-structure.md)** — Understand the codebase layout  
+👉 **[Feature Pattern](../architecture/feature-pattern.md)** — Learn the core architecture pattern
 
 ---
 
