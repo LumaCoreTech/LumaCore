@@ -28,28 +28,39 @@ public static class EndpointMapping
 	/// Maps the admin endpoint group (for example <c>/api/admin/*</c>) into the application's
 	/// endpoint routing table.
 	/// </summary>
-	/// <param name="app">The <see cref="IEndpointRouteBuilder"/> used to define HTTP endpoints.</param>
-	/// <returns>
-	/// The modified <see cref="WebApplication"/> instance to enable fluent configuration.
-	/// </returns>
+	/// <param name="endpoints">
+	/// The <see cref="IEndpointRouteBuilder"/> to map endpoints to. This is typically the
+	/// <c>/api</c> route group from <c>Program.Pipeline.cs</c>, not the root application.
+	/// </param>
+	/// <returns>The <paramref name="endpoints"/> builder for method chaining.</returns>
 	/// <remarks>
 	///     <para>
-	///     This method groups all admin endpoints under the <c>/api/admin</c> path prefix and
-	///     enforces that a valid, authenticated user in the <c>admin</c> role is present by
-	///     applying an authorization policy that requires this role via <c>RequireAuthorization()</c>.
+	///     This method groups all admin endpoints under the <c>/admin</c> path prefix (relative
+	///     to the parent route group) and enforces that a valid, authenticated user in the
+	///     <c>admin</c> role is present by applying an authorization policy via
+	///     <c>RequireAuthorization()</c>.
+	///     </para>
+	///     <para>
+	///     This feature is designed to be mounted on a route group (typically <c>/api</c>) and
+	///     maps its endpoints relative to that group. The <c>/api</c> prefix is added by the
+	///     central route group in <c>Program.Pipeline.cs</c>.
 	///     </para>
 	///     <para>
 	///     The method is intended to be called once during startup, typically from the central
 	///     pipeline configuration in <c>Program.Pipeline.cs</c>.
 	///     </para>
 	/// </remarks>
-	public static IEndpointRouteBuilder MapAdminFeature(this IEndpointRouteBuilder app)
+	public static IEndpointRouteBuilder MapAdminFeature(this IEndpointRouteBuilder endpoints)
 	{
+		// Note: This feature maps relative paths. The /api prefix is provided by the
+		// central route group in Program.Pipeline.cs which also applies global filters
+		// like validation. Features should NOT include /api in their paths.
+		//
 		// Group for admin / internal endpoints that always require an authenticated user
 		// in the 'admin' role. The RequireAuthorization(...) call applies an authorization
 		// policy that enforces this role using the JWT-based authentication configured
 		// by the AuthFeature.
-		RouteGroupBuilder admin = app.MapGroup("/api/admin")
+		RouteGroupBuilder admin = endpoints.MapGroup("/admin")
 			.RequireAuthorization(new AuthorizeAttribute { Roles = "admin" })
 			.WithTags("Admin");
 
@@ -159,6 +170,6 @@ public static class EndpointMapping
 				"only a masked representation of the key and basic configuration flags are returned.")
 			.WithName("AdminStatus");
 
-		return app;
+		return endpoints;
 	}
 }

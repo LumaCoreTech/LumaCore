@@ -9,8 +9,7 @@ using LumaCore.Api.Features.Health;
 using LumaCore.Api.Features.HttpsRedirection;
 using LumaCore.Api.Features.ProxyHeaders;
 using LumaCore.Api.Features.SecurityHeaders;
-
-using Microsoft.OpenApi;
+using LumaCore.Api.Features.Validation;
 
 using Serilog;
 
@@ -29,6 +28,32 @@ public static partial class Program
 		// the correct client IP, scheme, and host when running behind a reverse proxy.
 		// Without this, HTTPS redirection would see HTTP and cause redirect loops.
 		app.UseProxyHeadersFeature();
+
+		// Global exception handler that converts unhandled exceptions into RFC 7807
+		// ProblemDetails responses. This must be early in the pipeline to catch
+		// exceptions from all subsequent middleware. In Development, the developer
+		// exception page takes precedence (added below).
+		if (!app.Environment.IsDevelopment())
+		{
+			app.UseExceptionHandler();
+		}
+
+		// Convert non-exception error status codes (e.g. 404 Not Found, 401 Unauthorized)
+		// into ProblemDetails responses, but ONLY for API routes. Non-API routes (Blazor SPA,
+		// static files) should fall through to their normal handlers. Without this check,
+		// client-side SPA routes would receive JSON errors instead of index.html.
+		app.UseStatusCodePages(async context =>
+		{
+			// Only generate ProblemDetails for API endpoints.
+			// Non-API paths (Blazor routes, static files) are handled elsewhere.
+			if (!context.HttpContext.Request.Path.StartsWithSegments("/api"))
+				return;
+
+			// Generate a ProblemDetails response for the status code.
+			context.HttpContext.Response.ContentType = "application/problem+json";
+			await Results.Problem(statusCode: context.HttpContext.Response.StatusCode)
+				.ExecuteAsync(context.HttpContext);
+		});
 
 		// Enforce HTTPS by redirecting HTTP requests to their HTTPS counterparts.
 		// Must come AFTER proxy headers so the scheme is correctly detected.
@@ -53,31 +78,28 @@ public static partial class Program
 			// development to avoid leaking implementation details.
 			app.UseDeveloperExceptionPage();
 
-			// Generate an OpenAPI 3.1 document for the application using Swashbuckle.
-			// The concrete schema version (3.0 vs 3.1) is selected here so that the
-			// same SwaggerGen configuration can be reused across versions.
-			app.UseSwagger(options =>
-			{
-				// Explicitly target OpenAPI 3.1 for schema generation.
-				options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_1;
-			});
+			// Expose the OpenAPI document at /openapi/v1.json using native .NET 10 OpenAPI.
+			// This replaces Swashbuckle's UseSwagger() middleware with the built-in endpoint.
+			// The document is generated at runtime from the registered endpoints and metadata.
+			app.MapOpenApi();
 
 			// Expose Swagger UI as a developer-facing API browser that allows
 			// interactive exploration and testing of the LumaCore endpoints.
-			app.UseSwaggerUI(c =>
+			// Note: The endpoint path changed from /swagger/v1/swagger.json to /openapi/v1.json.
+			app.UseSwaggerUI(options =>
 			{
-				c.SwaggerEndpoint("/swagger/v1/swagger.json", "LumaCore API v1");
-				c.RoutePrefix = "swagger";
+				options.SwaggerEndpoint("/openapi/v1.json", "LumaCore API v1");
+				options.RoutePrefix = "swagger";
 
 				// Provide a clearer title in the browser tab and Swagger UI header.
-				c.DocumentTitle = "LumaCore API Explorer";
+				options.DocumentTitle = "LumaCore API Explorer";
 
 				// Show server-side execution time for each request in the UI.
-				c.DisplayRequestDuration();
+				options.DisplayRequestDuration();
 
 				// Collapse all operations by default to keep the UI manageable as
 				// the number of endpoints grows. Users can expand sections as needed.
-				c.DocExpansion(DocExpansion.None);
+				options.DocExpansion(DocExpansion.None);
 			});
 		}
 
@@ -103,13 +125,29 @@ public static partial class Program
 		// payload sizes and improve perceived latency for clients.
 		app.UseResponseCompression();
 
-		// Map authentication-related endpoints (e.g. /auth/login) into the endpoint routing table.
-		app.MapAuthFeature();
+		// -------------------------------------------------------------------------
+		// API Endpoint Mapping
+		// -------------------------------------------------------------------------
+		// All business API features are mounted under the /api prefix via a central
+		// route group. This group applies the ValidationFilter globally, ensuring
+		// that all API endpoints automatically validate request bodies using
+		// DataAnnotations without requiring each feature to register the filter.
+		//
+		// Features that are NOT part of the business API (e.g. Health probes,
+		// infrastructure endpoints) are mapped directly to `app` instead.
+		// -------------------------------------------------------------------------
+		RouteGroupBuilder api = app.MapGroup("/api")
+			.WithValidation();
 
-		// Map admin endpoints (e.g. /admin/*) into the endpoint routing table.
-		app.MapAdminFeature();
+		// Map business API features to the /api group.
+		// Each feature maps its endpoints relative to the group (e.g. /auth, /admin).
+		api.MapAuthFeature();
+		api.MapAdminFeature();
 
-		// Map health-related endpoints (e.g. /health, /api/health/live, ...)
+		// Map infrastructure endpoints directly to app (outside /api).
+		// Health endpoints are infrastructure, not business API. They have no complex
+		// request bodies requiring validation and must remain accessible for container
+		// orchestration probes. See Health/EndpointMapping.cs for details.
 		app.MapHealthFeature();
 
 		// Map attribute-routed controllers (e.g. [ApiController]) into the endpoint

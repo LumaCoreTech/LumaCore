@@ -25,8 +25,11 @@ public static class EndpointMapping
 	/// <summary>
 	/// Maps authentication-related endpoints.
 	/// </summary>
-	/// <param name="app">The <see cref="IEndpointRouteBuilder"/> used to define HTTP endpoints.</param>
-	/// <returns>The modified application.</returns>
+	/// <param name="endpoints">
+	/// The <see cref="IEndpointRouteBuilder"/> to map endpoints to. This is typically the
+	/// <c>/api</c> route group from <c>Program.Pipeline.cs</c>, not the root application.
+	/// </param>
+	/// <returns>The <paramref name="endpoints"/> builder for method chaining.</returns>
 	/// <remarks>
 	///     <para>
 	///     Currently this feature exposes:
@@ -57,11 +60,18 @@ public static class EndpointMapping
 	///     account. This is intended purely as a bootstrap mechanism until a persistent user
 	///     store is available.
 	///     </para>
+	///     <para>
+	///     This feature is designed to be mounted on a route group (typically <c>/api</c>) and
+	///     maps its endpoints relative to that group. The <c>/api</c> prefix is added by the
+	///     central route group in <c>Program.Pipeline.cs</c>.
+	///     </para>
 	/// </remarks>
-	public static IEndpointRouteBuilder MapAuthFeature(this IEndpointRouteBuilder app)
+	public static IEndpointRouteBuilder MapAuthFeature(this IEndpointRouteBuilder endpoints)
 	{
-		RouteGroupBuilder group = app
-			.MapGroup("/api")
+		// Note: This feature maps relative paths. The /api prefix is provided by the
+		// central route group in Program.Pipeline.cs which also applies global filters
+		// like validation. Features should NOT include /api in their paths.
+		RouteGroupBuilder group = endpoints
 			.MapGroup("/auth")
 			.WithTags("Auth");
 
@@ -299,7 +309,7 @@ public static class EndpointMapping
 				"intended primarily for debugging and support scenarios.")
 			.WithName("Introspect");
 
-		return app;
+		return endpoints;
 	}
 
 	/// <summary>
