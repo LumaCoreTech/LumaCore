@@ -4,6 +4,8 @@
 
 using System.ComponentModel.DataAnnotations;
 
+using LumaCore.Api.Features.ErrorHandling;
+
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace LumaCore.Api.Features.Validation;
@@ -112,10 +114,11 @@ public sealed class ValidationFilter : IEndpointFilter
 		}
 
 		// If any validation errors were found, return a ValidationProblem response.
-		// This uses the ProblemDetails infrastructure for consistent error formatting.
+		// This uses the ProblemDetails infrastructure for consistent error formatting
+		// with the LumaCore-specific validation error type URN.
 		if (errors is not null)
 		{
-			return Results.ValidationProblem(errors);
+			return Results.ValidationProblem(errors, type: ErrorTypes.Validation);
 		}
 
 		// Validation passed – continue with the endpoint handler.

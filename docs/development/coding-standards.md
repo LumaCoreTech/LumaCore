@@ -900,6 +900,28 @@ var token = factory.CreateToken(principal);
 <typeparamref name="T"/>        <!-- Reference a type parameter -->
 ```
 
+#### When to Use Which Tag
+
+| Use Case | Tag | Example |
+|----------|-----|---------|
+| Types (own or framework) | `<see cref=""/>` | `<see cref="ProblemDetails"/>` |
+| Interfaces | `<see cref=""/>` | `<see cref="IExceptionHandler"/>` |
+| Methods as reference | `<see cref=""/>` | `<see cref="CreateToken"/>` |
+| Methods as call example | `<c>` | `<c>AddProblemDetails()</c>` |
+| Keywords | `<see langword=""/>` | `<see langword="null"/>` |
+| Literals (strings, numbers) | `<c>` | `<c>"Bearer"</c>`, `<c>100</c>` |
+| JSON field names | `<c>` | `<c>traceId</c>` |
+| HTTP status codes | `<c>` | `<c>400 Bad Request</c>` |
+| HTTP headers | `<c>` | `<c>Retry-After</c>` |
+| HTTP methods + paths | `<c>` | `<c>POST /api/auth/login</c>` |
+| URNs / URIs | `<c>` | `<c>urn:lumacore:error:validation</c>` |
+| File names | `<c>` | `<c>Program.cs</c>` |
+
+**Rule of thumb:**
+- If the reader should be able to navigate to a definition → `<see cref=""/>`
+- If it's a literal value or code snippet → `<c>`
+- If it's a C# keyword → `<see langword=""/>`
+
 ---
 
 ## Formatting
@@ -1788,7 +1810,8 @@ It is not a replacement for thinking — but it helps ensure we don't miss the b
 - [ ] `<summary>` explains intent, not implementation details
 - [ ] All `<param>` and `<returns>` tags are present where applicable
 - [ ] Exceptions are documented when thrown as part of the contract
-- [ ] `<see cref="..."/>` is used to refer to related types and members
+- [ ] `<see cref="..."/>` for types/members, `<c>` for literals (see [When to Use Which Tag](#when-to-use-which-tag))
+- [ ] `<see langword="..."/>` for keywords (`null`, `true`, `false`)
 
 ### Code Organization and Formatting
 
