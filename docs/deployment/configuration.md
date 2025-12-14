@@ -112,5 +112,5 @@ This prevents runtime surprises from misconfiguration.
 
 ## Related Documentation
 
-- [Reverse Proxy Setup](reverse-proxy.md) — Nginx, Caddy, Traefik configuration
+- [Docker Deployment](docker.md) — Container setup and deployment
 - [Status & Roadmap](../status.md) — Current implementation status

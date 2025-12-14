@@ -266,9 +266,6 @@ These principles mean:
 - [Auth Feature](../features/auth.md) - Real implementation following these principles
 - [Admin Feature](../features/admin.md) - Another example
 
-**Build something:**
-- [Development Workflow](../development/workflow.md) - Add your own feature
-
 ---
 
 © 2025 LumaCoreTech • MIT License
