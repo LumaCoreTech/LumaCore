@@ -16,9 +16,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repository Files", "Reposit
 		.gitignore = .gitignore
 		src\Directory.Build.props = src\Directory.Build.props
 		src\Directory.Build.targets = src\Directory.Build.targets
+		Dockerfile = Dockerfile
 		global.json = global.json
 		LICENSE = LICENSE
 		LumaCore.sln.DotSettings = LumaCore.sln.DotSettings
+		Pre-Commit-Actions.ps1 = Pre-Commit-Actions.ps1
 		README.md = README.md
 		version.json = version.json
 	EndProjectSection
@@ -30,6 +32,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{1D4B4646
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build.net", "build.net", "{53DFD2C0-EFE3-45B4-9F51-1CABD34B6174}"
 	ProjectSection(SolutionItems) = preProject
+		build.net\.gitattributes = build.net\.gitattributes
 		build.net\LICENSE = build.net\LICENSE
 		build.net\README.md = build.net\README.md
 		build.net\ReSharper.DotSettings = build.net\ReSharper.DotSettings
@@ -37,15 +40,27 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build.net", "build.net", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LumaCore.Ui.Web", "src\LumaCore.Ui.Web\LumaCore.Ui.Web.csproj", "{3DD886D4-EFDE-476E-AD78-BE1ABE68EA48}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{071DD012-4C05-440B-BC6E-4F6A5A456A59}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenApi", "OpenApi", "{D3C2C9BE-AF6C-44FB-B2C2-4BE20F179036}"
 	ProjectSection(SolutionItems) = preProject
-		docs\status.md = docs\status.md
+		build.net\OpenApi\generate-api-docs.ps1 = build.net\OpenApi\generate-api-docs.ps1
+		build.net\OpenApi\README.md = build.net\OpenApi\README.md
+		build.net\OpenApi\verify-api-docs.ps1 = build.net\OpenApi\verify-api-docs.ps1
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deployment", "deployment", "{8DE4F24D-5531-4CE4-9844-F401D8FA6C4D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{60804A8C-8209-4D63-95D2-E56A7F65B4CC}"
 	ProjectSection(SolutionItems) = preProject
-		docs\deployment\configuration.md = docs\deployment\configuration.md
+		.github\dependabot.yml = .github\dependabot.yml
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{B804D941-DD50-4F4E-9F38-BC33C873A0EC}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\linux-build.yml = .github\workflows\linux-build.yml
+		.github\workflows\README.md = .github\workflows\README.md
+		.github\workflows\release.yml = .github\workflows\release.yml
+		.github\workflows\windows-build.yml = .github\workflows\windows-build.yml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docs", "docs\Docs.csproj", "{718966AB-D840-C99F-BC8C-757012BE68AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,13 +84,18 @@ Global
 		{3DD886D4-EFDE-476E-AD78-BE1ABE68EA48}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3DD886D4-EFDE-476E-AD78-BE1ABE68EA48}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3DD886D4-EFDE-476E-AD78-BE1ABE68EA48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{718966AB-D840-C99F-BC8C-757012BE68AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{718966AB-D840-C99F-BC8C-757012BE68AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{718966AB-D840-C99F-BC8C-757012BE68AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{718966AB-D840-C99F-BC8C-757012BE68AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1D4B4646-0707-4C47-848B-9BCCB7D1436A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{8DE4F24D-5531-4CE4-9844-F401D8FA6C4D} = {071DD012-4C05-440B-BC6E-4F6A5A456A59}
+		{D3C2C9BE-AF6C-44FB-B2C2-4BE20F179036} = {53DFD2C0-EFE3-45B4-9F51-1CABD34B6174}
+		{B804D941-DD50-4F4E-9F38-BC33C873A0EC} = {60804A8C-8209-4D63-95D2-E56A7F65B4CC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FF91DAF1-41D5-4766-9080-7F9DFFA42F7E}

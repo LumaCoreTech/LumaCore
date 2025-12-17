@@ -23,3 +23,24 @@ jobs:
 
     - name: Test
       run: dotnet test LumaCore.sln -c Release --no-build --verbosity normal
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # API Documentation Verification
+    # ──────────────────────────────────────────────────────────────────────────
+    # Verifies that committed API documentation matches the current API surface.
+    # Uses our pure .NET toolchain (LumaCore.OpenApiGen) - no npm required.
+    # ──────────────────────────────────────────────────────────────────────────
+    
+    - name: Verify API Documentation
+      run: pwsh -File ./build.net/OpenApi/verify-api-docs.ps1 -ApiProject src/LumaCore.Api/LumaCore.Api.csproj
+    
+    - name: Documentation Verification Failed
+      if: failure()
+      run: |
+        echo "❌ API documentation may be outdated!"
+        echo ""
+        echo "To fix this issue:"
+        echo "  1. Run locally: .\Pre-Commit-Actions.ps1"
+        echo "  2. Review changes: git diff docs/api/"
+        echo "  3. Commit updates: git add docs/api/ && git commit -m 'docs: update API documentation'"
+        echo ""

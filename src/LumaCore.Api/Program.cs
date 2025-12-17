@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.Reflection;
+
 using Serilog;
 
 /// <summary>
@@ -16,6 +18,18 @@ public static partial class Program
 	/// <param name="args">Optional command-line arguments.</param>
 	public static async Task Main(string[] args)
 	{
+		// -------------------------------------------------------
+		// 0. Build-time OpenAPI document generation detection
+		// -------------------------------------------------------
+		// When running under GetDocument.Insider (MSBuild OpenAPI generation),
+		// force Development environment to use fallback configuration values.
+		// Production mode requires secrets (JWT keys, etc.) not available during build.
+		bool isDocumentGeneration = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
+		if (isDocumentGeneration)
+		{
+			Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+		}
+
 		// -------------------------------------------------------
 		// 1. Bootstrap logger (very early logging)
 		// -------------------------------------------------------
@@ -51,14 +65,18 @@ public static partial class Program
 			// This is where request processing flow is defined.
 			ConfigurePipeline(app);
 
-			Log.Information(
-				"LumaCore API ready to accept requests on {Url}",
-				app.Urls.FirstOrDefault() ?? "http://localhost:5080");
-
 			// ---------------------------------------------------
 			// 3. Run the web host
 			// ---------------------------------------------------
+			if (!isDocumentGeneration)
+			{
+				Log.Information(
+					"LumaCore API ready to accept requests on {Url}",
+					app.Urls.FirstOrDefault() ?? "http://localhost:5080");
+			}
+
 			// This starts the Kestrel server and begins listening for requests.
+			// In document generation mode, the host exits after extracting the OpenAPI spec.
 			await app.RunAsync();
 		}
 		catch (Exception ex)

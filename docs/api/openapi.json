@@ -1,0 +1,430 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "LumaCore API",
+    "description": "API surface of the LumaCore server (self-hosted, persona-focused AI runtime).",
+    "contact": {
+      "name": "LumaCore Project",
+      "url": "https://lumacore.tech"
+    },
+    "license": {
+      "name": "MIT License",
+      "url": "https://github.com/LumaCoreTech/LumaCore/blob/main/LICENSE"
+    },
+    "version": "v1"
+  },
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Authenticates the built-in admin and issues a JWT access token.",
+        "description": "Authenticates the temporary, built-in administrator account and returns a short-lived JWT access token. This endpoint is intended for development and bootstrap scenarios only and will be replaced by a proper, database-backed authentication flow once persistent user management is available.",
+        "operationId": "Login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "The request body is invalid or failed validation."
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/auth/whoami": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Returns the current authenticated user.",
+        "description": "Returns basic identity information for the current authenticated principal, including effective name, roles, and raw claims. Intended for any authenticated user and typically used by client applications to show “who am I?” within the UI.",
+        "operationId": "AuthWhoAmI",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthWhoAmIResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required to access this endpoint."
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/auth/introspect": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Introspects the current JWT and returns details about the token.",
+        "description": "Provides diagnostic information about the currently used JWT access token, including subject, roles, expiry and configured lifetime. This endpoint is intended primarily for debugging and support scenarios.",
+        "operationId": "Introspect",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthIntrospectResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required to access this endpoint."
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/admin/status": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Returns high-level status information about the API.",
+        "description": "Returns a small, non-sensitive snapshot of the running LumaCore instance, including environment, API version, machine name, server time and JWT configuration status. Secrets such as the signing key are never exposed; only a masked representation of the key and basic configuration flags are returned.",
+        "operationId": "AdminStatus",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required to access this endpoint."
+          },
+          "403": {
+            "description": "The authenticated user does not have permission to access this resource."
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
+    "/api/health/live": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Returns a simple JSON-based liveness indicator for the backend.",
+        "description": "Returns a minimal JSON payload that indicates whether the backend is currently reachable. This endpoint is primarily intended for use by the LumaCore Web UI and by external monitoring systems as a lightweight liveness probe.",
+        "operationId": "ApiHealthLive",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AdminJwtStatusInfo": {
+        "required": [
+          "configured",
+          "issuer",
+          "audience",
+          "signingKey",
+          "accessTokenLifetimeMinutes"
+        ],
+        "type": "object",
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "description": "`true` if a JWT issuer, audience, and signing key are all configured;\r\notherwise, `false`."
+          },
+          "issuer": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The configured JWT issuer, if any."
+          },
+          "audience": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The configured JWT audience, if any."
+          },
+          "signingKey": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "A masked representation of the configured signing key, or `null` if no key is configured.\r\nThe raw signing key is never exposed by this endpoint."
+          },
+          "accessTokenLifetimeMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "description": "The configured access token lifetime in minutes, if available; otherwise `null`.",
+            "format": "int32"
+          }
+        },
+        "description": "Represents diagnostic information about the JWT configuration used by the LumaCore API."
+      },
+      "AdminStatusResponse": {
+        "required": [
+          "environment",
+          "apiVersion",
+          "machineName",
+          "utcNow",
+          "jwt"
+        ],
+        "type": "object",
+        "properties": {
+          "environment": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The logical environment of the application (for example 'Development' or 'Production')."
+          },
+          "apiVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The advertised API version."
+          },
+          "machineName": {
+            "type": "string",
+            "description": "The operating system machine name of the host."
+          },
+          "utcNow": {
+            "type": "string",
+            "description": "The current UTC time on the server.",
+            "format": "date-time"
+          },
+          "jwt": {
+            "description": "Information about the JWT configuration status.",
+            "$ref": "#/components/schemas/AdminJwtStatusInfo"
+          }
+        },
+        "description": "Represents the high-level status of the running LumaCore instance as\r\nreturned by the `/api/admin/status` endpoint."
+      },
+      "AuthClaimItem": {
+        "required": [
+          "type",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "The claim type (for example a URI or well-known claim name)."
+          },
+          "value": {
+            "type": "string",
+            "description": "The claim value."
+          }
+        },
+        "description": "Represents a single claim in the authentication principal as exposed\r\nby the `/auth/whoami` endpoint."
+      },
+      "AuthIntrospectResponse": {
+        "required": [
+          "subject",
+          "name",
+          "roles",
+          "notBeforeUtc",
+          "expiresUtc",
+          "expiresIn",
+          "jwtId",
+          "issuer",
+          "audience",
+          "configuredAccessTokenLifetimeMinutes"
+        ],
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "The logical subject of the token (usually the user identifier)."
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The display name associated with the principal, if available."
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The roles associated with the principal."
+          },
+          "notBeforeUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The UTC time before which the token is not considered valid, if present.",
+            "format": "date-time"
+          },
+          "expiresUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The UTC time at which the token expires, if present.",
+            "format": "date-time"
+          },
+          "expiresIn": {
+            "pattern": "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The remaining lifetime of the token at the time of the request, or `null`\r\nif the expiry could not be determined."
+          },
+          "jwtId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The unique token identifier (jti claim), if present."
+          },
+          "issuer": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The token issuer as read from the claims, if present."
+          },
+          "audience": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The token audience as read from the claims, if present."
+          },
+          "configuredAccessTokenLifetimeMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "The configured access token lifetime in minutes as specified in JwtOptions.",
+            "format": "int32"
+          }
+        },
+        "description": "Represents the response returned by the `/auth/introspect` endpoint."
+      },
+      "AuthWhoAmIResponse": {
+        "required": [
+          "name",
+          "roles",
+          "claims"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The logical name of the authenticated user."
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The set of roles associated with the user."
+          },
+          "claims": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthClaimItem"
+            },
+            "description": "The raw claims associated with the user principal."
+          }
+        },
+        "description": "Represents the response returned by the `/auth/whoami` endpoint."
+      },
+      "LoginRequest": {
+        "required": [
+          "username",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "The username for authentication. Must be between 1 and 100 characters."
+          },
+          "password": {
+            "type": "string",
+            "description": "The password for authentication. Must be at least 8 characters."
+          }
+        },
+        "description": "Represents login credentials submitted by a client in order to obtain a JWT."
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Enter your JWT token",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Admin"
+    },
+    {
+      "name": "Health"
+    }
+  ]
+}

@@ -78,7 +78,7 @@ public sealed class SecurityResponsesTransformer : IOpenApiOperationTransformer
 		// This indicates that validation errors may occur.
 		if (HasRequestBody(operation))
 		{
-			AddResponseIfMissing(
+			AddOrUpdateResponse(
 				operation,
 				"400",
 				"The request body is invalid or failed validation.");
@@ -93,7 +93,7 @@ public sealed class SecurityResponsesTransformer : IOpenApiOperationTransformer
 		// failure (who are you?), while 403 indicates an authorization failure (are you allowed?).
 		if (authorizeData is not null && !allowAnonymous)
 		{
-			AddResponseIfMissing(
+			AddOrUpdateResponse(
 				operation,
 				"401",
 				"Authentication is required to access this endpoint.");
@@ -102,7 +102,7 @@ public sealed class SecurityResponsesTransformer : IOpenApiOperationTransformer
 			// This indicates that even authenticated users may be denied access.
 			if (HasRolesOrPolicies(authorizeData))
 			{
-				AddResponseIfMissing(
+				AddOrUpdateResponse(
 					operation,
 					"403",
 					"The authenticated user does not have permission to access this resource.");
@@ -138,12 +138,19 @@ public sealed class SecurityResponsesTransformer : IOpenApiOperationTransformer
 	}
 
 	/// <summary>
-	/// Adds an <see cref="OpenApiResponse"/> to the operation if it doesn't already exist.
+	/// Adds or updates an <see cref="OpenApiResponse"/> in the operation.
 	/// </summary>
-	/// <param name="operation">The <see cref="OpenApiOperation"/> to add the response to.</param>
+	/// <param name="operation">The <see cref="OpenApiOperation"/> to modify.</param>
 	/// <param name="statusCode">The HTTP status code as a string (e.g., <c>"400"</c>).</param>
 	/// <param name="description">The response description.</param>
-	private static void AddResponseIfMissing(
+	/// <remarks>
+	///     <para>
+	///     If a response for the given status code already exists with a generic description
+	///     (e.g., <c>"Unauthorized"</c>, <c>"Forbidden"</c>, <c>"Bad Request"</c>), it will be
+	///     replaced with the more descriptive text. Custom descriptions are preserved.
+	///     </para>
+	/// </remarks>
+	private static void AddOrUpdateResponse(
 		OpenApiOperation operation,
 		string           statusCode,
 		string           description)
@@ -151,9 +158,17 @@ public sealed class SecurityResponsesTransformer : IOpenApiOperationTransformer
 		// Ensure Responses collection exists.
 		operation.Responses ??= new OpenApiResponses();
 
-		// Don't override existing response documentation.
-		if (operation.Responses.ContainsKey(statusCode))
-			return;
+		// Check if response already exists.
+		if (operation.Responses.TryGetValue(statusCode, out IOpenApiResponse? existing))
+		{
+			// Only override generic HTTP reason phrases with our more descriptive text.
+			// This preserves any custom descriptions set by endpoint authors.
+			string? existingDesc = existing.Description;
+			bool isGeneric = string.IsNullOrWhiteSpace(existingDesc) ||
+			                 existingDesc is "OK" or "Unauthorized" or "Forbidden" or "Bad Request" or "Not Found";
+
+			if (!isGeneric) return;
+		}
 
 		operation.Responses[statusCode] = new OpenApiResponse
 		{

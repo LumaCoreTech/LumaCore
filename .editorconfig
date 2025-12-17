@@ -1,17 +1,50 @@
+# ===================================================
+# Root configuration
+# ===================================================
 root = true
 
+# ===================================================
+# Universal editor settings
+# ===================================================
 [*]
 charset = utf-8
 end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
-indent_style = tabs
+indent_style = space
 indent_size = 4
+tab_width = 4
 
-# Markdown: keep intentional trailing spaces
+# ===================================================
+# Markdown files: preserve trailing spaces
+# ===================================================
 [*.md]
 trim_trailing_whitespace = false
 
+# ===================================================
 # Windows scripts use CRLF
+# ===================================================
 [*.{bat,cmd,ps1,psm1,psd1}]
 end_of_line = crlf
+
+# ===================================================
+# File-type specific overrides
+# ===================================================
+[**/openapi.json]
+indent_style = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+
+[*.{js,ts}]
+quote_type = single
+
+[*.{cs,csproj,vb,vbproj,fs,fsi,fsx,fsproj,props,targets}]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+
+[*.{html,xml,xaml,js,css,sql,resx}]
+indent_style = space
+indent_size = 4
+tab_width = 4
+insert_final_newline = true

@@ -17,7 +17,7 @@ namespace LumaCore.Api.Features.ErrorHandling;
 ///     categories across the LumaCore API.
 ///     </para>
 ///     <para>
-///     <b>Why URNs instead of URLs?</b>
+///         <b>Why URNs instead of URLs?</b>
 ///     </para>
 ///     <list type="bullet">
 ///         <item>
@@ -75,17 +75,27 @@ public static class ErrorTypes
 	///     This error type is returned when:
 	///     </para>
 	///     <list type="bullet">
-	///         <item><description>Required fields are missing</description></item>
-	///         <item><description>Field values exceed length constraints</description></item>
-	///         <item><description>Field values are outside allowed ranges</description></item>
-	///         <item><description>Custom validation attributes fail</description></item>
+	///         <item>
+	///             <description>Required fields are missing</description>
+	///         </item>
+	///         <item>
+	///             <description>Field values exceed length constraints</description>
+	///         </item>
+	///         <item>
+	///             <description>Field values are outside allowed ranges</description>
+	///         </item>
+	///         <item>
+	///             <description>Custom validation attributes fail</description>
+	///         </item>
 	///     </list>
 	///     <para>
 	///     The <see cref="ProblemDetails"/> response will include an <c>errors</c> dictionary mapping
 	///     field names to their validation error messages.
 	///     </para>
 	/// </remarks>
-	/// <value><c>urn:lumacore:error:validation</c></value>
+	/// <value>
+	///     <c>urn:lumacore:error:validation</c>
+	/// </value>
 	public const string Validation = $"{Base}:validation";
 
 	/// <summary>
@@ -101,7 +111,9 @@ public static class ErrorTypes
 	///     Route-level 404s use the standard RFC 9110 type reference.
 	///     </para>
 	/// </remarks>
-	/// <value><c>urn:lumacore:error:not-found</c></value>
+	/// <value>
+	///     <c>urn:lumacore:error:not-found</c>
+	/// </value>
 	public const string NotFound = $"{Base}:not-found";
 
 	/// <summary>
@@ -112,9 +124,15 @@ public static class ErrorTypes
 	///     This error type is returned when:
 	///     </para>
 	///     <list type="bullet">
-	///         <item><description>No authentication token is provided</description></item>
-	///         <item><description>The provided token is expired</description></item>
-	///         <item><description>The provided token is malformed or invalid</description></item>
+	///         <item>
+	///             <description>No authentication token is provided</description>
+	///         </item>
+	///         <item>
+	///             <description>The provided token is expired</description>
+	///         </item>
+	///         <item>
+	///             <description>The provided token is malformed or invalid</description>
+	///         </item>
 	///     </list>
 	///     <para>
 	///     Despite the HTTP status being <c>401 Unauthorized</c>, this error represents
@@ -122,7 +140,9 @@ public static class ErrorTypes
 	///     failure (are you allowed?).
 	///     </para>
 	/// </remarks>
-	/// <value><c>urn:lumacore:error:unauthorized</c></value>
+	/// <value>
+	///     <c>urn:lumacore:error:unauthorized</c>
+	/// </value>
 	public const string Unauthorized = $"{Base}:unauthorized";
 
 	/// <summary>
@@ -140,7 +160,9 @@ public static class ErrorTypes
 	///     failure (we don't know who you are).
 	///     </para>
 	/// </remarks>
-	/// <value><c>urn:lumacore:error:forbidden</c></value>
+	/// <value>
+	///     <c>urn:lumacore:error:forbidden</c>
+	/// </value>
 	public const string Forbidden = $"{Base}:forbidden";
 
 	/// <summary>
@@ -158,7 +180,9 @@ public static class ErrorTypes
 	///     available only in server logs.
 	///     </para>
 	/// </remarks>
-	/// <value><c>urn:lumacore:error:internal</c></value>
+	/// <value>
+	///     <c>urn:lumacore:error:internal</c>
+	/// </value>
 	public const string Internal = $"{Base}:internal";
 
 	/// <summary>
@@ -169,12 +193,20 @@ public static class ErrorTypes
 	///     This error type is returned when:
 	///     </para>
 	///     <list type="bullet">
-	///         <item><description>Creating a resource that already exists</description></item>
-	///         <item><description>Updating a resource with a stale version (optimistic concurrency)</description></item>
-	///         <item><description>Attempting an operation that violates business invariants</description></item>
+	///         <item>
+	///             <description>Creating a resource that already exists</description>
+	///         </item>
+	///         <item>
+	///             <description>Updating a resource with a stale version (optimistic concurrency)</description>
+	///         </item>
+	///         <item>
+	///             <description>Attempting an operation that violates business invariants</description>
+	///         </item>
 	///     </list>
 	/// </remarks>
-	/// <value><c>urn:lumacore:error:conflict</c></value>
+	/// <value>
+	///     <c>urn:lumacore:error:conflict</c>
+	/// </value>
 	public const string Conflict = $"{Base}:conflict";
 
 	/// <summary>
@@ -187,6 +219,8 @@ public static class ErrorTypes
 	///     header indicating when the client can retry.
 	///     </para>
 	/// </remarks>
-	/// <value><c>urn:lumacore:error:rate-limited</c></value>
+	/// <value>
+	///     <c>urn:lumacore:error:rate-limited</c>
+	/// </value>
 	public const string RateLimited = $"{Base}:rate-limited";
 }

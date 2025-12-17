@@ -1,3 +1,7 @@
+// Copyright (c) 2025 LumaCoreTech
+// SPDX-License-Identifier: MIT
+// Project: https://github.com/LumaCoreTech/LumaCore
+
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 

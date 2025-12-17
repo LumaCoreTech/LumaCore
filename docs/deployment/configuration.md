@@ -27,21 +27,6 @@ Open the file, read the comments, adjust the values.
 
 ---
 
-## Configuration Sections at a Glance
-
-| Section | Purpose |
-|---------|---------|
-| `Jwt` | Token authentication (issuer, audience, lifetime) |
-| `Kestrel` | Server endpoints and limits |
-| `LumaCore` | Application metadata (environment, version, Swagger) |
-| `HttpsRedirection` | HTTPS redirection settings |
-| `ProxyHeaders` | Reverse proxy support (X-Forwarded-*) |
-| `Cors` | Cross-origin resource sharing |
-| `SecurityHeaders` | HTTP security headers (HSTS, CSP, X-Frame-Options) |
-| `Serilog` | Structured logging configuration |
-
----
-
 ## Key Points
 
 ### Secrets via Environment Variables
