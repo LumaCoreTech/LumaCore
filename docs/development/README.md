@@ -14,6 +14,7 @@ This section contains everything you need to contribute to LumaCore:
 ### Standards & Guidelines
 - **[Engineering Guidelines](engineering-guidelines.md)** — Principles and the "why" behind our standards
 - **[Coding Standards](coding-standards.md)** — C# style, naming conventions, patterns
+- **[Commit Message Guidelines](commit-message-guidelines.md)** — Conventional Commits format and allowed scopes
 - **[Building Features](building-features.md)** — Hands-on guide for implementing features
 
 ### For Maintainers
