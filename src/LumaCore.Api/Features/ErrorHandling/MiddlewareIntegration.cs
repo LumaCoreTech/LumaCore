@@ -27,15 +27,27 @@ public static class MiddlewareIntegration
 	///     fallback to serve <c>index.html</c> for client-side routing.
 	///     </para>
 	///     <para>
-	///     <b>Status code mapping:</b>
+	///         <b>Status code mapping:</b>
 	///     </para>
 	///     <list type="bullet">
-	///         <item><description>401 → <see cref="ErrorTypes.Unauthorized"/></description></item>
-	///         <item><description>403 → <see cref="ErrorTypes.Forbidden"/></description></item>
-	///         <item><description>404 → <see cref="ErrorTypes.NotFound"/></description></item>
-	///         <item><description>409 → <see cref="ErrorTypes.Conflict"/></description></item>
-	///         <item><description>429 → <see cref="ErrorTypes.RateLimited"/></description></item>
-	///         <item><description>Other → Standard RFC 9110 type reference</description></item>
+	///         <item>
+	///             <description>401 → <see cref="ErrorTypes.Unauthorized"/></description>
+	///         </item>
+	///         <item>
+	///             <description>403 → <see cref="ErrorTypes.Forbidden"/></description>
+	///         </item>
+	///         <item>
+	///             <description>404 → <see cref="ErrorTypes.NotFound"/></description>
+	///         </item>
+	///         <item>
+	///             <description>409 → <see cref="ErrorTypes.Conflict"/></description>
+	///         </item>
+	///         <item>
+	///             <description>429 → <see cref="ErrorTypes.RateLimited"/></description>
+	///         </item>
+	///         <item>
+	///             <description>Other → Standard RFC 9110 type reference</description>
+	///         </item>
 	///     </list>
 	///     <para>
 	///     <b>Pipeline position:</b> Call this method early in the pipeline, after
@@ -43,7 +55,7 @@ public static class MiddlewareIntegration
 	///     </para>
 	/// </remarks>
 	/// <example>
-	/// <code>
+	///     <code>
 	/// // In Program.Pipeline.cs
 	/// app.UseProxyHeadersFeature();
 	/// app.UseExceptionHandler();
@@ -89,7 +101,7 @@ public static class MiddlewareIntegration
 			StatusCodes.Status404NotFound        => ErrorTypes.NotFound,
 			StatusCodes.Status409Conflict        => ErrorTypes.Conflict,
 			StatusCodes.Status429TooManyRequests => ErrorTypes.RateLimited,
-			_ => null
+			var _                                => null
 		};
 	}
 }

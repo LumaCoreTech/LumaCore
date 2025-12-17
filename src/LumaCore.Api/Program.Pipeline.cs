@@ -66,12 +66,30 @@ public static partial class Program
 			// instead of the generic error handler. This should only be enabled in
 			// development to avoid leaking implementation details.
 			app.UseDeveloperExceptionPage();
+		}
 
-			// Expose the OpenAPI document at /openapi/v1.json using native .NET 10 OpenAPI.
-			// This replaces Swashbuckle's UseSwagger() middleware with the built-in endpoint.
-			// The document is generated at runtime from the registered endpoints and metadata.
+		// ┌─────────────────────────────────────────────────────────────────────────────┐
+		// │ OpenAPI Document Endpoint                                                   │
+		// ├─────────────────────────────────────────────────────────────────────────────┤
+		// │ Exposes the OpenAPI document at /openapi/v1.json in Development mode.       │
+		// │                                                                             │
+		// │ BUILD-TIME GENERATION:                                                      │
+		// │ When running `dotnet build /p:GenerateOpenApi=true`, MSBuild invokes        │
+		// │ Microsoft.Extensions.ApiDescription.Server which launches the app with      │
+		// │ GetDocument.Insider as entry assembly. Program.cs detects this and forces   │
+		// │ ASPNETCORE_ENVIRONMENT=Development so the endpoint is available and         │
+		// │ fallback configuration values are used (Production requires secrets).       │
+		// │                                                                             │
+		// │ In Production, the /openapi/v1.json endpoint is NOT exposed.                │
+		// │ See: https://learn.microsoft.com/aspnet/core/fundamentals/openapi           │
+		// └─────────────────────────────────────────────────────────────────────────────┘
+		if (app.Environment.IsDevelopment())
+		{
 			app.MapOpenApi();
+		}
 
+		if (app.Environment.IsDevelopment())
+		{
 			// Expose Swagger UI as a developer-facing API browser that allows
 			// interactive exploration and testing of the LumaCore endpoints.
 			// Note: The endpoint path changed from /swagger/v1/swagger.json to /openapi/v1.json.

@@ -1,0 +1,33 @@
+<!--
+	============================================================================
+	Docs.csproj - Documentation Browser Project
+	============================================================================
+
+	This is not a real project. It produces no output and builds nothing.
+
+	Visual Studio solution files (.sln) don't support wildcards for including
+	files. This makes it tedious to browse documentation folders - every new
+	file would need to be added manually.
+
+	This "project" is a creative workaround:
+	- Uses Microsoft.Build.NoTargets SDK (official, does nothing)
+	- Wildcards (**/*) automatically include all files in /docs
+	- New files appear in Solution Explorer without manual edits
+	- No build artifacts, no bin/obj folders
+
+	It's hacky, but it works. Sometimes engineering is about pragmatic
+	solutions, not elegant ones.
+
+	============================================================================
+-->
+<Project Sdk="Microsoft.Build.NoTargets/3.7.0">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="**/*" Exclude="$(MSBuildProjectFile);obj/**;bin/**" />
+	</ItemGroup>
+
+</Project>

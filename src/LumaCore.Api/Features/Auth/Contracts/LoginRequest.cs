@@ -29,7 +29,6 @@ public sealed record LoginRequest(
 	[Required(ErrorMessage = "Username is required.")]
 	[StringLength(100, ErrorMessage = "Username must not exceed 100 characters.")]
 	string Username,
-
 	[Required(ErrorMessage = "Password is required.")]
 	[MinLength(8, ErrorMessage = "Password must be at least 8 characters.")]
 	string Password);

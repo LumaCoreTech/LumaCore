@@ -1,0 +1,134 @@
+name: Release Build & Publish
+
+# ============================================================================
+# SECURITY: This workflow has access to secrets for publishing releases.
+# 
+# CRITICAL: This workflow does NOT run widdershins/npm to avoid exposing
+# secrets to potential vulnerabilities in those dependencies.
+# 
+# API documentation is generated locally by developers using:
+#   .\Pre-Commit-Actions.ps1
+# and committed to the repository before creating a release.
+# ============================================================================
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags (e.g., v1.0.0, v1.2.3)
+
+jobs:
+  release:
+    name: Build and Publish Release
+    runs-on: ubuntu-latest
+    
+    # Grant permissions for creating releases
+    permissions:
+      contents: write
+      packages: write
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for release notes
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+    
+    # ========================================================================
+    # Build Release (NO DOCUMENTATION GENERATION)
+    # ========================================================================
+    # IMPORTANT: We do NOT run widdershins/npm here!
+    # Documentation was already generated locally and committed.
+    # This keeps secrets safe from potential widdershins vulnerabilities.
+    # ========================================================================
+    
+    - name: Restore Dependencies
+      run: dotnet restore
+    
+    - name: Build Release
+      run: dotnet build --configuration Release --no-restore
+    
+    - name: Run Tests
+      run: dotnet test --configuration Release --no-build --verbosity normal
+    
+    # ========================================================================
+    # Create NuGet Packages
+    # ========================================================================
+    
+    - name: Pack NuGet Packages
+      run: dotnet pack --configuration Release --no-build --output ./artifacts/packages
+    
+    # ========================================================================
+    # Extract Version from Tag
+    # ========================================================================
+    
+    - name: Get Version from Tag
+      id: get_version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "Release version: $VERSION"
+    
+    # ========================================================================
+    # Create GitHub Release
+    # ========================================================================
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Release ${{ steps.get_version.outputs.VERSION }}
+        draft: false
+        prerelease: false
+        files: |
+          ./artifacts/packages/*.nupkg
+          ./artifacts/packages/*.snupkg
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    # ========================================================================
+    # Publish to NuGet.org (Optional - uncomment when ready)
+    # ========================================================================
+    
+    # - name: Publish to NuGet.org
+    #   run: dotnet nuget push ./artifacts/packages/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+    #   env:
+    #     NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+    
+    # ========================================================================
+    # Publish to GitHub Packages (Optional)
+    # ========================================================================
+    
+    # - name: Publish to GitHub Packages
+    #   run: dotnet nuget push ./artifacts/packages/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/LumaCoreTech/index.json --skip-duplicate
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    # ========================================================================
+    # Optional: Docker Image Build & Push
+    # ========================================================================
+    
+    # - name: Build Docker Image
+    #   run: docker build -t lumacore:${{ steps.get_version.outputs.VERSION }} .
+    # 
+    # - name: Push to Docker Hub
+    #   run: |
+    #     echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+    #     docker push lumacore:${{ steps.get_version.outputs.VERSION }}
+
+    # ========================================================================
+    # Success Notification
+    # ========================================================================
+    
+    - name: Release Summary
+      run: |
+        echo "✅ Release ${{ steps.get_version.outputs.VERSION }} published successfully!"
+        echo ""
+        echo "📦 NuGet packages created in ./artifacts/packages/"
+        echo "🚀 GitHub Release created: https://github.com/${{ github.repository }}/releases/tag/v${{ steps.get_version.outputs.VERSION }}"
+        echo ""
+        echo "🔒 SECURITY: This workflow did NOT run widdershins/npm."
+        echo "    API documentation was pre-generated and committed by developers."

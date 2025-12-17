@@ -8,10 +8,16 @@ This section contains everything you need to contribute to LumaCore:
 
 ## Available Documentation
 
+### Getting Started
+- **[Developer Workflow](workflow.md)** — Complete guide from setup to contributing changes
+
 ### Standards & Guidelines
 - **[Engineering Guidelines](engineering-guidelines.md)** — Principles and the "why" behind our standards
 - **[Coding Standards](coding-standards.md)** — C# style, naming conventions, patterns
 - **[Building Features](building-features.md)** — Hands-on guide for implementing features
+
+### For Maintainers
+- **[Release Process](release-process.md)** — Creating and publishing releases
 
 ---
 
