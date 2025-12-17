@@ -38,14 +38,19 @@
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 	</PropertyGroup>
 
+	<!-- MinVer Configuration -->
+	<PropertyGroup>
+		<MinVerTagPrefix>v</MinVerTagPrefix>
+		<MinVerDefaultPreReleaseIdentifiers>ci</MinVerDefaultPreReleaseIdentifiers>
+	</PropertyGroup>
+
 	<!-- Central package management -->
 	<ItemGroup>
 		<!-- Automatic semantic versioning -->
-		<PackageReference
-			Include="Nerdbank.GitVersioning"
-			Version="[3.9.50,4.0.0)"
-			PrivateAssets="all"
-			IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+		<PackageReference Include="MinVer" Version="6.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 
 		<!-- SourceLink for GitHub -->
 		<PackageReference
