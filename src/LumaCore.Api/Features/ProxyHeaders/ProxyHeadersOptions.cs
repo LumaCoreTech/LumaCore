@@ -157,6 +157,7 @@ public sealed class ProxyHeadersOptions : IValidatableObject
 	/// valid, and that the prefix length is within the allowed range (0–32 for IPv4, 0–128 for IPv6).
 	/// No parsing of the actual network is performed beyond validation.
 	/// </remarks>
+	// ReSharper disable once OutParameterValueIsAlwaysDiscarded.Local
 	private static bool TryParseCidr(string value, out IPNetwork network, out string? error)
 	{
 		network = default;

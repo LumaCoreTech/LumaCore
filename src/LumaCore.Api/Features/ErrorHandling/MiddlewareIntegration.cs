@@ -64,12 +64,12 @@ public static class MiddlewareIntegration
 	/// </example>
 	public static WebApplication UseErrorHandlingFeature(this WebApplication app)
 	{
-		app.UseStatusCodePages(async context =>
+		app.UseStatusCodePages(context =>
 		{
 			// Only generate ProblemDetails for API endpoints.
 			// Non-API paths (Blazor routes, static files) are handled elsewhere.
 			if (!context.HttpContext.Request.Path.StartsWithSegments("/api"))
-				return;
+				return Task.CompletedTask;
 
 			// Map status codes to LumaCore-specific error type URNs.
 			int statusCode = context.HttpContext.Response.StatusCode;
@@ -77,7 +77,8 @@ public static class MiddlewareIntegration
 
 			// Generate a ProblemDetails response for the status code.
 			context.HttpContext.Response.ContentType = "application/problem+json";
-			await Results.Problem(statusCode: statusCode, type: errorType)
+			return Results
+				.Problem(statusCode: statusCode, type: errorType)
 				.ExecuteAsync(context.HttpContext);
 		});
 
