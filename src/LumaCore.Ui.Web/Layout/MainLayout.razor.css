@@ -12,7 +12,7 @@
 
 .lc-header {
     align-items: center;
-    background: radial-gradient(circle at top left, #252545 0%, #131322 55%, #0b0b12 100%);
+    background: radial-gradient(circle at top left, #252545 0, #131322 55%, #0b0b12 100%);
     border-bottom: 1px solid #26263a;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); /* Soft drop shadow below the header */
     display: flex;

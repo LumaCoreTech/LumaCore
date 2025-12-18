@@ -17,7 +17,7 @@ public class Program
 	/// </summary>
 	/// <param name="args">Command-line arguments passed to the application.</param>
 	/// <returns>A task that completes when the application shuts down.</returns>
-	public static async Task Main(string[] args)
+	public static Task Main(string[] args)
 	{
 		var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -31,7 +31,7 @@ public class Program
 		string? backendBaseUrl = builder.Configuration["LumaCore:BackendBaseUrl"];
 
 		// HttpClient configured with a placeholder base address.
-		builder.Services.AddScoped(sp =>
+		builder.Services.AddScoped(_ =>
 		{
 			// Use configured backend URL if present; otherwise default to the host base address.
 			string effectiveBaseUrl = !string.IsNullOrWhiteSpace(backendBaseUrl)
@@ -52,6 +52,6 @@ public class Program
 			};
 		});
 
-		await builder.Build().RunAsync();
+		return builder.Build().RunAsync();
 	}
 }

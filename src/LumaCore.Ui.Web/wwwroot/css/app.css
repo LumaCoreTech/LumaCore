@@ -40,13 +40,13 @@ a:hover { text-decoration: underline; }
 }
 
 .lc-title {
-    color: #f9fafb; /* heller */
+    color: #f9fafb;
     font-size: 1.1rem;
     font-weight: 600;
 }
 
 .lc-subtitle {
-    color: #cbd5f5; /* leicht aufgehellt, aber noch softer */
+    color: #cbd5f5;
     font-size: 0.82rem;
     opacity: 0.9;
 }
@@ -121,7 +121,7 @@ a:hover { text-decoration: underline; }
 
 .lc-logo-img {
     display: block;
-    height: 32px; /* oder 36px, je nach Geschmack */
+    height: 32px;
 }
 
 .lc-logo-health-indicator {
