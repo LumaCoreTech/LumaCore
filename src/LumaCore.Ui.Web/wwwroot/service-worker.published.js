@@ -1,7 +1,11 @@
+// ReSharper disable All
+// Standard Blazor Service Worker - Microsoft template code
+
 // Caution! Be sure you understand the caveats before publishing an application with
 // offline support. See https://aka.ms/blazor-offline-considerations
 
 self.importScripts('./service-worker-assets.js');
+
 self.addEventListener('install', event => event.waitUntil(onInstall(event)));
 self.addEventListener('activate', event => event.waitUntil(onActivate(event)));
 self.addEventListener('fetch', event => event.respondWith(onFetch(event)));
@@ -19,6 +23,7 @@ const base = '/';
 const baseUrl = new URL(base, self.origin);
 const manifestUrlList = self.assetsManifest.assets.map(asset => new URL(asset.url, baseUrl).href);
 
+// ReSharper disable once UnusedParameter
 async function onInstall(event) {
     console.info('Service worker: Install');
 
@@ -30,6 +35,7 @@ async function onInstall(event) {
     await caches.open(cacheName).then(cache => cache.addAll(assetsRequests));
 }
 
+// ReSharper disable once UnusedParameter
 async function onActivate(event) {
     console.info('Service worker: Activate');
 

@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<OverrideHtmlAssetPlaceholders>false</OverrideHtmlAssetPlaceholders> <!--TODO: Enable fingerprinting for production builds. -->
 		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+		<TypeScriptLanguageVersion>ES2024</TypeScriptLanguageVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
