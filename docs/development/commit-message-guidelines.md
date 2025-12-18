@@ -100,6 +100,7 @@ The scope identifies the **affected feature or domain area**.
 | `logging` | Logging, Serilog configuration |
 | `proxy` | Proxy/forwarded headers configuration |
 | `security` | Security headers (CSP, HSTS, etc.) |
+| `ui` | Blazor UI components, pages, layouts, styling |
 | `validation` | Request validation, validation filters |
 | `assets` | Static assets, branding, logos |
 
