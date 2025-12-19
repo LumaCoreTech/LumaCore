@@ -15,7 +15,7 @@
       2. Generates Markdown documentation from OpenAPI spec
       3. Checks for unstaged changes in docs/
       4. Optionally runs tests
-      5. Optionally formats code
+      5. Optionally checks code style and analyzers (whitespace is ReSharper's domain)
     
     OpenAPI generation is handled by Microsoft.Extensions.ApiDescription.Server
     during the build process - no server startup required.
@@ -27,7 +27,7 @@
     Skip running tests (faster for quick commits)
 
 .PARAMETER SkipFormat
-    Skip code formatting check
+    Skip code style and analyzer checks (whitespace/alignment is always skipped - use ReSharper)
 
 .PARAMETER AutoStage
     Automatically stage changed documentation files
@@ -121,29 +121,24 @@ if (!(Get-Command dotnet -ErrorAction SilentlyContinue)) {
 
 Write-Section "1. Regenerating API Documentation"
 
-Write-Info "Building API project (generates OpenAPI specification at build time)..."
+Write-Info "Generating OpenAPI JSON specifications..."
 
 try {
-    # Build with GenerateOpenApi=true triggers MSBuild OpenAPI generation
-    # via Microsoft.Extensions.ApiDescription.Server
-    # Output: docs/api/openapi.json
-    #
-    # IMPORTANT: We set ASPNETCORE_ENVIRONMENT=Development because:
-    # - Production mode requires valid configuration (JWT secrets, etc.)
-    # - These secrets are not available during the build process
-    # - Development mode uses fallback values that allow the app to start
-    $env:ASPNETCORE_ENVIRONMENT = "Development"
-    dotnet build $ApiProject --configuration Release --verbosity minimal /p:GenerateOpenApi=true
+    # Generate versioned OpenAPI JSON files (v1.json, v2.json, etc.)
+    # Uses ./build.net/OpenApi/generate-openapi-json.ps1 which handles
+    # Microsoft's quirky naming conventions via explicit --document-name
+    # and --file-name parameters.
+    & "$PSScriptRoot/build.net/OpenApi/generate-openapi-json.ps1"
     
     if ($LASTEXITCODE -ne 0) {
-        Write-Error "Build failed"
+        Write-Error "OpenAPI JSON generation failed"
         exit 1
     }
     
-    Write-Info "✅ OpenAPI specification generated via MSBuild"
+    Write-Info "✅ OpenAPI specifications generated"
 }
 catch {
-    Write-Error "Failed to build API project: $_"
+    Write-Error "Failed to generate OpenAPI JSON: $_"
     exit 1
 }
 
@@ -238,18 +233,41 @@ if (!$SkipFormat) {
     
     Write-Info "Checking code formatting..."
     
+    # NOTE: We check 'style' and 'analyzers' but NOT 'whitespace'.
+    # Whitespace formatting (including alignment) is handled by ReSharper,
+    # and dotnet format has different opinions about column alignment.
+    # This avoids false positives for ReSharper's aligned parameter lists.
+    
+    $hasIssues = $false
+    
     try {
-        # Check if dotnet-format is available
-        $formatCheck = dotnet format --verify-no-changes --verbosity quiet 2>&1
+        # Check style rules (using directives, var preferences, etc.)
+        Write-Info "Checking style rules..."
+        dotnet format style --verify-no-changes --verbosity quiet 2>&1 | Out-Null
         
-        if ($LASTEXITCODE -eq 0) {
-            Write-Info "✅ Code formatting is correct"
+        if ($LASTEXITCODE -ne 0) {
+            $hasIssues = $true
+            Write-Warn "⚠️  Style issues detected"
+        }
+        
+        # Check analyzer rules (code quality, nullability, etc.)
+        Write-Info "Checking analyzer rules..."
+        dotnet format analyzers --verify-no-changes --verbosity quiet 2>&1 | Out-Null
+        
+        if ($LASTEXITCODE -ne 0) {
+            $hasIssues = $true
+            Write-Warn "⚠️  Analyzer issues detected"
+        }
+        
+        if ($hasIssues) {
+            Write-Info "To auto-fix issues, run:"
+            Write-Host "  dotnet format style" -ForegroundColor Yellow
+            Write-Host "  dotnet format analyzers" -ForegroundColor Yellow
+            Write-Host ""
+            Write-Info "Note: Whitespace/alignment is managed by ReSharper, not dotnet format."
         }
         else {
-            Write-Warn "⚠️  Code formatting issues detected"
-            Write-Info "To auto-format code, run:"
-            Write-Host "  dotnet format" -ForegroundColor Yellow
-            Write-Host ""
+            Write-Info "✅ Code formatting is correct"
         }
     }
     catch {
