@@ -3,6 +3,7 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using LumaCore.Api.Features.Admin;
+using LumaCore.Api.Features.ApiVersioning;
 using LumaCore.Api.Features.Auth;
 using LumaCore.Api.Features.Cors;
 using LumaCore.Api.Features.ErrorHandling;
@@ -77,6 +78,11 @@ public static partial class Program
 		// This replaces Swashbuckle's AddSwaggerGen() with the built-in OpenAPI support.
 		// The document is generated at runtime and served via MapOpenApi() in the pipeline.
 		builder.AddOpenApiFeature();
+
+		// Register API versioning services.
+		// Configures URL segment-based versioning (e.g., /api/v1/..., /api/v2/...).
+		// Version information is reported via api-supported-versions response header.
+		builder.AddApiVersioningFeature();
 
 		// Register the health checks infrastructure so that individual subsystems
 		// (e.g. database, vector store, model backends) can expose their status via

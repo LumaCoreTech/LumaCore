@@ -102,7 +102,7 @@ A client (browser, mobile app, or CLI tool) wants to access protected endpoints.
 ```
               Client                                    LumaCore API
                 |                                            |
-                |  POST /api/auth/login                      |
+                |  POST /api/v1/auth/login                   |
                 |  {                                         |
                 |    "username": "admin",                    |
                 |    "password": "changeme"                  |
@@ -143,7 +143,7 @@ Now the client has a token and wants to access protected endpoints. Every reques
 ```
 Client                                    LumaCore API
   |                                            |
-  |  GET /api/admin/status                     |
+  |  GET /api/v1/admin/status                  |
   |  Authorization: Bearer eyJhbGc...          |
   |------------------------------------------->|
   |                                            |
@@ -217,7 +217,7 @@ Without signature verification, anyone could create a JWT with `"role": "admin"`
 
 LumaCore provides two endpoints that help clients understand their authentication state:
 
-**`GET /api/auth/whoami`** - Returns basic identity information:
+**`GET /api/v1/auth/whoami`** - Returns basic identity information:
 ```json
 {
   "name": "John Doe",
@@ -232,7 +232,7 @@ LumaCore provides two endpoints that help clients understand their authenticatio
 
 This is useful for UI applications that want to display "Logged in as: John Doe" or show/hide UI elements based on roles.
 
-**`GET /api/auth/introspect`** - Returns detailed token information:
+**`GET /api/v1/auth/introspect`** - Returns detailed token information:
 ```json
 {
   "subject": "550e8400-e29b-41d4-a716-446655440000",
@@ -545,7 +545,7 @@ Without HTTPS, network traffic is plaintext. Anyone between the client and serve
 
 You're at a coffee shop on public WiFi. You log into LumaCore. An attacker running Wireshark on the same network captures the POST to `/auth/login` and sees:
 ```
-POST /api/auth/login HTTP/1.1
+POST /api/v1/auth/login HTTP/1.1
 {"username": "admin", "password": "changeme"}
 ```
 
@@ -553,7 +553,7 @@ Game over. They have your credentials.
 
 Even if they miss the login, they can capture your JWT from subsequent requests:
 ```
-GET /api/admin/status HTTP/1.1
+GET /api/v1/admin/status HTTP/1.1
 Authorization: Bearer eyJhbGc...
 ```
 

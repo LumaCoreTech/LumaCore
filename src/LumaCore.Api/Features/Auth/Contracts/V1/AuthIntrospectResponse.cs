@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-namespace LumaCore.Api.Features.Auth.Contracts;
+namespace LumaCore.Api.Features.Auth.Contracts.V1;
 
 /// <summary>
-/// Represents the response returned by the <c>/auth/introspect</c> endpoint.
+/// Represents the response returned by the <c>/api/v1/auth/introspect</c> endpoint.
 /// </summary>
 /// <param name="Subject">The logical subject of the token (usually the user identifier).</param>
 /// <param name="Name">The display name associated with the principal, if available.</param>

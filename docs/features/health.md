@@ -3,7 +3,7 @@
 The *Health* feature provides lightweight endpoints for monitoring and orchestration systems. It enables container orchestrators, reverse proxies, and uptime monitors to verify that LumaCore is running and responsive. The feature is designed to be minimal but extensible — additional checks for databases, vector stores, or LLM backends can be added over time without breaking existing consumers.
 
 > [!NOTE]
-> **Infrastructure Feature:** Unlike business API features (Auth, Admin, etc.), the Health feature is mapped directly to the application root, not via the central `/api` route group. This means it maps **absolute paths** in code, while business features map relative paths. However, the liveness endpoint still uses the `/api/health` prefix for API surface consistency.
+> **Split Mapping:** The *Health* feature uses two mapping methods. Infrastructure probes (`/health`) are mapped directly to the application root for orchestrator compatibility. The liveness API endpoint (`/api/v1/health/live`) is part of the versioned API surface and mapped via the central route group.
 
 ---
 
@@ -19,17 +19,17 @@ Currently, no custom health checks are registered, so the endpoint always return
 
 This endpoint is anonymous — no authentication is required.
 
-> For request/response schemas and examples, see the [OpenAPI documentation](../api/openapi.md).
+> For request/response schemas and examples, see the [OpenAPI documentation](../api/README.md).
 
 ---
 
-### `GET /api/health/live`
+### `GET /api/v1/health/live`
 
 Returns a minimal JSON payload indicating whether the backend is responsive. This endpoint is intentionally lightweight and always returns successfully as long as the API process can handle requests.
 
 This endpoint is anonymous — no authentication is required. This allows monitoring systems and the Web UI to check backend availability even before authentication is configured.
 
-> For request/response schemas and examples, see the [OpenAPI documentation](../api/openapi.md).
+> For request/response schemas and examples, see the [OpenAPI documentation](../api/README.md).
 
 ---
 
@@ -37,7 +37,7 @@ This endpoint is anonymous — no authentication is required. This allows monito
 
 The *Health* feature does not introduce additional configuration options. It registers the standard ASP.NET Core health check infrastructure, which can be extended with custom health checks in future versions.
 
-The feature is registered via `builder.AddHealthFeature()` and `app.MapHealthFeature()` in `Program.cs`.
+The feature is registered via `builder.AddHealthFeature()` and mapped via `app.MapHealthProbesFeature()` (for `/health`) and `app.MapHealthApiFeature()` (for `/api/v1/health/live`) in `Program.cs`.
 
 ---
 
@@ -49,7 +49,7 @@ The *Health* feature does not register any injectable services. It configures th
 
 ## Pipeline Order
 
-The *Health* feature registers endpoints only — no middleware. The order of `MapHealthFeature()` relative to other features does not matter.
+The *Health* feature registers endpoints only — no middleware. The order of `MapHealthProbesFeature()` and `MapHealthApiFeature()` relative to other features does not matter.
 
 ---
 
@@ -58,7 +58,7 @@ The *Health* feature registers endpoints only — no middleware. The order of `M
 A typical health monitoring setup works as follows:
 
 1. Configure your orchestrator's **readiness probe** to poll `GET /health`.
-2. Configure your orchestrator's **liveness probe** to poll `GET /api/health/live`.
+2. Configure your orchestrator's **liveness probe** to poll `GET /api/v1/health/live`.
 3. If readiness returns `Healthy`, the instance is added to load balancer rotation.
 4. If liveness fails or times out, the orchestrator restarts the container.
 5. External monitoring systems can use either endpoint for uptime checks.

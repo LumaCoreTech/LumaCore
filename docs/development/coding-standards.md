@@ -913,7 +913,7 @@ var token = factory.CreateToken(principal);
 | JSON field names | `<c>` | `<c>traceId</c>` |
 | HTTP status codes | `<c>` | `<c>400 Bad Request</c>` |
 | HTTP headers | `<c>` | `<c>Retry-After</c>` |
-| HTTP methods + paths | `<c>` | `<c>POST /api/auth/login</c>` |
+| HTTP methods + paths | `<c>` | `<c>POST /api/v1/auth/login</c>` |
 | URNs / URIs | `<c>` | `<c>urn:lumacore:error:validation</c>` |
 | File names | `<c>` | `<c>Program.cs</c>` |
 

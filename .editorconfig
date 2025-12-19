@@ -30,10 +30,11 @@ end_of_line = crlf
 # ===================================================
 # File-type specific overrides
 # ===================================================
-[**/openapi.json]
+[docs/api/*.json]
 indent_style = unset
 insert_final_newline = unset
 trim_trailing_whitespace = unset
+max_line_length = off
 
 [*.{js,ts}]
 quote_type = single

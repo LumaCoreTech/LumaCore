@@ -59,7 +59,7 @@ dotnet watch run
 Check if LumaCore is healthy:
 
 ```bash
-curl http://localhost:5080/api/health/live
+curl http://localhost:5080/api/v1/health/live
 ```
 
 You should see:
@@ -79,7 +79,7 @@ LumaCore uses JWT authentication. Let's get a token and explore the API.
 The default development credentials are `admin` / `changeme`:
 
 ```bash
-curl -X POST http://localhost:5080/api/auth/login \
+curl -X POST http://localhost:5080/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "changeme"}'
 ```
@@ -100,7 +100,7 @@ Save the token and use it in the `Authorization` header:
 TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
 curl -H "Authorization: Bearer $TOKEN" \
-  http://localhost:5080/api/auth/whoami
+  http://localhost:5080/api/v1/auth/whoami
 ```
 
 This tells you who you're authenticated as:
@@ -123,7 +123,7 @@ To see the full token details including expiration:
 
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
-  http://localhost:5080/api/auth/introspect
+  http://localhost:5080/api/v1/auth/introspect
 ```
 
 ```json
@@ -148,7 +148,7 @@ The easiest way to explore the API is through Swagger UI at http://localhost:508
 
 To authenticate in Swagger:
 
-1. First, call `POST /api/auth/login` with the credentials
+1. First, call `POST /api/v1/auth/login` with the credentials
 2. Copy the `accessToken` from the response
 3. Click the "Authorize" button at the top right
 4. Paste the token (without "Bearer" prefix)
@@ -159,12 +159,12 @@ Now you can try all protected endpoints directly in the browser.
 ## Available Endpoints
 
 **Authentication:**
-- `POST /api/auth/login` — Get a JWT token
-- `GET /api/auth/whoami` — Who am I? (requires token)
-- `GET /api/auth/introspect` — Full token details (requires token)
+- `POST /api/v1/auth/login` — Get a JWT token
+- `GET /api/v1/auth/whoami` — Who am I? (requires token)
+- `GET /api/v1/auth/introspect` — Full token details (requires token)
 
 **Health:**
-- `GET /api/health/live` — Liveness check (no auth required)
+- `GET /api/v1/health/live` — Liveness check (no auth required)
 - `GET /health` — Detailed health with dependencies (no auth required)
 
 ## Development Mode
@@ -196,7 +196,7 @@ Either stop the other process, or change the port in `src/LumaCore.Api/appsettin
 **401 Unauthorized?**
 
 Make sure you:
-1. Got a token from `/api/auth/login`
+1. Got a token from `/api/v1/auth/login`
 2. Include it as `Authorization: Bearer <token>`
 3. The token hasn't expired (default: 60 minutes)
 
@@ -210,7 +210,7 @@ Now that LumaCore is running:
 
 **Explore the API**
 - Open Swagger at http://localhost:5080/swagger and try out the endpoints
-- Check `/api/health/live` and `/health` to understand the health check system
+- Check `/api/v1/health/live` and `/health` to understand the health check system
 
 **Deploy to Production**
 - [Docker Deployment](deployment/docker.md) — HTTPS setup with Caddy, registry workflows, and security notes

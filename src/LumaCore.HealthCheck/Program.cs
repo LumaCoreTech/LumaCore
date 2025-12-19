@@ -15,7 +15,7 @@
 //   dotnet LumaCore.HealthCheck.dll [url] [timeout_seconds]
 //
 // Environment Variables:
-//   HEALTHCHECK_URL              Target URL (default: http://localhost:5080/api/health/live)
+//   HEALTHCHECK_URL              Target URL (default: http://localhost:5080/api/v1/health/live)
 //   HEALTHCHECK_TIMEOUT_SECONDS  Request timeout (default: 5)
 //
 // Exit Codes:
@@ -24,8 +24,8 @@
 //
 // Examples:
 //   dotnet LumaCore.HealthCheck.dll
-//   dotnet LumaCore.HealthCheck.dll http://localhost:8080/api/health/live
-//   dotnet LumaCore.HealthCheck.dll http://localhost:8080/api/health/live 10
+//   dotnet LumaCore.HealthCheck.dll http://localhost:8080/api/v1/health/live
+//   dotnet LumaCore.HealthCheck.dll http://localhost:8080/api/v1/health/live 10
 //
 // Docker Usage:
 //   HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
@@ -54,9 +54,9 @@ static class HealthCheckRunner
 	/// The default URL to check when no URL is provided via arguments or environment.
 	/// </summary>
 	/// <value>
-	/// <c>http://localhost:5080/api/health/live</c> — the LumaCore API liveness endpoint.
+	/// <c>http://localhost:5080/api/v1/health/live</c> — the LumaCore API liveness endpoint.
 	/// </value>
-	private const string DefaultUrl = "http://localhost:5080/api/health/live";
+	private const string DefaultUrl = "http://localhost:5080/api/v1/health/live";
 
 	/// <summary>
 	/// The default timeout in seconds for health check requests.

@@ -4,11 +4,13 @@
 
 using System.Security.Claims;
 
-using LumaCore.Api.Features.Admin.Contracts;
+using LumaCore.Api.Features.ApiVersioning;
 using LumaCore.Api.Features.Auth;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
+
+using V1 = LumaCore.Api.Features.Admin.Contracts.V1;
 
 namespace LumaCore.Api.Features.Admin;
 
@@ -25,12 +27,12 @@ namespace LumaCore.Api.Features.Admin;
 public static class EndpointMapping
 {
 	/// <summary>
-	/// Maps the admin endpoint group (for example <c>/api/admin/*</c>) into the application's
+	/// Maps the admin endpoint group (for example <c>/api/v1/admin/*</c>) into the application's
 	/// endpoint routing table.
 	/// </summary>
 	/// <param name="endpoints">
 	/// The <see cref="IEndpointRouteBuilder"/> to map endpoints to. This is typically the
-	/// <c>/api</c> route group from <c>Program.Pipeline.cs</c>, not the root application.
+	/// <c>/api/v{version}</c> route group from <c>Program.Pipeline.cs</c>, not the root application.
 	/// </param>
 	/// <returns>The <paramref name="endpoints"/> builder for method chaining.</returns>
 	/// <remarks>
@@ -41,8 +43,8 @@ public static class EndpointMapping
 	///     <c>RequireAuthorization()</c>.
 	///     </para>
 	///     <para>
-	///     This feature is designed to be mounted on a route group (typically <c>/api</c>) and
-	///     maps its endpoints relative to that group. The <c>/api</c> prefix is added by the
+	///     This feature is designed to be mounted on a route group (typically <c>/api/v{version}</c>) and
+	///     maps its endpoints relative to that group. The versioned prefix is added by the
 	///     central route group in <c>Program.Pipeline.cs</c>.
 	///     </para>
 	///     <para>
@@ -52,7 +54,7 @@ public static class EndpointMapping
 	/// </remarks>
 	public static IEndpointRouteBuilder MapAdminFeature(this IEndpointRouteBuilder endpoints)
 	{
-		// Note: This feature maps relative paths. The /api prefix is provided by the
+		// Note: This feature maps relative paths. The /api/v{version} prefix is provided by the
 		// central route group in Program.Pipeline.cs which also applies global filters
 		// like validation. Features should NOT include /api in their paths.
 		//
@@ -74,7 +76,7 @@ public static class EndpointMapping
 		//
 		// At the current stage of development the feature provides:
 		//
-		//   - GET /api/admin/status
+		//   - GET /api/v1/admin/status
 		//     Returns a small, non-sensitive snapshot of the API status, including
 		//     environment, API version, machine name, server time, and high-level JWT
 		//     configuration information. Secrets such as the signing key are never
@@ -89,12 +91,12 @@ public static class EndpointMapping
 		//   - system restart, shutdown, or maintenance operations
 		//
 		// These capabilities can be added here in the future, keeping all operational
-		// and potentially high-impact actions clearly grouped under the /api/admin
+		// and potentially high-impact actions clearly grouped under the /api/v{version}/admin
 		// prefix.
 		// -----------------------------------------------------------------------------
 
 		// ---------------------------------------------------------------------
-		// /api/admin/status
+		// /api/v1/admin/status
 		// ---------------------------------------------------------------------
 		// Exposes a small set of non-sensitive status information about the
 		// running LumaCore instance. Sensitive values such as the JWT signing
@@ -142,7 +144,7 @@ public static class EndpointMapping
 						                              : $"*** (length {signingKey.Length})";
 
 					// Build the JWT status info.
-					var jwtStatus = new AdminJwtStatusInfo(
+					var jwtStatus = new V1.AdminJwtStatusInfo(
 						Configured: jwtConfigured,
 						Issuer: jwtOptions.Issuer,
 						Audience: jwtOptions.Audience,
@@ -150,7 +152,7 @@ public static class EndpointMapping
 						AccessTokenLifetimeMinutes: jwtOptions.AccessTokenLifetimeMinutes);
 
 					// Build the overall admin status response.
-					var response = new AdminStatusResponse(
+					var response = new V1.AdminStatusResponse(
 						Environment: environment,
 						ApiVersion: apiVersion,
 						MachineName: Environment.MachineName,
@@ -159,7 +161,8 @@ public static class EndpointMapping
 
 					return Results.Ok(response);
 				})
-			.Produces<AdminStatusResponse>(StatusCodes.Status200OK)
+			.MapToApiVersion(ApiVersions.V1)
+			.Produces<V1.AdminStatusResponse>(StatusCodes.Status200OK)
 			.Produces(StatusCodes.Status401Unauthorized)
 			.Produces(StatusCodes.Status403Forbidden)
 			.WithSummary("Returns high-level status information about the API.")

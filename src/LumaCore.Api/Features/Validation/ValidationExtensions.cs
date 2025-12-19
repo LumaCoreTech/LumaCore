@@ -63,7 +63,7 @@ public static class ValidationExtensions
 	/// </remarks>
 	/// <example>
 	///     <code>
-	/// app.MapGroup("/api/items")
+	/// app.MapGroup("/api/v1/items")
 	///    .WithValidation()
 	///    .MapPost("/", HandleCreate)
 	///    .MapPut("/{id}", HandleUpdate);

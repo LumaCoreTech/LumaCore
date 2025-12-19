@@ -124,7 +124,7 @@ The *FeatureName* feature exposes [number] endpoints: [brief description of each
 Each endpoint follows this structure:
 
 ```markdown
-### `METHOD /api/path`
+### `METHOD /api/v1/path`
 
 Short description of what the endpoint does. [Explain the purpose and typical use case.]
 
@@ -134,7 +134,7 @@ behavior — write flowing text that reads naturally.]
 
 **Requires:** a valid JWT (`Authorization: Bearer <token>`)
 
-> For request/response schemas and examples, see the [OpenAPI documentation](../api/openapi.md).
+> For request/response schemas and examples, see the [OpenAPI documentation](../api/README.md).
 ```
 
 For endpoints requiring specific roles:
@@ -159,7 +159,7 @@ Rules:
 
 ### Features Without Endpoints (Middleware-Only)
 
-Some features (e.g., CORS, SecurityHeaders, ProxyHeaders) configure middleware but do not expose endpoints. For these features:
+Some features (e.g., *CORS*, *SecurityHeaders*, *ProxyHeaders*) configure middleware but do not expose endpoints. For these features:
 
 - Omit the `## Endpoints` section entirely
 - Focus on `## Configuration` and `## Pipeline Order`
@@ -396,7 +396,7 @@ Each section should flow naturally into the next. Use transitional phrases and e
 | Feature names in titles | Plain | # Auth Feature |
 | Configuration keys | `Code` | Set `Issuer` to... |
 | HTTP methods | `Code` + uppercase | `GET`, `POST` |
-| Endpoint paths | `Code` | `/api/auth/login` |
+| Endpoint paths | `Code` | `/api/v1/auth/login` |
 | Type names | `Code` | `LoginResponse` |
 | Environment variables | `Code` | `Jwt__Issuer` |
 | Roles | `Code` | `admin` role |

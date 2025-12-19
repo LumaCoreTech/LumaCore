@@ -11,13 +11,13 @@ The *Admin* feature provides endpoints intended for operational insight and admi
 
 The *Admin* feature currently exposes a single endpoint for retrieving instance status. Additional administrative endpoints will be added as the platform evolves.
 
-### `GET /api/admin/status`
+### `GET /api/v1/admin/status`
 
 Returns high-level status information about the running LumaCore instance. This endpoint is useful for health dashboards, deployment verification, and troubleshooting configuration issues. For security reasons, the signing key is never exposed — only a masked representation is returned.
 
 **Requires:** a valid JWT with the `admin` role (`Authorization: Bearer <token>`)
 
-> For request/response schemas and examples, see the [OpenAPI documentation](../api/openapi.md).
+> For request/response schemas and examples, see the [OpenAPI documentation](../api/README.md).
 
 ---
 
@@ -45,8 +45,8 @@ The *Admin* feature registers endpoints only — no middleware. Since it has no 
 
 A typical administrative workflow works as follows:
 
-1. Administrator obtains a JWT via the *Auth* feature (`POST /api/auth/login`).
-2. Administrator calls `GET /api/admin/status` with the token.
+1. Administrator obtains a JWT via the *Auth* feature (`POST /api/v1/auth/login`).
+2. Administrator calls `GET /api/v1/admin/status` with the token.
 3. The response confirms that LumaCore is running and configured correctly.
 4. Administrator verifies environment, version, and JWT settings match expectations.
 

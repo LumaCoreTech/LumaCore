@@ -21,7 +21,7 @@ This guide provides practical, hands-on instructions for building features. It c
 - **Endpoint Patterns:** Mapping HTTP routes effectively
 - **Testing:** Writing tests for your features
 - **Best Practices:** Common patterns and pitfalls to avoid
-- **Real Examples:** Complete walkthrough of the Auth feature
+- **Real Examples:** Complete walkthrough of the *Auth* feature
 
 ---
 
@@ -199,9 +199,9 @@ public static IEndpointRouteBuilder Map<Feature>Feature(
 ```
 
 > [!IMPORTANT]
-> **Business API features** are mounted on the central `/api` route group in `Program.Pipeline.cs`. This group applies the `ValidationFilter` globally, so features should map **relative paths** (e.g., `/myfeature`, not `/api/myfeature`). The `/api` prefix is added automatically by the parent group.
+> **Business API features** are mounted on the central versioned `/api/v{version}` route group in `Program.Pipeline.cs`. This group applies the `ValidationFilter` globally, so features should map **relative paths** (e.g., `/myfeature`, not `/api/v1/myfeature`). The `/api/v1` prefix is added automatically by the parent group.
 >
-> **Infrastructure features** (like Health) are mapped directly to the root and should include their full path.
+> **Infrastructure endpoints** (like `/health`) are mapped directly to the application root, outside the versioned API group.
 
 **Example (Business API Feature):**
 
@@ -220,12 +220,12 @@ public static class EndpointMapping
     /// </summary>
     /// <param name="endpoints">
     /// The <see cref="IEndpointRouteBuilder"/> to map endpoints to. This is typically the
-    /// <c>/api</c> route group from <c>Program.Pipeline.cs</c>, not the root application.
+    /// versioned <c>/api/v{version}</c> route group from <c>Program.Pipeline.cs</c>, not the root application.
     /// </param>
     /// <returns>The <paramref name="endpoints"/> builder for method chaining.</returns>
     /// <remarks>
     /// This method groups the feature's endpoints under a common prefix (<c>/myfeature</c>)
-    /// relative to the parent route group. The full path becomes <c>/api/myfeature</c> when
+    /// relative to the parent route group. The full path becomes <c>/api/v1/myfeature</c> when
     /// mounted on the central API group. It is intended to be called once during startup
     /// from <c>Program.Pipeline.cs</c>.
     /// </remarks>
@@ -410,7 +410,7 @@ Features/MyFeature/
 
 **Real-world benefit - API versioning:**
 
-When you need to version your API:
+When you need to version your API, contracts are organized by version:
 
 ```
 Features/MyFeature/
@@ -426,6 +426,53 @@ Features/MyFeature/
 ```
 
 The service layer doesn't duplicate - only the contracts. Internal logic is reused across versions.
+
+**Contract versioning conventions:**
+
+1. **Namespace mirrors folder structure:**
+   ```csharp
+   // In Features/MyFeature/Contracts/V1/CreateItemRequest.cs
+   namespace LumaCore.Api.Features.MyFeature.Contracts.V1;
+   
+   // In Features/MyFeature/Contracts/V2/CreateItemRequest.cs
+   namespace LumaCore.Api.Features.MyFeature.Contracts.V2;
+   ```
+
+2. **Use using aliases in EndpointMapping for clarity:**
+   ```csharp
+   using V1 = LumaCore.Api.Features.MyFeature.Contracts.V1;
+   using V2 = LumaCore.Api.Features.MyFeature.Contracts.V2;
+   
+   // V1 endpoint
+   group.MapPost("/items", (V1.CreateItemRequest request) => HandleCreateV1(request))
+       .MapToApiVersion(ApiVersions.V1);
+   
+   // V2 endpoint with extended DTO
+   group.MapPost("/items", (V2.CreateItemRequest request) => HandleCreateV2(request))
+       .MapToApiVersion(ApiVersions.V2);
+   ```
+
+3. **Shared contracts stay in root `Contracts/` folder:**
+   ```
+   Features/MyFeature/
+   ├── Contracts/
+   │   ├── SharedTypes.cs          # Unchanged since V1, used by both
+   │   ├── V1/
+   │   │   └── CreateItemRequest.cs   # V1-specific
+   │   └── V2/
+   │       └── CreateItemRequest.cs   # V2 with new fields
+   ```
+
+4. **XMLDocs include full versioned path:**
+   ```csharp
+   /// <summary>
+   /// Represents the response returned by the <c>/api/v1/myfeature/items</c> endpoint.
+   /// </summary>
+   public sealed record ItemResponse(string Id, string Name);
+   ```
+
+> [!IMPORTANT]
+> **All new features start with `Contracts/V1/`** from day one. This ensures consistent structure and makes future versioning seamless. Never put contracts directly in `Contracts/` unless they are truly shared across all versions.
 
 **Another benefit - serialization concerns:**
 
@@ -644,7 +691,7 @@ public async Task CreateItem_WithValidRequest_ReturnsItem()
     var request = new CreateItemRequest("Test Item");
     
     // Act
-    HttpResponseMessage response = await client.PostAsJsonAsync("/api/myfeature/items", request);
+    HttpResponseMessage response = await client.PostAsJsonAsync("/api/v1/myfeature/items", request);
     
     // Assert
     response.EnsureSuccessStatusCode();
@@ -1094,7 +1141,7 @@ return Results.Problem(
     "title": "Bad Request",
     "status": 400,
     "detail": "Cannot delete an item that has active references.",
-    "instance": "/api/items/123",
+    "instance": "/api/v1/items/123",
     "traceId": "00-1234abcd..."
 }
 ```
@@ -1120,7 +1167,7 @@ When creating a new feature, ensure:
 ### File Structure
 - [ ] `ServiceRegistration.cs` with `Add<Feature>Feature()` method
 - [ ] `EndpointMapping.cs` with `Map<Feature>Feature()` method
-- [ ] `Contracts/` folder with all DTOs as records
+- [ ] `Contracts/V1/` folder with all DTOs as records
 - [ ] `<Feature>Options.cs` if configuration is needed
 - [ ] Service interfaces and implementations if needed
 
@@ -1164,26 +1211,34 @@ Common issues and how to resolve them:
 
 ## Real-World Example: Auth Feature
 
-Let's walk through the complete Auth feature as a real example:
+Let's walk through the complete *Auth* feature as a real example:
 
 ### Step 1: Define Contracts
 
 ```csharp
-// LoginRequest.cs
+// Contracts/V1/LoginRequest.cs
+namespace LumaCore.Api.Features.Auth.Contracts.V1;
+
 public sealed record LoginRequest(
     [Required, MinLength(3)] string Username,
     [Required, MinLength(8)] string Password);
 
-// LoginResponse.cs
+// Contracts/V1/LoginResponse.cs
+namespace LumaCore.Api.Features.Auth.Contracts.V1;
+
 public sealed record LoginResponse(string AccessToken);
 
-// AuthWhoAmIResponse.cs
+// Contracts/V1/AuthWhoAmIResponse.cs
+namespace LumaCore.Api.Features.Auth.Contracts.V1;
+
 public sealed record AuthWhoAmIResponse(
     string Name,
     string[] Roles,
     AuthClaimItem[] Claims);
 
-// AuthClaimItem.cs
+// Contracts/V1/AuthClaimItem.cs
+namespace LumaCore.Api.Features.Auth.Contracts.V1;
+
 public sealed record AuthClaimItem(string Type, string Value);
 ```
 
@@ -1322,10 +1377,9 @@ public static class EndpointMapping
 builder.AddAuthFeature();  // ← One line!
 
 // Program.Pipeline.cs
-RouteGroupBuilder api = app.MapGroup("/api")
-    .WithValidation();  // ← Central validation for all API features
+RouteGroupBuilder api = app.MapVersionedApiGroup();  // ← /api/v{version} with validation
 
-api.MapAuthFeature();   // ← Maps to /api/auth/*
+api.MapAuthFeature();   // ← Maps to /api/v1/auth/*
 ```
 
 **That's it!** The feature is completely integrated and working.
@@ -1362,31 +1416,47 @@ This keeps `Program.cs` clean — no conditional registration needed.
 
 When you need to make breaking changes to an API, versioning lets you evolve without breaking existing clients. Old clients continue using V1 while new clients adopt V2.
 
+LumaCore uses the `Asp.Versioning` library with URL segment-based versioning (`/api/v1/...`, `/api/v2/...`). Version-specific endpoints are mapped using `MapToApiVersion()`:
+
 ```csharp
-// Program.Pipeline.cs
-app.MapGroup("/api/v1/myfeature").MapMyFeatureV1();
-app.MapGroup("/api/v2/myfeature").MapMyFeatureV2();
+// EndpointMapping.cs - Single file handles multiple versions
+using V1 = LumaCore.Api.Features.MyFeature.Contracts.V1;
+using V2 = LumaCore.Api.Features.MyFeature.Contracts.V2;
+
+public static IEndpointRouteBuilder MapMyFeature(this IEndpointRouteBuilder group)
+{
+    // V1 endpoint (original contract)
+    group.MapPost("/items", (V1.CreateItemRequest request) => HandleCreateV1(request))
+        .MapToApiVersion(ApiVersions.V1);
+    
+    // V2 endpoint (extended contract with new fields)
+    group.MapPost("/items", (V2.CreateItemRequest request) => HandleCreateV2(request))
+        .MapToApiVersion(ApiVersions.V2);
+    
+    return group;
+}
 ```
 
-Each version has its own contracts and endpoint mappings, but they share the same service layer. Only the API surface is duplicated — not the business logic:
+Each version has its own contracts, but they share the same service layer. Only the API surface is duplicated — not the business logic:
 
 ```
 Features/MyFeature/
 ├── Contracts/
-│   ├── V1/ItemResponse.cs    # Old format
-│   └── V2/ItemResponse.cs    # New format (extra fields)
-├── MyFeatureService.cs       # Shared implementation
-├── EndpointMappingV1.cs      # V1 routes
-└── EndpointMappingV2.cs      # V2 routes
+│   ├── V1/
+│   │   └── CreateItemRequest.cs   # Old format
+│   └── V2/
+│       └── CreateItemRequest.cs   # New format (extra fields)
+├── MyFeatureService.cs            # Shared implementation
+└── EndpointMapping.cs             # Single file, uses MapToApiVersion()
 ```
 
-This keeps Swagger clean (separate endpoint groups per version) and makes the API self-documenting.
+This keeps Swagger clean (separate endpoint groups per version via the dropdown) and makes the API self-documenting.
 
 This is why contracts matter: DTOs decouple the API surface from internal data structures. You can evolve your database schema without breaking existing API versions.
 
 ### Feature Dependencies
 
-Some features depend on others. For example, any feature that requires authentication depends on the Auth feature being registered first — it needs the authentication services and middleware in place.
+Some features depend on others. For example, any feature that requires authentication depends on the *Auth* feature being registered first — it needs the authentication services and middleware in place.
 
 ```csharp
 // MyFeature needs Auth to be registered first

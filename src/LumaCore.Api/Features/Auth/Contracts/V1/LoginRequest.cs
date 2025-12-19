@@ -4,14 +4,14 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace LumaCore.Api.Features.Auth.Contracts;
+namespace LumaCore.Api.Features.Auth.Contracts.V1;
 
 /// <summary>
 /// Represents login credentials submitted by a client in order to obtain a JWT.
 /// </summary>
 /// <remarks>
 ///     <para>
-///     This record is consumed by the <c>POST /api/auth/login</c> endpoint in <see cref="EndpointMapping"/>.
+///     This record is consumed by the <c>POST /api/v1/auth/login</c> endpoint in <see cref="EndpointMapping"/>.
 ///     </para>
 ///     <para>
 ///     Validation is performed automatically by the <see cref="Validation.ValidationFilter"/>

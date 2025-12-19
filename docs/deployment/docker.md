@@ -116,7 +116,7 @@ In production, you should do this regularly — ideally as part of your deployme
 
 ## Health Checks
 
-Docker automatically monitors whether LumaCore is still alive. Every 30 seconds, it calls the `/api/health/live` endpoint. If this check fails three times in a row, Docker marks the container as "unhealthy".
+Docker automatically monitors whether LumaCore is still alive. Every 30 seconds, it calls the `/api/v1/health/live` endpoint. If this check fails three times in a row, Docker marks the container as "unhealthy".
 
 Important: Docker only *marks* the container — it doesn't automatically restart it. Automatic restarts require additional tooling like Docker Swarm, Kubernetes, or a watchdog service. The `restart: unless-stopped` policy only kicks in when the process actually crashes, not when health checks fail.
 
@@ -128,7 +128,7 @@ docker ps
 
 The STATUS column shows something like `Up 5 minutes (healthy)` or `Up 2 minutes (unhealthy)`.
 
-LumaCore exposes two health endpoints for different purposes. The `/api/health/live` endpoint is a simple liveness check — it just confirms the process is running and can respond to HTTP requests. It's fast and has no dependencies.
+LumaCore exposes two health endpoints for different purposes. The `/api/v1/health/live` endpoint is a simple liveness check — it just confirms the process is running and can respond to HTTP requests. It's fast and has no dependencies.
 
 The `/health` endpoint is a readiness check. It verifies that all registered services are healthy, including any database connections or external dependencies. This is more thorough but slower.
 
@@ -243,7 +243,7 @@ You should see `0.0.0.0:5080->5080/tcp` in the PORTS column. If it shows `127.0.
 **Health check failing?** Check if the endpoint actually responds:
 
 ```bash
-curl http://localhost:5080/api/health/live
+curl http://localhost:5080/api/v1/health/live
 ```
 
 If this works but Docker still shows unhealthy, the application might need more time to start. The health check has a start period of 10 seconds by default — it waits that long before the first check. For larger deployments, you might need to increase this in the Dockerfile.
@@ -283,7 +283,7 @@ The base image is `mcr.microsoft.com/dotnet/aspnet:10.0`, Microsoft's official A
 
 The application runs as the `app` user with UID 1654. This is a non-root user that comes pre-configured in the .NET base images since .NET 8.
 
-The working directory is `/app`, where all application files live. The container exposes port 5080 for HTTP traffic. The container HEALTHCHECK uses the `LumaCore.HealthCheck` tool, which in turn calls `/api/health/live` every 30 seconds.
+The working directory is `/app`, where all application files live. The container exposes port 5080 for HTTP traffic. The container HEALTHCHECK uses the `LumaCore.HealthCheck` tool, which in turn calls `/api/v1/health/live` every 30 seconds.
 
 The image also contains `/lumacore.version` with the version string — useful for tagging when pushing to a registry.
 

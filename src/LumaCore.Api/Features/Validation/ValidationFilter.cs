@@ -30,7 +30,7 @@ namespace LumaCore.Api.Features.Validation;
 ///        .AddEndpointFilter&lt;ValidationFilter&gt;();
 /// 
 ///     // Route group (all endpoints in the group)
-///     app.MapGroup("/api/items")
+///     app.MapGroup("/api/v1/items")
 ///        .AddEndpointFilter&lt;ValidationFilter&gt;()
 ///        .MapPost("/", HandleCreate)
 ///        .MapPut("/{id}", HandleUpdate);

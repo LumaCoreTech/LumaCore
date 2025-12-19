@@ -20,7 +20,7 @@ LumaCore follows a **feature-oriented architecture** where every major capabilit
 
 > **"Every feature owns its endpoints, services, configuration, and contracts."**
 
-This means when you want to understand authentication, you open the Auth feature folder and everything you need is there. No hunting across the codebase for controllers, data models, or services scattered in different locations.
+This means when you want to understand authentication, you open the *Auth* feature folder and everything you need is there. No hunting across the codebase for controllers, data models, or services scattered in different locations.
 
 ---
 
@@ -55,7 +55,7 @@ Understand where everything lives and why it's organized that way.
 - Service registration lifecycle
 - Endpoint mapping
 - Feature isolation principles
-- Real examples from Auth, Admin, Health features
+- Real examples from *Auth*, *Admin*, *Health* features
 
 This is the most important pattern in LumaCore - understand this and you understand the system.
 
@@ -79,7 +79,7 @@ Learn how security is baked into the architecture from the ground up.
 
 LumaCore organizes all code by feature, not by technical layer. Each feature owns its endpoints, services, configuration, and contracts in a single folder.
 
-**Example:** The Auth feature lives in `Features/Auth/` within the Api project (`src/LumaCore.Api/Features/Auth/`).
+**Example:** The *Auth* feature lives in `Features/Auth/` within the Api project (`src/LumaCore.Api/Features/Auth/`).
 
 **Why?** Traditional ASP.NET projects scatter related code across Controllers, Services, Models folders—requiring you to open 5+ files in different locations to understand one capability. Feature-based architecture keeps everything together.
 

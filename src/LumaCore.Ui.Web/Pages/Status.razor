@@ -4,7 +4,7 @@
 @inject HttpClient Http
 
 @* Status page that shows the current backend health as seen from the UI.
-   Uses the same /api/health/live endpoint that the header health indicator relies on. *@
+   Uses the same /api/v1/health/live endpoint that the header health indicator relies on. *@
 
 <h1>Instance Status</h1>
 
@@ -77,7 +77,7 @@ else
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///     Sends an HTTP GET request to the <c>api/health/live</c> endpoint and distinguishes between:
+    ///     Sends an HTTP GET request to the <c>api/v1/health/live</c> endpoint and distinguishes between:
     ///     HTTP status failures, payload format issues, and a valid JSON response.
     ///     </para>
     /// </remarks>
@@ -93,7 +93,7 @@ else
         {
             // Perform a lightweight GET request and inspect the status code explicitly.
             using HttpResponseMessage response =
-                await Http.GetAsync("api/health/live", HttpCompletionOption.ResponseHeadersRead);
+                await Http.GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead);
 
             if (!response.IsSuccessStatusCode)
             {

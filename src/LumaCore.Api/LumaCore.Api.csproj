@@ -12,37 +12,24 @@
 	BUILD-TIME OPENAPI DOCUMENT GENERATION
 	═══════════════════════════════════════════════════════════════════════════════
 	
-	This section configures automatic OpenAPI document generation during build.
-	Generation is OPT-IN to avoid slowing down regular development builds.
+	OpenAPI JSON generation is handled by the dedicated script:
+	  ./build.net/OpenApi/generate-openapi-json.ps1
 	
-	Usage:
-	  dotnet build /p:GenerateOpenApi=true
-	  
-	What happens:
-	  1. MSBuild invokes dotnet-getdocument.dll from the ApiDescription.Server package
-	  2. Your app starts with GetDocument.Insider.dll as the entry assembly
-	  3. The tool extracts the OpenAPI document from the running app (no ports opened)
-	  4. Output is written to: docs/api/openapi.json
+	The script generates one JSON file per API version (v1.json, v2.json, etc.)
+	and handles Microsoft's quirky naming conventions correctly.
 	
-	IMPORTANT: The OpenAPI endpoint is only exposed when:
-	  - ASPNETCORE_ENVIRONMENT=Development (normal development), OR
-	  - Entry assembly is "GetDocument.Insider" (build-time generation)
+	DO NOT use /p:GenerateOpenApi=true directly - use the script instead.
 	
-	In Production builds, the /openapi/v1.json endpoint is NOT exposed.
+	After JSON generation, run:
+	  ./build.net/OpenApi/generate-api-docs.ps1
+	to create Markdown documentation.
 	
-	The Pre-Commit-Actions.ps1 script calls this automatically.
-	See Program.Pipeline.cs for the endpoint exposure logic.
+	See docs/api/README.md for full workflow documentation.
 	═══════════════════════════════════════════════════════════════════════════════
 	-->
+	<!-- OpenAPI generation disabled by default - use generate-openapi-json.ps1 -->
 	<PropertyGroup>
-		<!-- Only generate when explicitly requested via /p:GenerateOpenApi=true -->
-		<OpenApiGenerateDocuments Condition="'$(GenerateOpenApi)' == 'true'">true</OpenApiGenerateDocuments>
-
-		<!-- Output directory relative to project file (resolves to repo-root/docs/api/) -->
-		<OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/../../docs/api</OpenApiDocumentsDirectory>
-
-		<!-- Output filename without extension (produces openapi.json) -->
-		<OpenApiGenerateDocumentsOptions>--file-name openapi</OpenApiGenerateDocumentsOptions>
+		<OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -63,6 +50,12 @@
 		<!-- ASP.NET Core Packages -->
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.1" />
+
+		<!-- API Versioning for Minimal APIs -->
+		<PackageReference Include="Asp.Versioning.Http" Version="8.1.0" />
+
+		<!-- API Explorer for versioned OpenAPI document generation -->
+		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
 
 		<!-- Native OpenAPI for .NET 10 -->
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />

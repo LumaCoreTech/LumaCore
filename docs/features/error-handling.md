@@ -44,7 +44,7 @@ An `IExceptionHandler` implementation that converts unhandled exceptions into RF
   "type": "urn:lumacore:error:internal",
   "title": "An unexpected error occurred",
   "status": 500,
-  "instance": "/api/some/endpoint",
+  "instance": "/api/v1/some/endpoint",
   "traceId": "00-abc123def456..."
 }
 ```
@@ -84,6 +84,12 @@ builder.AddErrorHandlingFeature();  // After AddProblemDetails()
 app.UseExceptionHandler();
 app.UseErrorHandlingFeature();  // After UseExceptionHandler()
 ```
+
+---
+
+## Registered Services
+
+The *Error Handling* feature does not register any injectable services. It configures ASP.NET Core's built-in *ProblemDetails* services and exception handling middleware.
 
 ---
 
@@ -140,7 +146,7 @@ Request → ProxyHeaders → ExceptionHandler → ErrorHandling → HTTPS → ..
   "type": "urn:lumacore:error:internal",
   "title": "An unexpected error occurred",
   "status": 500,
-  "instance": "/api/auth/login",
+  "instance": "/api/v1/auth/login",
   "traceId": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
 }
 ```

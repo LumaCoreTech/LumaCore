@@ -53,7 +53,7 @@
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///     Sends an HTTP GET request to the <c>api/health/live</c> endpoint. HTTP status codes and
+    ///     Sends an HTTP GET request to the <c>api/v1/health/live</c> endpoint. HTTP status codes and
     ///     payload format are handled separately:
     ///     </para>
     ///     <list type="bullet">
@@ -79,7 +79,7 @@
         try
         {
             // Perform a lightweight GET request and inspect the status code explicitly.
-            using HttpResponseMessage response = await Http.GetAsync("api/health/live", HttpCompletionOption.ResponseHeadersRead);
+            using HttpResponseMessage response = await Http.GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead);
 
             if (!response.IsSuccessStatusCode)
             {

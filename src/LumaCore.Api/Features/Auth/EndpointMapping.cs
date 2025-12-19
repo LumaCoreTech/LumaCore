@@ -5,9 +5,11 @@
 using System.Collections.ObjectModel;
 using System.Security.Claims;
 
-using LumaCore.Api.Features.Auth.Contracts;
+using LumaCore.Api.Features.ApiVersioning;
 
 using Microsoft.Extensions.Options;
+
+using V1 = LumaCore.Api.Features.Auth.Contracts.V1;
 
 namespace LumaCore.Api.Features.Auth;
 
@@ -37,20 +39,20 @@ public static class EndpointMapping
 	///     <list type="bullet">
 	///         <item>
 	///             <description>
-	///             <c>POST /api/auth/login</c> – accepts a <see cref="LoginRequest"/> and returns a
-	///             <see cref="LoginResponse"/> containing a short-lived access token.
+	///             <c>POST /api/v1/auth/login</c> – accepts a <see cref="V1.LoginRequest"/> and returns a
+	///             <see cref="V1.LoginResponse"/> containing a short-lived access token.
 	///             </description>
 	///         </item>
 	///         <item>
 	///             <description>
-	///             <c>GET /api/auth/whoami</c> – returns information about the currently authenticated
+	///             <c>GET /api/v1/auth/whoami</c> – returns information about the currently authenticated
 	///             principal (name, roles, and raw claims). This endpoint is available to any
 	///             authenticated user.
 	///             </description>
 	///         </item>
 	///         <item>
 	///             <description>
-	///             <c>GET /api/auth/introspect</c> – returns information about the current authenticated
+	///             <c>GET /api/v1/auth/introspect</c> – returns information about the current authenticated
 	///             principal and token, including expiry information.
 	///             </description>
 	///         </item>
@@ -61,14 +63,14 @@ public static class EndpointMapping
 	///     store is available.
 	///     </para>
 	///     <para>
-	///     This feature is designed to be mounted on a route group (typically <c>/api</c>) and
-	///     maps its endpoints relative to that group. The <c>/api</c> prefix is added by the
+	///     This feature is designed to be mounted on a route group (typically <c>/api/v{version}</c>) and
+	///     maps its endpoints relative to that group. The versioned prefix is added by the
 	///     central route group in <c>Program.Pipeline.cs</c>.
 	///     </para>
 	/// </remarks>
 	public static IEndpointRouteBuilder MapAuthFeature(this IEndpointRouteBuilder endpoints)
 	{
-		// Note: This feature maps relative paths. The /api prefix is provided by the
+		// Note: This feature maps relative paths. The /api/v{version} prefix is provided by the
 		// central route group in Program.Pipeline.cs which also applies global filters
 		// like validation. Features should NOT include /api in their paths.
 		RouteGroupBuilder group = endpoints
@@ -81,19 +83,19 @@ public static class EndpointMapping
 		// This endpoint group hosts all authentication-related routes of the LumaCore
 		// API. At the current stage of development the feature provides:
 		//
-		//   - POST /api/auth/login
+		//   - POST /api/v1/auth/login
 		//     Issues a short-lived JWT access token for the built-in administrator
 		//     account. This is a temporary bootstrap mechanism until LumaCore has a
 		//     persistent user store (for example a database-backed authentication
 		//     system with proper password hashing and user management).
 		//
-		//   - GET /api/auth/whoami
+		//   - GET /api/v1/auth/whoami
 		//     Returns basic information about the currently authenticated principal,
 		//     including effective name, roles, and raw claims. This endpoint is useful
 		//     for debugging authentication and authorization behavior and is available
 		//     to any authenticated user, not only administrators.
 		//
-		//   - GET /api/auth/introspect
+		//   - GET /api/v1/auth/introspect
 		//     Returns diagnostic information about the current principal and token
 		//     (subject, roles, issuer, audience, expiry, remaining lifetime, etc.).
 		//     This endpoint is primarily intended for development and debugging of
@@ -114,7 +116,7 @@ public static class EndpointMapping
 		group.MapPost(
 				"/login",
 				(
-					LoginRequest     request,
+					V1.LoginRequest  request,
 					IJwtTokenFactory tokenFactory,
 					ILoggerFactory   loggerFactory) =>
 				{
@@ -151,8 +153,9 @@ public static class EndpointMapping
 						request.Username);
 
 					// Return the access token to the caller.
-					return Results.Ok(new LoginResponse(token));
+					return Results.Ok(new V1.LoginResponse(token));
 				})
+			.MapToApiVersion(ApiVersions.V1)
 			.AllowAnonymous()
 			.WithSummary("Authenticates the built-in admin and issues a JWT access token.")
 			.WithDescription(
@@ -184,21 +187,22 @@ public static class EndpointMapping
 					// Extract all claims as raw type/value pairs.
 					// This allows clients to inspect the full set of claims.
 					// The claims are returned in no particular order.
-					ReadOnlyCollection<AuthClaimItem> claims = user.Claims
-						.Select(c => new AuthClaimItem(c.Type, c.Value))
+					ReadOnlyCollection<V1.AuthClaimItem> claims = user.Claims
+						.Select(c => new V1.AuthClaimItem(c.Type, c.Value))
 						.ToList()
 						.AsReadOnly();
 
 					// Build and return the whoami response.
-					var response = new AuthWhoAmIResponse(
+					var response = new V1.AuthWhoAmIResponse(
 						Name: name,
 						Roles: roles,
 						Claims: claims);
 
 					return Results.Ok(response);
 				})
+			.MapToApiVersion(ApiVersions.V1)
 			.RequireAuthorization()
-			.Produces<AuthWhoAmIResponse>(StatusCodes.Status200OK)
+			.Produces<V1.AuthWhoAmIResponse>(StatusCodes.Status200OK)
 			.Produces(StatusCodes.Status401Unauthorized)
 			.WithSummary("Returns the current authenticated user.")
 			.WithDescription(
@@ -279,7 +283,7 @@ public static class EndpointMapping
 					// Build and return the introspection response.
 					// This includes all extracted information about the token
 					// and the configured access token lifetime for reference.
-					var response = new AuthIntrospectResponse(
+					var response = new V1.AuthIntrospectResponse(
 						Subject: subject,
 						Name: name,
 						Roles: roles,
@@ -299,8 +303,9 @@ public static class EndpointMapping
 					// Return the introspection response.
 					return Results.Ok(response);
 				})
+			.MapToApiVersion(ApiVersions.V1)
 			.RequireAuthorization()
-			.Produces<AuthIntrospectResponse>(StatusCodes.Status200OK)
+			.Produces<V1.AuthIntrospectResponse>(StatusCodes.Status200OK)
 			.Produces(StatusCodes.Status401Unauthorized)
 			.WithSummary("Introspects the current JWT and returns details about the token.")
 			.WithDescription(

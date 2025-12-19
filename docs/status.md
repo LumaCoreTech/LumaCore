@@ -41,7 +41,7 @@ The LLM Integration layer connects LumaCore to AI models and orchestrates conver
 ### Model Backends
 | Capability       | Stage | Functional Target (Phase) | Hardened Target (Phase) |
 |------------------|-------|---------------------------|-----------------|
-| **Ollama Integration**<br/>_Connect to Ollama REST API (/api/generate, /api/chat) for model inference._ | ❌ None | P1 | P2 |
+| **Ollama Integration**<br/>_Connect to Ollama REST API (/api/v1/generate, /api/v1/chat) for model inference._ | ❌ None | P1 | P2 |
 | **OpenAI API Support**<br/>_Support OpenAI-compatible API endpoints as alternative backend._ | ❌ None | P2 | P3 |
 | **Model Health Checks**<br/>_Check Ollama connection, configured model availability, and inference readiness._ | ❌ None | P1 | P2 |
 | **Model Configuration**<br/>_Configure available models and inference parameters (temperature, top_p, max_tokens)._ | ❌ None | P1 | P2 |

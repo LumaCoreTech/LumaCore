@@ -11,7 +11,7 @@ The *Auth* feature provides JWT-based authentication and identity introspection 
 
 The *Auth* feature exposes three endpoints: one for obtaining a token, and two for inspecting the current authentication state.
 
-### `POST /api/auth/login`
+### `POST /api/v1/auth/login`
 
 Authenticates a user and returns a JWT access token.
 
@@ -20,27 +20,27 @@ Authenticates a user and returns a JWT access token.
 
 On successful authentication, the endpoint returns a signed JWT. If authentication fails, the response does not reveal whether the username exists — this prevents user enumeration attacks.
 
-> For request/response schemas and examples, see the [OpenAPI documentation](../api/openapi.md).
+> For request/response schemas and examples, see the [OpenAPI documentation](../api/README.md).
 
 ---
 
-### `GET /api/auth/whoami`
+### `GET /api/v1/auth/whoami`
 
 Returns basic information about the currently authenticated user. This endpoint works with any authentication method supported by LumaCore — it reads from the underlying authentication context, not from JWT-specific claims.
 
 **Requires:** an authenticated user
 
-> For request/response schemas and examples, see the [OpenAPI documentation](../api/openapi.md).
+> For request/response schemas and examples, see the [OpenAPI documentation](../api/README.md).
 
 ---
 
-### `GET /api/auth/introspect`
+### `GET /api/v1/auth/introspect`
 
 Returns diagnostic information about the current authentication state. When using JWT authentication, the response includes token-specific metadata such as the validity window, remaining lifetime, and configured issuer and audience. This endpoint is primarily intended for development and debugging.
 
 **Requires:** a valid JWT (`Authorization: Bearer <token>`)
 
-> For request/response schemas and examples, see the [OpenAPI documentation](../api/openapi.md).
+> For request/response schemas and examples, see the [OpenAPI documentation](../api/README.md).
 
 ---
 
@@ -103,17 +103,17 @@ Note that `UseAuthentication()` and `UseAuthorization()` must come before endpoi
 
 ---
 
-## Typical Auth Flow
+## Typical Usage
 
 A typical authentication flow works as follows:
 
-1. Client sends credentials to `POST /api/auth/login`.
+1. Client sends credentials to `POST /api/v1/auth/login`.
 2. On success, the API returns a JWT in the `accessToken` field.
 3. Client stores the token (typically in memory or secure storage).
 4. For subsequent requests, client includes the token as `Authorization: Bearer <token>`.
 5. Protected endpoints validate the token; invalid or missing tokens return `401 Unauthorized`.
-6. Client can use `GET /api/auth/whoami` to display the current user in the UI.
-7. Client can use `GET /api/auth/introspect` for debugging token issues.
+6. Client can use `GET /api/v1/auth/whoami` to display the current user in the UI.
+7. Client can use `GET /api/v1/auth/introspect` for debugging token issues.
 
 > [!WARNING]
 > Never store JWTs in LocalStorage — it is vulnerable to XSS attacks. Use HttpOnly cookies or secure in-memory storage for production applications.

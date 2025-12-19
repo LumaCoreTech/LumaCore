@@ -35,8 +35,8 @@ Request → ProxyHeaders → HTTPS → SecurityHeaders → CORS → Auth → Rou
 
 ## Next Steps
 
-👉 **[Architecture Overview](../architecture/README.md)** - Understand the feature-based architecture  
-👉 **[Feature Pattern](../architecture/feature-pattern.md)** - Learn how features are structured
+👉 **[Architecture Overview](../architecture/README.md)** — Understand the feature-based architecture  
+👉 **[Feature Pattern](../architecture/feature-pattern.md)** — Learn how features are structured
 
 ---
 

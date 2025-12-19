@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-using Microsoft.AspNetCore.OpenApi;
+using Asp.Versioning;
+
+using LumaCore.Api.Features.ApiVersioning;
+
 using Microsoft.OpenApi;
 
 namespace LumaCore.Api.Features.OpenApi;
@@ -13,11 +16,17 @@ namespace LumaCore.Api.Features.OpenApi;
 /// <remarks>
 ///     <para>
 ///     The OpenAPI feature configures native .NET 10 OpenAPI document generation, replacing
-///     the need for Swashbuckle's <c>AddSwaggerGen()</c>. The generated document is served
-///     at <c>/openapi/v1.json</c> via <c>MapOpenApi()</c> in the request pipeline.
+///     the need for Swashbuckle's <c>AddSwaggerGen()</c>. The generated documents are served
+///     at <c>/openapi/{version}.json</c> via <c>MapOpenApi()</c> in the request pipeline.
 ///     </para>
 ///     <para>
-///     This feature configures:
+///     This feature generates one OpenAPI document per API version:
+///     </para>
+///     <list type="bullet">
+///         <item><c>/openapi/v1.json</c> – API version 1 specification</item>
+///     </list>
+///     <para>
+///     Each document includes:
 ///     </para>
 ///     <list type="bullet">
 ///         <item>Document metadata (title, version, contact, license)</item>
@@ -35,29 +44,86 @@ public static class ServiceRegistration
 	/// <returns>The <paramref name="builder"/> for method chaining.</returns>
 	/// <remarks>
 	///     <para>
-	///     This method configures native .NET 10 OpenAPI document generation with:
+	///     This method registers OpenAPI documents for each supported API version. The document
+	///     names match the version group names used by the API versioning feature (e.g., <c>v1</c>).
 	///     </para>
-	///     <list type="bullet">
-	///         <item>Document metadata via <see cref="IOpenApiDocumentTransformer"/></item>
-	///         <item>JWT Bearer security scheme</item>
-	///         <item>Global security requirement for all operations</item>
-	///         <item><see cref="SecurityResponsesTransformer"/> for automatic error documentation</item>
-	///     </list>
+	///     <para>
+	///         <b>Adding New Versions:</b>
+	///     </para>
+	///     <para>
+	///     When adding a new API version, add a corresponding <c>AddOpenApiDocument()</c> call
+	///     for the new version. For example:
+	///     </para>
+	///     <code>
+	///     AddOpenApiDocument(builder.Services, ApiVersions.V2);
+	///     </code>
 	/// </remarks>
 	public static WebApplicationBuilder AddOpenApiFeature(this WebApplicationBuilder builder)
 	{
-		builder.Services.AddOpenApi(
-			"v1",
+		// -------------------------------------------------------------------------
+		// OPENAPI DOCUMENT REGISTRATION
+		// -------------------------------------------------------------------------
+		// Register one OpenAPI document per API version. The document name must match
+		// the GroupName produced by the API versioning feature's GroupNameFormat.
+		//
+		// GroupNameFormat = "'v'VVV" produces: v1, v2, v2.1, v3-beta, etc.
+		//
+		// When adding a new API version:
+		//   1. Add the version constant to ApiVersions.cs
+		//   2. Register it in VersionedApiGroup.cs
+		//   3. Add an AddOpenApiDocument() call here
+		// -------------------------------------------------------------------------
+
+		AddOpenApiDocument(builder.Services, ApiVersions.V1);
+
+		// Future versions:
+		// AddOpenApiDocument(builder.Services, ApiVersions.V2);
+
+		return builder;
+	}
+
+	/// <summary>
+	/// Registers an OpenAPI document for the specified API version.
+	/// </summary>
+	/// <param name="services">The <see cref="IServiceCollection"/> to register services with.</param>
+	/// <param name="version">The <see cref="ApiVersion"/> to generate a document for.</param>
+	/// <remarks>
+	///     <para>
+	///     This method configures the OpenAPI document with:
+	///     </para>
+	///     <list type="bullet">
+	///         <item>Document metadata (title, version, contact, license)</item>
+	///         <item>JWT Bearer security scheme</item>
+	///         <item>Global security requirement for all operations</item>
+	///         <item>Automatic error response documentation via <see cref="SecurityResponsesTransformer"/></item>
+	///     </list>
+	/// </remarks>
+	private static void AddOpenApiDocument(IServiceCollection services, ApiVersion version)
+	{
+		// Build the document name to match the GroupNameFormat from API versioning.
+		// Format: 'v'VVV → v1, v2, v2.1, etc.
+		string documentName = $"v{version.MajorVersion}";
+		if (version.MinorVersion.HasValue && version.MinorVersion.Value > 0)
+		{
+			documentName += $".{version.MinorVersion.Value}";
+		}
+
+		if (!string.IsNullOrEmpty(version.Status))
+		{
+			documentName += $"-{version.Status}";
+		}
+
+		services.AddOpenApi(
+			documentName,
 			options =>
 			{
-				// Configure document metadata via a transformer. This approach is more flexible
-				// than Swashbuckle's SwaggerDoc() and allows for dynamic metadata generation.
+				// Configure document metadata via a transformer.
 				options.AddDocumentTransformer((document, _, _) =>
 				{
 					document.Info = new OpenApiInfo
 					{
 						Title = "LumaCore API",
-						Version = "v1",
+						Version = documentName,
 						Description = "API surface of the LumaCore server (self-hosted, persona-focused AI runtime).",
 						Contact = new OpenApiContact
 						{
@@ -75,14 +141,11 @@ public static class ServiceRegistration
 				});
 
 				// Add JWT Bearer security scheme to the OpenAPI document.
-				// This transformer adds the security definition and applies it globally to all operations.
 				options.AddDocumentTransformer((document, _, _) =>
 				{
-					// Ensure the Components and SecuritySchemes collections exist.
 					document.Components ??= new OpenApiComponents();
 					document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
 
-					// Define the Bearer authentication scheme.
 					document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
 					{
 						Type = SecuritySchemeType.Http,
@@ -95,8 +158,6 @@ public static class ServiceRegistration
 				});
 
 				// Apply global security requirement so all operations require Bearer authentication.
-				// This is equivalent to Swashbuckle's AddSecurityRequirement().
-				// In Microsoft.OpenApi 2.0+, we use OpenApiSecuritySchemeReference instead of OpenApiReference.
 				options.AddOperationTransformer((operation, context, _) =>
 				{
 					operation.Security ??= [];
@@ -110,13 +171,7 @@ public static class ServiceRegistration
 				});
 
 				// Automatically document error responses based on endpoint metadata.
-				// This transformer adds 400/401/403 responses where appropriate:
-				//   - 400: Endpoints with request body (validation errors)
-				//   - 401: Endpoints with RequireAuthorization()
-				//   - 403: Endpoints with specific roles or policies
 				options.AddOperationTransformer<SecurityResponsesTransformer>();
 			});
-
-		return builder;
 	}
 }
