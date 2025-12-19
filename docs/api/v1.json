@@ -175,7 +175,7 @@
         "properties": {
           "configured": {
             "type": "boolean",
-            "description": "`true` if a JWT issuer, audience, and signing key are all configured;\r\notherwise, `false`."
+            "description": "`true` if a JWT issuer, audience, and signing key are all configured;\notherwise, `false`."
           },
           "issuer": {
             "type": [
@@ -196,7 +196,7 @@
               "null",
               "string"
             ],
-            "description": "A masked representation of the configured signing key, or `null` if no key is configured.\r\nThe raw signing key is never exposed by this endpoint."
+            "description": "A masked representation of the configured signing key, or `null` if no key is configured.\nThe raw signing key is never exposed by this endpoint."
           },
           "accessTokenLifetimeMinutes": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -249,7 +249,7 @@
             "$ref": "#/components/schemas/AdminJwtStatusInfo"
           }
         },
-        "description": "Represents the high-level status of the running LumaCore instance as\r\nreturned by the `/api/v1/admin/status` endpoint."
+        "description": "Represents the high-level status of the running LumaCore instance as\nreturned by the `/api/v1/admin/status` endpoint."
       },
       "AuthClaimItem": {
         "required": [
@@ -267,7 +267,7 @@
             "description": "The claim value."
           }
         },
-        "description": "Represents a single claim in the authentication principal as exposed\r\nby the `/api/v1/auth/whoami` endpoint."
+        "description": "Represents a single claim in the authentication principal as exposed\nby the `/api/v1/auth/whoami` endpoint."
       },
       "AuthIntrospectResponse": {
         "required": [
@@ -324,7 +324,7 @@
               "null",
               "string"
             ],
-            "description": "The remaining lifetime of the token at the time of the request, or `null`\r\nif the expiry could not be determined."
+            "description": "The remaining lifetime of the token at the time of the request, or `null`\nif the expiry could not be determined."
           },
           "jwtId": {
             "type": [
