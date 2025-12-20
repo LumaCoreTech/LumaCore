@@ -19,7 +19,7 @@ namespace LumaCore.Api.Features.HttpsRedirection;
 ///     and deployments behind reverse proxies that terminate TLS.
 ///     </para>
 /// </remarks>
-public sealed class HttpsRedirectionOptions
+sealed class HttpsRedirectionOptions
 {
 	/// <summary>
 	/// The configuration section name used to bind these options.

@@ -9,7 +9,7 @@ namespace LumaCore.Api.Features.SecurityHeaders;
 /// <summary>
 /// Provides extension methods for integrating security headers middleware in the request pipeline.
 /// </summary>
-public static class MiddlewareIntegration
+static class MiddlewareIntegration
 {
 	/// <summary>
 	/// Configures the application to add security headers to all responses.

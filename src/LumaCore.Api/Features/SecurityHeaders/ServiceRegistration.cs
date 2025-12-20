@@ -15,7 +15,7 @@ namespace LumaCore.Api.Features.SecurityHeaders;
 ///     based on the <see cref="SecurityHeadersOptions"/> configuration.
 ///     </para>
 /// </remarks>
-public static class ServiceRegistration
+static class ServiceRegistration
 {
 	/// <summary>
 	/// Registers the Security Headers feature services using the <see cref="WebApplicationBuilder"/> facade.

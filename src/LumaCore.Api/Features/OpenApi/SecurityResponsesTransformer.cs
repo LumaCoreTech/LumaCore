@@ -53,7 +53,7 @@ namespace LumaCore.Api.Features.OpenApi;
 /// });
 /// </code>
 /// </example>
-public sealed class SecurityResponsesTransformer : IOpenApiOperationTransformer
+sealed class SecurityResponsesTransformer : IOpenApiOperationTransformer
 {
 	/// <summary>
 	/// Transforms the <see cref="OpenApiOperation"/> by adding error response documentation.

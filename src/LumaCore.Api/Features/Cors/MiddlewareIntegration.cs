@@ -9,7 +9,7 @@ namespace LumaCore.Api.Features.Cors;
 /// <summary>
 /// Provides extension methods for integrating CORS middleware in the request pipeline.
 /// </summary>
-public static class MiddlewareIntegration
+static class MiddlewareIntegration
 {
 	/// <summary>
 	/// The name of the CORS policy used by LumaCore.

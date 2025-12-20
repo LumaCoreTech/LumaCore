@@ -35,7 +35,7 @@ namespace LumaCore.Api.Features.ApiVersioning;
 ///         </item>
 ///     </list>
 /// </remarks>
-public static class VersionedApiGroup
+static class VersionedApiGroup
 {
 	/// <summary>
 	/// The route prefix for all versioned API endpoints.

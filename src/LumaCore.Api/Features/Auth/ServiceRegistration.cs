@@ -20,7 +20,7 @@ namespace LumaCore.Api.Features.Auth;
 ///     <see cref="IJwtTokenFactory"/> for issuing tokens.
 ///     </para>
 /// </remarks>
-public static class ServiceRegistration
+static class ServiceRegistration
 {
 	/// <summary>
 	/// Registers JWT authentication, authorization, options binding, and supporting services

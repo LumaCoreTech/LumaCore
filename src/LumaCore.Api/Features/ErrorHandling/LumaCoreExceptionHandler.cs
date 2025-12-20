@@ -52,7 +52,7 @@ namespace LumaCore.Api.Features.ErrorHandling;
 /// }
 /// </code>
 /// </example>
-public sealed class LumaCoreExceptionHandler : IExceptionHandler
+sealed class LumaCoreExceptionHandler : IExceptionHandler
 {
 	private readonly ILogger<LumaCoreExceptionHandler> mLogger;
 

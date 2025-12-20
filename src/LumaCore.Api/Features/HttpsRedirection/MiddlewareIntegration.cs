@@ -15,7 +15,7 @@ namespace LumaCore.Api.Features.HttpsRedirection;
 ///     based on the <see cref="HttpsRedirectionOptions"/> configuration.
 ///     </para>
 /// </remarks>
-public static class MiddlewareIntegration
+static class MiddlewareIntegration
 {
 	/// <summary>
 	/// Adds the HTTPS redirection middleware to the application pipeline if enabled.

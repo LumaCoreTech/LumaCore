@@ -7,7 +7,7 @@ namespace LumaCore.Api.Features.ErrorHandling;
 /// <summary>
 /// Provides extension methods for integrating error handling middleware in the request pipeline.
 /// </summary>
-public static class MiddlewareIntegration
+static class MiddlewareIntegration
 {
 	/// <summary>
 	/// Configures the application to return RFC 7807 <see cref="Microsoft.AspNetCore.Mvc.ProblemDetails"/>

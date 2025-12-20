@@ -13,7 +13,7 @@ namespace LumaCore.Api.Features.Cors;
 ///     based on the <see cref="CorsOptions"/> configuration.
 ///     </para>
 /// </remarks>
-public static class ServiceRegistration
+static class ServiceRegistration
 {
 	/// <summary>
 	/// Registers the CORS feature services using the <see cref="WebApplicationBuilder"/> facade.

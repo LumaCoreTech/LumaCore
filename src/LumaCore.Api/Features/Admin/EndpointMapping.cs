@@ -24,7 +24,7 @@ namespace LumaCore.Api.Features.Admin;
 ///     the <c>admin</c> role.
 ///     </para>
 /// </remarks>
-public static class EndpointMapping
+static class EndpointMapping
 {
 	/// <summary>
 	/// Maps the admin endpoint group (for example <c>/api/v1/admin/*</c>) into the application's

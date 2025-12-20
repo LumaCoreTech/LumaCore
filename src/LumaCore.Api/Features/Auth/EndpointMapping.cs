@@ -22,7 +22,7 @@ namespace LumaCore.Api.Features.Auth;
 ///     identity introspection, and token diagnostics.
 ///     </para>
 /// </remarks>
-public static class EndpointMapping
+static class EndpointMapping
 {
 	/// <summary>
 	/// Maps authentication-related endpoints.

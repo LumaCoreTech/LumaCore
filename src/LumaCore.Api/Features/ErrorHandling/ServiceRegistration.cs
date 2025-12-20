@@ -33,7 +33,7 @@ namespace LumaCore.Api.Features.ErrorHandling;
 ///     registration and the <c>UseExceptionHandler()</c> middleware.
 ///     </para>
 /// </remarks>
-public static class ServiceRegistration
+static class ServiceRegistration
 {
 	/// <summary>
 	/// Adds the Error Handling feature services to the dependency injection container.

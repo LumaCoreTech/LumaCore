@@ -25,7 +25,7 @@ namespace LumaCore.Api.Features.Auth;
 ///     has already validated credentials and supplies the correct subject and claims.
 ///     </para>
 /// </remarks>
-public sealed class JwtTokenFactory : IJwtTokenFactory
+sealed class JwtTokenFactory : IJwtTokenFactory
 {
 	private readonly JwtOptions mOptions;
 	private readonly byte[]     mSigningKeyBytes;

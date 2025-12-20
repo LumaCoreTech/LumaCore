@@ -18,7 +18,7 @@ namespace LumaCore.Api.Features.SecurityHeaders;
 ///     These headers are recommended for any publicly exposed web application.
 ///     </para>
 /// </remarks>
-public sealed class SecurityHeadersOptions : IValidatableObject
+sealed class SecurityHeadersOptions : IValidatableObject
 {
 	/// <summary>
 	/// The configuration section name used to bind these options.

@@ -55,7 +55,7 @@ namespace LumaCore.Api.Features.ErrorHandling;
 /// };
 /// </code>
 /// </example>
-public static class ErrorTypes
+static class ErrorTypes
 {
 	/// <summary>
 	/// The base URN prefix for all LumaCore error types.

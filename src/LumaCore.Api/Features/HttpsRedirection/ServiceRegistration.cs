@@ -13,7 +13,7 @@ namespace LumaCore.Api.Features.HttpsRedirection;
 ///     based on the <see cref="HttpsRedirectionOptions"/> configuration.
 ///     </para>
 /// </remarks>
-public static class ServiceRegistration
+static class ServiceRegistration
 {
 	/// <summary>
 	/// Registers HTTPS redirection services using the <see cref="WebApplicationBuilder"/> facade.

@@ -29,7 +29,7 @@ namespace LumaCore.Api.Features.Auth;
 ///     variables or a dedicated secret store and must never be committed to source control.
 ///     </para>
 /// </remarks>
-public sealed class JwtOptions
+sealed class JwtOptions
 {
 	/// <summary>
 	/// Gets the configuration section name used to bind <see cref="JwtOptions"/>.

@@ -45,7 +45,7 @@ namespace LumaCore.Api.Features.ApiVersioning;
 ///         </item>
 ///     </list>
 /// </remarks>
-public static class ServiceRegistration
+static class ServiceRegistration
 {
 	/// <summary>
 	/// Registers the API versioning feature services using the <see cref="WebApplicationBuilder"/> facade.

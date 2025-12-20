@@ -14,7 +14,7 @@ namespace LumaCore.Api.Features.Admin;
 ///     with the feature pattern used throughout LumaCore.
 ///     </para>
 /// </remarks>
-public static class ServiceRegistration
+static class ServiceRegistration
 {
 	/// <summary>
 	/// Registers options binding and supporting services using the <see cref="WebApplicationBuilder"/> facade.

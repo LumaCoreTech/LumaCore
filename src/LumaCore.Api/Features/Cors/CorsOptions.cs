@@ -19,7 +19,7 @@ namespace LumaCore.Api.Features.Cors;
 ///     access while enabling legitimate cross-origin requests.
 ///     </para>
 /// </remarks>
-public sealed class CorsOptions : IValidatableObject
+sealed class CorsOptions : IValidatableObject
 {
 	/// <summary>
 	/// The configuration section name used to bind these options.

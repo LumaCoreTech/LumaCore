@@ -13,7 +13,7 @@ namespace LumaCore.Api.Features.Health;
 ///     health check infrastructure for liveness and readiness probes.
 ///     </para>
 /// </remarks>
-public static class ServiceRegistration
+static class ServiceRegistration
 {
 	/// <summary>
 	/// Registers the health feature with the given <see cref="WebApplicationBuilder"/>.

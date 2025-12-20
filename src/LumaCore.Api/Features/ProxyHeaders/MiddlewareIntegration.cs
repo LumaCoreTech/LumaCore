@@ -15,7 +15,7 @@ namespace LumaCore.Api.Features.ProxyHeaders;
 /// <summary>
 /// Provides extension methods for integrating forwarded headers middleware in the request pipeline.
 /// </summary>
-public static class MiddlewareIntegration
+static class MiddlewareIntegration
 {
 	/// <summary>
 	/// Configures the application to process forwarded headers from reverse proxies and load balancers.

@@ -39,7 +39,7 @@ namespace LumaCore.Api.Features.Health;
 ///         </item>
 ///     </list>
 /// </remarks>
-public static class EndpointMapping
+static class EndpointMapping
 {
 	// -------------------------------------------------------------------------
 	// HEALTH FEATURE – OVERVIEW

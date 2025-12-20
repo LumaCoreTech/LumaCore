@@ -38,7 +38,7 @@ namespace LumaCore.Api.Features.ApiVersioning;
 ///         </item>
 ///     </list>
 /// </remarks>
-public static class ApiVersions
+static class ApiVersions
 {
 	/// <summary>
 	/// API version 1 – the initial stable release of the LumaCore API.

@@ -13,7 +13,7 @@ namespace LumaCore.Api.Features.ProxyHeaders;
 ///     forwarded headers from reverse proxies based on the <see cref="ProxyHeadersOptions"/> configuration.
 ///     </para>
 /// </remarks>
-public static class ServiceRegistration
+static class ServiceRegistration
 {
 	/// <summary>
 	/// Registers the ProxyHeaders feature services using the <see cref="WebApplicationBuilder"/> facade.

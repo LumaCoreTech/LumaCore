@@ -15,7 +15,7 @@ namespace LumaCore.Api.Features.Validation;
 ///     validation errors.
 ///     </para>
 /// </remarks>
-public static class ValidationExtensions
+static class ValidationExtensions
 {
 	/// <summary>
 	/// Adds automatic <see cref="System.ComponentModel.DataAnnotations"/> validation to the endpoint.

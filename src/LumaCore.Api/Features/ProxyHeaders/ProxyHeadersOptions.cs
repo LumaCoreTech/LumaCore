@@ -16,7 +16,7 @@ namespace LumaCore.Api.Features.ProxyHeaders;
 /// These options control how LumaCore processes headers like X-Forwarded-For, X-Forwarded-Proto,
 /// X-Forwarded-Host, and X-Forwarded-Prefix that are set by reverse proxies.
 /// </remarks>
-public sealed class ProxyHeadersOptions : IValidatableObject
+sealed class ProxyHeadersOptions : IValidatableObject
 {
 	/// <summary>
 	/// The configuration section name used to bind these options.
@@ -214,7 +214,7 @@ public sealed class ProxyHeadersOptions : IValidatableObject
 /// <summary>
 /// Specifies the mode for processing forwarded headers from reverse proxies and load balancers.
 /// </summary>
-public enum ForwardedHeaderMode
+enum ForwardedHeaderMode
 {
 	/// <summary>
 	/// Forwarded headers are not processed. Use this when LumaCore is accessed directly without a reverse proxy.

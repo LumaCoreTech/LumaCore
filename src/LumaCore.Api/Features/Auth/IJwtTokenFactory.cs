@@ -9,7 +9,7 @@ namespace LumaCore.Api.Features.Auth;
 /// <summary>
 /// Defines a service that can create JSON Web Tokens (JWT) for authenticated users.
 /// </summary>
-public interface IJwtTokenFactory
+interface IJwtTokenFactory
 {
 	/// <summary>
 	/// Creates a signed access token for the specified subject.

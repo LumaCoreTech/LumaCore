@@ -56,7 +56,7 @@ namespace LumaCore.Api.Features.Validation;
 /// </code>
 /// Invalid requests will automatically receive a 400 response with validation details.
 /// </example>
-public sealed class ValidationFilter : IEndpointFilter
+sealed class ValidationFilter : IEndpointFilter
 {
 	/// <summary>
 	/// Validates all endpoint arguments and either continues the pipeline or returns a validation error.

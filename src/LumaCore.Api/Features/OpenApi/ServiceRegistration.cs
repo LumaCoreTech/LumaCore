@@ -35,7 +35,7 @@ namespace LumaCore.Api.Features.OpenApi;
 ///         <item>Automatic error response documentation (400/401/403)</item>
 ///     </list>
 /// </remarks>
-public static class ServiceRegistration
+static class ServiceRegistration
 {
 	/// <summary>
 	/// Registers the OpenAPI feature services with the application.
