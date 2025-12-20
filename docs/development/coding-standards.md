@@ -906,16 +906,37 @@ var token = factory.CreateToken(principal);
 |----------|-----|---------|
 | Types (own or framework) | `<see cref=""/>` | `<see cref="ProblemDetails"/>` |
 | Interfaces | `<see cref=""/>` | `<see cref="IExceptionHandler"/>` |
-| Methods as reference | `<see cref=""/>` | `<see cref="CreateToken"/>` |
-| Methods as call example | `<c>` | `<c>AddProblemDetails()</c>` |
+| Enum values | `<see cref=""/>` | `<see cref="ForwardedHeaderMode.Cloud"/>` |
+| Own methods (same project) | `<see cref=""/>` | `<see cref="AddOpenApiDocument"/>` |
+| Properties as reference | `<see cref=""/>` | `<see cref="ApiHealthLiveResponse.Status"/>` |
+| Framework extension methods | `<c>` | `<c>AddProblemDetails()</c>` |
 | Keywords | `<see langword=""/>` | `<see langword="null"/>` |
 | Literals (strings, numbers) | `<c>` | `<c>"Bearer"</c>`, `<c>100</c>` |
+| Config section names | `<c>` | `<c>"Jwt"</c>`, `<c>"Cors"</c>` |
 | JSON field names | `<c>` | `<c>traceId</c>` |
 | HTTP status codes | `<c>` | `<c>400 Bad Request</c>` |
 | HTTP headers | `<c>` | `<c>Retry-After</c>` |
 | HTTP methods + paths | `<c>` | `<c>POST /api/v1/auth/login</c>` |
 | URNs / URIs | `<c>` | `<c>urn:lumacore:error:validation</c>` |
-| File names | `<c>` | `<c>Program.cs</c>` |
+| File names | `<c>` | `<c>appsettings.json</c>` |
+
+**Why `<c>` for framework extension methods?**
+
+Extension methods like `AddProblemDetails()`, `UseRouting()`, or `UseExceptionHandler()` are best documented with `<c>` rather than `<see cref=""/>`:
+
+1. **Readability:** `<c>UseRouting()</c>` is immediately clear. The full cref `<see cref="EndpointRoutingApplicationBuilderExtensions.UseRouting(IApplicationBuilder)"/>` is a monster that obscures the documentation.
+
+2. **Mental model:** Developers think "I call `UseRouting()`", not "I call `EndpointRoutingApplicationBuilderExtensions.UseRouting`". The `<c>` variant matches how we actually talk about and use these methods.
+
+3. **No coupling through usings:** Using `<see cref=""/>` requires adding `using` statements just to make documentation compile. That's the tail wagging the dog.
+
+4. **Stability:** If Microsoft renames the static extension class (unlikely but possible), our docs break. The method name itself is the stable API.
+
+**When to use `<see cref=""/>` for methods:**
+
+- Own methods in the same project where navigation is useful
+- Methods you're explaining conceptually (not as a call example)
+- Overloads where the specific signature matters
 
 **Rule of thumb:**
 - If the reader should be able to navigate to a definition → `<see cref=""/>`
