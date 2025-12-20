@@ -12,6 +12,7 @@ This document explains how the LumaCore repository is organized, how the build s
 LumaCore/
 ├── src/                          → Source Code Organization
 │   ├── LumaCore.Api/
+│   ├── LumaCore.Api.Contracts/
 │   ├── LumaCore.Core/
 │   ├── LumaCore.Ui.Web/
 │   ├── Directory.Build.props
@@ -34,7 +35,6 @@ LumaCore/
 │
 ├── LumaCore.sln                  → Solution File
 ├── global.json                   → SDK Configuration
-├── version.json                  → Versioning
 ├── LICENSE
 └── README.md
 ```
@@ -42,7 +42,7 @@ LumaCore/
 **Quick Navigation:**
 - [Source Code Organization](#source-code-organization) — `/src` projects and structure
 - [Build System](#build-system) — `Directory.Build.props` and artifacts
-- [Versioning](#versioning) — `version.json` and semantic versioning
+- [Versioning](#versioning) — *MinVer* and semantic versioning via Git tags
 - [SDK Configuration](#sdk-configuration) — `global.json` and .NET SDK
 - [Solution File](#solution-file) — `LumaCore.sln`
 - [Documentation Organization](#documentation-organization) — `/docs` structure
@@ -69,8 +69,39 @@ The `/src` folder contains all source code projects.
 - Blazor UI hosting
 
 **Dependencies:**
+- `LumaCore.Api.Contracts` (project reference)
 - `LumaCore.Core` (project reference)
 - `LumaCore.Ui.Web` (project reference)
+
+---
+
+#### LumaCore.Api.Contracts
+**Type:** `Microsoft.NET.Sdk` (class library)  
+**Purpose:** Shared API contract types (DTOs) for requests and responses  
+**Status:** Operational
+
+**Key responsibilities:**
+- Request DTOs with validation attributes
+- Response DTOs for API endpoints
+- Shared types used across multiple endpoints
+
+**Why separate?**
+- **Shared access** — Both API and Blazor UI can reference contracts without circular dependencies
+- **Clear API surface** — Contract changes are intentional and visible
+- **Minimal dependencies** — Only `System.ComponentModel.Annotations` for validation
+
+**Structure:**
+```
+LumaCore.Api.Contracts/
+├── V1/
+│   ├── MyFeature/
+│   │   ├── CreateItemRequest.cs
+│   │   ├── ItemResponse.cs
+│   │   └── ...
+│   └── AnotherFeature/
+│       └── SomeResponse.cs
+└── V2/                              # Future versions
+```
 
 ---
 
@@ -99,6 +130,9 @@ The `/src` folder contains all source code projects.
 
 Blazor WebAssembly compiles to static files (HTML, JS, WebAssembly DLLs) and runs entirely in the browser. It is currently served by LumaCore.Api on the same origin, so no CORS configuration is needed.
 
+**Dependencies:**
+- `LumaCore.Api.Contracts` (project reference) — Shared DTOs for API communication
+
 ---
 
 ### Feature-Based Directory Structure
@@ -111,13 +145,11 @@ Features/{FeatureName}/
 ├── ServiceRegistration.cs              # Registers services and configuration with DI
 ├── EndpointMapping.cs                  # HTTP endpoints (if feature exposes API)
 ├── MiddlewareIntegration.cs            # Pipeline middleware (if needed)
-├── Contracts/                          # Request/Response DTOs (if feature has endpoints)
-│   ├── {EndpointName}Request.cs        # Endpoint input
-│   ├── {EndpointName}Response.cs       # Endpoint output
-│   └── {SharedType}.cs                 # Shared types used by multiple DTOs
 ├── {FeatureName}Options.cs             # Configuration class
 └── *.cs                                # Implementation (factories, services, validators, etc.)
 ```
+
+> **Note:** Request/response DTOs (contracts) live in the separate `LumaCore.Api.Contracts` project, organized by API version (`V1/`, `V2/`, etc.). This allows both the API and Blazor UI to share the same types.
 
 Each feature contains only what it needs. No mandatory structure beyond ServiceRegistration.cs.
 
@@ -221,8 +253,7 @@ The `build.net/` folder is a **Git submodule** pointing to:
 
 **Purpose:** Shared configuration and tooling reused across multiple LumaCoreTech repositories:
 - ReSharper/Rider code style settings
-- Git configuration templates
-- Build scripts and utilities
+- OpenAPI documentation scripts and generators
 
 The submodule points to a specific commit of the build.net repository, ensuring consistent tooling across all builds. Updates to the submodule are managed through the main repository's version control.
 
@@ -230,24 +261,20 @@ The submodule points to a specific commit of the build.net repository, ensuring 
 
 ## Versioning
 
-### version.json
+### Versioning
 
-Defines the base version (`0.1`) used by Nerdbank.GitVersioning for automatic version calculation based on Git history.
+Versioning is managed by *MinVer*, which derives the version automatically from Git tags. No configuration file is required.
 
-```json
-{
-  "version": "0.1",
-  "publicReleaseRefSpec": [
-    "^refs/tags/v\\d+\\.\\d+\\.\\d+"
-  ]
-}
-```
+**How it works:**
+- Create a Git tag like `v1.0.0` → produces version `1.0.0`
+- Commits after a tag → produces version `1.0.1-ci.{height}` (e.g., `1.0.1-ci.5`)
+- No tags → produces version `0.0.0-ci.{height}`
 
 **Version format:**
-- Prerelease builds: `0.1.{commits}-ci` (e.g., `0.1.42-ci`)
-- Public releases: Triggered by Git tags (e.g., `v1.0.0` → `1.0.0`)
+- Release builds: Tag-based (e.g., `v1.2.3` → `1.2.3`)
+- Prerelease builds: `{version}-ci.{commits}` (e.g., `1.0.1-ci.5`)
 
-Versioning is managed by **Nerdbank.GitVersioning**, integrated via `Directory.Build.props`.
+*MinVer* is integrated via `Directory.Build.props` and requires no additional configuration.
 
 ---
 
@@ -288,6 +315,7 @@ The Visual Studio solution file references all projects:
 ```
 LumaCore.sln
 ├── LumaCore.Api
+├── LumaCore.Api.Contracts
 ├── LumaCore.Core
 └── LumaCore.Ui.Web
 ```

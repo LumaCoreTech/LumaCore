@@ -103,8 +103,8 @@ else
 
             try
             {
-                // Attempt to deserialize the JSON payload into the expected DTO.
-                var dto = await response.Content.ReadFromJsonAsync<HealthLiveDto>();
+                // Attempt to deserialize the JSON payload into the shared API contract.
+                var dto = await response.Content.ReadFromJsonAsync<ApiHealthLiveResponse>();
 
                 if (dto is null)
                 {
@@ -162,16 +162,5 @@ else
             var _ =>
                 $"Backend health endpoint returned HTTP {code} ({statusCode})."
         };
-    }
-
-    /// <summary>
-    /// Minimal DTO used to deserialize the backend live health response.
-    /// </summary>
-    private sealed class HealthLiveDto
-    {
-        /// <summary>
-        /// Gets or sets the reported overall health status of the backend.
-        /// </summary>
-        public string? Status { get; init; }
     }
 }

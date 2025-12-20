@@ -39,7 +39,7 @@ The `release.yml` workflow runs automatically when you push the tag. It:
 5. Attaches `.nupkg` files to the release
 6. Optionally publishes to *NuGet.org* (if configured)
 
-The version number comes from the git tag via *Nerdbank.GitVersioning*, so project files don't need manual version updates.
+The version number comes from the git tag via *MinVer*, so project files don't need manual version updates.
 
 ### Verification
 

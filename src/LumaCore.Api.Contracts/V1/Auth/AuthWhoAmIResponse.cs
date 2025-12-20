@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-namespace LumaCore.Api.Features.Auth.Contracts.V1;
+namespace LumaCore.Api.Contracts.V1.Auth;
 
 /// <summary>
 /// Represents the response returned by the <c>/api/v1/auth/whoami</c> endpoint.

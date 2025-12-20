@@ -145,7 +145,7 @@ docker build -t lumacore:latest .
 ```
 
 > [!NOTE]
-> The Docker build requires a Git clone, not a ZIP download. Nerdbank.GitVersioning extracts the version from Git history. Without `.git`, the version falls back to `0.0.0-local`.
+> The Docker build requires a Git clone, not a ZIP download. *MinVer* extracts the version from Git tags and history. Without `.git`, the version falls back to `0.0.0-ci.0`.
 
 Then run it with the minimum required configuration:
 

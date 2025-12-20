@@ -53,8 +53,9 @@ public static class ApiVersions
 	///         <item><c>/api/v1/health/*</c> – Health and liveness probes</item>
 	///     </list>
 	///     <para>
-	///     Endpoints that do not specify a version explicitly via <c>MapToApiVersion()</c>
-	///     are available in all registered versions by default.
+	///     Every endpoint MUST specify its version(s) explicitly via <c>MapToApiVersion()</c>.
+	///     The application validates this at startup and will fail to start if any
+	///     endpoint is missing an explicit version mapping.
 	///     </para>
 	/// </remarks>
 	public static readonly ApiVersion V1 = new(1);

@@ -238,11 +238,13 @@ public static class EndpointMapping
             .WithTags("MyFeature");
         
         group.MapGet("/items", HandleGetItems)
+            .MapToApiVersion(ApiVersions.V1)
             .WithName("GetItems")
             .WithSummary("Returns all items.")
             .Produces<ItemResponse[]>(StatusCodes.Status200OK);
         
         group.MapPost("/items", HandleCreateItem)
+            .MapToApiVersion(ApiVersions.V1)
             .RequireAuthorization()
             .WithName("CreateItem")
             .WithSummary("Creates a new item.")
@@ -258,17 +260,19 @@ public static class EndpointMapping
 
 **Key Points:**
 
-1. **Central `/api` route group:** Business API features are mounted on a central `/api` group in `Program.Pipeline.cs` that applies the `ValidationFilter` globally. Features map relative paths (e.g., `/myfeature`) and the `/api` prefix is added automatically
+1. **Every endpoint requires `MapToApiVersion()`:** This explicitly assigns each endpoint to an API version. LumaCore validates this at startup — the application will fail to start if any versioned endpoint is missing an explicit `MapToApiVersion()` call. Use `ApiVersions.V1` (or `V2`, etc.) from the central `ApiVersions` class
 
-2. **Route groups organize related endpoints:** Features use `MapGroup()` to create a common prefix (e.g., `/myfeature`) that applies to all endpoints, reducing repetition and improving organization
+2. **Central `/api/v{version}` route group:** Business API features are mounted on a versioned route group in `Program.Pipeline.cs` that applies both API versioning and the `ValidationFilter` globally. Features map relative paths (e.g., `/myfeature`) and the `/api/v{version}/` prefix is added automatically
 
-3. **Minimal API style is preferred in LumaCore:** Direct route-to-handler mappings give good performance, less ceremony, and a clear code flow for the size and goals of this project. For large, existing MVC applications other trade-offs might make sense, but for LumaCore we standardize on Minimal APIs
+3. **Route groups organize related endpoints:** Features use `MapGroup()` to create a common prefix (e.g., `/myfeature`) that applies to all endpoints, reducing repetition and improving organization
 
-4. **Authorization is explicit per endpoint:** Each endpoint explicitly declares its security requirements with `RequireAuthorization()` or `AllowAnonymous()`, making security visible and intentional
+4. **Minimal API style is preferred in LumaCore:** Direct route-to-handler mappings give good performance, less ceremony, and a clear code flow for the size and goals of this project. For large, existing MVC applications other trade-offs might make sense, but for LumaCore we standardize on Minimal APIs
 
-5. **OpenAPI metadata enables documentation:** Attributes like `WithName()`, `WithSummary()`, and `Produces()` generate Swagger documentation automatically, making the API self-documenting
+5. **Authorization is explicit per endpoint:** Each endpoint must explicitly declare its security requirements with `RequireAuthorization()` or `AllowAnonymous()`. LumaCore validates this at startup — the application will fail to start if any versioned endpoint is missing an explicit authorization declaration
 
-6. **Dependencies are injected as parameters:** Handlers receive services directly as method parameters, not through constructor injection, keeping handlers focused and testable
+6. **OpenAPI metadata enables documentation:** Attributes like `WithName()`, `WithSummary()`, and `Produces()` generate Swagger documentation automatically, making the API self-documenting
+
+7. **Dependencies are injected as parameters:** Handlers receive services directly as method parameters, not through constructor injection, keeping handlers focused and testable
 
 #### Handler Patterns
 
@@ -276,13 +280,15 @@ public static class EndpointMapping
 
 ```csharp
 group.MapGet("/ping", () => Results.Ok(new PingResponse("pong")))
+    .MapToApiVersion(ApiVersions.V1)
     .WithName("Ping");
 ```
 
 **Pattern 2: Private Method** — Extract for readability:
 
 ```csharp
-group.MapPost("/items", HandleCreateItem);
+group.MapPost("/items", HandleCreateItem)
+    .MapToApiVersion(ApiVersions.V1);
 
 private static async Task<IResult> HandleCreateItem(
     CreateItemRequest request,
@@ -301,7 +307,8 @@ Benefits: cleaner endpoint mapping, easier to test, better for complex logic.
 
 ```csharp
 // EndpointMapping.cs
-group.MapPost("/batch-import", MyFeatureHandlers.BatchImport);
+group.MapPost("/batch-import", MyFeatureHandlers.BatchImport)
+    .MapToApiVersion(ApiVersions.V1);
 
 // MyFeatureHandlers.cs
 internal static class MyFeatureHandlers
@@ -351,97 +358,77 @@ public static class MiddlewareIntegration
 
 ## Contracts: The Feature's Public API
 
-Every feature defines its HTTP endpoints' request and response types through **Contracts** (DTOs).
+Every feature defines its HTTP endpoints' request and response types through **Contracts** (DTOs). These live in the dedicated `LumaCore.Api.Contracts` project.
 
 > 💡 **See [Contract Design Rules](#contract-design-rules)** below for detailed conventions.
 
-### Why a Separate Folder?
+### Why a Separate Project?
 
 ```
-Contracts/
-├── CreateItemRequest.cs    # Input
-├── ItemResponse.cs         # Output
-├── BatchImportRequest.cs   # Input
-└── BatchImportResponse.cs  # Output
+LumaCore.Api.Contracts/
+├── V1/
+│   ├── MyFeature/
+│   │   ├── CreateItemRequest.cs
+│   │   ├── ItemResponse.cs
+│   │   └── ...
+│   └── AnotherFeature/
+│       └── SomeResponse.cs
+└── V2/                              # Future versions
 ```
 
-At first glance, a separate `Contracts/` folder might seem like unnecessary ceremony. Why not just put DTOs next to the services that use them?
+At first glance, a separate contracts project might seem like unnecessary ceremony. Why not just put DTOs inside the feature folders?
 
 **The answer lies in understanding what a Contract is:**
 
 A **Contract** is a promise to the outside world. It says: *"This is the shape of data I accept, and this is the shape of data I return."* Once published, it becomes part of your API surface. Clients depend on it. Breaking changes affect everyone who calls your API.
 
-**Scenario: The scattered DTO problem**
-
-Imagine DTOs scattered throughout your feature:
+**The key benefit: Shared access without circular dependencies**
 
 ```
-Features/MyFeature/
-├── TokenFactory.cs
-├── CreateItemRequest.cs       # Here?
-├── Services/
-│   ├── MyFeatureService.cs
-│   └── ItemResponse.cs        # Or here?
-├── Validators/
-│   └── ItemValidator.cs       # Or here??
+LumaCore.Api.Contracts (DTOs only, minimal dependencies)
+         ↑
+    ┌────┴────┐
+    │         │
+LumaCore.Api  LumaCore.Ui.Web
 ```
 
-**Questions that arise:**
-- Which types cross the HTTP boundary?
-- Which types are internal implementation details?
-- If I change `CreateItemRequest`, am I breaking the API or just refactoring?
-- Where do I look when I need to understand the API contract?
+Both the API and the Blazor UI can reference the same contract types:
+- **API** uses contracts for endpoint parameters and responses
+- **Blazor UI** uses contracts for HTTP client calls
 
-**The separate folder answers all these questions:**
-
-```
-Features/MyFeature/
-├── Contracts/               # ← Everything here crosses HTTP boundary
-│   ├── CreateItemRequest.cs # ← Public API
-│   ├── ItemResponse.cs      # ← Public API
-│   └── ...
-├── TokenFactory.cs          # ← Internal implementation
-└── MyFeatureService.cs      # ← Internal implementation
-```
-
-**Now it's crystal clear:**
-- **In `Contracts/`?** → Public API, changes affect clients
-- **Outside `Contracts/`?** → Internal, no API impact
+Without a separate project, you'd either duplicate DTOs or create circular dependencies.
 
 **Real-world benefit - API versioning:**
 
-When you need to version your API, contracts are organized by version:
+Contracts are organized by version within the project:
 
 ```
-Features/MyFeature/
-├── Contracts/
-│   ├── V1/
-│   │   ├── CreateItemRequest.cs  # Old contract
-│   │   └── ItemResponse.cs
-│   └── V2/
-│       ├── CreateItemRequest.cs  # New contract with extra fields
-│       └── ItemResponse.cs
-├── TokenFactory.cs               # Can serve both versions!
-└── ...
+LumaCore.Api.Contracts/
+├── V1/
+│   └── MyFeature/
+│       └── CreateItemRequest.cs      # Original contract
+└── V2/
+    └── MyFeature/
+        └── CreateItemRequest.cs      # Extended contract with new fields
 ```
 
 The service layer doesn't duplicate - only the contracts. Internal logic is reused across versions.
 
-**Contract versioning conventions:**
+**Contract organization conventions:**
 
-1. **Namespace mirrors folder structure:**
+1. **Namespace follows folder structure:**
    ```csharp
-   // In Features/MyFeature/Contracts/V1/CreateItemRequest.cs
-   namespace LumaCore.Api.Features.MyFeature.Contracts.V1;
+   // In LumaCore.Api.Contracts/V1/MyFeature/CreateItemRequest.cs
+   namespace LumaCore.Api.Contracts.V1.MyFeature;
    
-   // In Features/MyFeature/Contracts/V2/CreateItemRequest.cs
-   namespace LumaCore.Api.Features.MyFeature.Contracts.V2;
+   // In LumaCore.Api.Contracts/V2/MyFeature/CreateItemRequest.cs
+   namespace LumaCore.Api.Contracts.V2.MyFeature;
    ```
 
 2. **Use using aliases in EndpointMapping for clarity:**
    ```csharp
-   using V1 = LumaCore.Api.Features.MyFeature.Contracts.V1;
-   using V2 = LumaCore.Api.Features.MyFeature.Contracts.V2;
+   using V1 = LumaCore.Api.Contracts.V1.MyFeature;
+   using V2 = LumaCore.Api.Contracts.V2.MyFeature;
    
    // V1 endpoint
    group.MapPost("/items", (V1.CreateItemRequest request) => HandleCreateV1(request))
@@ -452,15 +439,12 @@ The service layer doesn't duplicate - only the contracts. Internal logic is reus
        .MapToApiVersion(ApiVersions.V2);
    ```
 
-3. **Shared contracts stay in root `Contracts/` folder:**
+3. **Contracts grouped by feature within each version:**
    ```
-   Features/MyFeature/
-   ├── Contracts/
-   │   ├── SharedTypes.cs          # Unchanged since V1, used by both
-   │   ├── V1/
-   │   │   └── CreateItemRequest.cs   # V1-specific
-   │   └── V2/
-   │       └── CreateItemRequest.cs   # V2 with new fields
+   V1/
+   ├── MyFeature/           # Feature contracts
+   ├── AnotherFeature/      # Feature contracts
+   └── ...
    ```
 
 4. **XMLDocs include full versioned path:**
@@ -472,11 +456,11 @@ The service layer doesn't duplicate - only the contracts. Internal logic is reus
    ```
 
 > [!IMPORTANT]
-> **All new features start with `Contracts/V1/`** from day one. This ensures consistent structure and makes future versioning seamless. Never put contracts directly in `Contracts/` unless they are truly shared across all versions.
+> **All contracts start in `V1/`** from day one. This ensures consistent structure and makes future versioning seamless. Organize by feature within each version folder. Only place contracts directly in the project root if they are truly shared across all versions.
 
 **Another benefit - serialization concerns:**
 
-Types in `Contracts/` have special requirements:
+Types in the Contracts project have special requirements:
 - Must be JSON-serializable
 - Should be immutable (records)
 - Need DataAnnotations for validation
@@ -484,15 +468,7 @@ Types in `Contracts/` have special requirements:
 
 This follows the type conventions defined in the LumaCore Coding Standards: DTOs are immutable records by default, with changes treated as potential API-breaking changes.
 
-Types outside `Contracts/` are free to:
-- Use complex inheritance
-- Have mutable state
-- Use internal types not suitable for JSON
-- Change frequently during refactoring
-
-By keeping contracts separate, you make the boundary explicit. You can apply serialization attributes, validation rules, and versioning strategies specifically to the public API surface without affecting internal code.
-
-**In short:** A separate `Contracts/` folder isn't ceremony - it's a clear signal about what's public API and what's internal implementation. This clarity prevents accidental breaking changes and makes the codebase easier to reason about.
+**In short:** A separate Contracts project isn't ceremony - it's a clear architectural boundary that enables sharing between API and UI while preventing circular dependencies. This clarity prevents accidental breaking changes and makes the codebase easier to reason about.
 
 ### Contract Design Rules
 
@@ -742,10 +718,12 @@ Every endpoint should declare its security requirements explicitly, even if it s
 ```csharp
 // ✅ Good - Clear intent
 group.MapDelete("/items/{id}", HandleDeleteItem)
+    .MapToApiVersion(ApiVersions.V1)
     .RequireAuthorization(new AuthorizeAttribute { Roles = "admin" });
 
 // ❌ Bad - Relies on group-level auth
-group.MapDelete("/items/{id}", HandleDeleteItem);
+group.MapDelete("/items/{id}", HandleDeleteItem)
+    .MapToApiVersion(ApiVersions.V1);
 ```
 
 When authorization is implicit (inherited from the group), it's invisible at the endpoint level. A developer reading the code can't tell if the endpoint is protected without tracing back through the group configuration. Explicit authorization makes security requirements visible exactly where they matter — at the endpoint definition. It also prevents accidental exposure if someone refactors the group structure.
@@ -758,6 +736,7 @@ Every endpoint should be fully documented for Swagger/OpenAPI. This isn't just a
 
 ```csharp
 group.MapPost("/items", HandleCreateItem)
+    .MapToApiVersion(ApiVersions.V1)
     .WithName("CreateItem")
     .WithSummary("Create a new item")
     .WithDescription("Creates a new item and returns the created resource")
@@ -807,41 +786,44 @@ Specify which content types the endpoint accepts. Most endpoints only need JSON,
 .Accepts<CreateItemRequest>("application/xml")  // If XML support enabled
 ```
 
-**Advanced Control with WithOpenApi()**
+**Advanced Control with Operation Transformers**
 
-When the fluent methods aren't enough, `WithOpenApi()` gives you direct access to the OpenAPI operation object. This is useful for adding custom examples, security requirements, or any metadata that doesn't have a dedicated fluent method.
+When the fluent methods aren't enough, LumaCore uses `IOpenApiOperationTransformer` for advanced customization. This is the .NET 9+ native approach — there is no `WithOpenApi()` method.
+
+LumaCore already includes `SecurityResponsesTransformer` which automatically documents 401/403 responses for protected endpoints. For custom transformations, create your own transformer:
 
 ```csharp
-.WithOpenApi(operation =>
+// In Features/MyFeature/MyFeatureOpenApiTransformer.cs
+public sealed class MyFeatureOpenApiTransformer : IOpenApiOperationTransformer
 {
-    // Modify the OpenAPI operation directly
-    operation.Summary = "Advanced summary";
-    operation.Description = "Advanced description with **markdown**";
-    
-    // Add custom examples
-    operation.RequestBody.Content["application/json"].Example = 
-        new OpenApiExample
-        {
-            Summary = "Example item",
-            Value = new CreateItemRequest("My Item", "Description")
-        };
-    
-    // Add security requirements
-    operation.Security = new List<OpenApiSecurityRequirement>
+    public Task TransformAsync(
+        OpenApiOperation operation,
+        OpenApiOperationTransformerContext context,
+        CancellationToken cancellationToken)
     {
-        new OpenApiSecurityRequirement
+        // Only transform endpoints in this feature
+        string? path = context.Description.RelativePath;
+        if (path is null || !path.Contains("/myfeature/", StringComparison.OrdinalIgnoreCase))
         {
-            [new OpenApiSecurityScheme { Reference = new OpenApiReference 
-            { 
-                Type = ReferenceType.SecurityScheme, 
-                Id = "Bearer" 
-            }}] = new List<string>()
+            return Task.CompletedTask;
         }
-    };
-    
-    return operation;
-})
+        
+        // Add custom examples, headers, or other metadata
+        // operation.RequestBody, operation.Responses, etc.
+        
+        return Task.CompletedTask;
+    }
+}
+
+// Register in Features/OpenApi/ServiceRegistration.cs
+services.AddOpenApi(documentName, options =>
+{
+    options.AddOperationTransformer<MyFeatureOpenApiTransformer>();
+});
 ```
+
+> [!TIP]
+> For most endpoints, `WithSummary()`, `WithDescription()`, and `WithTags()` are sufficient. Only use transformers when you need to modify the OpenAPI operation object directly.
 
 **Exclude from Documentation**
 
@@ -853,15 +835,13 @@ Some endpoints are internal and shouldn't appear in public documentation — hea
 
 **Deprecation**
 
-When retiring an endpoint, mark it as deprecated rather than removing it immediately. This gives API consumers time to migrate.
+When retiring an endpoint, mark it as deprecated rather than removing it immediately. This gives API consumers time to migrate. Use the `Deprecated` attribute:
 
 ```csharp
-.WithOpenApi(op =>
-{
-    op.Deprecated = true;
-    op.Description = "⚠️ DEPRECATED: Use /v2/items instead";
-    return op;
-})
+group.MapGet("/legacy", HandleLegacy)
+    .MapToApiVersion(ApiVersions.V1)
+    .WithSummary("⚠️ DEPRECATED: Use /v2/items instead")
+    .WithMetadata(new ObsoleteAttribute("Use /v2/items instead"));
 ```
 
 #### Schema Documentation via Attributes
@@ -905,26 +885,22 @@ public sealed record CreateItemRequest(
 
 #### Response Examples
 
-Provide example responses for better documentation:
+For response examples, use XML documentation on your DTO types or create a schema transformer:
 
 ```csharp
-.WithOpenApi(op =>
-{
-    // Add response examples
-    var response = op.Responses["200"];
-    response.Content["application/json"].Example = new OpenApiExample
-    {
-        Summary = "Successful creation",
-        Description = "Returns the created item with its ID",
-        Value = new ItemResponse(
-            Id: Guid.Parse("550e8400-e29b-41d4-a716-446655440000"),
-            Name: "My Item"
-        )
-    };
-    
-    return op;
-})
+/// <summary>
+/// Response containing created item details.
+/// </summary>
+/// <example>
+/// {
+///   "id": "550e8400-e29b-41d4-a716-446655440000",
+///   "name": "My Item"
+/// }
+/// </example>
+public sealed record ItemResponse(Guid Id, string Name);
 ```
+
+For more complex example scenarios, implement `IOpenApiSchemaTransformer` to programmatically add examples to your schemas.
 
 #### Complete Example
 
@@ -932,6 +908,8 @@ Fully documented endpoint with all metadata:
 
 ```csharp
 group.MapPost("/items", HandleCreateItem)
+    .MapToApiVersion(ApiVersions.V1)
+    
     // Basic metadata
     .WithName("CreateItem")
     .WithSummary("Create a new item")
@@ -952,29 +930,12 @@ group.MapPost("/items", HandleCreateItem)
     .Produces<ItemResponse>(StatusCodes.Status200OK)
     .Produces(StatusCodes.Status400BadRequest, "application/problem+json")
     
-    // Advanced customization
-    .WithOpenApi(operation =>
-    {
-        // Add request example
-        operation.RequestBody.Content["application/json"].Example = 
-            new OpenApiExample
-            {
-                Summary = "Create item",
-                Value = new { name = "My Item", description = "Optional description" }
-            };
-        
-        // Add response examples
-        var successResponse = operation.Responses["200"];
-        successResponse.Content["application/json"].Example = 
-            new OpenApiExample
-            {
-                Summary = "Item created",
-                Value = new { id = "550e8400-e29b-41d4-a716-446655440000", name = "My Item" }
-            };
-        
-        return operation;
-    });
+    // Security
+    .RequireAuthorization();
 ```
+
+> [!NOTE]
+> For request/response examples, use XML documentation on your DTO types. For more advanced OpenAPI customization, implement an `IOpenApiOperationTransformer`.
 
 #### XML Documentation for Handlers
 
@@ -1072,7 +1033,6 @@ These mistakes lead to confusing or incomplete documentation. The comments expla
 | `.Produces<T>()` | Success response type | **Required** |
 | `.Produces()` | Error status codes | **Required** |
 | `.Accepts<T>()` | Request content type | Optional |
-| `.WithOpenApi()` | Advanced customization | Optional |
 | `.ExcludeFromDescription()` | Hide from Swagger | Rare |
 
 **Rule of thumb** — every endpoint should have at minimum:
@@ -1150,6 +1110,7 @@ return Results.Problem(
 
 ```csharp
 group.MapGet("/items/{id}", HandleGetItem)
+    .MapToApiVersion(ApiVersions.V1)
     .Produces<ItemResponse>(StatusCodes.Status200OK)
     .ProducesProblem(StatusCodes.Status404NotFound);
 ```
@@ -1167,7 +1128,7 @@ When creating a new feature, ensure:
 ### File Structure
 - [ ] `ServiceRegistration.cs` with `Add<Feature>Feature()` method
 - [ ] `EndpointMapping.cs` with `Map<Feature>Feature()` method
-- [ ] `Contracts/V1/` folder with all DTOs as records
+- [ ] DTOs in `LumaCore.Api.Contracts/V1/<Feature>/` folder
 - [ ] `<Feature>Options.cs` if configuration is needed
 - [ ] Service interfaces and implementations if needed
 
@@ -1215,29 +1176,31 @@ Let's walk through the complete *Auth* feature as a real example:
 
 ### Step 1: Define Contracts
 
+Contracts live in the `LumaCore.Api.Contracts` project:
+
 ```csharp
-// Contracts/V1/LoginRequest.cs
-namespace LumaCore.Api.Features.Auth.Contracts.V1;
+// LumaCore.Api.Contracts/V1/Auth/LoginRequest.cs
+namespace LumaCore.Api.Contracts.V1.Auth;
 
 public sealed record LoginRequest(
     [Required, MinLength(3)] string Username,
     [Required, MinLength(8)] string Password);
 
-// Contracts/V1/LoginResponse.cs
-namespace LumaCore.Api.Features.Auth.Contracts.V1;
+// LumaCore.Api.Contracts/V1/Auth/LoginResponse.cs
+namespace LumaCore.Api.Contracts.V1.Auth;
 
 public sealed record LoginResponse(string AccessToken);
 
-// Contracts/V1/AuthWhoAmIResponse.cs
-namespace LumaCore.Api.Features.Auth.Contracts.V1;
+// LumaCore.Api.Contracts/V1/Auth/AuthWhoAmIResponse.cs
+namespace LumaCore.Api.Contracts.V1.Auth;
 
 public sealed record AuthWhoAmIResponse(
     string Name,
     string[] Roles,
     AuthClaimItem[] Claims);
 
-// Contracts/V1/AuthClaimItem.cs
-namespace LumaCore.Api.Features.Auth.Contracts.V1;
+// LumaCore.Api.Contracts/V1/Auth/AuthClaimItem.cs
+namespace LumaCore.Api.Contracts.V1.Auth;
 
 public sealed record AuthClaimItem(string Type, string Value);
 ```
@@ -1343,11 +1306,13 @@ public static class EndpointMapping
             .WithTags("Auth");
         
         group.MapPost("/login", HandleLogin)
+            .MapToApiVersion(ApiVersions.V1)
             .WithName("AuthLogin")
             .WithSummary("Authenticate and obtain an access token.")
             .Produces<LoginResponse>();
         
         group.MapGet("/whoami", HandleWhoAmI)
+            .MapToApiVersion(ApiVersions.V1)
             .RequireAuthorization()
             .WithName("AuthWhoAmI")
             .WithSummary("Returns the current user's identity and claims.")
@@ -1420,8 +1385,8 @@ LumaCore uses the `Asp.Versioning` library with URL segment-based versioning (`/
 
 ```csharp
 // EndpointMapping.cs - Single file handles multiple versions
-using V1 = LumaCore.Api.Features.MyFeature.Contracts.V1;
-using V2 = LumaCore.Api.Features.MyFeature.Contracts.V2;
+using V1 = LumaCore.Api.Contracts.V1.MyFeature;
+using V2 = LumaCore.Api.Contracts.V2.MyFeature;
 
 public static IEndpointRouteBuilder MapMyFeature(this IEndpointRouteBuilder group)
 {
@@ -1437,15 +1402,18 @@ public static IEndpointRouteBuilder MapMyFeature(this IEndpointRouteBuilder grou
 }
 ```
 
-Each version has its own contracts, but they share the same service layer. Only the API surface is duplicated — not the business logic:
+Each version has its own contracts in the Contracts project, but features share the same service layer. Only the API surface is duplicated — not the business logic:
 
 ```
-Features/MyFeature/
-├── Contracts/
-│   ├── V1/
-│   │   └── CreateItemRequest.cs   # Old format
-│   └── V2/
-│       └── CreateItemRequest.cs   # New format (extra fields)
+LumaCore.Api.Contracts/
+├── V1/
+│   └── MyFeature/
+│       └── CreateItemRequest.cs   # Old format
+└── V2/
+    └── MyFeature/
+        └── CreateItemRequest.cs   # New format (extra fields)
+
+LumaCore.Api/Features/MyFeature/
 ├── MyFeatureService.cs            # Shared implementation
 └── EndpointMapping.cs             # Single file, uses MapToApiVersion()
 ```

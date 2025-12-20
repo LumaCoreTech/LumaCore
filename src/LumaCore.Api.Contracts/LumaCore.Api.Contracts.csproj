@@ -1,0 +1,37 @@
+<!-- Copyright (c) 2025 LumaCoreTech -->
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Project: https://github.com/LumaCoreTech/LumaCore -->
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<AssemblyName>LumaCore.Api.Contracts</AssemblyName>
+		<RootNamespace>LumaCore.Api.Contracts</RootNamespace>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Description>API contract types (DTOs) for LumaCore. Shared between API and UI projects.</Description>
+	</PropertyGroup>
+
+	<!--
+	═══════════════════════════════════════════════════════════════════════════════
+	DEPENDENCIES
+	═══════════════════════════════════════════════════════════════════════════════
+	
+	This project intentionally has minimal dependencies to ensure it can be
+	referenced by both server-side (LumaCore.Api) and client-side (Blazor WASM)
+	projects without pulling in unnecessary packages.
+	
+	Only System.ComponentModel.Annotations is required for validation attributes
+	on request DTOs.
+	═══════════════════════════════════════════════════════════════════════════════
+	-->
+	<ItemGroup>
+		<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+	</ItemGroup>
+
+</Project>

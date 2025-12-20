@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-namespace LumaCore.Api.Features.Health.Contracts.V1;
+namespace LumaCore.Api.Contracts.V1.Health;
 
 /// <summary>
 /// Represents the response returned by the <c>/api/v1/health/live</c> endpoint.

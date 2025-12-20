@@ -76,11 +76,6 @@ Features/<Feature>/
 ├── MiddlewareIntegration.cs        # Required (for features with middleware)
 │   └── Use<Feature>Feature()       # Middleware integration method
 │
-├── Contracts/                      # Required (for DTOs)
-│   ├── <Endpoint>Request.cs        # One per endpoint that accepts input
-│   ├── <Endpoint>Response.cs       # One per endpoint that returns data
-│   └── <Shared>Item.cs             # Shared DTOs used across endpoints
-│
 ├── <Feature>Options.cs             # Optional (if configuration needed)
 │
 ├── I<Service>.cs                   # Optional (service interfaces)
@@ -89,11 +84,12 @@ Features/<Feature>/
 └── README.md                       # Optional (feature documentation)
 ```
 
+> **Note:** Request/response DTOs (contracts) live in the separate `LumaCore.Api.Contracts` project, not within feature folders. This allows both the API and Blazor UI to share the same contract types. See [Building Features: Contracts](../development/building-features.md#contracts-the-features-public-api) for details.
+
 **Naming patterns:**
 - `<Feature>` = Feature name (Auth, Admin, Health, Persona, etc.)
 - `<Endpoint>` = Specific endpoint/action (Login, WhoAmI, CreatePersona, etc.)
 - `<Service>` = Service name (TokenFactory, PersonaEngine, etc.)
-- `<Shared>` = Shared type name (ClaimItem, PersonaMetadata, etc.)
 
 Every feature follows this pattern - no variations, no surprises, no guessing where things are.
 

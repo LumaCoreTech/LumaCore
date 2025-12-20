@@ -103,7 +103,7 @@ public static class ServiceRegistration
 		// Build the document name to match the GroupNameFormat from API versioning.
 		// Format: 'v'VVV → v1, v2, v2.1, etc.
 		string documentName = $"v{version.MajorVersion}";
-		if (version.MinorVersion.HasValue && version.MinorVersion.Value > 0)
+		if (version.MinorVersion is > 0)
 		{
 			documentName += $".{version.MinorVersion.Value}";
 		}

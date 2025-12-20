@@ -277,6 +277,9 @@ Endpoints can declare different protection levels:
 .RequireAuthorization(policy => policy.RequireRole("admin"))  // Specific role required
 ```
 
+> [!IMPORTANT]
+> Every versioned API endpoint **must** explicitly declare its authorization level. LumaCore validates this at startup and will fail to start if any endpoint is missing `RequireAuthorization()` or `AllowAnonymous()`. This prevents accidental exposure of unprotected endpoints.
+
 The authorization middleware checks these requirements against the authenticated principal's role claims and allows or denies access accordingly.
 
 **Target roles:**

@@ -212,8 +212,8 @@ using Microsoft.Extensions.Options;
 using Serilog;
 
 // 4. LumaCore namespaces (alphabetically)
+using LumaCore.Api.Contracts.V1.Auth;
 using LumaCore.Api.Features.Auth;
-using LumaCore.Api.Features.Auth.Contracts;
 ```
 
 This ordering makes imports easy to scan and keeps diffs clean. When everyone uses the same structure, merge conflicts around `using` statements become rare.

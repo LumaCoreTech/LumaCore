@@ -6,7 +6,7 @@ using LumaCore.Api.Features.ApiVersioning;
 
 using Microsoft.AspNetCore.Mvc;
 
-using V1 = LumaCore.Api.Features.Health.Contracts.V1;
+using V1 = LumaCore.Api.Contracts.V1.Health;
 
 namespace LumaCore.Api.Features.Health;
 

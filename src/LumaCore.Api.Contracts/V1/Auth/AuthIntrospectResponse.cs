@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-namespace LumaCore.Api.Features.Auth.Contracts.V1;
+namespace LumaCore.Api.Contracts.V1.Auth;
 
 /// <summary>
 /// Represents the response returned by the <c>/api/v1/auth/introspect</c> endpoint.
@@ -20,7 +20,7 @@ namespace LumaCore.Api.Features.Auth.Contracts.V1;
 /// <param name="Issuer">The token issuer as read from the claims, if present.</param>
 /// <param name="Audience">The token audience as read from the claims, if present.</param>
 /// <param name="ConfiguredAccessTokenLifetimeMinutes">
-/// The configured access token lifetime in minutes as specified in <see cref="JwtOptions"/>.
+/// The configured access token lifetime in minutes as specified in the JWT options.
 /// </param>
 public sealed record AuthIntrospectResponse(
 	string                Subject,

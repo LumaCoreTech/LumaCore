@@ -10,7 +10,7 @@ using LumaCore.Api.Features.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
-using V1 = LumaCore.Api.Features.Admin.Contracts.V1;
+using V1 = LumaCore.Api.Contracts.V1.Admin;
 
 namespace LumaCore.Api.Features.Admin;
 

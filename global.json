@@ -1,8 +1,8 @@
 {
-    "sdk": {
-        "version": "10.0.0",
-        "rollForward": "latestFeature",
-        "allowPrerelease": false
-    },
-    "msbuild-sdks": {}
+  "sdk": {
+    "version": "10.0.0",
+    "rollForward": "latestFeature",
+    "allowPrerelease": false
+  },
+  "msbuild-sdks": {}
 }

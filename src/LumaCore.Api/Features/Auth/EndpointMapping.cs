@@ -9,7 +9,7 @@ using LumaCore.Api.Features.ApiVersioning;
 
 using Microsoft.Extensions.Options;
 
-using V1 = LumaCore.Api.Features.Auth.Contracts.V1;
+using V1 = LumaCore.Api.Contracts.V1.Auth;
 
 namespace LumaCore.Api.Features.Auth;
 

@@ -189,5 +189,25 @@ public static partial class Program
 		// Fallback: if no API/other endpoint matches, serve the Blazor index.html.
 		// This enables client-side routing for the SPA.
 		app.MapFallbackToFile("index.html");
+
+		// -------------------------------------------------------------------------
+		// API Version Validation
+		// -------------------------------------------------------------------------
+		// Validate that all versioned API endpoints have explicit MapToApiVersion()
+		// calls. This prevents endpoints from being unintentionally available in
+		// all API versions. The validation runs at startup and fails fast if any
+		// endpoint is missing an explicit version mapping.
+		// -------------------------------------------------------------------------
+		app.ValidateExplicitApiVersionMappings();
+
+		// -------------------------------------------------------------------------
+		// Authorization Validation
+		// -------------------------------------------------------------------------
+		// Validate that all versioned API endpoints have explicit authorization
+		// declarations (RequireAuthorization() or AllowAnonymous()). This prevents
+		// accidental exposure of unprotected endpoints. The validation runs at
+		// startup and fails fast if any endpoint is missing an explicit declaration.
+		// -------------------------------------------------------------------------
+		app.ValidateExplicitAuthorizationPolicies();
 	}
 }

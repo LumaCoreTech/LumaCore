@@ -42,7 +42,7 @@
         },
         "security": [
           {
-            "Bearer": [ ]
+            "Bearer": []
           }
         ]
       }
@@ -72,7 +72,7 @@
         },
         "security": [
           {
-            "Bearer": [ ]
+            "Bearer": []
           }
         ]
       }
@@ -102,7 +102,7 @@
         },
         "security": [
           {
-            "Bearer": [ ]
+            "Bearer": []
           }
         ]
       }
@@ -135,7 +135,7 @@
         },
         "security": [
           {
-            "Bearer": [ ]
+            "Bearer": []
           }
         ]
       }
@@ -155,7 +155,7 @@
         },
         "security": [
           {
-            "Bearer": [ ]
+            "Bearer": []
           }
         ]
       }
@@ -226,7 +226,7 @@
               "null",
               "string"
             ],
-            "description": "The logical environment of the application (for example 'Development' or 'Production')."
+            "description": "The logical environment of the application (for example `Development` or `Production`)."
           },
           "apiVersion": {
             "type": [
@@ -353,7 +353,7 @@
               "integer",
               "string"
             ],
-            "description": "The configured access token lifetime in minutes as specified in JwtOptions.",
+            "description": "The configured access token lifetime in minutes as specified in the JWT options.",
             "format": "int32"
           }
         },

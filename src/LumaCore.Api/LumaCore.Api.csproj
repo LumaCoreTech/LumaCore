@@ -42,6 +42,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\LumaCore.Api.Contracts\LumaCore.Api.Contracts.csproj" />
 		<ProjectReference Include="..\LumaCore.Core\LumaCore.Core.csproj" />
 		<ProjectReference Include="..\LumaCore.Ui.Web\LumaCore.Ui.Web.csproj" Condition="'$(IncludeBlazorUi)' == 'true'" />
 	</ItemGroup>

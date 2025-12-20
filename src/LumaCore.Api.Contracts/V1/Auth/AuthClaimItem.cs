@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-namespace LumaCore.Api.Features.Auth.Contracts.V1;
+namespace LumaCore.Api.Contracts.V1.Auth;
 
 /// <summary>
 /// Represents a single claim in the authentication principal as exposed

@@ -64,7 +64,7 @@
     ///             <description>A successful status code with malformed JSON produces a format-related message.</description>
     ///         </item>
     ///         <item>
-    ///             <description>A valid <see cref="HealthLiveDto"/> with a non-empty <c>Status</c> marks the backend as healthy.</description>
+    ///             <description>A valid <see cref="ApiHealthLiveResponse"/> with a non-empty <c>Status</c> marks the backend as healthy.</description>
     ///         </item>
     ///     </list>
     /// </remarks>
@@ -92,8 +92,8 @@
 
             try
             {
-                // Attempt to deserialize the JSON payload into the expected DTO.
-                var dto = await response.Content.ReadFromJsonAsync<HealthLiveDto>();
+                // Attempt to deserialize the JSON payload into the shared API contract.
+                var dto = await response.Content.ReadFromJsonAsync<ApiHealthLiveResponse>();
 
                 if (dto is null || string.IsNullOrWhiteSpace(dto.Status))
                 {
@@ -178,15 +178,4 @@
         HealthState.Checking => "Checking backend health…",
         var _                => "Backend status unknown. Click to check."
     };
-
-    /// <summary>
-    /// Minimal DTO used to deserialize the backend live health response.
-    /// </summary>
-    private sealed class HealthLiveDto
-    {
-        /// <summary>
-        /// Gets or sets the reported overall health status of the backend.
-        /// </summary>
-        public string? Status { get; init; }
-    }
 }

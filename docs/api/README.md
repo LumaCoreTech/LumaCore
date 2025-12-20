@@ -50,7 +50,7 @@ The `verify-api-docs.ps1` script ensures documentation stays in sync:
 When adding V2:
 
 1. Register the version in `ApiVersions.cs`
-2. Add contracts in `Contracts/V2/` folders
+2. Add contracts in `LumaCore.Api.Contracts/V2/<Feature>/` folders
 3. Map endpoints with `.MapToApiVersion(ApiVersions.V2)`
 4. Regenerate documentation
 5. Update this README with the new version entry

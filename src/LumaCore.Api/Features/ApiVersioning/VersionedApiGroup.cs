@@ -102,19 +102,19 @@ public static class VersionedApiGroup
 	///         <b>Feature Endpoint Mapping:</b>
 	///     </para>
 	///     <para>
-	///     Features that need version-specific endpoints can use <c>MapToApiVersion()</c>:
+	///     Every endpoint MUST use <c>MapToApiVersion()</c> to specify which version(s)
+	///     it belongs to. The application validates this at startup and will fail to
+	///     start if any endpoint is missing an explicit version mapping.
 	///     </para>
 	///     <code>
-	///     // Available in all versions (default behavior)
-	///     group.MapPost("/login", LoginHandler);
-	///     
-	///     // Only available in v2
-	///     group.MapPost("/login/mfa", MfaLoginHandler)
-	///         .MapToApiVersion(ApiVersions.V2);
-	///     
-	///     // Only available in v1 (legacy)
-	///     group.MapGet("/legacy", LegacyHandler)
+	///     // ✅ Correct: Explicit version mapping
+	///     group.MapPost("/login", LoginHandler)
 	///         .MapToApiVersion(ApiVersions.V1);
+	///     
+	///     // Available in multiple versions
+	///     group.MapPost("/login/mfa", MfaLoginHandler)
+	///         .MapToApiVersion(ApiVersions.V1)
+	///         .MapToApiVersion(ApiVersions.V2);
 	///     </code>
 	/// </remarks>
 	public static RouteGroupBuilder MapVersionedApiGroup(this WebApplication app)
