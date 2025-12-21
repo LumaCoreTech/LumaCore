@@ -31,6 +31,8 @@ This separation avoids redundancy and ensures a **single source of truth** for A
 
 **Rule of thumb:** If you're tempted to add a JSON example to a feature doc, add it to the OpenAPI annotations in the code instead. The feature doc should link to OpenAPI, not duplicate it.
 
+> **Exception:** Cross-cutting features like *Error Handling* may include JSON examples and status codes to illustrate behavior that applies across the entire API. These features define response formats that aren't tied to specific endpoints.
+
 ---
 
 ## Document Structure
@@ -188,7 +190,7 @@ The *FeatureName* feature does not register any injectable services.
 ## Pipeline Order
 
 The *FeatureName* feature registers middleware only — no endpoints. The order 
-of `UseFeatureName()` [matters/does not matter] because [reason].
+of `Use{FeatureName}()` [matters/does not matter] because [reason].
 
 [If order matters: explain what must come before/after]
 
@@ -214,9 +216,9 @@ All [feature]-related settings are configured in `appsettings.json` (or via envi
 
 ### Options
 
-| Option | Required | Validation | Description |
-|--------|----------|------------|-------------|
-| `OptionName` | Yes/No | Validation rule | What it does |
+| Option | Required | Default | Validation | Description |
+|--------|----------|---------|------------|-------------|
+| `OptionName` | Yes/No | `value` | Validation rule | What it does |
 
 If any option is missing or invalid, LumaCore refuses to start.
 
@@ -238,7 +240,7 @@ Options can also be set via environment variables with the `SectionName__` prefi
 SectionName__Option=value
 ```
 
-The feature is registered via `builder.AddFeatureNameFeature()` and `app.MapFeatureNameFeature()` in `Program.cs`.
+The feature is registered via `builder.Add{FeatureName}Feature()` and mapped to the versioned API group in `Program.cs`.
 ```
 
 For features without own configuration:
@@ -248,11 +250,13 @@ For features without own configuration:
 
 The *FeatureName* feature does not introduce additional configuration options. It relies on the *OtherFeature* feature for [what it needs].
 
-The feature is registered via `builder.AddFeatureNameFeature()` and `app.MapFeatureNameFeature()` in `Program.cs`.
+The feature is registered via `builder.Add{FeatureName}Feature()` and mapped to the versioned API group in `Program.cs`.
 ```
 
+> **Note:** For infrastructure features that don't expose API endpoints (e.g., middleware-only features), use `app.Use{FeatureName}Feature()` or `app.Map{FeatureName}Feature()` directly on the application builder instead.
+
 Rules:
-- Options table with: Option | Required | Validation | Description
+- Options table with: Option | Required | Default | Validation | Description
 - Always mention fail-fast behavior for invalid config
 - Always include the registration line at the end
 - Reference other features in *italics*
@@ -292,7 +296,7 @@ Rules:
 ```markdown
 ## Pipeline Order
 
-The *FeatureName* feature registers [endpoints only / middleware and endpoints]. The order of `MapFeatureNameFeature()` relative to other features [does / does not] matter.
+The *FeatureName* feature registers [endpoints only / middleware and endpoints]. The order of `Map{FeatureName}Feature()` relative to other features [does / does not] matter.
 
 [If order matters, explain why and what must come before/after]
 ```

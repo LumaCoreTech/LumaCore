@@ -119,7 +119,7 @@ Security establishes a foundation where mistakes are not fatal. It limits damage
 | **HTTPS support (Kestrel)**<br/>_Enables encrypted transport without proxy._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
 | **Reverse Proxy Support**<br/>_Trust X-Forwarded-* headers (Proto, Host, For) from configured proxies; TLS offload support._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
 | **CORS Support**<br/>_Configurable CORS policies for cross-origin API access._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
-| **Secure defaults (TLS1.2+, HTTPS redirect)**<br/>_Enforces modern HTTPS guarantees by default._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
+| **Secure defaults (TLS1.2+, HTTPS redirect)**<br/>_TLS 1.2+ enforced; HTTPS redirect available (opt-in via configuration)._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
 | **Security Headers (HSTS, CSP, X-Frame-Options)**<br/>_Adds HTTP security headers to protect against common web vulnerabilities._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
 | **TLS exposure guidelines / proxy strategy**<br/>_Defines safe public exposure & TLS hardening._ | 🟢 Functional | ✔ (P0) | P1 |
 

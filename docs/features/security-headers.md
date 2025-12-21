@@ -10,16 +10,16 @@ All settings are configured in `appsettings.json` (or via environment variables)
 
 ### Options
 
-| Option | Default | Validation | Description |
-|--------|---------|------------|-------------|
-| `Enabled` | `true` | — | Master switch for all security headers |
-| `EnableHsts` | `true` | — | Send `Strict-Transport-Security` header |
-| `HstsMaxAgeSeconds` | `31536000` | ≥ 0 | HSTS duration in seconds (default: 1 year) |
-| `HstsIncludeSubDomains` | `false` | — | Apply HSTS to all subdomains |
-| `XFrameOptions` | `"DENY"` | `DENY`, `SAMEORIGIN`, or `null` | Controls iframe embedding |
-| `EnableNoSniff` | `true` | — | Send `X-Content-Type-Options: nosniff` |
-| `ReferrerPolicy` | `"strict-origin-when-cross-origin"` | Valid policy or `null` | Controls referrer information |
-| `ContentSecurityPolicy` | See below | Non-empty or `null` | Approved content sources |
+| Option | Required | Default | Validation | Description |
+|--------|----------|---------|------------|-------------|
+| `Enabled` | No | `true` | — | Master switch for all security headers |
+| `EnableHsts` | No | `true` | — | Send `Strict-Transport-Security` header |
+| `HstsMaxAgeSeconds` | No | `31536000` | ≥ 0 | HSTS duration in seconds (default: 1 year) |
+| `HstsIncludeSubDomains` | No | `false` | — | Apply HSTS to all subdomains |
+| `XFrameOptions` | No | `"DENY"` | `DENY`, `SAMEORIGIN`, or `null` | Controls iframe embedding |
+| `EnableNoSniff` | No | `true` | — | Send `X-Content-Type-Options: nosniff` |
+| `ReferrerPolicy` | No | `"strict-origin-when-cross-origin"` | Valid policy or `null` | Controls referrer information |
+| `ContentSecurityPolicy` | No | *See below* | Non-empty or `null` | Approved content sources |
 
 > [!WARNING]
 > Only enable HSTS when your site fully supports HTTPS. Once enabled, browsers will refuse HTTP connections for the specified duration. Consider disabling HSTS in development to avoid localhost issues.

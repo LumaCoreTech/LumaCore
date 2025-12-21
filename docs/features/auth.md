@@ -50,12 +50,12 @@ All JWT-related settings are configured in `appsettings.json` (or via environmen
 
 ### Options
 
-| Option | Required | Validation | Description |
-|--------|----------|------------|-------------|
-| `Issuer` | Yes | Non-empty string | Token issuer claim (`iss`) |
-| `Audience` | Yes | Non-empty string | Token audience claim (`aud`) |
-| `SigningKey` | Yes | At least 32 characters | Secret key for signing tokens |
-| `AccessTokenLifetimeMinutes` | Yes | 1–1440 | Token validity duration in minutes |
+| Option | Required | Default | Validation | Description |
+|--------|----------|---------|------------|-------------|
+| `Issuer` | Yes | — | Non-empty string | Token issuer claim (`iss`) |
+| `Audience` | Yes | — | Non-empty string | Token audience claim (`aud`) |
+| `SigningKey` | Yes | — | At least 32 characters | Secret key for signing tokens |
+| `AccessTokenLifetimeMinutes` | No | `60` | 1–1440 | Token validity duration in minutes |
 
 ### Example: `appsettings.json`
 
@@ -81,7 +81,7 @@ Jwt__SigningKey=your-secret-key-at-least-32-characters-long
 Jwt__AccessTokenLifetimeMinutes=60
 ```
 
-The feature is registered via `builder.AddAuthFeature()` and `app.MapAuthFeature()` in `Program.cs`.
+The feature is registered via `builder.AddAuthFeature()` and mapped to the versioned API group in `Program.cs`.
 
 ---
 
@@ -100,6 +100,14 @@ The *Auth* feature registers the following services for dependency injection:
 The *Auth* feature registers authentication middleware and endpoints. The order of `AddAuthFeature()` in service registration does not matter, and `MapAuthFeature()` can be called in any order relative to other features.
 
 Note that `UseAuthentication()` and `UseAuthorization()` must come before endpoint mapping in the middleware pipeline — this is handled automatically by the ASP.NET Core framework.
+
+---
+
+## Startup Validation
+
+The application validates at startup that every endpoint has an explicit authorization declaration — either `RequireAuthorization()` or `AllowAnonymous()`. Endpoints without explicit authorization cause startup failure.
+
+This fail-fast behavior prevents accidental exposure of unprotected endpoints.
 
 ---
 

@@ -25,7 +25,7 @@ Returns high-level status information about the running LumaCore instance. This 
 
 The *Admin* feature does not introduce additional configuration options. It relies on the *Auth* feature for JWT bearer authentication and role-based access control — any user with the `admin` role can access the admin endpoints.
 
-The feature is registered via `builder.AddAdminFeature()` and `app.MapAdminFeature()` in `Program.cs`.
+The feature is registered via `builder.AddAdminFeature()` and mapped to the versioned API group in `Program.cs`.
 
 ---
 

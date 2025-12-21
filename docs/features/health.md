@@ -37,7 +37,7 @@ This endpoint is anonymous — no authentication is required. This allows monito
 
 The *Health* feature does not introduce additional configuration options. It registers the standard ASP.NET Core health check infrastructure, which can be extended with custom health checks in future versions.
 
-The feature is registered via `builder.AddHealthFeature()` and mapped via `app.MapHealthProbesFeature()` (for `/health`) and `app.MapHealthApiFeature()` (for `/api/v1/health/live`) in `Program.cs`.
+The feature is registered via `builder.AddHealthFeature()` and mapped via `app.MapHealthProbesFeature()` (for `/health`) and to the versioned API group via `MapHealthApiFeature()` (for `/api/v1/health/live`) in `Program.cs`.
 
 ---
 
