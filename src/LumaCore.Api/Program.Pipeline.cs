@@ -183,10 +183,6 @@ public static partial class Program
 		// See Health/EndpointMapping.cs for details on the split.
 		app.MapHealthProbesFeature();
 
-		// Map attribute-routed controllers (e.g. [ApiController]) into the endpoint
-		// routing table so that they can handle incoming HTTP requests.
-		app.MapControllers();
-
 		// Fallback: if no API/other endpoint matches, serve the Blazor index.html.
 		// This enables client-side routing for the SPA.
 		app.MapFallbackToFile("index.html");

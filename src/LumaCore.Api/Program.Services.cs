@@ -23,7 +23,6 @@ public static partial class Program
 	///     <para>
 	///     This method configures:
 	///     <list type="bullet">
-	///         <item>Controllers and API endpoints</item>
 	///         <item>ProblemDetails for RFC 7807 compliant error responses</item>
 	///         <item>Response compression for HTTPS</item>
 	///         <item>CORS policy for development</item>
@@ -35,10 +34,6 @@ public static partial class Program
 	/// </remarks>
 	private static void ConfigureServices(WebApplicationBuilder builder)
 	{
-		// Register MVC-style controllers so that attribute-routed API endpoints
-		// (e.g. [ApiController] + [Route]) are discovered and exposed by the app.
-		builder.Services.AddControllers();
-
 		// Register ProblemDetails services for RFC 7807 compliant error responses.
 		// This enables consistent, machine-readable error payloads across all endpoints.
 		// Unhandled exceptions, validation errors, and status codes are automatically
