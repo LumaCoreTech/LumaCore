@@ -41,9 +41,9 @@ LumaCore organizes code by **capability** instead:
 
 ```
 Features/
-├── Auth/               # Everything auth-related
-├── Admin/              # Everything admin-related
-└── Health/             # Everything health-related
+├── <FeatureA>/         # Everything related to capability A
+├── <FeatureB>/         # Everything related to capability B
+└── <FeatureC>/         # Everything related to capability C
 ```
 
 Each feature folder contains its own registration, endpoints, contracts, services, and configuration - everything needed for that capability lives together.
@@ -204,7 +204,12 @@ Features follow this architecture naturally - each phase has a dedicated integra
 
 ### Features Should Be Independent
 
-One of the core principles of the Feature pattern is **independence** - features should not directly depend on each other. This means a feature should never import services, types, or logic from another feature.
+One of the core principles of the Feature pattern is **independence** — features should not directly depend on each other. This means a feature should never import services, types, or logic from another feature.
+
+**Allowed imports:**
+
+- **API infrastructure extensions** (e.g., `ApiVersions.V1`, `MapToApiVersion()`, `WithValidation()`) — these are designed to be used by all features
+- **Interfaces from LumaCore.Core** — shared domain abstractions live in Core, not in features
 
 **Why this matters:**
 
@@ -212,7 +217,42 @@ When features are independent, they can be added, removed, or modified without a
 
 **When features need to share logic:**
 
-If multiple features need the same functionality, that's a sign the logic belongs in **LumaCore.Core** as shared infrastructure. Both features can then depend on the shared abstraction from Core, not on each other. This preserves independence while avoiding duplication.
+If multiple features need the same functionality, that's a sign the logic belongs in **LumaCore.Core** as a shared abstraction. Both features can then depend on the interface from Core, not on each other. This preserves independence while avoiding duplication.
+
+### Sharing Services via Dependency Inversion
+
+When multiple features need access to the same domain service (e.g., user management, notifications), use **Dependency Inversion**:
+
+1. **Interface** lives in `LumaCore.Core` — defines the contract
+2. **Implementation** lives in a Feature — provides the actual logic
+3. **Consumers** inject the interface — never the concrete type
+
+```
+┌──────────────────────────────────────────────────┐
+│                  LumaCore.Api                    │
+│  ┌──────────┐  ┌──────────┐  ┌───────────────┐   │
+│  │ FeatureA │  │ FeatureB │  │ FeatureC      │   │
+│  │          │  │          │  │               │   │
+│  │ injects  │  │ injects  │  │ implements    │   │
+│  │ IService │  │ IService │  │ IService ────►DI  │
+│  │          │  │          │  │               │   │
+│  └────┬─────┘  └────┬─────┘  └───────────────┘   │
+│       │             │                            │
+│       └─────────────┴────────────┐               │
+│                                  ▼               │
+└──────────────────────────────────┼───────────────┘
+                                   │
+┌──────────────────────────────────┼───────────────┐
+│           LumaCore.Core          ▼               │
+│                          ┌──────────────┐        │
+│                          │   IService   │        │
+│                          └──────────────┘        │
+└──────────────────────────────────────────────────┘
+```
+
+This pattern ensures that features remain independent while sharing functionality through well-defined interfaces.
+
+> 💡 **For implementation details** (code examples, registration patterns), see [Sharing Services via Dependency Inversion](../development/building-features.md#7-sharing-services-via-dependency-inversion) in the Developer Guide.
 
 ---
 
