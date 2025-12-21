@@ -10,17 +10,15 @@ namespace LumaCore.Api.Features.HttpsRedirection;
 /// Configuration options controlling HTTPS redirection behavior.
 /// </summary>
 /// <remarks>
-///     <para>
-///     These options are bound from the <c>HttpsRedirection</c> configuration section
-///     and control whether HTTP requests are redirected to HTTPS.
-///     </para>
-///     <para>
-///     HTTPS redirection is disabled by default to support development scenarios
-///     and deployments behind reverse proxies that terminate TLS.
-///     </para>
+/// These options are bound from the <c>HttpsRedirection</c> configuration section and control whether HTTP
+/// requests are redirected to HTTPS.
+/// HTTPS redirection is disabled by default to support development scenarios and deployments behind reverse
+/// proxies that terminate TLS.
 /// </remarks>
 sealed class HttpsRedirectionOptions
 {
+	private const string HttpsPortRangeError = "HttpsRedirection:HttpsPort must be between 1 and 65535.";
+
 	/// <summary>
 	/// The configuration section name used to bind these options.
 	/// </summary>
@@ -29,30 +27,24 @@ sealed class HttpsRedirectionOptions
 	/// <summary>
 	/// Gets or sets a value indicating whether HTTP requests should be redirected to HTTPS.
 	/// </summary>
+	/// <value>
+	/// <see langword="true"/> to redirect HTTP to HTTPS;
+	/// <see langword="false"/> to allow HTTP.
+	/// Default is <see langword="false"/> (opt-in).
+	/// </value>
 	/// <remarks>
-	///     <para>
-	///     Defaults to <see langword="false"/>, so redirection is opt-in.
-	///     </para>
-	///     <para>
-	///     When running behind a reverse proxy that terminates TLS, this should typically
-	///     remain <see langword="false"/> as the proxy handles HTTPS redirection.
-	///     </para>
+	/// When running behind a reverse proxy that terminates TLS, this should typically remain
+	/// <see langword="false"/> as the proxy handles HTTPS redirection.
 	/// </remarks>
 	public bool Enabled { get; set; } = false;
 
 	/// <summary>
 	/// Gets or sets the HTTPS port to use for redirection.
 	/// </summary>
-	/// <remarks>
-	///     <para>
-	///     If <see langword="null"/>, the framework attempts to infer the port from
-	///     the server addresses or uses the default HTTPS port (443).
-	///     </para>
-	///     <para>
-	///     Set this explicitly when using a non-standard HTTPS port.
-	///     Valid port numbers are 1–65535.
-	///     </para>
-	/// </remarks>
-	[Range(1, 65535, ErrorMessage = "HttpsRedirection:HttpsPort must be between 1 and 65535.")]
+	/// <value>
+	/// A port number between 1 and 65535, or <see langword="null"/> to infer from server addresses or use the
+	/// default HTTPS port (443).
+	/// </value>
+	[Range(1, 65535, ErrorMessage = HttpsPortRangeError)]
 	public int? HttpsPort { get; set; }
 }

@@ -12,32 +12,21 @@ namespace LumaCore.Api.Features.ApiVersioning;
 /// Provides validation for API versioning configuration at application startup.
 /// </summary>
 /// <remarks>
-///     <para>
-///     This class ensures that all versioned API endpoints have an explicit
-///     <c>MapToApiVersion()</c> call. Without explicit version mapping, endpoints
-///     are implicitly available in all API versions, which can lead to:
-///     </para>
-///     <list type="bullet">
-///         <item>
-///             <description>
-///             Unintended exposure of endpoints in new API versions.
-///             </description>
-///         </item>
-///         <item>
-///             <description>
-///             Difficulty tracking which endpoints belong to which version.
-///             </description>
-///         </item>
-///         <item>
-///             <description>
-///             Inconsistent API surface across versions.
-///             </description>
-///         </item>
-///     </list>
-///     <para>
-///     By validating at startup, configuration errors are caught immediately
-///     rather than manifesting as unexpected runtime behavior.
-///     </para>
+/// This class ensures that all versioned API endpoints have an explicit <c>MapToApiVersion()</c> call. Without
+/// explicit version mapping, endpoints are implicitly available in all API versions, which can lead to:
+/// <list type="bullet">
+///     <item>
+///         <description>Unintended exposure of endpoints in new API versions.</description>
+///     </item>
+///     <item>
+///         <description>Difficulty tracking which endpoints belong to which version.</description>
+///     </item>
+///     <item>
+///         <description>Inconsistent API surface across versions.</description>
+///     </item>
+/// </list>
+/// By validating at startup, configuration errors are caught immediately rather than manifesting as unexpected
+/// runtime behavior.
 /// </remarks>
 static class ApiVersionValidation
 {
@@ -56,27 +45,23 @@ static class ApiVersionValidation
 	/// <param name="app">The <see cref="WebApplication"/> to validate.</param>
 	/// <returns>The <paramref name="app"/> for method chaining.</returns>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown when one or more versioned endpoints are missing explicit
-	/// <c>MapToApiVersion()</c> calls.
+	/// Thrown when one or more versioned endpoints are missing explicit <c>MapToApiVersion()</c> calls.
 	/// </exception>
 	/// <remarks>
 	///     <para>
-	///     This method should be called after all endpoints have been mapped,
-	///     typically at the end of <c>ConfigurePipeline</c> in <c>Program.Pipeline.cs</c>.
+	///     This method should be called after all endpoints have been mapped, typically at the end of
+	///     <c>ConfigurePipeline</c> in <c>Program.Pipeline.cs</c>.
 	///     </para>
 	///     <para>
 	///         <b>What is validated:</b>
 	///     </para>
 	///     <list type="bullet">
 	///         <item>
-	///             <description>
-	///             Only endpoints under <c>/api/v{version}</c> are checked.
-	///             </description>
+	///             <description>Only endpoints under <c>/api/v{version}</c> are checked.</description>
 	///         </item>
 	///         <item>
 	///             <description>
-	///             Each endpoint must have <see cref="ApiVersionMetadata"/> with
-	///             at least one explicitly mapped version.
+	///             Each endpoint must have <see cref="ApiVersionMetadata"/> with at least one explicitly mapped version.
 	///             </description>
 	///         </item>
 	///     </list>
@@ -125,7 +110,8 @@ static class ApiVersionValidation
 			// If there's no metadata at all, the endpoint isn't properly configured.
 			if (metadata is null)
 			{
-				endpointsMissingVersionMapping.Add($"{routeEndpoint.DisplayName} ({routePattern}) - No ApiVersionMetadata");
+				endpointsMissingVersionMapping.Add(
+					$"{routeEndpoint.DisplayName} ({routePattern}) - No ApiVersionMetadata");
 				continue;
 			}
 
@@ -144,7 +130,8 @@ static class ApiVersionValidation
 		if (endpointsMissingVersionMapping.Count > 0)
 		{
 			var message = new StringBuilder();
-			message.AppendLine("API version validation failed. The following endpoints are missing explicit MapToApiVersion() calls:");
+			message.AppendLine(
+				"API version validation failed. The following endpoints are missing explicit MapToApiVersion() calls:");
 			message.AppendLine();
 
 			foreach (string endpoint in endpointsMissingVersionMapping)

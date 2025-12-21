@@ -14,24 +14,18 @@ namespace LumaCore.Api.Features.Auth;
 /// Provides extension methods for registering authentication services with the dependency injection container.
 /// </summary>
 /// <remarks>
-///     <para>
-///     This class is part of the Auth feature and configures JWT-based authentication
-///     for the LumaCore API, including token validation, authorization, and the
-///     <see cref="IJwtTokenFactory"/> for issuing tokens.
-///     </para>
+/// Configures JWT-based authentication for the LumaCore API, including token validation, authorization, and the
+/// <see cref="IJwtTokenFactory"/> for issuing tokens.
 /// </remarks>
 static class ServiceRegistration
 {
 	/// <summary>
-	/// Registers JWT authentication, authorization, options binding, and supporting services
-	/// using the <see cref="WebApplicationBuilder"/> facade.
+	/// Registers JWT authentication, authorization, options binding, and supporting services using the
+	/// <see cref="WebApplicationBuilder"/> facade.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     This is a convenience wrapper that forwards to <see cref="AddAuthFeatureCore"/>
-	///     using the <see cref="IServiceCollection"/> and <see cref="IConfiguration"/>
-	///     exposed by the builder.
-	///     </para>
+	/// This is a convenience wrapper that forwards to <see cref="AddAuthFeatureCore"/> using the
+	/// <see cref="IServiceCollection"/> and <see cref="IConfiguration"/> exposed by the builder.
 	/// </remarks>
 	/// <param name="builder">The web application builder.</param>
 	/// <returns>The modified application builder.</returns>
@@ -42,19 +36,19 @@ static class ServiceRegistration
 	}
 
 	/// <summary>
-	/// Registers JWT authentication, authorization, options binding, and supporting services
-	/// using the underlying <see cref="IServiceCollection"/>.
+	/// Registers JWT authentication, authorization, options binding, and supporting services using the underlying
+	/// <see cref="IServiceCollection"/>.
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     This method wires up the complete authentication stack for the LumaCore HTTP API:
-	///     it binds <see cref="JwtOptions"/>, configures the JWT bearer handler, and registers
-	///     authorization services and the <see cref="IJwtTokenFactory"/>.
+	///     This method wires up the complete authentication stack for the LumaCore HTTP API: it binds
+	///     <see cref="JwtOptions"/>, configures the JWT bearer handler, and registers authorization services and the
+	///     <see cref="IJwtTokenFactory"/>.
 	///     </para>
 	///     <para>
-	///     It is factored to operate on <see cref="IServiceCollection"/> and <see cref="IConfiguration"/>
-	///     so that it can be reused in other hosting scenarios (for example background workers
-	///     using the same JWT infrastructure) and easily unit-tested.
+	///     It is factored to operate on <see cref="IServiceCollection"/> and <see cref="IConfiguration"/> so that it
+	///     can be reused in other hosting scenarios (for example background workers using the same JWT infrastructure)
+	///     and easily unit-tested.
 	///     </para>
 	/// </remarks>
 	/// <param name="services">The service collection to register authentication services with.</param>

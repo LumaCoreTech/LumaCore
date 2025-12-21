@@ -12,28 +12,23 @@ namespace LumaCore.Api.Features.ApiVersioning;
 /// Provides extension methods for creating the versioned API route group.
 /// </summary>
 /// <remarks>
-///     <para>
-///     This class is part of the API Versioning feature and provides the central
-///     route group that all business API features are mounted on. The route group
-///     is configured with:
-///     </para>
-///     <list type="bullet">
-///         <item>
-///             <description>
-///             URL segment-based versioning via the <c>/api/v{version:apiVersion}</c> prefix.
-///             </description>
-///         </item>
-///         <item>
-///             <description>
-///             Automatic request validation via <see cref="ValidationExtensions.WithValidation(RouteGroupBuilder)"/>.
-///             </description>
-///         </item>
-///         <item>
-///             <description>
-///             Version reporting headers (<c>api-supported-versions</c>, <c>api-deprecated-versions</c>).
-///             </description>
-///         </item>
-///     </list>
+/// This class provides the central route group that all business API features are mounted on. The route group is
+/// configured with:
+/// <list type="bullet">
+///     <item>
+///         <description>URL segment-based versioning via the <c>/api/v{version:apiVersion}</c> prefix.</description>
+///     </item>
+///     <item>
+///         <description>
+///         Automatic request validation via <see cref="ValidationExtensions.WithValidation(RouteGroupBuilder)"/>.
+///         </description>
+///     </item>
+///     <item>
+///         <description>
+///         Version reporting headers (<c>api-supported-versions</c>, <c>api-deprecated-versions</c>).
+///         </description>
+///     </item>
+/// </list>
 /// </remarks>
 static class VersionedApiGroup
 {
@@ -41,14 +36,12 @@ static class VersionedApiGroup
 	/// The route prefix for all versioned API endpoints.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     The <c>{version:apiVersion}</c> segment is a route constraint that extracts the
-	///     API version from the URL. For example:
-	///     </para>
-	///     <list type="bullet">
-	///         <item><c>/api/v1/auth/login</c> → Version 1</item>
-	///         <item><c>/api/v2/auth/login</c> → Version 2</item>
-	///     </list>
+	/// The <c>{version:apiVersion}</c> segment is a route constraint that extracts the API version from the URL.
+	/// For example:
+	/// <list type="bullet">
+	///     <item><c>/api/v1/auth/login</c> → Version 1</item>
+	///     <item><c>/api/v2/auth/login</c> → Version 2</item>
+	/// </list>
 	/// </remarks>
 	private const string RoutePrefix = "/api/v{version:apiVersion}";
 
@@ -57,27 +50,25 @@ static class VersionedApiGroup
 	/// </summary>
 	/// <param name="app">The <see cref="WebApplication"/> to create the route group on.</param>
 	/// <returns>
-	/// A <see cref="RouteGroupBuilder"/> configured with versioning and validation that
-	/// features can use to map their endpoints.
+	/// A <see cref="RouteGroupBuilder"/> configured with versioning and validation that features can use to map
+	/// their endpoints.
 	/// </returns>
 	/// <remarks>
 	///     <para>
-	///     This method creates the central route group for all business API features. The
-	///     returned <see cref="RouteGroupBuilder"/> is pre-configured with:
+	///     This method creates the central route group for all business API features. The returned
+	///     <see cref="RouteGroupBuilder"/> is pre-configured with:
 	///     </para>
 	///     <list type="bullet">
 	///         <item>
 	///             <description>
-	///             <b>Versioning:</b> An <see cref="ApiVersionSet"/> containing all supported
-	///             versions defined in <see cref="ApiVersions"/>. Endpoints inherit this
-	///             version set automatically.
+	///             <b>Versioning:</b> An <see cref="ApiVersionSet"/> containing all supported versions defined in
+	///             <see cref="ApiVersions"/>. Endpoints inherit this version set automatically.
 	///             </description>
 	///         </item>
 	///         <item>
 	///             <description>
-	///             <b>Validation:</b> The <see cref="ValidationExtensions.WithValidation(RouteGroupBuilder)"/>
-	///             filter is applied, ensuring all request bodies are validated using
-	///             <see cref="System.ComponentModel.DataAnnotations"/>.
+	///             <b>Validation:</b> The <see cref="ValidationExtensions.WithValidation(RouteGroupBuilder)"/> filter
+	///             is applied, ensuring all request bodies are validated using data annotation attributes.
 	///             </description>
 	///         </item>
 	///     </list>
@@ -94,17 +85,16 @@ static class VersionedApiGroup
 	///         <b>Adding New Versions:</b>
 	///     </para>
 	///     <para>
-	///     When adding a new API version, register it in the <see cref="ApiVersionSet"/>
-	///     builder below using <c>HasApiVersion()</c>. To deprecate an older version,
-	///     change its registration to <c>HasDeprecatedApiVersion()</c>.
+	///     When adding a new API version, register it in the <see cref="ApiVersionSet"/> builder below using
+	///     <c>HasApiVersion()</c>. To deprecate an older version, change its registration to
+	///     <c>HasDeprecatedApiVersion()</c>.
 	///     </para>
 	///     <para>
 	///         <b>Feature Endpoint Mapping:</b>
 	///     </para>
 	///     <para>
-	///     Every endpoint MUST use <c>MapToApiVersion()</c> to specify which version(s)
-	///     it belongs to. The application validates this at startup and will fail to
-	///     start if any endpoint is missing an explicit version mapping.
+	///     Every endpoint MUST use <c>MapToApiVersion()</c> to specify which version(s) it belongs to. The application
+	///     validates this at startup and will fail to start if any endpoint is missing an explicit version mapping.
 	///     </para>
 	///     <code>
 	///     // ✅ Correct: Explicit version mapping

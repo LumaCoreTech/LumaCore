@@ -62,7 +62,7 @@ static class HealthCheckRunner
 	/// The default timeout in seconds for health check requests.
 	/// </summary>
 	/// <value>
-	/// <c>5</c> seconds — sufficient for a simple liveness check while failing fast
+	/// 5 seconds — sufficient for a simple liveness check while failing fast
 	/// enough to allow Docker to detect unresponsive containers.
 	/// </value>
 	private const int DefaultTimeoutSeconds = 5;

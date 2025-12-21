@@ -48,13 +48,13 @@
     }
 
     /// <summary>
-    /// Checks the current health of the backend by calling the live health endpoint.
-    /// Updates the internal state and error message based on the response.
+    /// Checks the current health of the backend by calling the live health endpoint. Updates the internal state and
+    /// error message based on the response.
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///     Sends an HTTP GET request to the <c>api/v1/health/live</c> endpoint. HTTP status codes and
-    ///     payload format are handled separately:
+    ///     Sends an HTTP GET request to the <c>api/v1/health/live</c> endpoint. HTTP status codes and payload format
+    ///     are handled separately:
     ///     </para>
     ///     <list type="bullet">
     ///         <item>
@@ -64,7 +64,10 @@
     ///             <description>A successful status code with malformed JSON produces a format-related message.</description>
     ///         </item>
     ///         <item>
-    ///             <description>A valid <see cref="ApiHealthLiveResponse"/> with a non-empty <c>Status</c> marks the backend as healthy.</description>
+    ///             <description>
+    ///             A valid <see cref="ApiHealthLiveResponse"/> with a non-empty <see cref="ApiHealthLiveResponse.Status"/>
+    ///             marks the backend as healthy.
+    ///             </description>
     ///         </item>
     ///     </list>
     /// </remarks>
@@ -129,8 +132,7 @@
     }
 
     /// <summary>
-    /// Maps a non-success HTTP status code from the backend health endpoint
-    /// to a user-friendly error message.
+    /// Maps a non-success HTTP status code from the backend health endpoint to a user-friendly error message.
     /// </summary>
     /// <param name="statusCode">The HTTP status code returned by the backend.</param>
     /// <returns>A short descriptive error message.</returns>

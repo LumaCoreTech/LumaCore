@@ -10,15 +10,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace LumaCore.Api.Features.ErrorHandling;
 
 /// <summary>
-/// A centralized exception handler that converts unhandled exceptions into RFC 7807
-/// <see cref="ProblemDetails"/> responses with trace correlation.
+/// A centralized exception handler that converts unhandled exceptions into RFC 7807 <see cref="ProblemDetails"/>
+/// responses with trace correlation.
 /// </summary>
 /// <remarks>
 ///     <para>
-///     This handler implements <see cref="IExceptionHandler"/> to provide consistent,
-///     structured error responses for all unhandled exceptions in the LumaCore API.
-///     Every error response includes a <c>traceId</c> extension field that correlates
-///     with server-side logs for debugging.
+///     This handler implements <see cref="IExceptionHandler"/> to provide consistent, structured error responses for
+///     all unhandled exceptions in the LumaCore API. Every error response includes a <c>traceId</c> extension field
+///     that correlates with server-side logs for debugging.
 ///     </para>
 ///     <para>
 ///         <b>Security considerations:</b>
@@ -26,20 +25,18 @@ namespace LumaCore.Api.Features.ErrorHandling;
 ///     <list type="bullet">
 ///         <item>
 ///             <description>
-///             Exception details (message, stack trace) are <em>never</em> included in
-///             production responses to prevent information disclosure.
+///             Exception details (message, stack trace) are <em>never</em> included in production responses to prevent
+///             information disclosure.
 ///             </description>
 ///         </item>
 ///         <item>
 ///             <description>
-///             The <c>traceId</c> allows support teams to locate detailed exception
-///             information in server logs without exposing it to clients.
+///             The <c>traceId</c> allows support teams to locate detailed exception information in server logs without
+///             exposing it to clients.
 ///             </description>
 ///         </item>
 ///     </list>
-///     <para>
-///     Register this handler in the DI container using <see cref="ServiceRegistration.AddErrorHandlingFeature"/>.
-///     </para>
+///     <para>Register this handler in the DI container using <see cref="ServiceRegistration.AddErrorHandlingFeature"/>.</para>
 /// </remarks>
 /// <example>
 /// The handler produces responses like:
@@ -72,9 +69,7 @@ sealed class LumaCoreExceptionHandler : IExceptionHandler
 	/// </summary>
 	/// <param name="httpContext">The <see cref="HttpContext"/> for the current request.</param>
 	/// <param name="exception">The unhandled <see cref="Exception"/> to handle.</param>
-	/// <param name="cancellationToken">
-	/// A <see cref="CancellationToken"/> to cancel the operation.
-	/// </param>
+	/// <param name="cancellationToken">A <see cref="CancellationToken"/> to cancel the operation.</param>
 	/// <returns>
 	/// <see langword="true"/> indicating the exception was handled and a response was written;
 	/// the exception middleware should not invoke subsequent handlers.

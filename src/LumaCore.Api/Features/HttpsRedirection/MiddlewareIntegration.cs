@@ -10,10 +10,8 @@ namespace LumaCore.Api.Features.HttpsRedirection;
 /// Provides extension methods for integrating HTTPS redirection middleware into the request pipeline.
 /// </summary>
 /// <remarks>
-///     <para>
-///     This class is part of the HttpsRedirection feature and conditionally enables HTTPS redirection
-///     based on the <see cref="HttpsRedirectionOptions"/> configuration.
-///     </para>
+/// This class conditionally enables HTTPS redirection based on the <see cref="HttpsRedirectionOptions"/>
+/// configuration.
 /// </remarks>
 static class MiddlewareIntegration
 {
@@ -24,18 +22,17 @@ static class MiddlewareIntegration
 	/// <returns>The modified application for fluent chaining.</returns>
 	/// <remarks>
 	///     <para>
-	///     This method checks the <see cref="HttpsRedirectionOptions.Enabled"/> setting
-	///     and only enables HTTPS redirection when explicitly configured.
+	///     This method checks the <see cref="HttpsRedirectionOptions.Enabled"/> setting and only enables HTTPS
+	///     redirection when explicitly configured.
 	///     </para>
 	///     <para>
-	///     <strong>Important:</strong> This middleware must be configured AFTER
-	///     <c>UseProxyHeadersFeature()</c> (or <c>UseForwardedHeaders()</c>) when running
-	///     behind a reverse proxy. Otherwise, the middleware sees HTTP instead of the
-	///     forwarded HTTPS scheme, causing infinite redirect loops.
+	///     <strong>Important:</strong> This middleware must be configured AFTER <c>UseProxyHeadersFeature()</c> (or
+	///     <c>UseForwardedHeaders()</c>) when running behind a reverse proxy. Otherwise, the middleware sees HTTP
+	///     instead of the forwarded HTTPS scheme, causing infinite redirect loops.
 	///     </para>
 	///     <para>
-	///     When running behind a reverse proxy that terminates TLS, HTTPS redirection
-	///     should typically be disabled as the proxy handles redirection.
+	///     When running behind a reverse proxy that terminates TLS, HTTPS redirection should typically be disabled
+	///     as the proxy handles redirection.
 	///     </para>
 	/// </remarks>
 	/// <example>

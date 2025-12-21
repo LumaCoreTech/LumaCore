@@ -12,37 +12,31 @@ namespace LumaCore.Api.Features.OpenApi;
 /// An <see cref="IOpenApiOperationTransformer"/> that automatically documents common error responses.
 /// </summary>
 /// <remarks>
-///     <para>
-///     This transformer analyzes endpoint metadata and automatically adds appropriate
-///     error response documentation to the OpenAPI specification:
-///     </para>
-///     <list type="bullet">
-///         <item>
-///             <description>
-///             <b>400 Bad Request</b> – Added when the endpoint accepts a request body,
-///             indicating that validation errors may occur.
-///             </description>
-///         </item>
-///         <item>
-///             <description>
-///             <b>401 Unauthorized</b> – Added when the endpoint requires authentication
-///             (has <see cref="AuthorizeAttribute"/> metadata). Despite the historical name
-///             "Unauthorized", this status indicates missing or invalid authentication.
-///             </description>
-///         </item>
-///         <item>
-///             <description>
-///             <b>403 Forbidden</b> – Added when the endpoint requires specific roles
-///             or policies, indicating that authenticated users may still be denied access
-///             due to insufficient authorization.
-///             </description>
-///         </item>
-///     </list>
-///     <para>
-///     This transformer ensures consistent error response documentation across all endpoints
-///     without requiring developers to manually add <c>.Produces()</c> calls for common
-///     error scenarios.
-///     </para>
+/// This transformer analyzes endpoint metadata and automatically adds appropriate error response documentation
+/// to the OpenAPI specification:
+/// <list type="bullet">
+///     <item>
+///         <description>
+///         <b>400 Bad Request</b> – Added when the endpoint accepts a request body, indicating that validation
+///         errors may occur.
+///         </description>
+///     </item>
+///     <item>
+///         <description>
+///         <b>401 Unauthorized</b> – Added when the endpoint requires authentication (has
+///         <see cref="AuthorizeAttribute"/> metadata). Despite the historical name "Unauthorized", this status
+///         indicates missing or invalid authentication.
+///         </description>
+///     </item>
+///     <item>
+///         <description>
+///         <b>403 Forbidden</b> – Added when the endpoint requires specific roles or policies, indicating that
+///         authenticated users may still be denied access due to insufficient authorization.
+///         </description>
+///     </item>
+/// </list>
+/// This transformer ensures consistent error response documentation across all endpoints without requiring
+/// developers to manually add <c>.Produces()</c> calls for common error scenarios.
 /// </remarks>
 /// <example>
 /// Register this transformer in <c>Program.Services.cs</c>:
@@ -144,11 +138,9 @@ sealed class SecurityResponsesTransformer : IOpenApiOperationTransformer
 	/// <param name="statusCode">The HTTP status code as a string (e.g., <c>"400"</c>).</param>
 	/// <param name="description">The response description.</param>
 	/// <remarks>
-	///     <para>
-	///     If a response for the given status code already exists with a generic description
-	///     (e.g., <c>"Unauthorized"</c>, <c>"Forbidden"</c>, <c>"Bad Request"</c>), it will be
-	///     replaced with the more descriptive text. Custom descriptions are preserved.
-	///     </para>
+	/// If a response for the given status code already exists with a generic description (e.g.,
+	/// <c>"Unauthorized"</c>, <c>"Forbidden"</c>, <c>"Bad Request"</c>), it will be replaced with the more
+	/// descriptive text. Custom descriptions are preserved.
 	/// </remarks>
 	private static void AddOrUpdateResponse(
 		OpenApiOperation operation,

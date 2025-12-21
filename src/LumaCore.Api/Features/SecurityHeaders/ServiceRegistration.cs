@@ -10,10 +10,7 @@ namespace LumaCore.Api.Features.SecurityHeaders;
 /// Provides extension methods for registering the Security Headers feature services.
 /// </summary>
 /// <remarks>
-///     <para>
-///     This class is part of the SecurityHeaders feature and configures HTTP security headers
-///     based on the <see cref="SecurityHeadersOptions"/> configuration.
-///     </para>
+/// Configures HTTP security headers based on the <see cref="SecurityHeadersOptions"/> configuration.
 /// </remarks>
 static class ServiceRegistration
 {
@@ -23,11 +20,8 @@ static class ServiceRegistration
 	/// <param name="builder">The web application builder.</param>
 	/// <returns>The web application builder for method chaining.</returns>
 	/// <remarks>
-	///     <para>
-	///     This is a convenience wrapper that forwards to <see cref="AddSecurityHeadersFeatureCore"/>
-	///     using the <see cref="IServiceCollection"/> and <see cref="IConfiguration"/>
-	///     exposed by the builder.
-	///     </para>
+	/// This is a convenience wrapper that forwards to <see cref="AddSecurityHeadersFeatureCore"/> using the
+	/// <see cref="IServiceCollection"/> and <see cref="IConfiguration"/> exposed by the builder.
 	/// </remarks>
 	public static WebApplicationBuilder AddSecurityHeadersFeature(this WebApplicationBuilder builder)
 	{
@@ -39,16 +33,16 @@ static class ServiceRegistration
 	/// Registers the Security Headers feature services using the underlying <see cref="IServiceCollection"/>.
 	/// </summary>
 	/// <param name="services">The service collection to register services with.</param>
-	/// <param name="configuration">The application configuration used to bind <see cref="SecurityHeadersOptions"/>.</param>
+	/// <param name="configuration">
+	/// The application configuration used to bind <see cref="SecurityHeadersOptions"/>.
+	/// </param>
 	/// <returns>The original <see cref="IServiceCollection"/> for fluent chaining.</returns>
 	/// <remarks>
 	///     <para>
-	///     This registers and validates the <see cref="SecurityHeadersOptions"/> configuration from
-	///     the <c>SecurityHeaders</c> section in appsettings.json.
+	///     This registers and validates the <see cref="SecurityHeadersOptions"/> configuration from the
+	///     <c>SecurityHeaders</c> section in appsettings.json.
 	///     </para>
-	///     <para>
-	///     HSTS options are also configured based on the <see cref="SecurityHeadersOptions"/> settings.
-	///     </para>
+	///     <para>HSTS options are also configured based on the <see cref="SecurityHeadersOptions"/> settings.</para>
 	/// </remarks>
 	public static IServiceCollection AddSecurityHeadersFeatureCore(
 		this IServiceCollection services,

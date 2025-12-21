@@ -5,7 +5,7 @@
 namespace LumaCore.Api.Contracts.V1.Auth;
 
 /// <summary>
-/// Represents the response returned by the <c>/api/v1/auth/introspect</c> endpoint.
+/// Detailed information about the current JWT token.
 /// </summary>
 /// <param name="Subject">The logical subject of the token (usually the user identifier).</param>
 /// <param name="Name">The display name associated with the principal, if available.</param>
@@ -13,8 +13,8 @@ namespace LumaCore.Api.Contracts.V1.Auth;
 /// <param name="NotBeforeUtc">The UTC time before which the token is not considered valid, if present.</param>
 /// <param name="ExpiresUtc">The UTC time at which the token expires, if present.</param>
 /// <param name="ExpiresIn">
-/// The remaining lifetime of the token at the time of the request, or <see langword="null"/>
-/// if the expiry could not be determined.
+/// The remaining lifetime of the token at the time of the request, or <see langword="null"/> if the expiry could not
+/// be determined.
 /// </param>
 /// <param name="JwtId">The unique token identifier (jti claim), if present.</param>
 /// <param name="Issuer">The token issuer as read from the claims, if present.</param>

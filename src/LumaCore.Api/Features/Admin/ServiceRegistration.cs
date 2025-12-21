@@ -8,11 +8,8 @@ namespace LumaCore.Api.Features.Admin;
 /// Provides extension methods for registering administrative services with the dependency injection container.
 /// </summary>
 /// <remarks>
-///     <para>
-///     This class is part of the Admin feature and currently serves as a placeholder
-///     for future administrative service registrations while maintaining consistency
-///     with the feature pattern used throughout LumaCore.
-///     </para>
+/// Currently serves as a placeholder for future administrative service registrations while maintaining
+/// consistency with the feature pattern used throughout LumaCore.
 /// </remarks>
 static class ServiceRegistration
 {
@@ -20,11 +17,9 @@ static class ServiceRegistration
 	/// Registers options binding and supporting services using the <see cref="WebApplicationBuilder"/> facade.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     This is a convenience wrapper that forwards to <see cref="AddAdminFeatureCore"/>
-	///     using <see cref="WebApplicationBuilder.Services"/> and <see cref="WebApplicationBuilder.Configuration"/>.
-	///     It exists to keep the <c>Program</c>-level configuration consistent with other feature registration methods.
-	///     </para>
+	/// This is a convenience wrapper that forwards to <see cref="AddAdminFeatureCore"/>
+	/// using <see cref="WebApplicationBuilder.Services"/> and <see cref="WebApplicationBuilder.Configuration"/>.
+	/// It exists to keep the <c>Program</c>-level configuration consistent with other feature registration methods.
 	/// </remarks>
 	/// <param name="builder">The application builder.</param>
 	/// <returns>The modified application builder.</returns>

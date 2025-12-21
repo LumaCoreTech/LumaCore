@@ -17,10 +17,7 @@ namespace LumaCore.Api.Features.Auth;
 /// Provides extension methods for mapping authentication endpoints to the application's routing pipeline.
 /// </summary>
 /// <remarks>
-///     <para>
-///     This class is part of the Auth feature and exposes endpoints for login,
-///     identity introspection, and token diagnostics.
-///     </para>
+/// This class exposes endpoints for login, identity introspection, and token diagnostics.
 /// </remarks>
 static class EndpointMapping
 {
@@ -28,14 +25,12 @@ static class EndpointMapping
 	/// Maps authentication-related endpoints.
 	/// </summary>
 	/// <param name="endpoints">
-	/// The <see cref="IEndpointRouteBuilder"/> to map endpoints to. This is typically the
-	/// <c>/api</c> route group from <c>Program.Pipeline.cs</c>, not the root application.
+	/// The <see cref="IEndpointRouteBuilder"/> to map endpoints to. This is typically the <c>/api</c> route group
+	/// from <c>Program.Pipeline.cs</c>, not the root application.
 	/// </param>
 	/// <returns>The <paramref name="endpoints"/> builder for method chaining.</returns>
 	/// <remarks>
-	///     <para>
-	///     Currently this feature exposes:
-	///     </para>
+	///     <para>Currently this feature exposes:</para>
 	///     <list type="bullet">
 	///         <item>
 	///             <description>
@@ -45,27 +40,25 @@ static class EndpointMapping
 	///         </item>
 	///         <item>
 	///             <description>
-	///             <c>GET /api/v1/auth/whoami</c> – returns information about the currently authenticated
-	///             principal (name, roles, and raw claims). This endpoint is available to any
-	///             authenticated user.
+	///             <c>GET /api/v1/auth/whoami</c> – returns information about the currently authenticated principal
+	///             (name, roles, and raw claims). This endpoint is available to any authenticated user.
 	///             </description>
 	///         </item>
 	///         <item>
 	///             <description>
-	///             <c>GET /api/v1/auth/introspect</c> – returns information about the current authenticated
-	///             principal and token, including expiry information.
+	///             <c>GET /api/v1/auth/introspect</c> – returns information about the current authenticated principal
+	///             and token, including expiry information.
 	///             </description>
 	///         </item>
 	///     </list>
 	///     <para>
-	///     The current implementation of <c>/auth/login</c> uses a single built-in administrator
-	///     account. This is intended purely as a bootstrap mechanism until a persistent user
-	///     store is available.
+	///     The current implementation of <c>/auth/login</c> uses a single built-in administrator account. This is
+	///     intended purely as a bootstrap mechanism until a persistent user store is available.
 	///     </para>
 	///     <para>
-	///     This feature is designed to be mounted on a route group (typically <c>/api/v{version}</c>) and
-	///     maps its endpoints relative to that group. The versioned prefix is added by the
-	///     central route group in <c>Program.Pipeline.cs</c>.
+	///     This feature is designed to be mounted on a route group (typically <c>/api/v{version}</c>) and maps its
+	///     endpoints relative to that group. The versioned prefix is added by the central route group in
+	///     <c>Program.Pipeline.cs</c>.
 	///     </para>
 	/// </remarks>
 	public static IEndpointRouteBuilder MapAuthFeature(this IEndpointRouteBuilder endpoints)
@@ -321,11 +314,9 @@ static class EndpointMapping
 	/// Performs the current, minimal authentication based on a single hard-coded admin account.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     This method is intended as a temporary bootstrap mechanism only. It must be replaced
-	///     by a proper authentication flow backed by a persistent user store before the system
-	///     is exposed to untrusted networks.
-	///     </para>
+	/// This method is intended as a temporary bootstrap mechanism only. It must be replaced
+	/// by a proper authentication flow backed by a persistent user store before the system
+	/// is exposed to untrusted networks.
 	/// </remarks>
 	/// <param name="username">The supplied user name.</param>
 	/// <param name="password">The supplied password.</param>

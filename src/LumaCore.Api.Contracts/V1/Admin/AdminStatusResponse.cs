@@ -5,10 +5,11 @@
 namespace LumaCore.Api.Contracts.V1.Admin;
 
 /// <summary>
-/// Represents the high-level status of the running LumaCore instance as
-/// returned by the <c>/api/v1/admin/status</c> endpoint.
+/// High-level status of the running LumaCore instance.
 /// </summary>
-/// <param name="Environment">The logical environment of the application (for example <c>Development</c> or <c>Production</c>).</param>
+/// <param name="Environment">
+/// The logical environment of the application (for example <c>Development</c> or <c>Production</c>).
+/// </param>
 /// <param name="ApiVersion">The advertised API version.</param>
 /// <param name="MachineName">The operating system machine name of the host.</param>
 /// <param name="UtcNow">The current UTC time on the server.</param>

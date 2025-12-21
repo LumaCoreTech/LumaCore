@@ -23,17 +23,15 @@ static class MiddlewareIntegration
 	/// <returns>The web application for method chaining.</returns>
 	/// <remarks>
 	///     <para>
-	///     This middleware applies Cross-Origin Resource Sharing (CORS) policies that control which
-	///     origins, methods, and headers are allowed in cross-origin HTTP requests.
+	///     This middleware applies Cross-Origin Resource Sharing (CORS) policies that control which origins, methods,
+	///     and headers are allowed in cross-origin HTTP requests.
 	///     </para>
 	///     <para>
-	///     <strong>Important:</strong> This middleware must be configured BEFORE <c>UseRouting()</c>
-	///     to properly handle preflight requests (OPTIONS method), but AFTER proxy headers,
-	///     HTTPS redirection, and security headers middleware.
+	///     <strong>Important:</strong> This middleware must be configured BEFORE <c>UseRouting()</c> to properly handle
+	///     preflight requests (OPTIONS method), but AFTER proxy headers, HTTPS redirection, and security headers
+	///     middleware.
 	///     </para>
-	///     <para>
-	///     The CORS policy is built dynamically from the <c>Cors</c> configuration section:
-	///     </para>
+	///     <para>The CORS policy is built dynamically from the <c>Cors</c> configuration section:</para>
 	///     <code>
 	/// {
 	///   "Cors": {
@@ -48,8 +46,8 @@ static class MiddlewareIntegration
 	/// }
 	/// </code>
 	///     <para>
-	///     If <c>Cors:Enabled</c> is <see langword="false"/>, no CORS policy is applied
-	///     and cross-origin requests will be blocked by browsers.
+	///     If <c>Cors:Enabled</c> is <see langword="false"/>, no CORS policy is applied and cross-origin requests will
+	///     be blocked by browsers.
 	///     </para>
 	/// </remarks>
 	/// <example>
@@ -86,7 +84,8 @@ static class MiddlewareIntegration
 				// Configure allowed origins.
 				if (corsOptions.AllowedOrigins.Contains("*"))
 				{
-					logger.LogWarning("CORS policy allows all origins (*). This is insecure and should not be used in production.");
+					logger.LogWarning(
+						"CORS policy allows all origins (*). This is insecure and should not be used in production.");
 					builder.AllowAnyOrigin();
 				}
 				else

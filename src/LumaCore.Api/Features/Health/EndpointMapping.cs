@@ -15,26 +15,22 @@ namespace LumaCore.Api.Features.Health;
 /// </summary>
 /// <remarks>
 ///     <para>
-///     This class is part of the Health feature and exposes endpoints for
-///     liveness probes and health monitoring by orchestration systems and the Web UI.
+///     Exposes endpoints for liveness probes and health monitoring by orchestration systems and the Web UI.
 ///     </para>
-///     <para>
-///     The Health feature is split into two mapping methods to accommodate different
-///     routing requirements:
-///     </para>
+///     <para>The Health feature is split into two mapping methods to accommodate different routing requirements:</para>
 ///     <list type="bullet">
 ///         <item>
 ///             <description>
-///             <see cref="MapHealthProbesFeature"/> — Maps the standard ASP.NET Core health
-///             check endpoint at <c>/health</c>. This is infrastructure-level and must remain
-///             unversioned for compatibility with container orchestrators.
+///             <see cref="MapHealthProbesFeature"/> — Maps the standard ASP.NET Core health check endpoint at
+///             <c>/health</c>. This is infrastructure-level and must remain unversioned for compatibility with
+///             container orchestrators.
 ///             </description>
 ///         </item>
 ///         <item>
 ///             <description>
 ///             <see cref="MapHealthApiFeature"/> — Maps the JSON-based liveness endpoint at
-///             <c>/api/v{version}/health/live</c>. This is part of the versioned API surface
-///             and follows the same versioning scheme as other business features.
+///             <c>/api/v{version}/health/live</c>. This is part of the versioned API surface and follows the same
+///             versioning scheme as other business features.
 ///             </description>
 ///         </item>
 ///     </list>

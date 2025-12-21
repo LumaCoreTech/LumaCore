@@ -15,15 +15,11 @@ namespace LumaCore.Api.Features.Auth;
 /// Implements <see cref="IJwtTokenFactory"/> to produce signed JSON Web Tokens.
 /// </summary>
 /// <remarks>
-///     <para>
-///     This factory is a thin, stateless wrapper around <see cref="JwtSecurityTokenHandler"/>
-///     and uses the configured <see cref="JwtOptions"/> to determine issuer, audience, lifetime,
-///     and signing key.
-///     </para>
-///     <para>
-///     The factory does not perform any kind of user authentication. It assumes that the caller
-///     has already validated credentials and supplies the correct subject and claims.
-///     </para>
+/// This factory is a thin, stateless wrapper around <see cref="JwtSecurityTokenHandler"/>
+/// and uses the configured <see cref="JwtOptions"/> to determine issuer, audience, lifetime,
+/// and signing key.
+/// The factory does not perform any kind of user authentication. It assumes that the caller
+/// has already validated credentials and supplies the correct subject and claims.
 /// </remarks>
 sealed class JwtTokenFactory : IJwtTokenFactory
 {

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using Microsoft.AspNetCore.Mvc;
+
 namespace LumaCore.Api.Features.ErrorHandling;
 
 /// <summary>
@@ -10,21 +12,18 @@ namespace LumaCore.Api.Features.ErrorHandling;
 static class MiddlewareIntegration
 {
 	/// <summary>
-	/// Configures the application to return RFC 7807 <see cref="Microsoft.AspNetCore.Mvc.ProblemDetails"/>
-	/// responses for API error status codes.
+	/// Configures the application to return RFC 7807 <see cref="ProblemDetails"/> responses for API error status codes.
 	/// </summary>
 	/// <param name="app">The <see cref="WebApplication"/> to configure.</param>
 	/// <returns>The <paramref name="app"/> for method chaining.</returns>
 	/// <remarks>
 	///     <para>
-	///     This middleware intercepts non-success HTTP status codes for <c>/api/*</c> paths
-	///     and converts them into structured <see cref="Microsoft.AspNetCore.Mvc.ProblemDetails"/>
-	///     responses with LumaCore-specific error type URNs.
+	///     This middleware intercepts non-success HTTP status codes for <c>/api/*</c> paths and converts them into
+	///     structured <see cref="ProblemDetails"/> responses with LumaCore-specific error type URNs.
 	///     </para>
 	///     <para>
-	///     <b>Scope:</b> Only requests to <c>/api/*</c> paths are affected. Non-API paths
-	///     (Blazor SPA routes, static files) pass through unchanged, allowing the SPA
-	///     fallback to serve <c>index.html</c> for client-side routing.
+	///     <b>Scope:</b> Only requests to <c>/api/*</c> paths are affected. Non-API paths (Blazor SPA routes, static
+	///     files) pass through unchanged, allowing the SPA fallback to serve <c>index.html</c> for client-side routing.
 	///     </para>
 	///     <para>
 	///         <b>Status code mapping:</b>
@@ -50,8 +49,8 @@ static class MiddlewareIntegration
 	///         </item>
 	///     </list>
 	///     <para>
-	///     <b>Pipeline position:</b> Call this method early in the pipeline, after
-	///     <c>UseProxyHeadersFeature()</c> and <c>UseExceptionHandler()</c>.
+	///     <b>Pipeline position:</b> Call this method early in the pipeline, after <c>UseProxyHeadersFeature()</c> and
+	///     <c>UseExceptionHandler()</c>.
 	///     </para>
 	/// </remarks>
 	/// <example>
@@ -90,8 +89,8 @@ static class MiddlewareIntegration
 	/// </summary>
 	/// <param name="statusCode">The HTTP status code.</param>
 	/// <returns>
-	/// The error type URN for known status codes, or <see langword="null"/> for
-	/// unknown codes (which will use the default RFC 9110 type reference).
+	/// The error type URN for known status codes, or <see langword="null"/> for unknown codes (which will use the
+	/// default RFC 9110 type reference).
 	/// </returns>
 	private static string? MapStatusCodeToErrorType(int statusCode)
 	{

@@ -868,6 +868,10 @@ Generic type parameter description.
 What the method returns. Include type info and conditions.
 </returns>
 
+<value>
+What the property value represents. Valid values, defaults.
+</value>
+
 <exception cref="ExceptionType">
 When and why this exception is thrown.
 </exception>
@@ -909,9 +913,12 @@ var token = factory.CreateToken(principal);
 | Enum values | `<see cref=""/>` | `<see cref="ForwardedHeaderMode.Cloud"/>` |
 | Own methods (same project) | `<see cref=""/>` | `<see cref="AddOpenApiDocument"/>` |
 | Properties as reference | `<see cref=""/>` | `<see cref="ApiHealthLiveResponse.Status"/>` |
-| Framework extension methods | `<c>` | `<c>AddProblemDetails()</c>` |
-| Keywords | `<see langword=""/>` | `<see langword="null"/>` |
-| Literals (strings, numbers) | `<c>` | `<c>"Bearer"</c>`, `<c>100</c>` |
+| Extension methods | `<c>` | `<c>UseRouting()</c>` |
+| C# keywords | `<see langword=""/>` | `<see langword="null"/>`, `<see langword="true"/>` |
+| String literals | `<c>` | `<c>"Bearer"</c>` |
+| Code snippets | `<c>` | `<c>obj.Method()</c>` |
+| Sentinel/special values | `<c>` | `<c>-1</c>` means "not found" |
+| Numbers in prose | plain text | "Defaults to 150" |
 | Config section names | `<c>` | `<c>"Jwt"</c>`, `<c>"Cors"</c>` |
 | JSON field names | `<c>` | `<c>traceId</c>` |
 | HTTP status codes | `<c>` | `<c>400 Bad Request</c>` |
@@ -920,23 +927,46 @@ var token = factory.CreateToken(principal);
 | URNs / URIs | `<c>` | `<c>urn:lumacore:error:validation</c>` |
 | File names | `<c>` | `<c>appsettings.json</c>` |
 
-**Why `<c>` for framework extension methods?**
+**Why `<see langword=""/>` for C# keywords?**
 
-Extension methods like `AddProblemDetails()`, `UseRouting()`, or `UseExceptionHandler()` are best documented with `<c>` rather than `<see cref=""/>`:
+Use `<see langword="null"/>` instead of `<c>null</c>` for language keywords. This ensures compatibility with other .NET languages — documentation tools can render `Nothing` for VB.NET or the appropriate keyword for F#.
+
+**Methods:**
+
+Use `<see cref=""/>` for methods. For extension methods, use `<c>MethodName()</c>` instead:
 
 1. **Readability:** `<c>UseRouting()</c>` is immediately clear. The full cref `<see cref="EndpointRoutingApplicationBuilderExtensions.UseRouting(IApplicationBuilder)"/>` is a monster that obscures the documentation.
 
-2. **Mental model:** Developers think "I call `UseRouting()`", not "I call `EndpointRoutingApplicationBuilderExtensions.UseRouting`". The `<c>` variant matches how we actually talk about and use these methods.
+2. **Implementation detail:** The extension class (`StringExtensions`, `ValidationExtensions`, etc.) is an implementation detail. Developers think "I call `UseRouting()`", not "I call `EndpointRoutingApplicationBuilderExtensions.UseRouting`".
 
-3. **No coupling through usings:** Using `<see cref=""/>` requires adding `using` statements just to make documentation compile. That's the tail wagging the dog.
+**Avoid fully qualified type names:**
 
-4. **Stability:** If Microsoft renames the static extension class (unlikely but possible), our docs break. The method name itself is the stable API.
+Use `<see cref="ProblemDetails"/>` instead of `<see cref="Microsoft.AspNetCore.Mvc.ProblemDetails"/>`. Short names keep the source code readable. The tooltip displays the fully qualified name anyway, providing namespace context when needed.
 
-**When to use `<see cref=""/>` for methods:**
+**Properties: `<value>` vs `<remarks>`:**
 
-- Own methods in the same project where navigation is useful
-- Methods you're explaining conceptually (not as a call example)
-- Overloads where the specific signature matters
+For properties, use `<value>` to describe valid values and defaults. Use `<remarks>` for context, warnings, or explanations:
+
+```csharp
+/// <summary>
+/// Gets or sets the HTTPS port for redirection.
+/// </summary>
+/// <value>
+/// A port number between 1 and 65535, or <see langword="null"/> to use the default (443).
+/// </value>
+/// <remarks>
+/// When running behind a reverse proxy, this should typically remain <see langword="null"/>.
+/// </remarks>
+public int? HttpsPort { get; set; }
+```
+
+| Tag | Purpose | Content |
+|-----|---------|---------|
+| `<value>` | What the value is | Valid values, defaults, constraints |
+| `<remarks>` | Why it matters | Context, warnings, usage guidance |
+
+If a property only needs value documentation (no context), use `<value>` alone.
+If it only needs context (value is obvious), use `<remarks>` alone.
 
 **Rule of thumb:**
 - If the reader should be able to navigate to a definition → `<see cref=""/>`
@@ -1903,6 +1933,7 @@ An `.editorconfig` file at the repository root configures basic formatting:
 
 - **Indentation:** tabs (`indent_style = tabs`)
 - **Indent size:** displayed as 4 spaces by default (`indent_size = 4`)
+- **Max line length:** 120 characters for code files (`max_line_length = 120` for `.cs`, `.razor`, etc.)
 - **Encoding:** UTF-8 without BOM (`charset = utf-8`)
 - **Line endings:** LF for all source files (`end_of_line = lf`)
   - Exception: Windows scripts (`.bat`, `.cmd`, `.ps1`, `.psm1`, `.psd1`) may use CRLF where required

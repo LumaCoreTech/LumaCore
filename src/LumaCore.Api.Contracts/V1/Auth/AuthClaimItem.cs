@@ -5,8 +5,7 @@
 namespace LumaCore.Api.Contracts.V1.Auth;
 
 /// <summary>
-/// Represents a single claim in the authentication principal as exposed
-/// by the <c>/api/v1/auth/whoami</c> endpoint.
+/// A single claim in the authentication principal.
 /// </summary>
 /// <param name="Type">The claim type (for example a URI or well-known claim name).</param>
 /// <param name="Value">The claim value.</param>

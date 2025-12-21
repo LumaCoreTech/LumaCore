@@ -18,17 +18,15 @@ static class MiddlewareIntegration
 	/// <returns>The web application for method chaining.</returns>
 	/// <remarks>
 	///     <para>
-	///     This middleware adds various HTTP security headers based on the
-	///     <see cref="SecurityHeadersOptions"/> configuration.
+	///     This middleware adds various HTTP security headers based on the <see cref="SecurityHeadersOptions"/>
+	///     configuration.
 	///     </para>
 	///     <para>
-	///     <strong>Important:</strong> This middleware should be added early in the pipeline,
-	///     after <c>UseProxyHeadersFeature()</c> and <c>UseHttpsRedirectionFeature()</c>,
-	///     but before CORS, routing, and authentication middleware.
+	///     <strong>Important:</strong> This middleware should be added early in the pipeline, after
+	///     <c>UseProxyHeadersFeature()</c> and <c>UseHttpsRedirectionFeature()</c>, but before CORS, routing, and
+	///     authentication middleware.
 	///     </para>
-	///     <para>
-	///     The following headers may be added:
-	///     </para>
+	///     <para>The following headers may be added:</para>
 	///     <list type="bullet">
 	///         <item><c>Strict-Transport-Security</c> — HSTS, enforces HTTPS</item>
 	///         <item><c>X-Frame-Options</c> — Prevents clickjacking</item>

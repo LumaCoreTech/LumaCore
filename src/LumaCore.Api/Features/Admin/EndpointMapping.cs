@@ -18,38 +18,33 @@ namespace LumaCore.Api.Features.Admin;
 /// Provides extension methods for mapping administrative endpoints to the application's routing pipeline.
 /// </summary>
 /// <remarks>
-///     <para>
-///     This class is part of the Admin feature and exposes endpoints for
-///     operational monitoring and system status. All endpoints require
-///     the <c>admin</c> role.
-///     </para>
+/// This class exposes endpoints for operational monitoring and system status. All endpoints require the <c>admin</c>
+/// role.
 /// </remarks>
 static class EndpointMapping
 {
 	/// <summary>
-	/// Maps the admin endpoint group (for example <c>/api/v1/admin/*</c>) into the application's
-	/// endpoint routing table.
+	/// Maps the admin endpoint group (for example <c>/api/v1/admin/*</c>) into the application's endpoint routing table.
 	/// </summary>
 	/// <param name="endpoints">
-	/// The <see cref="IEndpointRouteBuilder"/> to map endpoints to. This is typically the
-	/// <c>/api/v{version}</c> route group from <c>Program.Pipeline.cs</c>, not the root application.
+	/// The <see cref="IEndpointRouteBuilder"/> to map endpoints to. This is typically the <c>/api/v{version}</c> route
+	/// group from <c>Program.Pipeline.cs</c>, not the root application.
 	/// </param>
 	/// <returns>The <paramref name="endpoints"/> builder for method chaining.</returns>
 	/// <remarks>
 	///     <para>
-	///     This method groups all admin endpoints under the <c>/admin</c> path prefix (relative
-	///     to the parent route group) and enforces that a valid, authenticated user in the
-	///     <c>admin</c> role is present by applying an authorization policy via
-	///     <c>RequireAuthorization()</c>.
+	///     This method groups all admin endpoints under the <c>/admin</c> path prefix (relative to the parent route
+	///     group) and enforces that a valid, authenticated user in the <c>admin</c> role is present by applying an
+	///     authorization policy via <c>RequireAuthorization()</c>.
 	///     </para>
 	///     <para>
-	///     This feature is designed to be mounted on a route group (typically <c>/api/v{version}</c>) and
-	///     maps its endpoints relative to that group. The versioned prefix is added by the
-	///     central route group in <c>Program.Pipeline.cs</c>.
+	///     This feature is designed to be mounted on a route group (typically <c>/api/v{version}</c>) and maps its
+	///     endpoints relative to that group. The versioned prefix is added by the central route group in
+	///     <c>Program.Pipeline.cs</c>.
 	///     </para>
 	///     <para>
-	///     The method is intended to be called once during startup, typically from the central
-	///     pipeline configuration in <c>Program.Pipeline.cs</c>.
+	///     The method is intended to be called once during startup, typically from the central pipeline configuration
+	///     in <c>Program.Pipeline.cs</c>.
 	///     </para>
 	/// </remarks>
 	public static IEndpointRouteBuilder MapAdminFeature(this IEndpointRouteBuilder endpoints)

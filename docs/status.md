@@ -22,7 +22,7 @@ which indicate when a capability is planned to reach — or has already reached 
 
 | Phase | Scope |
 |---|---|
-| **0 — Infrastructure Foundation** *(active)* | API, Auth (JWT), Health, Proxy, Static Files, CORS, Logging, HTTPS, UI Shell, Status Page |
+| **0 — Infrastructure Foundation** *(active)* | Versioning, Validation, OpenAPI, JWT Auth, CORS, Security Headers, HTTPS, Health, Proxy, Logging, Static Files, UI Shell, Status Page |
 | **1 — LLM Integration & Persistence** *(planned)* | Database (multi-DB), User Store, Ollama (models, health), Chat (sessions, SSE, history), Persona config, Web UI (Login, Chat), Docker |
 | **2 — Storage & Retrieval** *(planned)* | Vector embeddings, Semantic search, RAG, Advanced features (persona switching, search, export), Native deployment (Services), Admin APIs, Config Management, System Dashboard |
 | **3 — Observability & Hardening** *(planned)* | Log viewer, Metrics export, Security hardening (audit, rate limiting) |
@@ -133,6 +133,20 @@ Security establishes a foundation where mistakes are not fatal. It limits damage
 
 ---
 
+## 🌐 API Foundation — Versioning, Validation & Documentation
+
+Core API infrastructure that ensures consistency, discoverability, and correctness across all endpoints.
+
+### API Structure
+| Capability | Stage | Functional Target (Phase) | Hardened Target (Phase) |
+|---|---|---|---|
+| **API Versioning**<br/>_URL segment versioning (`/api/v1/`) with automatic version reporting headers._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
+| **Endpoint Validation**<br/>_Startup validation ensures all endpoints declare API version and authorization._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
+| **Request Validation**<br/>_Automatic DataAnnotations validation with RFC 7807 ProblemDetails responses._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
+| **OpenAPI Documentation**<br/>_Native .NET 10 OpenAPI generation with per-version documents and CI tooling._ | 🔵 Hardened | ✔ (P0) | ✔ (P0) |
+
+---
+
 ## 🔧 Administration APIs
 
 APIs for system administration and configuration management.
@@ -223,6 +237,8 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 
 **Phase 0 (Current):** Foundation is stable
 - ✅ Basic API structure exists
+- ✅ API Versioning (URL segment `/api/v1/` with validation)
+- ✅ Request validation (DataAnnotations with ProblemDetails)
 - ✅ Health checks work (Liveness, Readiness)
 - ✅ Reverse proxy support ready
 - ✅ Static file hosting (API serves Blazor UI)
@@ -236,7 +252,7 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - ✅ Error handling with RFC 7807 ProblemDetails and TraceId
 - ✅ HTTPS works (Kestrel) — documentation needed
 - ✅ appsettings.json fully documented with comments
-- 🎯 OpenAPI documentation generator (C# tool → openapi.json + openapi.md at build time)
+- ✅ OpenAPI native (.NET 10, PowerShell generator for CI)
 - 🟡 Docker ready (Dockerfile, docker-compose.yml, native HealthCheck tool)
 - ⚠️ Hardcoded admin/changeme (bootstrap only, removed in P1)
 

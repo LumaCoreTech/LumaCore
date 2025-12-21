@@ -11,10 +11,9 @@ namespace LumaCore.Api.Features.ErrorHandling;
 /// </summary>
 /// <remarks>
 ///     <para>
-///     This class provides stable, machine-readable error type identifiers that follow
-///     the URN (Uniform Resource Name) format defined in RFC 8141. These URNs are used
-///     in the <c>type</c> field of <see cref="ProblemDetails"/> responses to uniquely identify error
-///     categories across the LumaCore API.
+///     This class provides stable, machine-readable error type identifiers that follow the URN (Uniform Resource
+///     Name) format defined in RFC 8141. These URNs are used in the <c>type</c> field of <see cref="ProblemDetails"/>
+///     responses to uniquely identify error categories across the LumaCore API.
 ///     </para>
 ///     <para>
 ///         <b>Why URNs instead of URLs?</b>
@@ -22,26 +21,26 @@ namespace LumaCore.Api.Features.ErrorHandling;
 ///     <list type="bullet">
 ///         <item>
 ///             <description>
-///             <b>Stability</b> – URNs are persistent identifiers that don't depend on
-///             server availability or URL structure changes.
+///             <b>Stability</b> – URNs are persistent identifiers that don't depend on server availability or URL
+///             structure changes.
 ///             </description>
 ///         </item>
 ///         <item>
 ///             <description>
-///             <b>No HTTP expectation</b> – Unlike URLs, URNs don't imply that the
-///             identifier should be dereferenceable via HTTP, avoiding confusion.
+///             <b>No HTTP expectation</b> – Unlike URLs, URNs don't imply that the identifier should be
+///             dereferenceable via HTTP, avoiding confusion.
 ///             </description>
 ///         </item>
 ///         <item>
 ///             <description>
-///             <b>Namespace clarity</b> – The <c>urn:lumacore:error:</c> prefix clearly
-///             identifies these as LumaCore-specific error types.
+///             <b>Namespace clarity</b> – The <c>urn:lumacore:error:</c> prefix clearly identifies these as
+///             LumaCore-specific error types.
 ///             </description>
 ///         </item>
 ///     </list>
 ///     <para>
-///     Clients can use these URNs to programmatically identify error types and provide
-///     appropriate handling logic without parsing human-readable error messages.
+///     Clients can use these URNs to programmatically identify error types and provide appropriate handling logic
+///     without parsing human-readable error messages.
 ///     </para>
 /// </remarks>
 /// <example>
@@ -67,13 +66,11 @@ static class ErrorTypes
 	private const string Base = "urn:lumacore:error";
 
 	/// <summary>
-	/// Indicates a validation error where the request body or parameters failed
-	/// data annotation or business rule validation.
+	/// Indicates a validation error where the request body or parameters failed data annotation or business rule
+	/// validation.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     This error type is returned when:
-	///     </para>
+	///     <para>This error type is returned when:</para>
 	///     <list type="bullet">
 	///         <item>
 	///             <description>Required fields are missing</description>
@@ -89,8 +86,8 @@ static class ErrorTypes
 	///         </item>
 	///     </list>
 	///     <para>
-	///     The <see cref="ProblemDetails"/> response will include an <c>errors</c> dictionary mapping
-	///     field names to their validation error messages.
+	///     The <see cref="ProblemDetails"/> response will include an <c>errors</c> dictionary mapping field names to
+	///     their validation error messages.
 	///     </para>
 	/// </remarks>
 	/// <value>
@@ -103,12 +100,12 @@ static class ErrorTypes
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     This error type is returned when an entity lookup by identifier fails,
-	///     such as requesting a user, document, or other resource that does not exist.
+	///     This error type is returned when an entity lookup by identifier fails, such as requesting a user,
+	///     document, or other resource that does not exist.
 	///     </para>
 	///     <para>
-	///     Note: This is distinct from a <c>404 Not Found</c> for unknown routes.
-	///     Route-level 404s use the standard RFC 9110 type reference.
+	///     Note: This is distinct from a <c>404 Not Found</c> for unknown routes. Route-level 404s use the standard
+	///     RFC 9110 type reference.
 	///     </para>
 	/// </remarks>
 	/// <value>
@@ -120,9 +117,7 @@ static class ErrorTypes
 	/// Indicates that the request lacks valid authentication credentials.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     This error type is returned when:
-	///     </para>
+	///     <para>This error type is returned when:</para>
 	///     <list type="bullet">
 	///         <item>
 	///             <description>No authentication token is provided</description>
@@ -135,9 +130,8 @@ static class ErrorTypes
 	///         </item>
 	///     </list>
 	///     <para>
-	///     Despite the HTTP status being <c>401 Unauthorized</c>, this error represents
-	///     an <em>authentication</em> failure (who are you?), not an authorization
-	///     failure (are you allowed?).
+	///     Despite the HTTP status being <c>401 Unauthorized</c>, this error represents an <em>authentication</em>
+	///     failure (who are you?), not an authorization failure (are you allowed?).
 	///     </para>
 	/// </remarks>
 	/// <value>
@@ -150,14 +144,12 @@ static class ErrorTypes
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     This error type is returned when the user is successfully authenticated
-	///     but does not have the required roles, claims, or policy permissions to
-	///     perform the requested operation.
+	///     This error type is returned when the user is successfully authenticated but does not have the required
+	///     roles, claims, or policy permissions to perform the requested operation.
 	///     </para>
 	///     <para>
-	///     This represents an <em>authorization</em> failure (you are not allowed),
-	///     as opposed to <see cref="Unauthorized"/> which represents an authentication
-	///     failure (we don't know who you are).
+	///     This represents an <em>authorization</em> failure (you are not allowed), as opposed to
+	///     <see cref="Unauthorized"/> which represents an authentication failure (we don't know who you are).
 	///     </para>
 	/// </remarks>
 	/// <value>
@@ -170,14 +162,12 @@ static class ErrorTypes
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     This error type is used as a fallback when an unhandled exception occurs
-	///     during request processing. The response will include a <c>traceId</c> that
-	///     can be used for correlation with server-side logs.
+	///     This error type is used as a fallback when an unhandled exception occurs during request processing. The
+	///     response will include a <c>traceId</c> that can be used for correlation with server-side logs.
 	///     </para>
 	///     <para>
-	///     <b>Security note:</b> Internal error responses intentionally omit exception
-	///     details to prevent information disclosure. Full exception information is
-	///     available only in server logs.
+	///     <b>Security note:</b> Internal error responses intentionally omit exception details to prevent information
+	///     disclosure. Full exception information is available only in server logs.
 	///     </para>
 	/// </remarks>
 	/// <value>
@@ -189,9 +179,7 @@ static class ErrorTypes
 	/// Indicates that the request conflicts with the current state of the resource.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     This error type is returned when:
-	///     </para>
+	///     <para>This error type is returned when:</para>
 	///     <list type="bullet">
 	///         <item>
 	///             <description>Creating a resource that already exists</description>
@@ -213,11 +201,8 @@ static class ErrorTypes
 	/// Indicates that the server cannot process the request due to rate limiting.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     This error type is returned when the client has exceeded the allowed number
-	///     of requests within a time window. The response may include a <c>Retry-After</c>
-	///     header indicating when the client can retry.
-	///     </para>
+	/// This error type is returned when the client has exceeded the allowed number of requests within a time
+	/// window. The response may include a <c>Retry-After</c> header indicating when the client can retry.
 	/// </remarks>
 	/// <value>
 	///     <c>urn:lumacore:error:rate-limited</c>

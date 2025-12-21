@@ -7,17 +7,11 @@ using System.ComponentModel.DataAnnotations;
 namespace LumaCore.Api.Contracts.V1.Auth;
 
 /// <summary>
-/// Represents login credentials submitted by a client in order to obtain a JWT.
+/// Login credentials submitted by a client to obtain a JWT.
 /// </summary>
 /// <remarks>
-///     <para>
-///     This record is consumed by the <c>POST /api/v1/auth/login</c> endpoint.
-///     </para>
-///     <para>
-///     Validation is performed automatically by the API validation filter
-///     when this record is used as an endpoint parameter. Invalid requests receive a
-///     <c>400 Bad Request</c> response with detailed validation errors.
-///     </para>
+/// Validation is performed automatically by the API validation filter. Invalid requests receive a
+/// <c>400 Bad Request</c> response with detailed validation errors.
 /// </remarks>
 /// <param name="Username">
 /// The username for authentication. Must be between 1 and 100 characters.

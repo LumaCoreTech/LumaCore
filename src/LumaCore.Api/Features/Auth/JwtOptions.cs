@@ -9,28 +9,42 @@ using Microsoft.IdentityModel.Tokens;
 namespace LumaCore.Api.Features.Auth;
 
 /// <summary>
-/// Represents configuration settings required to issue and validate JSON Web Tokens (JWT)
-/// for the LumaCore HTTP API.
+/// Represents configuration settings required to issue and validate JSON Web Tokens (JWT) for the LumaCore HTTP API.
 /// </summary>
 /// <remarks>
 ///     <para>
-///     All values in this options class are used both when issuing new tokens and when validating
-///     incoming tokens. Changing any of these values in a running system will typically invalidate
-///     all existing tokens and force clients to re-authenticate.
+///     All values in this options class are used both when issuing new tokens and when validating incoming tokens.
+///     Changing any of these values in a running system will typically invalidate all existing tokens and force
+///     clients to re-authenticate.
 ///     </para>
 ///     <para>
-///     Options are bound from the configuration section identified by <see cref="SectionName"/>.
-///     With the current defaults this corresponds to the <c>"Jwt"</c> section in <c>appsettings.json</c>
-///     and environment variables prefixed with <c>Jwt__</c> (for example <c>Jwt__Issuer</c>).
+///     Options are bound from the configuration section identified by <see cref="SectionName"/>. With the current
+///     defaults this corresponds to the <c>"Jwt"</c> section in <c>appsettings.json</c> and environment variables
+///     prefixed with <c>Jwt__</c> (for example <c>Jwt__Issuer</c>).
 ///     </para>
 ///     <para>
-///     In development the settings are usually provided via <c>appsettings.Development.json</c>.
-///     In production, sensitive values such as <see cref="SigningKey"/> must be supplied via environment
-///     variables or a dedicated secret store and must never be committed to source control.
+///     In development the settings are usually provided via <c>appsettings.Development.json</c>. In production,
+///     sensitive values such as <see cref="SigningKey"/> must be supplied via environment variables or a dedicated
+///     secret store and must never be committed to source control.
 ///     </para>
 /// </remarks>
 sealed class JwtOptions
 {
+	private const string IssuerRequiredError =
+		"Jwt:Issuer must be configured. Set configuration key 'Jwt:Issuer' or environment variable 'Jwt__Issuer'.";
+
+	private const string AudienceRequiredError =
+		"Jwt:Audience must be configured. Set configuration key 'Jwt:Audience' or environment variable 'Jwt__Audience'.";
+
+	private const string SigningKeyRequiredError =
+		"Jwt:SigningKey must be configured. Set configuration key 'Jwt:SigningKey' or environment variable 'Jwt__SigningKey'.";
+
+	private const string SigningKeyMinLengthError =
+		"Jwt:SigningKey must be at least 32 characters long. Use a long, random secret and do not commit it to source control.";
+
+	private const string AccessTokenLifetimeRangeError =
+		"Jwt:AccessTokenLifetimeMinutes must be between 1 and 1440 minutes.";
+
 	/// <summary>
 	/// Gets the configuration section name used to bind <see cref="JwtOptions"/>.
 	/// </summary>
@@ -50,14 +64,12 @@ sealed class JwtOptions
 	///             <description><c>Jwt:SigningKey</c> / <c>Jwt__SigningKey</c></description>
 	///         </item>
 	///         <item>
-	///             <description>
-	///             <c>Jwt:AccessTokenLifetimeMinutes</c> / <c>Jwt__AccessTokenLifetimeMinutes</c>
-	///             </description>
+	///             <description><c>Jwt:AccessTokenLifetimeMinutes</c> / <c>Jwt__AccessTokenLifetimeMinutes</c></description>
 	///         </item>
 	///     </list>
 	///     <para>
-	///     Container-based deployments should prefer environment variables over static JSON files,
-	///     especially for <see cref="SigningKey"/>.
+	///     Container-based deployments should prefer environment variables over static JSON files, especially for
+	///     <see cref="SigningKey"/>.
 	///     </para>
 	/// </remarks>
 	public const string SectionName = "Jwt";
@@ -67,16 +79,15 @@ sealed class JwtOptions
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     The issuer is written to the <c>iss</c> claim of each token and is validated when tokens
-	///     are received by the API. Typical values are a deployment-specific identifier such as
-	///     <c>"LumaCore"</c> or a fully-qualified URL like <c>"https://lumacore.local"</c>.
+	///     The issuer is written to the <c>iss</c> claim of each token and is validated when tokens are received by
+	///     the API. Typical values are a deployment-specific identifier such as <c>"LumaCore"</c> or a fully-qualified
+	///     URL like <c>"https://lumacore.local"</c>.
 	///     </para>
 	///     <para>
-	///     This value is bound from configuration key <c>Jwt:Issuer</c> (or environment variable
-	///     <c>Jwt__Issuer</c>).
+	///     This value is bound from configuration key <c>Jwt:Issuer</c> (or environment variable <c>Jwt__Issuer</c>).
 	///     </para>
 	/// </remarks>
-	[Required(ErrorMessage = "Jwt:Issuer must be configured. Set configuration key 'Jwt:Issuer' or environment variable 'Jwt__Issuer'.")]
+	[Required(ErrorMessage = IssuerRequiredError)]
 	public string Issuer { get; set; } = string.Empty;
 
 	/// <summary>
@@ -84,16 +95,14 @@ sealed class JwtOptions
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     The audience is written to the <c>aud</c> claim of each token and is validated when tokens
-	///     are received by the API. It should identify the intended recipients of the token, for example
-	///     <c>"LumaCore"</c>.
+	///     The audience is written to the <c>aud</c> claim of each token and is validated when tokens are received by
+	///     the API. It should identify the intended recipients of the token, for example <c>"LumaCore"</c>.
 	///     </para>
 	///     <para>
-	///     This value is bound from configuration key <c>Jwt:Audience</c> (or environment variable
-	///     <c>Jwt__Audience</c>).
+	///     This value is bound from configuration key <c>Jwt:Audience</c> (or environment variable <c>Jwt__Audience</c>).
 	///     </para>
 	/// </remarks>
-	[Required(ErrorMessage = "Jwt:Audience must be configured. Set configuration key 'Jwt:Audience' or environment variable 'Jwt__Audience'.")]
+	[Required(ErrorMessage = AudienceRequiredError)]
 	public string Audience { get; set; } = string.Empty;
 
 	/// <summary>
@@ -101,22 +110,22 @@ sealed class JwtOptions
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     This key is the only secret required to mint and validate tokens. Anyone in possession of this key
-	///     can generate valid tokens for the API. It must therefore be treated as a secret and must never
-	///     be checked into source control.
+	///     This key is the only secret required to mint and validate tokens. Anyone in possession of this key can
+	///     generate valid tokens for the API. It must therefore be treated as a secret and must never be checked into
+	///     source control.
 	///     </para>
 	///     <para>
-	///     A minimum length of 32 characters is enforced to ensure sufficient entropy when used with
-	///     <c>HS256</c> (<see cref="SecurityAlgorithms.HmacSha256"/>).
+	///     A minimum length of 32 characters is enforced to ensure sufficient entropy when used with <c>HS256</c>
+	///     (<see cref="SecurityAlgorithms.HmacSha256"/>).
 	///     </para>
 	///     <para>
 	///     This value is bound from configuration key <c>Jwt:SigningKey</c> (or environment variable
-	///     <c>Jwt__SigningKey</c>). In production this should be provided via environment variables or
-	///     a dedicated secrets mechanism (for example Docker secrets or a cloud secret store).
+	///     <c>Jwt__SigningKey</c>). In production this should be provided via environment variables or a dedicated
+	///     secrets mechanism (for example Docker secrets or a cloud secret store).
 	///     </para>
 	/// </remarks>
-	[Required(ErrorMessage = "Jwt:SigningKey must be configured. Set configuration key 'Jwt:SigningKey' or environment variable 'Jwt__SigningKey'.")]
-	[MinLength(32, ErrorMessage = "Jwt:SigningKey must be at least 32 characters long. Use a long, random secret and do not commit it to source control.")]
+	[Required(ErrorMessage = SigningKeyRequiredError)]
+	[MinLength(32, ErrorMessage = SigningKeyMinLengthError)]
 	public string SigningKey { get; set; } = string.Empty;
 
 	/// <summary>
@@ -124,16 +133,15 @@ sealed class JwtOptions
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Shorter lifetimes reduce the window in which a stolen token can be abused, at the cost of
-	///     requiring clients to re-authenticate more frequently. Longer lifetimes increase convenience
-	///     but also increase potential impact if a token is leaked.
+	///     Shorter lifetimes reduce the window in which a stolen token can be abused, at the cost of requiring clients
+	///     to re-authenticate more frequently. Longer lifetimes increase convenience but also increase potential impact
+	///     if a token is leaked.
 	///     </para>
 	///     <para>
-	///     This value is bound from configuration key <c>Jwt:AccessTokenLifetimeMinutes</c> (or environment
-	///     variable <c>Jwt__AccessTokenLifetimeMinutes</c>). The allowed range is between 1 and 1440 minutes
-	///     (1 day).
+	///     This value is bound from configuration key <c>Jwt:AccessTokenLifetimeMinutes</c> (or environment variable
+	///     <c>Jwt__AccessTokenLifetimeMinutes</c>). The allowed range is between 1 and 1440 minutes (1 day).
 	///     </para>
 	/// </remarks>
-	[Range(1, 24 * 60, ErrorMessage = "Jwt:AccessTokenLifetimeMinutes must be between 1 and 1440 minutes.")]
+	[Range(1, 24 * 60, ErrorMessage = AccessTokenLifetimeRangeError)]
 	public int AccessTokenLifetimeMinutes { get; set; } = 60;
 }

@@ -15,19 +15,15 @@ namespace LumaCore.Api.Features.OpenApi;
 /// </summary>
 /// <remarks>
 ///     <para>
-///     The OpenAPI feature configures native .NET 10 OpenAPI document generation, replacing
-///     the need for Swashbuckle's <c>AddSwaggerGen()</c>. The generated documents are served
-///     at <c>/openapi/{version}.json</c> via <c>MapOpenApi()</c> in the request pipeline.
+///     The OpenAPI feature configures native .NET 10 OpenAPI document generation, replacing the need for
+///     Swashbuckle's <c>AddSwaggerGen()</c>. The generated documents are served at <c>/openapi/{version}.json</c>
+///     via <c>MapOpenApi()</c> in the request pipeline.
 ///     </para>
-///     <para>
-///     This feature generates one OpenAPI document per API version:
-///     </para>
+///     <para>This feature generates one OpenAPI document per API version:</para>
 ///     <list type="bullet">
 ///         <item><c>/openapi/v1.json</c> – API version 1 specification</item>
 ///     </list>
-///     <para>
-///     Each document includes:
-///     </para>
+///     <para>Each document includes:</para>
 ///     <list type="bullet">
 ///         <item>Document metadata (title, version, contact, license)</item>
 ///         <item>JWT Bearer security scheme definition</item>
@@ -44,15 +40,15 @@ static class ServiceRegistration
 	/// <returns>The <paramref name="builder"/> for method chaining.</returns>
 	/// <remarks>
 	///     <para>
-	///     This method registers OpenAPI documents for each supported API version. The document
-	///     names match the version group names used by the API versioning feature (e.g., <c>v1</c>).
+	///     This method registers OpenAPI documents for each supported API version. The document names match the version
+	///     group names used by the API versioning feature (e.g., <c>v1</c>).
 	///     </para>
 	///     <para>
 	///         <b>Adding New Versions:</b>
 	///     </para>
 	///     <para>
-	///     When adding a new API version, add a corresponding <c>AddOpenApiDocument()</c> call
-	///     for the new version. For example:
+	///     When adding a new API version, add a corresponding <see cref="AddOpenApiDocument"/> call for the new version.
+	///     For example:
 	///     </para>
 	///     <code>
 	///     AddOpenApiDocument(builder.Services, ApiVersions.V2);
@@ -88,9 +84,7 @@ static class ServiceRegistration
 	/// <param name="services">The <see cref="IServiceCollection"/> to register services with.</param>
 	/// <param name="version">The <see cref="ApiVersion"/> to generate a document for.</param>
 	/// <remarks>
-	///     <para>
-	///     This method configures the OpenAPI document with:
-	///     </para>
+	///     <para>This method configures the OpenAPI document with:</para>
 	///     <list type="bullet">
 	///         <item>Document metadata (title, version, contact, license)</item>
 	///         <item>JWT Bearer security scheme</item>

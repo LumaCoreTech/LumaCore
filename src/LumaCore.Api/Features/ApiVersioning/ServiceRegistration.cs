@@ -3,6 +3,7 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 
 namespace LumaCore.Api.Features.ApiVersioning;
 
@@ -11,9 +12,8 @@ namespace LumaCore.Api.Features.ApiVersioning;
 /// </summary>
 /// <remarks>
 ///     <para>
-///     This class is part of the API Versioning feature and configures URL segment-based
-///     versioning for all LumaCore API endpoints. The versioning strategy uses path-based
-///     version indicators (e.g., <c>/api/v1/...</c>, <c>/api/v2/...</c>).
+///     Configures URL segment-based versioning for all LumaCore API endpoints. The versioning strategy uses path-based
+///     version indicators (e.g., <c>/api/v1/...</c>).
 ///     </para>
 ///     <para>
 ///         <b>Why URL Segment Versioning?</b>
@@ -21,26 +21,26 @@ namespace LumaCore.Api.Features.ApiVersioning;
 ///     <list type="bullet">
 ///         <item>
 ///             <description>
-///             <b>Explicit:</b> The version is immediately visible in the URL, making it
-///             clear which API version a client is targeting.
+///             <b>Explicit:</b> The version is immediately visible in the URL, making it clear which API version a
+///             client is targeting.
 ///             </description>
 ///         </item>
 ///         <item>
 ///             <description>
-///             <b>Cacheable:</b> Different versions have different URLs, enabling proper
-///             HTTP caching without version-specific cache keys.
+///             <b>Cacheable:</b> Different versions have different URLs, enabling proper HTTP caching without
+///             version-specific cache keys.
 ///             </description>
 ///         </item>
 ///         <item>
 ///             <description>
-///             <b>Simple Routing:</b> Standard URL routing handles version selection;
-///             no custom middleware or header inspection required.
+///             <b>Simple Routing:</b> Standard URL routing handles version selection; no custom middleware or header
+///             inspection required.
 ///             </description>
 ///         </item>
 ///         <item>
 ///             <description>
-///             <b>Developer Friendly:</b> Easy to test with tools like curl, browsers,
-///             and API clients without configuring custom headers.
+///             <b>Developer Friendly:</b> Easy to test with tools like curl, browsers, and API clients without
+///             configuring custom headers.
 ///             </description>
 ///         </item>
 ///     </list>
@@ -53,10 +53,8 @@ static class ServiceRegistration
 	/// <param name="builder">The web application builder.</param>
 	/// <returns>The <paramref name="builder"/> for method chaining.</returns>
 	/// <remarks>
-	///     <para>
-	///     This is a convenience wrapper that forwards to <see cref="AddApiVersioningFeatureCore"/>
-	///     using the <see cref="IServiceCollection"/> exposed by the builder.
-	///     </para>
+	/// This is a convenience wrapper that forwards to <see cref="AddApiVersioningFeatureCore"/>
+	/// using the <see cref="IServiceCollection"/> exposed by the builder.
 	/// </remarks>
 	public static WebApplicationBuilder AddApiVersioningFeature(this WebApplicationBuilder builder)
 	{
@@ -70,32 +68,30 @@ static class ServiceRegistration
 	/// <param name="services">The service collection to register services with.</param>
 	/// <returns>The <paramref name="services"/> for method chaining.</returns>
 	/// <remarks>
-	///     <para>
-	///     This method configures ASP.NET Core API versioning with the following settings:
-	///     </para>
+	///     <para>This method configures ASP.NET Core API versioning with the following settings:</para>
 	///     <list type="bullet">
 	///         <item>
 	///             <description>
-	///             <b>Default Version:</b> <see cref="ApiVersions.V1"/> is used when no version
-	///             is specified and <c>AssumeDefaultVersionWhenUnspecified</c> is enabled.
+	///             <b>Default Version:</b> <see cref="ApiVersions.V1"/> is used when no version is specified and
+	///             <see cref="ApiVersioningOptions.AssumeDefaultVersionWhenUnspecified"/> is enabled.
 	///             </description>
 	///         </item>
 	///         <item>
 	///             <description>
-	///             <b>Version Reporting:</b> The <c>api-supported-versions</c> and
-	///             <c>api-deprecated-versions</c> headers are included in responses.
+	///             <b>Version Reporting:</b> The <c>api-supported-versions</c> and <c>api-deprecated-versions</c>
+	///             headers are included in responses.
 	///             </description>
 	///         </item>
 	///         <item>
 	///             <description>
-	///             <b>URL Segment Reader:</b> Versions are read from the URL path segment
-	///             (e.g., <c>/api/v1/...</c>) using <see cref="UrlSegmentApiVersionReader"/>.
+	///             <b>URL Segment Reader:</b> Versions are read from the URL path segment (e.g., <c>/api/v1/...</c>)
+	///             using <see cref="UrlSegmentApiVersionReader"/>.
 	///             </description>
 	///         </item>
 	///         <item>
 	///             <description>
-	///             <b>API Explorer:</b> Integrates with <c>IApiVersionDescriptionProvider</c>
-	///             for OpenAPI document generation per API version.
+	///             <b>API Explorer:</b> Integrates with <see cref="IApiVersionDescriptionProvider"/> for OpenAPI
+	///             document generation per API version.
 	///             </description>
 	///         </item>
 	///     </list>

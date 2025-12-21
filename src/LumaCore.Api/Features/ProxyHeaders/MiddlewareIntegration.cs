@@ -24,18 +24,16 @@ static class MiddlewareIntegration
 	/// <returns>The web application builder for method chaining.</returns>
 	/// <remarks>
 	///     <para>
-	///     This middleware processes headers like X-Forwarded-For, X-Forwarded-Proto, X-Forwarded-Host,
-	///     and X-Forwarded-Prefix that are set by reverse proxies to preserve original request information.
+	///     This middleware processes headers like X-Forwarded-For, X-Forwarded-Proto, X-Forwarded-Host, and
+	///     X-Forwarded-Prefix that are set by reverse proxies to preserve original request information.
 	///     </para>
 	///     <para>
-	///     <strong>Important:</strong> This middleware must be the FIRST middleware in the pipeline.
-	///     It must run before HTTPS redirection, authentication, authorization, and routing middleware
-	///     to ensure correct scheme detection, client IP addresses, and URL generation.
-	///     Without this ordering, HTTPS redirection may cause infinite redirect loops behind proxies.
+	///     <strong>Important:</strong> This middleware must be the FIRST middleware in the pipeline. It must run
+	///     before HTTPS redirection, authentication, authorization, and routing middleware to ensure correct scheme
+	///     detection, client IP addresses, and URL generation. Without this ordering, HTTPS redirection may cause
+	///     infinite redirect loops behind proxies.
 	///     </para>
-	///     <para>
-	///     Behavior is controlled by the <c>ProxyHeaders:Mode</c> configuration setting:
-	///     </para>
+	///     <para>Behavior is controlled by the <c>ProxyHeaders:Mode</c> configuration setting:</para>
 	///     <list type="bullet">
 	///         <item>
 	///             <term>Disabled</term>
@@ -50,9 +48,7 @@ static class MiddlewareIntegration
 	///             <description>Only trust forwarded headers from explicitly configured proxy IPs/networks.</description>
 	///         </item>
 	///     </list>
-	///     <para>
-	///     Configuration example (appsettings.json):
-	///     </para>
+	///     <para>Configuration example (appsettings.json):</para>
 	///     <code>
 	/// {
 	///   "ProxyHeaders": {
@@ -113,10 +109,10 @@ static class MiddlewareIntegration
 	/// <param name="proxyOptions">The proxy headers feature configuration.</param>
 	/// <param name="logger">The logger to use.</param>
 	/// <remarks>
-	/// In cloud mode, all forwarded headers are trusted because the cloud platform (Azure, AWS, GCP)
-	/// controls the reverse proxy infrastructure. The <see cref="ForwardedHeadersOptions.KnownProxies"/>
-	/// and <see cref="ForwardedHeadersOptions.KnownIPNetworks"/> restrictions are cleared to allow the
-	/// platform to set headers.
+	/// In cloud mode, all forwarded headers are trusted because the cloud platform (Azure, AWS, GCP) controls the
+	/// reverse proxy infrastructure. The <see cref="ForwardedHeadersOptions.KnownProxies"/> and
+	/// <see cref="ForwardedHeadersOptions.KnownIPNetworks"/> restrictions are cleared to allow the platform to set
+	/// headers.
 	/// </remarks>
 	private static void ConfigureCloudMode(WebApplication app, ProxyHeadersOptions proxyOptions, ILogger logger)
 	{
@@ -140,7 +136,8 @@ static class MiddlewareIntegration
 		options.KnownIPNetworks.Clear();
 		options.KnownProxies.Clear();
 
-		logger.LogDebug("KnownProxies and KnownIPNetworks restrictions cleared (cloud platform manages proxy infrastructure).");
+		logger.LogDebug(
+			"KnownProxies and KnownIPNetworks restrictions cleared (cloud platform manages proxy infrastructure).");
 
 		app.UseForwardedHeaders(options);
 	}
@@ -153,13 +150,12 @@ static class MiddlewareIntegration
 	/// <param name="logger">The logger to use.</param>
 	/// <remarks>
 	///     <para>
-	///     In self-managed mode, only forwarded headers from explicitly configured proxy IPs
-	///     and networks are trusted. This prevents header spoofing attacks where malicious clients
-	///     could send fake X-Forwarded-For headers.
+	///     In self-managed mode, only forwarded headers from explicitly configured proxy IPs and networks are trusted.
+	///     This prevents header spoofing attacks where malicious clients could send fake X-Forwarded-For headers.
 	///     </para>
 	///     <para>
-	///     The configuration must specify at least one trusted proxy IP or network, otherwise
-	///     startup validation will fail (see <see cref="ProxyHeadersOptions.Validate"/>).
+	///     The configuration must specify at least one trusted proxy IP or network, otherwise startup validation will
+	///     fail (see <see cref="ProxyHeadersOptions.Validate"/>).
 	///     </para>
 	/// </remarks>
 	private static void ConfigureSelfManagedMode(WebApplication app, ProxyHeadersOptions proxyOptions, ILogger logger)

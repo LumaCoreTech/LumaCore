@@ -7,20 +7,18 @@ using System.ComponentModel.DataAnnotations;
 using LumaCore.Api.Features.ErrorHandling;
 
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 
 namespace LumaCore.Api.Features.Validation;
 
 /// <summary>
-/// An <see cref="IEndpointFilter"/> that validates request parameters using
-/// <see cref="System.ComponentModel.DataAnnotations"/>.
+/// An <see cref="IEndpointFilter"/> that validates request parameters using data annotation attributes.
 /// </summary>
 /// <remarks>
 ///     <para>
-///     This filter automatically validates all endpoint arguments that have
-///     <see cref="System.ComponentModel.DataAnnotations"/> attributes (such as
-///     <see cref="RequiredAttribute"/>, <see cref="RangeAttribute"/>,
-///     <see cref="StringLengthAttribute"/>, etc.) and returns a <c>400 Bad Request</c> with
-///     a <see cref="Microsoft.AspNetCore.Mvc.ProblemDetails"/> response if validation fails.
+///     This filter automatically validates all endpoint arguments that have validation attributes (such as
+///     <see cref="RequiredAttribute"/>, <see cref="RangeAttribute"/>, <see cref="StringLengthAttribute"/>, etc.) and
+///     returns a <c>400 Bad Request</c> with a <see cref="ProblemDetails"/> response if validation fails.
 ///     </para>
 ///     <para>
 ///     The filter can be applied to individual endpoints or to entire route groups:
@@ -37,9 +35,9 @@ namespace LumaCore.Api.Features.Validation;
 ///     </code>
 ///     </para>
 ///     <para>
-///     This filter works in conjunction with the <see cref="Microsoft.AspNetCore.Mvc.ProblemDetails"/>
-///     middleware configured in <c>Program.cs</c>. Validation errors are returned as RFC 7807
-///     compliant responses with detailed information about which properties failed validation.
+///     This filter works in conjunction with the <see cref="ProblemDetails"/> middleware configured in
+///     <c>Program.cs</c>. Validation errors are returned as RFC 7807 compliant responses with detailed information
+///     about which properties failed validation.
 ///     </para>
 /// </remarks>
 /// <example>
@@ -61,15 +59,11 @@ sealed class ValidationFilter : IEndpointFilter
 	/// <summary>
 	/// Validates all endpoint arguments and either continues the pipeline or returns a validation error.
 	/// </summary>
-	/// <param name="context">
-	/// The <see cref="EndpointFilterInvocationContext"/> containing the arguments to validate.
-	/// </param>
-	/// <param name="next">
-	/// The <see cref="EndpointFilterDelegate"/> to invoke if validation succeeds.
-	/// </param>
+	/// <param name="context">The <see cref="EndpointFilterInvocationContext"/> containing the arguments to validate.</param>
+	/// <param name="next">The <see cref="EndpointFilterDelegate"/> to invoke if validation succeeds.</param>
 	/// <returns>
-	/// The result of calling <paramref name="next"/> if validation passes, or an
-	/// <see cref="IResult"/> containing a <see cref="ValidationProblem"/> response if validation fails.
+	/// The result of calling <paramref name="next"/> if validation passes, or an <see cref="IResult"/> containing a
+	/// <see cref="ValidationProblem"/> response if validation fails.
 	/// </returns>
 	public async ValueTask<object?> InvokeAsync(
 		EndpointFilterInvocationContext context,

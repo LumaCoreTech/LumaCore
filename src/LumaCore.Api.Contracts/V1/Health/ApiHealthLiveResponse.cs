@@ -5,7 +5,7 @@
 namespace LumaCore.Api.Contracts.V1.Health;
 
 /// <summary>
-/// Represents the response returned by the <c>/api/v1/health/live</c> endpoint.
+/// Simple liveness indicator for the backend.
 /// </summary>
 /// <param name="Status">A short textual indicator of the backend state.</param>
 public sealed record ApiHealthLiveResponse(string Status);

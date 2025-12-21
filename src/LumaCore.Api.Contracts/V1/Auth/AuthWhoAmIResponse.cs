@@ -5,7 +5,7 @@
 namespace LumaCore.Api.Contracts.V1.Auth;
 
 /// <summary>
-/// Represents the response returned by the <c>/api/v1/auth/whoami</c> endpoint.
+/// Information about the current authenticated user.
 /// </summary>
 /// <param name="Name">The logical name of the authenticated user.</param>
 /// <param name="Roles">The set of roles associated with the user.</param>
