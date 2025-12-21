@@ -1119,6 +1119,95 @@ group.MapGet("/items/{id}", HandleGetItem)
 
 This makes your API predictable — clients always know the shape of error responses and can handle them programmatically.
 
+### 7. Sharing Services via Dependency Inversion
+
+When multiple features need access to the same domain service, use **Dependency Inversion** to keep features independent:
+
+1. **Interface** lives in `LumaCore.Core` — defines the contract
+2. **Implementation** lives in a Feature — provides the actual logic
+3. **Consumers** inject the interface — never the concrete type
+
+```csharp
+// 1. Interface in LumaCore.Core/Abstractions/
+namespace LumaCore.Core.Abstractions;
+
+public interface IMySharedService
+{
+    Task<MyEntity?> FindByIdAsync(string id, CancellationToken ct);
+}
+
+// 2. Implementation in LumaCore.Api/Features/MyProvider/
+namespace LumaCore.Api.Features.MyProvider;
+
+internal sealed class MySharedService : IMySharedService
+{
+    private readonly AppDbContext mDbContext;
+
+    public MySharedService(AppDbContext dbContext) => mDbContext = dbContext;
+
+    public async Task<MyEntity?> FindByIdAsync(string id, CancellationToken ct)
+    {
+        return await mDbContext.Entities
+            .FirstOrDefaultAsync(e => e.Id == id, ct)
+            .ConfigureAwait(false);
+    }
+}
+
+// 3. Registration in the Provider Feature's ServiceRegistration.cs
+public static WebApplicationBuilder AddMyProviderFeature(this WebApplicationBuilder builder)
+{
+    builder.Services.AddScoped<IMySharedService, MySharedService>();
+    return builder;
+}
+
+// 4. Consumer in another Feature — knows only the interface
+namespace LumaCore.Api.Features.MyConsumer;
+
+internal sealed class MyHandler
+{
+    private readonly IMySharedService mSharedService;
+
+    public MyHandler(IMySharedService sharedService)
+    {
+        mSharedService = sharedService;
+    }
+
+    public async Task<IResult> HandleAsync(MyRequest request, CancellationToken ct)
+    {
+        MyEntity? entity = await mSharedService
+            .FindByIdAsync(request.Id, ct)
+            .ConfigureAwait(false);
+
+        if (entity is null)
+        {
+            return Results.NotFound();
+        }
+
+        return Results.Ok(new MyResponse(entity));
+    }
+}
+```
+
+**Why this works:**
+
+- **Independence:** MyConsumer and MyProvider don't know each other — both depend on `IMySharedService` from Core
+- **Testability:** Mock `IMySharedService` to test MyConsumer in isolation, without a database
+- **Flexibility:** Swap implementations (database vs. in-memory vs. external service) without changing consumers
+- **Discoverability:** The interface in Core documents the contract; implementations are easy to find
+
+**When to use this pattern:**
+
+- Multiple features need the same domain service (user store, notification service, etc.)
+- You want to test features in isolation
+- The implementation might change (database, external API, caching layer)
+
+**When NOT to use this pattern:**
+
+- A service is only used within one feature — keep it internal to that feature
+- Simple utilities (string helpers, etc.) — these belong in a shared utilities namespace, not as DI services
+
+> 💡 **Architecture context:** See [Feature Communication](../architecture/feature-pattern.md#feature-communication) for the architectural reasoning behind this pattern.
+
 ---
 
 ## Feature Checklist
