@@ -209,7 +209,7 @@ of `Use{FeatureName}()` [matters/does not matter] because [reason].
 
 For features with configuration options:
 
-```markdown
+````markdown
 ## Configuration
 
 All [feature]-related settings are configured in `appsettings.json` (or via environment variables) under the `SectionName` section.
@@ -241,7 +241,7 @@ SectionName__Option=value
 ```
 
 The feature is registered via `builder.Add{FeatureName}Feature()` and mapped to the versioned API group in `Program.cs`.
-```
+````
 
 For features without own configuration:
 
@@ -335,7 +335,7 @@ Only include if there are real dependencies:
 ```markdown
 ## Related Features
 
-- [*FeatureName*](feature.md) — Why it's related (dependency, displays data from, etc.)
+- [*FeatureName*]({feature-name}.md) — Why it's related (dependency, displays data from, etc.)
 ```
 
 Rules:
