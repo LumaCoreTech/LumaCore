@@ -40,7 +40,7 @@ max_line_length = off
 [*.{js,ts}]
 quote_type = single
 
-[*.{cs,csproj,vb,vbproj,fs,fsi,fsx,fsproj,props,targets}]
+[*.{cs,csproj,vb,vbproj,fs,fsi,fsx,fsproj,props,targets,razor,cshtml}]
 indent_style = tab
 indent_size = 4
 tab_width = 4

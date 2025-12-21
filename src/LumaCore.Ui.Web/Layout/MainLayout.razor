@@ -9,45 +9,45 @@
     - A footer with a short tagline for the preview UI.
 *@
 <div class="lc-root">
-    <header class="lc-header">
-        <div class="lc-header-left">
-            @* Logo block with the LumaCore logo and a live backend health indicator *@
-            <div class="lc-logo-wrapper">
-                <img src="assets/branding/lumacore-logo.svg"
-                     alt="LumaCore Logo"
-                     class="lc-logo-img"/>
-                @* Small indicator that polls the backend and reflects its health state *@
-                <BackendHealthIndicator/>
-            </div>
+	<header class="lc-header">
+		<div class="lc-header-left">
+			@* Logo block with the LumaCore logo and a live backend health indicator *@
+			<div class="lc-logo-wrapper">
+				<img src="assets/branding/lumacore-logo.svg"
+				     alt="LumaCore Logo"
+				     class="lc-logo-img"/>
+				@* Small indicator that polls the backend and reflects its health state *@
+				<BackendHealthIndicator/>
+			</div>
 
-            @* Title and subtitle describing the project vision *@
-            <div class="lc-title-block">
-                <div class="lc-title">LumaCore</div>
-                <div class="lc-subtitle">
-                    A home for AI personas — built with warmth, intention, and the freedom to grow.
-                </div>
-            </div>
-        </div>
+			@* Title and subtitle describing the project vision *@
+			<div class="lc-title-block">
+				<div class="lc-title">LumaCore</div>
+				<div class="lc-subtitle">
+					A home for AI personas — built with warmth, intention, and the freedom to grow.
+				</div>
+			</div>
+		</div>
 
-        @* Primary navigation for the preview UI *@
-        <nav class="lc-nav">
-            @* Root/home entry; kept simple for the early preview version *@
-            <a href="">Home</a>
-            @* Internal status page (Blazor route) *@
-            <NavLink href="status" class="...">Status</NavLink>
-            @* External link to the public project site, opened in a separate tab *@
-            <a href="https://lumacore.tech" target="_blank" rel="noopener noreferrer">Project Site</a>
-        </nav>
-    </header>
+		@* Primary navigation for the preview UI *@
+		<nav class="lc-nav">
+			@* Root/home entry; kept simple for the early preview version *@
+			<a href="">Home</a>
+			@* Internal status page (Blazor route) *@
+			<NavLink href="status" class="...">Status</NavLink>
+			@* External link to the public project site, opened in a separate tab *@
+			<a href="https://lumacore.tech" target="_blank" rel="noopener noreferrer">Project Site</a>
+		</nav>
+	</header>
 
-    @* Main area where the currently active page content is rendered *@
-    <main class="lc-main">
-        @Body
-    </main>
+	@* Main area where the currently active page content is rendered *@
+	<main class="lc-main">
+		@Body
+	</main>
 
-    @* Footer with a short, stable tagline for the preview UI *@
-    <footer class="lc-footer">
-        <span>LumaCore UI (preview)</span>
-        <span>Self-hosted. Persona-focused. Yours.</span>
-    </footer>
+	@* Footer with a short, stable tagline for the preview UI *@
+	<footer class="lc-footer">
+		<span>LumaCore UI (preview)</span>
+		<span>Self-hosted. Persona-focused. Yours.</span>
+	</footer>
 </div>
