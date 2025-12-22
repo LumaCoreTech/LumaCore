@@ -22,7 +22,7 @@ which indicate when a capability is planned to reach — or has already reached 
 
 | Phase | Scope |
 |---|---|
-| **0 — Infrastructure Foundation** *(active)* | Versioning, Validation, OpenAPI, JWT Auth, CORS, Security Headers, HTTPS, Health, Proxy, Logging, Static Files, UI Shell, Status Page |
+| **0 — Infrastructure Foundation** *(active)* | Versioning, Validation, OpenAPI, JWT Auth, CORS, Security Headers, HTTPS, Health, Proxy, Logging, Static Files, UI Shell, Status Page, System Diagnostics |
 | **1 — LLM Integration & Persistence** *(planned)* | Database (multi-DB), User Store, Ollama (models, health), Chat (sessions, SSE, history), Persona config, Web UI (Login, Chat), Docker |
 | **2 — Storage & Retrieval** *(planned)* | Vector embeddings, Semantic search, RAG, Advanced features (persona switching, search, export), Native deployment (Services), Admin APIs, Config Management, System Dashboard |
 | **3 — Observability & Hardening** *(planned)* | Log viewer, Metrics export, Security hardening (audit, rate limiting) |
@@ -223,6 +223,7 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 | Capability         | Stage        | Functional Target (Phase) | Hardened Target (Phase) |
 |--------------------|--------------|---------------------------|-----------------|
 | **Status Page**<br/>_Blazor page showing backend health status with refresh button and error handling._ | 🟡 Prototype | ✔ (P0) | P1 |
+| **System Diagnostics API**<br/>_Admin-only endpoints for runtime info and configuration inspection with automatic secret masking._ | 🟢 Functional | ✔ (P0) | P1 |
 | **System Dashboard**<br/>_Full dashboard with metrics, performance charts, and detailed system information._ | ❌ None | P2 | P3 |
 
 ### Observability
@@ -249,10 +250,11 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - ✅ JWT Auth functional
 - ✅ Config validation on startup
 - ✅ Structured logging with TraceId correlation
-- ✅ Error handling with RFC 7807 ProblemDetails and TraceId
+- ✅ Error handling with RFC 7807 ProblemDetails and TraceId (20 status codes mapped)
 - ✅ HTTPS works (Kestrel) — documentation needed
 - ✅ appsettings.json fully documented with comments
 - ✅ OpenAPI native (.NET 10, PowerShell generator for CI)
+- ✅ System diagnostics API (runtime info, configuration with secret masking)
 - 🟡 Docker ready (Dockerfile, docker-compose.yml, native HealthCheck tool)
 - ⚠️ Hardcoded admin/changeme (bootstrap only, removed in P1)
 
@@ -272,7 +274,7 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - 📌 RAG integration
 - 📌 Advanced persona features (switching, search)
 - 📌 Native deployment (Windows Service, systemd)
-- 📌 Admin APIs (System, Model, Persona Management)
+- 📌 Admin APIs (Model, Persona Management)
 - 📌 Config Management & System Dashboard
 
 **Phase 3 (Future):** Make it **excellent**

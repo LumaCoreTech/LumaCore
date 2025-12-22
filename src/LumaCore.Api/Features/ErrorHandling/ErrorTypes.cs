@@ -208,4 +208,138 @@ static class ErrorTypes
 	///     <c>urn:lumacore:error:rate-limited</c>
 	/// </value>
 	public const string RateLimited = $"{Base}:rate-limited";
+
+	/// <summary>
+	/// Indicates that the request is malformed or contains invalid data.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     This error type is returned for general request format errors, such as malformed JSON, missing required
+	///     headers, or invalid query parameters. For field-level validation errors, see <see cref="Validation"/>.
+	///     </para>
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:bad-request</c>
+	/// </value>
+	public const string BadRequest = $"{Base}:bad-request";
+
+	/// <summary>
+	/// Indicates that the HTTP method is not supported for the requested endpoint.
+	/// </summary>
+	/// <remarks>
+	/// This error type is returned when a client uses an HTTP method (e.g., POST, DELETE) that the endpoint
+	/// does not support. The response includes an <c>Allow</c> header listing the supported methods.
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:method-not-allowed</c>
+	/// </value>
+	public const string MethodNotAllowed = $"{Base}:method-not-allowed";
+
+	/// <summary>
+	/// Indicates that the request content type is not supported by the endpoint.
+	/// </summary>
+	/// <remarks>
+	/// This error type is returned when the <c>Content-Type</c> header specifies a media type that the
+	/// endpoint cannot process (e.g., sending XML when only JSON is accepted).
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:unsupported-media-type</c>
+	/// </value>
+	public const string UnsupportedMediaType = $"{Base}:unsupported-media-type";
+
+	/// <summary>
+	/// Indicates that the server cannot produce a response matching the client's Accept header.
+	/// </summary>
+	/// <remarks>
+	/// This error type is returned when content negotiation fails because the server cannot generate
+	/// a response in any of the formats specified in the request's <c>Accept</c> header.
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:not-acceptable</c>
+	/// </value>
+	public const string NotAcceptable = $"{Base}:not-acceptable";
+
+	/// <summary>
+	/// Indicates that the server timed out waiting for the client request.
+	/// </summary>
+	/// <remarks>
+	/// This error type is returned when the client did not produce a request within the time the server
+	/// was prepared to wait (e.g., slow upload, idle connection).
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:request-timeout</c>
+	/// </value>
+	public const string RequestTimeout = $"{Base}:request-timeout";
+
+	/// <summary>
+	/// Indicates that the requested resource is permanently gone and will not be available again.
+	/// </summary>
+	/// <remarks>
+	/// This error type is returned when a resource has been intentionally and permanently removed.
+	/// Unlike <see cref="NotFound"/>, this indicates the resource existed but was deleted.
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:gone</c>
+	/// </value>
+	public const string Gone = $"{Base}:gone";
+
+	/// <summary>
+	/// Indicates that the request payload exceeds the server's size limits.
+	/// </summary>
+	/// <remarks>
+	/// This error type is returned when the request body is larger than the server is willing or able
+	/// to process. The response may include a <c>Retry-After</c> header if the condition is temporary.
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:payload-too-large</c>
+	/// </value>
+	public const string PayloadTooLarge = $"{Base}:payload-too-large";
+
+	/// <summary>
+	/// Indicates that the client must switch to a different protocol.
+	/// </summary>
+	/// <remarks>
+	/// This error type is returned when the server requires the client to upgrade to a different
+	/// protocol (e.g., switching from HTTP to WebSocket).
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:upgrade-required</c>
+	/// </value>
+	public const string UpgradeRequired = $"{Base}:upgrade-required";
+
+	/// <summary>
+	/// Indicates that the request headers are too large.
+	/// </summary>
+	/// <remarks>
+	/// This error type is returned when the server refuses to process the request because one or more
+	/// header fields (or all headers combined) exceed the configured size limit.
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:headers-too-large</c>
+	/// </value>
+	public const string HeadersTooLarge = $"{Base}:headers-too-large";
+
+	/// <summary>
+	/// Indicates that the service is temporarily unavailable.
+	/// </summary>
+	/// <remarks>
+	/// This error type is returned when the server is temporarily unable to handle the request due to
+	/// maintenance, overload, or dependency failures. The response may include a <c>Retry-After</c> header.
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:service-unavailable</c>
+	/// </value>
+	public const string ServiceUnavailable = $"{Base}:service-unavailable";
+
+	/// <summary>
+	/// Indicates that the server does not support the functionality required to fulfill the request.
+	/// </summary>
+	/// <remarks>
+	/// This error type is returned when the server does not recognize or support the request method
+	/// or lacks the ability to fulfill the request (e.g., a feature is not yet implemented).
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:not-implemented</c>
+	/// </value>
+	public const string NotImplemented = $"{Base}:not-implemented";
 }

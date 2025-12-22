@@ -15,15 +15,33 @@ The *Error Handling* feature provides centralized, RFC 7807-compliant error resp
 
 A static class containing URN-based error type identifiers for use in *ProblemDetails* responses. Using URNs (Uniform Resource Names) instead of URLs provides stable, machine-readable identifiers that don't depend on server availability.
 
-| Constant | URN | Description |
-|----------|-----|-------------|
-| `Validation` | `urn:lumacore:error:validation` | Request body or parameters failed validation. |
-| `NotFound` | `urn:lumacore:error:not-found` | Requested resource does not exist. |
-| `Unauthorized` | `urn:lumacore:error:unauthorized` | Missing or invalid authentication credentials. |
-| `Forbidden` | `urn:lumacore:error:forbidden` | Authenticated user lacks required permissions. |
-| `Internal` | `urn:lumacore:error:internal` | Unexpected server error. |
-| `Conflict` | `urn:lumacore:error:conflict` | Request conflicts with resource state. |
-| `RateLimited` | `urn:lumacore:error:rate-limited` | Too many requests in time window. |
+**4xx Client Errors:**
+
+| Code | Constant | URN | Description |
+|------|----------|-----|-------------|
+| 400 | `BadRequest` | `urn:lumacore:error:bad-request` | Request is malformed or contains invalid data. |
+| 401 | `Unauthorized` | `urn:lumacore:error:unauthorized` | Missing or invalid authentication credentials. |
+| 403 | `Forbidden` | `urn:lumacore:error:forbidden` | Authenticated user lacks required permissions. |
+| 404 | `NotFound` | `urn:lumacore:error:not-found` | Requested resource does not exist. |
+| 405 | `MethodNotAllowed` | `urn:lumacore:error:method-not-allowed` | HTTP method not supported for endpoint. |
+| 406 | `NotAcceptable` | `urn:lumacore:error:not-acceptable` | Cannot produce response matching Accept header. |
+| 408 | `RequestTimeout` | `urn:lumacore:error:request-timeout` | Server timed out waiting for request. |
+| 409 | `Conflict` | `urn:lumacore:error:conflict` | Request conflicts with resource state. |
+| 410 | `Gone` | `urn:lumacore:error:gone` | Resource has been permanently removed. |
+| 413 | `PayloadTooLarge` | `urn:lumacore:error:payload-too-large` | Request payload exceeds size limit. |
+| 415 | `UnsupportedMediaType` | `urn:lumacore:error:unsupported-media-type` | Request content type not supported. |
+| 422 | `Validation` | `urn:lumacore:error:validation` | Request data failed validation. |
+| 426 | `UpgradeRequired` | `urn:lumacore:error:upgrade-required` | Client must switch to different protocol. |
+| 429 | `RateLimited` | `urn:lumacore:error:rate-limited` | Too many requests in time window. |
+| 431 | `HeadersTooLarge` | `urn:lumacore:error:headers-too-large` | Request headers exceed size limit. |
+
+**5xx Server Errors:**
+
+| Code | Constant | URN | Description |
+|------|----------|-----|-------------|
+| 500 | `Internal` | `urn:lumacore:error:internal` | Unexpected server error. |
+| 501 | `NotImplemented` | `urn:lumacore:error:not-implemented` | Requested functionality not supported. |
+| 503 | `ServiceUnavailable` | `urn:lumacore:error:service-unavailable` | Service temporarily unavailable. |
 
 **Why URNs instead of URLs?**
 
@@ -119,13 +137,27 @@ Request → ProxyHeaders → ExceptionHandler → ErrorHandling → HTTPS → ..
 }
 ```
 
+> **Note:** Validation errors are returned by the `ValidationFilter` using ASP.NET Core's `ValidationProblem` result, which uses the standard title. The `detail` field is omitted for validation errors since the `errors` dictionary provides the specific information.
+
 ### Unauthorized (401)
 
 ```json
 {
   "type": "urn:lumacore:error:unauthorized",
-  "title": "Unauthorized",
-  "status": 401
+  "title": "Authentication Required",
+  "status": 401,
+  "detail": "Valid credentials are required to access this resource."
+}
+```
+
+### Forbidden (403)
+
+```json
+{
+  "type": "urn:lumacore:error:forbidden",
+  "title": "Access Denied",
+  "status": 403,
+  "detail": "Insufficient permissions to access this resource."
 }
 ```
 
@@ -134,8 +166,9 @@ Request → ProxyHeaders → ExceptionHandler → ErrorHandling → HTTPS → ..
 ```json
 {
   "type": "urn:lumacore:error:not-found",
-  "title": "Not Found",
-  "status": 404
+  "title": "Resource Not Found",
+  "status": 404,
+  "detail": "The requested resource does not exist."
 }
 ```
 
@@ -144,10 +177,22 @@ Request → ProxyHeaders → ExceptionHandler → ErrorHandling → HTTPS → ..
 ```json
 {
   "type": "urn:lumacore:error:internal",
-  "title": "An unexpected error occurred",
+  "title": "Internal Server Error",
   "status": 500,
+  "detail": "An unexpected error occurred.",
   "instance": "/api/v1/auth/login",
   "traceId": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+}
+```
+
+### Service Unavailable (503)
+
+```json
+{
+  "type": "urn:lumacore:error:service-unavailable",
+  "title": "Service Unavailable",
+  "status": 503,
+  "detail": "The service is temporarily unavailable."
 }
 ```
 
@@ -173,6 +218,15 @@ async function callApi(url) {
         break;
       case 'urn:lumacore:error:forbidden':
         // Show "access denied" message
+        break;
+      case 'urn:lumacore:error:not-found':
+        // Show "resource not found" message
+        break;
+      case 'urn:lumacore:error:rate-limited':
+        // Wait and retry, or show "slow down" message
+        break;
+      case 'urn:lumacore:error:service-unavailable':
+        // Show "service temporarily unavailable" message
         break;
       default:
         // Show generic error with traceId for support
