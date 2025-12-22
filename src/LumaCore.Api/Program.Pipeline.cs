@@ -4,7 +4,6 @@
 
 using Asp.Versioning.ApiExplorer;
 
-using LumaCore.Api.Features.Admin;
 using LumaCore.Api.Features.ApiVersioning;
 using LumaCore.Api.Features.Auth;
 using LumaCore.Api.Features.Cors;
@@ -13,6 +12,7 @@ using LumaCore.Api.Features.Health;
 using LumaCore.Api.Features.HttpsRedirection;
 using LumaCore.Api.Features.ProxyHeaders;
 using LumaCore.Api.Features.SecurityHeaders;
+using LumaCore.Api.Features.System;
 
 using Serilog;
 
@@ -172,9 +172,9 @@ public static partial class Program
 		RouteGroupBuilder api = app.MapVersionedApiGroup();
 
 		// Map business API features to the versioned /api/v{version} group.
-		// Each feature maps its endpoints relative to the group (e.g. /auth, /admin).
+		// Each feature maps its endpoints relative to the group (e.g. /auth, /system).
 		api.MapAuthFeature();
-		api.MapAdminFeature();
+		api.MapSystemFeature();
 		api.MapHealthApiFeature();
 
 		// Map infrastructure endpoints directly to app (outside versioned API).

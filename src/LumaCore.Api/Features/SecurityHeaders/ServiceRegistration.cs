@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Api.Configuration;
+
 using Microsoft.AspNetCore.HttpsPolicy;
 
 namespace LumaCore.Api.Features.SecurityHeaders;
@@ -52,11 +54,7 @@ static class ServiceRegistration
 		IConfigurationSection section = configuration.GetSection(SecurityHeadersOptions.SectionName);
 
 		// Register and validate SecurityHeadersOptions.
-		services
-			.AddOptions<SecurityHeadersOptions>()
-			.Bind(section)
-			.ValidateDataAnnotations()
-			.ValidateOnStart();
+		services.AddFeatureOptions<SecurityHeadersOptions>(configuration, SecurityHeadersOptions.SectionName);
 
 		// Configure HSTS options based on SecurityHeadersOptions.
 		SecurityHeadersOptions options = section.Get<SecurityHeadersOptions>() ?? new SecurityHeadersOptions();

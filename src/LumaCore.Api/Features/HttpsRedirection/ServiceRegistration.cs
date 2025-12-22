@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Api.Configuration;
+
 namespace LumaCore.Api.Features.HttpsRedirection;
 
 /// <summary>
@@ -44,11 +46,9 @@ static class ServiceRegistration
 		IConfiguration          configuration)
 	{
 		// Bind and validate options at startup so misconfiguration fails fast.
-		services
-			.AddOptions<HttpsRedirectionOptions>()
-			.Bind(configuration.GetSection(HttpsRedirectionOptions.SectionName))
-			.ValidateDataAnnotations()
-			.ValidateOnStart();
+		services.AddFeatureOptions<HttpsRedirectionOptions>(
+			configuration,
+			HttpsRedirectionOptions.SectionName);
 
 		// Configure HTTPS redirection settings, including the target HTTPS port
 		// if specified in configuration.

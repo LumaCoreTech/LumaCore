@@ -3,7 +3,7 @@
 The *Error Handling* feature provides centralized, RFC 7807-compliant error responses across the LumaCore API. It defines URN-based error type identifiers for machine-readable error categorization and a custom exception handler that ensures all unhandled exceptions are converted into structured responses with trace correlation.
 
 > [!NOTE]
-> **Cross-Cutting Feature:** Unlike endpoint features (*Auth*, *Admin*, etc.), the *Error Handling* feature provides infrastructure that affects all API responses. It integrates with ASP.NET Core's *ProblemDetails* services and exception handling middleware.
+> **Cross-Cutting Feature:** Unlike endpoint features (*Auth*, *System*, etc.), the *Error Handling* feature provides infrastructure that affects all API responses. It integrates with ASP.NET Core's *ProblemDetails* services and exception handling middleware.
 >
 > This document deviates from the standard feature documentation structure because it defines API-wide response contracts that clients need to understand — including error type URNs and response formats.
 

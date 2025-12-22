@@ -87,7 +87,7 @@ Features/<Feature>/
 > **Note:** Request/response DTOs (contracts) live in the separate `LumaCore.Api.Contracts` project, not within feature folders. This allows both the API and Blazor UI to share the same contract types. See [Building Features: Contracts](../development/building-features.md#contracts-the-features-public-api) for details.
 
 **Naming patterns:**
-- `<Feature>` = Feature name (Auth, Admin, Health, Persona, etc.)
+- `<Feature>` = Feature name (Auth, System, Health, Persona, etc.)
 - `<Endpoint>` = Specific endpoint/action (Login, WhoAmI, CreatePersona, etc.)
 - `<Service>` = Service name (TokenFactory, PersonaEngine, etc.)
 

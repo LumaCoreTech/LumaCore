@@ -4,6 +4,8 @@
 
 using System.Text;
 
+using LumaCore.Api.Configuration;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -59,11 +61,7 @@ static class ServiceRegistration
 		IConfiguration          configuration)
 	{
 		// Bind and validate JWT options at startup so misconfiguration fails fast.
-		services
-			.AddOptions<JwtOptions>()
-			.Bind(configuration.GetSection(JwtOptions.SectionName))
-			.ValidateDataAnnotations()
-			.ValidateOnStart();
+		services.AddFeatureOptions<JwtOptions>(configuration, JwtOptions.SectionName);
 
 		// Configure JWT bearer authentication for incoming requests.
 		services

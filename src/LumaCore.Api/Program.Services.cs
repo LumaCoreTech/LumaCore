@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-using LumaCore.Api.Features.Admin;
+using LumaCore.Api.Configuration;
 using LumaCore.Api.Features.ApiVersioning;
 using LumaCore.Api.Features.Auth;
 using LumaCore.Api.Features.Cors;
@@ -12,6 +12,7 @@ using LumaCore.Api.Features.HttpsRedirection;
 using LumaCore.Api.Features.OpenApi;
 using LumaCore.Api.Features.ProxyHeaders;
 using LumaCore.Api.Features.SecurityHeaders;
+using LumaCore.Api.Features.System;
 
 public static partial class Program
 {
@@ -66,9 +67,6 @@ public static partial class Program
 		// Register authentication and authorization services and configure JWT bearer.
 		builder.AddAuthFeature();
 
-		// Register admin feature services and options.
-		builder.AddAdminFeature();
-
 		// Native OpenAPI document generation (.NET 10).
 		// This replaces Swashbuckle's AddSwaggerGen() with the built-in OpenAPI support.
 		// The document is generated at runtime and served via MapOpenApi() in the pipeline.
@@ -88,5 +86,14 @@ public static partial class Program
 		// Register HTTPS redirection feature.
 		// Redirects HTTP requests to HTTPS when enabled in configuration.
 		builder.AddHttpsRedirectionFeature();
+
+		// Register the System feature for diagnostic endpoints.
+		// Provides /api/v1/system/info and /api/v1/system/configuration endpoints.
+		builder.AddSystemFeature();
+
+		// Validate that all LumaCore Options types were registered via AddFeatureOptions<T>().
+		// This ensures proper section name tracking for diagnostic endpoints and fails fast
+		// if any Options were registered using the raw AddOptions<T>().Bind() pattern.
+		builder.Services.ValidateOptionsRegistrations();
 	}
 }

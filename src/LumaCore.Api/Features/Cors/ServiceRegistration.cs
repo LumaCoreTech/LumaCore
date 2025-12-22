@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Api.Configuration;
+
 namespace LumaCore.Api.Features.Cors;
 
 /// <summary>
@@ -54,11 +56,7 @@ static class ServiceRegistration
 		IConfiguration          configuration)
 	{
 		// Register and validate CorsOptions.
-		services
-			.AddOptions<CorsOptions>()
-			.Bind(configuration.GetSection(CorsOptions.SectionName))
-			.ValidateDataAnnotations()
-			.ValidateOnStart();
+		services.AddFeatureOptions<CorsOptions>(configuration, CorsOptions.SectionName);
 
 		// Add CORS services to the DI container.
 		// The actual policy is configured in UseCorsFeature() based on CorsOptions.

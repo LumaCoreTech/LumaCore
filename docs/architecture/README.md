@@ -55,7 +55,7 @@ Understand where everything lives and why it's organized that way.
 - Service registration lifecycle
 - Endpoint mapping
 - Feature isolation principles
-- Real examples from *Auth*, *Admin*, *Health* features
+- Real examples from *Auth*, *System*, *Health* features
 
 This is the most important pattern in LumaCore - understand this and you understand the system.
 

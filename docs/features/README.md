@@ -60,9 +60,9 @@ The following sections list all implemented features by category:
 
 | Feature | Purpose |
 |---------|---------|
-| [Admin](admin.md) | Administrative status endpoint with runtime diagnostics |
 | [Auth](auth.md) | JWT authentication with login, introspection, and identity endpoints |
 | [Health](health.md) | Liveness and readiness probes for orchestrators |
+| [System](system.md) | Runtime information and configuration diagnostics |
 
 ---
 

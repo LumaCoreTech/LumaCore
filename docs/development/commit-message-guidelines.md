@@ -63,9 +63,9 @@ The scope identifies the **affected feature or domain area**.
 
 | Scope | Description |
 |-------|-------------|
-| `core` | Repository setup, solution structure, foundational changes |
 | `api` | REST API endpoints, controllers, middleware |
 | `auth` | Authentication, JWT, identity, authorization |
+| `core` | Repository setup, solution structure, foundational changes |
 | `health` | Health checks, liveness/readiness endpoints |
 | `openapi` | OpenAPI specification, documentation generation |
 
@@ -75,8 +75,8 @@ The scope identifies the **affected feature or domain area**.
 |-------|-------------|
 | `build` | Build configuration, MSBuild, project files |
 | `ci` | GitHub Actions, workflows, CI/CD pipelines |
-| `docker` | Dockerfile, Docker Compose, container configuration |
 | `deps` | Dependency updates (NuGet, npm) |
+| `docker` | Dockerfile, Docker Compose, container configuration |
 
 **Documentation Scopes**
 
@@ -93,16 +93,16 @@ The scope identifies the **affected feature or domain area**.
 
 | Scope | Description |
 |-------|-------------|
-| `admin` | Admin endpoints, diagnostics, status |
+| `assets` | Static assets, branding, logos |
 | `cors` | CORS configuration and policies |
 | `errors` | Error handling, ProblemDetails, exception handlers |
 | `https` | HTTPS redirection configuration |
 | `logging` | Logging, Serilog configuration |
 | `proxy` | Proxy/forwarded headers configuration |
 | `security` | Security headers (CSP, HSTS, etc.) |
+| `system` | System diagnostics, runtime info, configuration |
 | `ui` | Blazor UI components, pages, layouts, styling |
 | `validation` | Request validation, validation filters |
-| `assets` | Static assets, branding, logos |
 
 ### 3.3 Adding New Scopes
 

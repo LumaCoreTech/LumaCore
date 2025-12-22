@@ -4,6 +4,8 @@
 
 using System.ComponentModel.DataAnnotations;
 
+using LumaCore.Api.Configuration;
+
 using Microsoft.IdentityModel.Tokens;
 
 namespace LumaCore.Api.Features.Auth;
@@ -124,6 +126,7 @@ sealed class JwtOptions
 	///     secrets mechanism (for example Docker secrets or a cloud secret store).
 	///     </para>
 	/// </remarks>
+	[Secret]
 	[Required(ErrorMessage = SigningKeyRequiredError)]
 	[MinLength(32, ErrorMessage = SigningKeyMinLengthError)]
 	public string SigningKey { get; set; } = string.Empty;

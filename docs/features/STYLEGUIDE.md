@@ -481,7 +481,7 @@ Instead, describe the **observable behavior**:
 See these files as reference implementations:
 
 - [auth.md](auth.md) — Feature with configuration, services, multiple endpoints
-- [admin.md](admin.md) — Feature without own configuration, single endpoint
+- [system.md](system.md) — Feature without own configuration, diagnostic endpoints
 
 ---
 

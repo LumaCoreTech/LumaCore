@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Api.Configuration;
+
 namespace LumaCore.Api.Features.ProxyHeaders;
 
 /// <summary>
@@ -56,11 +58,9 @@ static class ServiceRegistration
 		this IServiceCollection services,
 		IConfiguration          configuration)
 	{
-		services
-			.AddOptions<ProxyHeadersOptions>()
-			.Bind(configuration.GetSection(ProxyHeadersOptions.SectionName))
-			.ValidateDataAnnotations()
-			.ValidateOnStart();
+		services.AddFeatureOptions<ProxyHeadersOptions>(
+			configuration,
+			ProxyHeadersOptions.SectionName);
 
 		return services;
 	}

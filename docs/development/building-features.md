@@ -105,12 +105,11 @@ public static class ServiceRegistration
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Bind and validate options
-        services
-            .AddOptions<MyFeatureOptions>()
-            .Bind(configuration.GetSection(MyFeatureOptions.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+        // Bind and validate options using AddFeatureOptions for proper section tracking.
+        // This enables the System feature to display configuration values correctly.
+        services.AddFeatureOptions<MyFeatureOptions>(
+            configuration,
+            MyFeatureOptions.SectionName);
         
         // Register feature services
         services.AddSingleton<ITokenFactory, TokenFactory>();    // Stateless
@@ -122,7 +121,7 @@ public static class ServiceRegistration
 }
 ```
 
-The wrapper method (`AddMyFeature`) provides a clean API for `Program.cs`, while the core method (`AddMyFeatureCore`) is reusable in other hosting scenarios and easily unit-tested.
+The wrapper method (`AddMyFeature`) provides a clean API for `Program.cs`, while the core method (`AddMyFeatureCore`) is reusable in other hosting scenarios and easily unit-tested. Note that `AddFeatureOptions<T>()` requires `using LumaCore.Api.Configuration;`.
 
 The pattern is straightforward: bind and validate options, register services with appropriate lifetimes, and return the builder for chaining.
 
@@ -548,15 +547,21 @@ Options classes are `sealed` (not designed for inheritance) and include a `Secti
 
 ### Options Registration
 
-Always validate at startup (see [Validation Patterns](#validation-patterns) for attribute details):
+Always use `AddFeatureOptions<T>()` to register options with proper section tracking:
 
 ```csharp
-services
-    .AddOptions<MyFeatureOptions>()
-    .Bind(configuration.GetSection(MyFeatureOptions.SectionName))
-    .ValidateDataAnnotations()      // Check [Required], [Range], etc.
-    .ValidateOnStart();             // Fail at startup, not runtime
+using LumaCore.Api.Configuration;
+
+// In ServiceRegistration.cs:
+services.AddFeatureOptions<MyFeatureOptions>(
+    configuration,
+    MyFeatureOptions.SectionName);
 ```
+
+This extension method binds to the configuration section, validates DataAnnotations (`[Required]`, `[Range]`, etc.) on startup (fail-fast), and tracks the section name for the *System* feature's diagnostic endpoints.
+
+> [!IMPORTANT]
+> Using the raw `AddOptions<T>().Bind()` pattern will cause the startup validator to reject the application.
 
 ### Options Usage
 
@@ -691,13 +696,11 @@ These patterns have proven themselves across LumaCore's features. They're not ar
 Configuration errors should crash the application at startup, not cause mysterious failures at 3 AM.
 
 ```csharp
-services
-    .AddOptions<MyOptions>()
-    .ValidateDataAnnotations()
-    .ValidateOnStart();  // ← Crucial!
+// AddFeatureOptions includes ValidateDataAnnotations() and ValidateOnStart() automatically
+services.AddFeatureOptions<MyOptions>(configuration, MyOptions.SectionName);
 ```
 
-Without `ValidateOnStart()`, a missing or invalid configuration value only surfaces when code first accesses the option — potentially hours after deployment, under load, in production. With it, the application refuses to start until configuration is correct. This turns "debugging production" into "fixing a failed deployment" — a much better situation.
+Without validation on start, a missing or invalid configuration value only surfaces when code first accesses the option — potentially hours after deployment, under load, in production. With it, the application refuses to start until configuration is correct. This turns "debugging production" into "fixing a failed deployment" — a much better situation.
 
 ### 2. Structured Logging
 
@@ -1361,12 +1364,8 @@ public static class ServiceRegistration
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Bind options
-        services
-            .AddOptions<JwtOptions>()
-            .Bind(configuration.GetSection(JwtOptions.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+        // Bind options with section tracking
+        services.AddFeatureOptions<JwtOptions>(configuration, JwtOptions.SectionName);
         
         // Configure authentication
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

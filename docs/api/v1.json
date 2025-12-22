@@ -107,30 +107,152 @@
         ]
       }
     },
-    "/api/v1/admin/status": {
+    "/api/v1/system/info": {
       "get": {
         "tags": [
-          "Admin"
+          "System"
         ],
-        "summary": "Returns high-level status information about the API.",
-        "description": "Returns a small, non-sensitive snapshot of the running LumaCore instance, including environment, API version, machine name, server time and JWT configuration status. Secrets such as the signing key are never exposed; only a masked representation of the key and basic configuration flags are returned.",
-        "operationId": "AdminStatus",
+        "summary": "Returns runtime information about the LumaCore instance.",
+        "description": "Returns a snapshot of the running LumaCore instance including environment, version, machine name, and current server time. Useful for verifying which instance is being accessed and for time synchronization debugging. Requires the 'admin' role.",
+        "operationId": "SystemInfo",
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AdminStatusResponse"
+                  "$ref": "#/components/schemas/SystemInfoResponse"
                 }
               }
             }
           },
           "401": {
             "description": "Authentication is required to access this endpoint."
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/system/configuration": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Returns all configuration sections with secrets masked.",
+        "description": "Returns all registered configuration options grouped by section name. Sensitive values are automatically masked (e.g., 'SigningKey' becomes '*** (length 32)'). Requires the 'admin' role.",
+        "operationId": "SystemConfiguration",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
           },
-          "403": {
-            "description": "The authenticated user does not have permission to access this resource."
+          "401": {
+            "description": "Authentication is required to access this endpoint."
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/system/configuration/{section}": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Returns a specific configuration section with secrets masked.",
+        "description": "Returns all values within a configuration section. Sensitive values are automatically masked. Requires the 'admin' role.",
+        "operationId": "SystemConfigurationSection",
+        "parameters": [
+          {
+            "name": "section",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Authentication is required to access this endpoint."
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/system/configuration/{section}/{key}": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Returns a specific configuration value with secrets masked.",
+        "description": "Returns a single configuration value by section and key. Sensitive values are returned in masked form. Requires the 'admin' role.",
+        "operationId": "SystemConfigurationValue",
+        "parameters": [
+          {
+            "name": "section",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Authentication is required to access this endpoint."
           }
         },
         "security": [
@@ -163,94 +285,6 @@
   },
   "components": {
     "schemas": {
-      "AdminJwtStatusInfo": {
-        "required": [
-          "configured",
-          "issuer",
-          "audience",
-          "signingKey",
-          "accessTokenLifetimeMinutes"
-        ],
-        "type": "object",
-        "properties": {
-          "configured": {
-            "type": "boolean",
-            "description": "`true` if a JWT issuer, audience, and signing key are all configured;\notherwise, `false`."
-          },
-          "issuer": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "The configured JWT issuer, if any."
-          },
-          "audience": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "The configured JWT audience, if any."
-          },
-          "signingKey": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "A masked representation of the configured signing key, or `null` if no key is configured.\nThe raw signing key is never exposed by this endpoint."
-          },
-          "accessTokenLifetimeMinutes": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "description": "The configured access token lifetime in minutes, if available; otherwise `null`.",
-            "format": "int32"
-          }
-        },
-        "description": "Represents diagnostic information about the JWT configuration used by the LumaCore API."
-      },
-      "AdminStatusResponse": {
-        "required": [
-          "environment",
-          "apiVersion",
-          "machineName",
-          "utcNow",
-          "jwt"
-        ],
-        "type": "object",
-        "properties": {
-          "environment": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "The logical environment of the application (for example `Development` or `Production`)."
-          },
-          "apiVersion": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "The advertised API version."
-          },
-          "machineName": {
-            "type": "string",
-            "description": "The operating system machine name of the host."
-          },
-          "utcNow": {
-            "type": "string",
-            "description": "The current UTC time on the server.",
-            "format": "date-time"
-          },
-          "jwt": {
-            "description": "Information about the JWT configuration status.",
-            "$ref": "#/components/schemas/AdminJwtStatusInfo"
-          }
-        },
-        "description": "Represents the high-level status of the running LumaCore instance as\nreturned by the `/api/v1/admin/status` endpoint."
-      },
       "AuthClaimItem": {
         "required": [
           "type",
@@ -267,7 +301,7 @@
             "description": "The claim value."
           }
         },
-        "description": "Represents a single claim in the authentication principal as exposed\nby the `/api/v1/auth/whoami` endpoint."
+        "description": "A single claim in the authentication principal."
       },
       "AuthIntrospectResponse": {
         "required": [
@@ -324,7 +358,7 @@
               "null",
               "string"
             ],
-            "description": "The remaining lifetime of the token at the time of the request, or `null`\nif the expiry could not be determined."
+            "description": "The remaining lifetime of the token at the time of the request, or `null` if the expiry could not\nbe determined."
           },
           "jwtId": {
             "type": [
@@ -357,7 +391,7 @@
             "format": "int32"
           }
         },
-        "description": "Represents the response returned by the `/api/v1/auth/introspect` endpoint."
+        "description": "Detailed information about the current JWT token."
       },
       "AuthWhoAmIResponse": {
         "required": [
@@ -386,7 +420,7 @@
             "description": "The raw claims associated with the user principal."
           }
         },
-        "description": "Represents the response returned by the `/api/v1/auth/whoami` endpoint."
+        "description": "Information about the current authenticated user."
       },
       "LoginRequest": {
         "required": [
@@ -404,7 +438,47 @@
             "description": "The password for authentication. Must be at least 8 characters."
           }
         },
-        "description": "Represents login credentials submitted by a client in order to obtain a JWT."
+        "description": "Login credentials submitted by a client to obtain a JWT."
+      },
+      "SystemInfoResponse": {
+        "required": [
+          "environment",
+          "version",
+          "informationalVersion",
+          "machineName",
+          "utcNow"
+        ],
+        "type": "object",
+        "properties": {
+          "environment": {
+            "type": "string",
+            "description": "The current environment name (e.g., `Development`, `Production`)."
+          },
+          "version": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The assembly version (e.g., `1.0.0.0`)."
+          },
+          "informationalVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The full version including prerelease tag and build metadata (e.g.,\n`1.0.0-alpha+abc123de`)."
+          },
+          "machineName": {
+            "type": "string",
+            "description": "The name of the machine running the LumaCore instance."
+          },
+          "utcNow": {
+            "type": "string",
+            "description": "The current UTC time on the server.",
+            "format": "date-time"
+          }
+        },
+        "description": "Response containing runtime information about the LumaCore instance."
       }
     },
     "securitySchemes": {
@@ -421,7 +495,7 @@
       "name": "Auth"
     },
     {
-      "name": "Admin"
+      "name": "System"
     },
     {
       "name": "Health"

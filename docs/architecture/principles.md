@@ -168,7 +168,7 @@ Configuration isn't scattered through attributes or convention-based scanning. I
 
 ```csharp
 builder.AddAuthFeature();
-builder.AddAdminFeature();
+builder.AddSystemFeature();
 builder.AddHealthFeature();
 ```
 
@@ -264,7 +264,7 @@ These principles mean:
 
 **See it in practice:**
 - [Auth Feature](../features/auth.md) - Real implementation following these principles
-- [Admin Feature](../features/admin.md) - Another example
+- [System Feature](../features/system.md) - Another example
 
 ---
 

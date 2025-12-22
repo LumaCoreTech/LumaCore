@@ -132,7 +132,7 @@ Once a proper user store and role management are implemented, the bootstrap admi
 
 ## Related Features
 
-- [*Admin*](admin.md) — Requires authentication; displays JWT configuration in status
+- [*System*](system.md) — Exposes JWT configuration (sanitized) via configuration endpoint
 
 ---
 
