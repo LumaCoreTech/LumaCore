@@ -68,7 +68,7 @@
 		</PackageReference>
 
 		<!-- Swagger UI (visualization only, OpenAPI generation is native) -->
-		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.0.1" />
+		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.0" />
 
 		<!-- Serilog packages compatible with .NET 8+ -->
 		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
