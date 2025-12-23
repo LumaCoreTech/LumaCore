@@ -22,8 +22,8 @@ which indicate when a capability is planned to reach — or has already reached 
 
 | Phase | Scope |
 |---|---|
-| **0 — Infrastructure Foundation** *(active)* | Versioning, Validation, OpenAPI, JWT Auth, CORS, Security Headers, HTTPS, Health, Proxy, Logging, Static Files, UI Shell, Status Page, System Diagnostics |
-| **1 — LLM Integration & Persistence** *(planned)* | Database (multi-DB), User Store, Ollama (models, health), Chat (sessions, SSE, history), Persona config, Web UI (Login, Chat), Docker |
+| **0 — Infrastructure Foundation** *(active)* | Versioning, Validation, OpenAPI, JWT Auth, CORS, Security Headers, HTTPS, Health, Proxy, Logging, Static Files, UI Shell, Status Page, System Diagnostics, Docker |
+| **1 — LLM Integration & Persistence** *(planned)* | Database (multi-DB), User Store, Ollama (models, health), Chat (sessions, SSE, history), Persona config, Web UI (Login, Chat), Docker Compose (Ollama/DB) |
 | **2 — Storage & Retrieval** *(planned)* | Vector embeddings, Semantic search, RAG, Advanced features (persona switching, search, export), Native deployment (Services), Admin APIs, Config Management, System Dashboard |
 | **3 — Observability & Hardening** *(planned)* | Log viewer, Metrics export, Security hardening (audit, rate limiting) |
 
@@ -192,7 +192,7 @@ The web interface is where users **experience** LumaCore — chat with personas,
 ### Chat UI
 | Capability      | Stage       | Functional Target (Phase) | Hardened Target (Phase) |
 |-----------------|-------------|---------------------------|-----------------|
-| **UI Shell (Layout)**<br/>_Blazor app shell with main layout, navigation, and health indicator in header._ | 🟡 Prototype | ✔ (P0) | P1 |
+| **UI Shell (Layout)**<br/>_Blazor app shell with main layout, navigation, and health indicator in header._ | 🟢 Functional | ✔ (P0) | P1 |
 | **Login UI**<br/>_Login form with credentials input, token storage, and error handling._ | ❌ None | P1 | P2 |
 | **Chat Interface**<br/>_Chat page with message input, history display, and persona integration._ | ❌ None | P1 | P2 |
 | **Message Display**<br/>_Render messages with Markdown support, syntax highlighting, and copy-to-clipboard._ | ❌ None | P1 | P2 |
@@ -209,8 +209,8 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 ### Deployment  
 | Capability         | Stage        | Functional Target (Phase) | Hardened Target (Phase) |
 |--------------------|--------------|---------------------------|-----------------|
-| **Docker Runtime**<br/>_Dockerfile builds LumaCore API + Blazor UI with native health check tool (.NET 10)._ | 🟡 Prototype | P1 | P2 |
-| **Docker Compose**<br/>_Single-container orchestration for LumaCore with volumes and env config. Ollama integration planned._ | 🟡 Prototype | P1 | P2 |
+| **Docker Runtime**<br/>_Dockerfile builds LumaCore API + Blazor UI with native health check tool (.NET 10)._ | 🟢 Functional | ✔ (P0) | P2 |
+| **Docker Compose**<br/>_Single-container orchestration for LumaCore with volumes and env config. Ollama integration planned._ | 🟢 Functional | ✔ (P0) | P2 |
 | **Windows Service (SCM)**<br/>_Run as Windows Service with SCM integration, automatic startup, and recovery options._ | ❌ None | P2 | P3 |
 | **Linux systemd Service**<br/>_Run as systemd service with Restart=always, Type=notify, and proper service management._ | ❌ None | P2 | P3 |
 
@@ -224,6 +224,7 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 |--------------------|--------------|---------------------------|-----------------|
 | **Status Page**<br/>_Blazor page showing backend health status with refresh button and error handling._ | 🟡 Prototype | ✔ (P0) | P1 |
 | **System Diagnostics API**<br/>_Admin-only endpoints for runtime info and configuration inspection with automatic secret masking._ | 🟢 Functional | ✔ (P0) | P1 |
+| **System Metrics API**<br/>_Admin-only endpoint for memory, GC, and runtime metrics. Foundation for Prometheus export._ | ❌ None | P1 | P2 |
 | **System Dashboard**<br/>_Full dashboard with metrics, performance charts, and detailed system information._ | ❌ None | P2 | P3 |
 
 ### Observability
@@ -255,7 +256,7 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - ✅ appsettings.json fully documented with comments
 - ✅ OpenAPI native (.NET 10, PowerShell generator for CI)
 - ✅ System diagnostics API (runtime info, configuration with secret masking)
-- 🟡 Docker ready (Dockerfile, docker-compose.yml, native HealthCheck tool)
+- ✅ Docker ready (Dockerfile, docker-compose.yml, native HealthCheck tool)
 - ⚠️ Hardcoded admin/changeme (bootstrap only, removed in P1)
 
 **Phase 1 (Next):** Make it **useful**
@@ -267,7 +268,8 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - 🎯 Persona configuration (personality, system prompts)
 - 🎯 Chat history storage & session metadata
 - 🎯 Web chat UI (login, chat interface)
-- 🎯 Docker deployment (Runtime + Compose)
+- 🎯 Docker Compose integration (Ollama, Database)
+- 🎯 System metrics API (memory, GC, runtime diagnostics)
 
 **Phase 2 (Later):** Make it **smart** and **manageable**
 - 📌 Vector embeddings & semantic search

@@ -82,12 +82,13 @@ The scope identifies the **affected feature or domain area**.
 
 | Scope | Description |
 |-------|-------------|
-| `docs` | General documentation (when no specific scope applies) |
 | `architecture` | Architecture documentation |
 | `deployment` | Deployment guides and configuration docs |
 | `development` | Development guides and contributor docs |
+| `docs` | General documentation (when no specific scope applies) |
 | `features` | Feature documentation |
 | `guides` | Getting started and how-to guides |
+| `roadmap` | Status tracking, phase planning, design notes |
 
 **Feature Scopes**
 
