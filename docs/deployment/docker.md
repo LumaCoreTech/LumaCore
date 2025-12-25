@@ -177,6 +177,12 @@ services:
 
 Docker Compose automatically merges this with the base file. The container will be killed if it tries to use more than 512 MB of memory. For most LumaCore deployments, 512 MB is plenty — adjust based on your workload.
 
+## Garbage Collection
+
+LumaCore (ASP.NET Core) uses **Server GC** with **DATAS** (Dynamic Adaptation To Application Sizes) by default on .NET 9+. DATAS automatically adjusts heap size based on actual application load — growing under pressure, shrinking when idle. This is ideal for containerized deployments and works well across a wide range of hardware, from Raspberry Pi to multi-core servers.
+
+For most deployments, no GC configuration is needed. If you have specific requirements or want to understand the options, see [Microsoft's GC Configuration Reference](https://learn.microsoft.com/en-us/dotnet/core/runtime-config/garbage-collector).
+
 ## Pushing to a Registry
 
 For team deployments or CI/CD pipelines, you might want to build the image once and push it to a registry. This way, your servers pull a pre-built image instead of building from source.

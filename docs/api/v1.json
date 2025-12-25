@@ -112,8 +112,8 @@
         "tags": [
           "System"
         ],
-        "summary": "Returns runtime information about the LumaCore instance.",
-        "description": "Returns a snapshot of the running LumaCore instance including environment, version, machine name, and current server time. Useful for verifying which instance is being accessed and for time synchronization debugging. Requires the 'admin' role.",
+        "summary": "Returns identity information about the LumaCore instance.",
+        "description": "Returns static identity information including environment, version, machine name, and current server time. For runtime metrics (memory, GC, thread pool), use the /metrics endpoint instead. Requires the 'admin' role.",
         "operationId": "SystemInfo",
         "responses": {
           "200": {
@@ -122,6 +122,36 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SystemInfoResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required to access this endpoint."
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/system/metrics": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Returns runtime metrics for the LumaCore instance.",
+        "description": "Returns a comprehensive snapshot of runtime diagnostics including memory usage, garbage collection statistics, process resources, and thread pool state. Additional metrics may be included from registered features. All values represent a point-in-time snapshot. Requires the 'admin' role.",
+        "operationId": "SystemMetrics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemMetricsResponse"
                 }
               }
             }
@@ -244,7 +274,7 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": { }
+                "schema": {}
               }
             }
           },
@@ -422,6 +452,116 @@
         },
         "description": "Information about the current authenticated user."
       },
+      "ContainerMetrics": {
+        "required": [
+          "limitBytes",
+          "usageBytes"
+        ],
+        "type": "object",
+        "properties": {
+          "limitBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Container memory limit (cgroup hard limit).",
+            "format": "int64"
+          },
+          "usageBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Current container memory usage (what the OOM killer monitors).",
+            "format": "int64"
+          }
+        },
+        "description": "Container memory metrics from cgroup."
+      },
+      "EffectiveMetrics": {
+        "required": [
+          "limitBytes",
+          "usageBytes"
+        ],
+        "type": "object",
+        "properties": {
+          "limitBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "description": "Actual memory ceiling: min of container limit and system RAM. `null` if undetermined.",
+            "format": "int64"
+          },
+          "usageBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Memory usage for utilization: container usage if available, otherwise process working set.",
+            "format": "int64"
+          }
+        },
+        "description": "Computed effective memory limits and usage for utilization calculations."
+      },
+      "GcMetrics": {
+        "required": [
+          "gen0Collections",
+          "gen1Collections",
+          "gen2Collections",
+          "isServerGc",
+          "totalAllocatedBytes"
+        ],
+        "type": "object",
+        "properties": {
+          "gen0Collections": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of Gen0 (ephemeral) garbage collections since process start.",
+            "format": "int32"
+          },
+          "gen1Collections": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of Gen1 garbage collections since process start.",
+            "format": "int32"
+          },
+          "gen2Collections": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of Gen2 (full) garbage collections since process start.",
+            "format": "int32"
+          },
+          "isServerGc": {
+            "type": "boolean",
+            "description": "`true` if Server GC is active (one managed heap per logical CPU);\n`false` for Workstation GC (single managed heap)."
+          },
+          "totalAllocatedBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Cumulative bytes allocated by managed code since process start.",
+            "format": "int64"
+          }
+        },
+        "description": "Garbage collection statistics and configuration."
+      },
       "LoginRequest": {
         "required": [
           "username",
@@ -439,6 +579,172 @@
           }
         },
         "description": "Login credentials submitted by a client to obtain a JWT."
+      },
+      "ManagedHeapMetrics": {
+        "required": [
+          "liveBytes",
+          "heapSizeBytes",
+          "fragmentedBytes",
+          "pinnedObjectsCount",
+          "totalAvailableBytes"
+        ],
+        "type": "object",
+        "properties": {
+          "liveBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Approximate bytes used by live (reachable) managed objects.",
+            "format": "int64"
+          },
+          "heapSizeBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Total size of the managed heap, including live objects and free space.",
+            "format": "int64"
+          },
+          "fragmentedBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Free bytes scattered between allocated objects.",
+            "format": "int64"
+          },
+          "pinnedObjectsCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of pinned objects (cannot be moved by GC).",
+            "format": "int64"
+          },
+          "totalAvailableBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "GC heap budget.\nIn containers: ~75% of container limit.\nWithout containers: typically equals system physical memory.",
+            "format": "int64"
+          }
+        },
+        "description": "Metrics for the managed GC heap."
+      },
+      "MemoryMetrics": {
+        "required": [
+          "managed",
+          "process",
+          "system",
+          "container",
+          "effective"
+        ],
+        "type": "object",
+        "properties": {
+          "managed": {
+            "description": "Managed heap metrics (GC-controlled memory).",
+            "$ref": "#/components/schemas/ManagedHeapMetrics"
+          },
+          "process": {
+            "description": "Process-level memory metrics (OS view).",
+            "$ref": "#/components/schemas/ProcessMemoryMetrics"
+          },
+          "system": {
+            "description": "Host machine memory metrics.",
+            "$ref": "#/components/schemas/SystemMemoryMetrics"
+          },
+          "container": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "Container memory metrics, or `null` if not in a container.",
+                "$ref": "#/components/schemas/ContainerMetrics"
+              }
+            ]
+          },
+          "effective": {
+            "description": "Computed effective limits and usage for utilization calculations.",
+            "$ref": "#/components/schemas/EffectiveMetrics"
+          }
+        },
+        "description": "Memory usage and availability metrics, organized by scope."
+      },
+      "ProcessMemoryMetrics": {
+        "required": [
+          "workingSetBytes",
+          "privateMemoryBytes"
+        ],
+        "type": "object",
+        "properties": {
+          "workingSetBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Physical memory (RAM) used by the process.",
+            "format": "int64"
+          },
+          "privateMemoryBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Committed private virtual memory (RAM + paged to disk).",
+            "format": "int64"
+          }
+        },
+        "description": "Process-level memory metrics as reported by the operating system."
+      },
+      "ProcessMetrics": {
+        "required": [
+          "threadCount",
+          "handleCount",
+          "startTimeUtc",
+          "uptime"
+        ],
+        "type": "object",
+        "properties": {
+          "threadCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of OS threads currently active in the process.",
+            "format": "int32"
+          },
+          "handleCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Number of OS handles (files, sockets, registry keys, etc.) held by the process.",
+            "format": "int32"
+          },
+          "startTimeUtc": {
+            "type": "string",
+            "description": "UTC timestamp when the process started.",
+            "format": "date-time"
+          },
+          "uptime": {
+            "pattern": "^-?(\\d+\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
+            "type": "string",
+            "description": "Duration the process has been running. Serializes as `d.hh:mm:ss.fffffff` (e.g., `1.02:30:45`)."
+          }
+        },
+        "description": "Process-level resource metrics."
       },
       "SystemInfoResponse": {
         "required": [
@@ -466,7 +772,7 @@
               "null",
               "string"
             ],
-            "description": "The full version including prerelease tag and build metadata (e.g.,\n`1.0.0-alpha+abc123de`)."
+            "description": "The full version including prerelease tag and build metadata (e.g., `1.0.0-alpha+abc123de`)."
           },
           "machineName": {
             "type": "string",
@@ -478,7 +784,149 @@
             "format": "date-time"
           }
         },
-        "description": "Response containing runtime information about the LumaCore instance."
+        "description": "Response containing identity information about the LumaCore instance."
+      },
+      "SystemMemoryMetrics": {
+        "required": [
+          "totalPhysicalBytes",
+          "availablePhysicalBytes"
+        ],
+        "type": "object",
+        "properties": {
+          "totalPhysicalBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "description": "Total physical RAM, or `null` if unavailable.",
+            "format": "int64"
+          },
+          "availablePhysicalBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "description": "Available physical RAM, or `null` if unavailable.",
+            "format": "int64"
+          }
+        },
+        "description": "Physical host machine memory metrics."
+      },
+      "SystemMetricsResponse": {
+        "required": [
+          "timestamp",
+          "gc",
+          "memory",
+          "process",
+          "threadPool"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "description": "UTC time when this metrics snapshot was captured.",
+            "format": "date-time"
+          },
+          "gc": {
+            "description": "Garbage collection metrics including collection counts and configuration.",
+            "$ref": "#/components/schemas/GcMetrics"
+          },
+          "memory": {
+            "description": "Memory usage metrics including managed heap, process memory, and system memory.",
+            "$ref": "#/components/schemas/MemoryMetrics"
+          },
+          "process": {
+            "description": "Process-level metrics including thread count, handle count, and uptime.",
+            "$ref": "#/components/schemas/ProcessMetrics"
+          },
+          "threadPool": {
+            "description": ".NET thread pool metrics including available threads and pending work items.",
+            "$ref": "#/components/schemas/ThreadPoolMetrics"
+          }
+        },
+        "description": "Response containing runtime metrics for the LumaCore instance."
+      },
+      "ThreadPoolMetrics": {
+        "required": [
+          "availableWorkerThreads",
+          "availableCompletionPortThreads",
+          "minWorkerThreads",
+          "minCompletionPortThreads",
+          "maxWorkerThreads",
+          "maxCompletionPortThreads",
+          "pendingWorkItemCount"
+        ],
+        "type": "object",
+        "properties": {
+          "availableWorkerThreads": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Remaining worker thread capacity.",
+            "format": "int32"
+          },
+          "availableCompletionPortThreads": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Remaining I/O completion port thread capacity.",
+            "format": "int32"
+          },
+          "minWorkerThreads": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Minimum worker threads before throttled creation.",
+            "format": "int32"
+          },
+          "minCompletionPortThreads": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Minimum I/O completion port threads.",
+            "format": "int32"
+          },
+          "maxWorkerThreads": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Maximum worker threads the pool can create.",
+            "format": "int32"
+          },
+          "maxCompletionPortThreads": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Maximum I/O completion port threads the pool can create.",
+            "format": "int32"
+          },
+          "pendingWorkItemCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "description": "Work items queued and waiting for a thread to become available.",
+            "format": "int64"
+          }
+        },
+        "description": "Thread pool state metrics."
       }
     },
     "securitySchemes": {

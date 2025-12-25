@@ -37,6 +37,10 @@ This guide provides practical, hands-on instructions for building features. It c
 8. [Troubleshooting](#troubleshooting)
 9. [Real-World Example: Auth Feature](#real-world-example-auth-feature)
 10. [Advanced Topics](#advanced-topics)
+    - [Feature Flags](#feature-flags)
+    - [Feature Versioning](#feature-versioning)
+    - [Feature Dependencies](#feature-dependencies)
+    - [Metrics Contributors](#metrics-contributors)
 
 ---
 
@@ -1521,6 +1525,86 @@ builder.AddMyFeature();        // Depends on Auth
 ```
 
 If a dependency is missing, you'll typically get a runtime error when DI can't resolve a required service. Document dependencies clearly in the feature's README so developers know what to register.
+
+### Metrics Contributors
+
+Features can contribute their own metrics to the `/api/v1/system/metrics` endpoint. This enables centralized monitoring of all feature health and performance data.
+
+**Step 1: Implement the Interface**
+
+The `IMetricsContributor` interface lives in `LumaCore.Core.Diagnostics`:
+
+```csharp
+using LumaCore.Core.Diagnostics;
+
+public sealed class MyFeatureMetricsContributor : IMetricsContributor
+{
+    private readonly IMyFeatureClient mClient;
+    
+    public MyFeatureMetricsContributor(IMyFeatureClient client)
+    {
+        mClient = client;
+    }
+    
+    public async Task<object> CollectAsync(CancellationToken cancellationToken)
+    {
+        // Collect feature-specific metrics
+        var status = await mClient.GetStatusAsync(cancellationToken).ConfigureAwait(false);
+        
+        return new
+        {
+            ItemsProcessed = status.ProcessedCount,
+            QueueDepth = status.PendingItems,
+            IsHealthy = status.IsReady
+        };
+    }
+}
+```
+
+**Step 2: Register with a Unique Section Name**
+
+In your feature's `ServiceRegistration.cs`, register the contributor with a unique section name:
+
+```csharp
+public static WebApplicationBuilder AddMyFeature(this WebApplicationBuilder builder)
+{
+    // ... other registrations ...
+    
+    // Register metrics contributor
+    builder.AddMetricsContributor<MyFeatureMetricsContributor>("myfeature");
+    
+    return builder;
+}
+```
+
+**Validation:** Section names are validated at registration time. If you try to register a duplicate name or a name that conflicts with reserved names (`timestamp`, `_errors`) or existing contributors, the application will fail to start with a clear error message.
+
+**Sorting:** All metric sections are sorted alphabetically by name. The only exceptions are `timestamp` (always first) and `_errors` (always last, if present).
+
+**Error Handling:** If your contributor throws an exception during collection, its section is set to `null` and the error details appear in a separate `_errors` section:
+
+```json
+{
+  "timestamp": "2025-12-23T12:00:00Z",
+  "gc": { ... },
+  "memory": { ... },
+  "myfeature": null,
+  "process": { ... },
+  "threadPool": { ... },
+  "_errors": {
+    "myfeature": "HttpRequestException: Connection refused"
+  }
+}
+```
+
+This keeps the schema for each section stable — clients can rely on the expected structure or `null`, and optionally inspect `_errors` for diagnostics.
+
+**Best Practices:**
+
+- Keep collection fast — the metrics endpoint should respond quickly
+- Use caching for expensive operations (return cached data with a staleness indicator)
+- Return meaningful data even when the feature is degraded
+- Use lowercase, descriptive section names (e.g., `chat`, `database`)
 
 ---
 

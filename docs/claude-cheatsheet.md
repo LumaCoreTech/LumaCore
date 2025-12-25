@@ -1,17 +1,17 @@
 # Claude LumaCore Cheatsheet
 
-Kondensierte Regeln für die Arbeit an LumaCore. Bei Unsicherheit: Originaldokumente konsultieren.
+Condensed rules for working on LumaCore. When in doubt: consult the original documents.
 
 ---
 
-## Code-Formatierung
+## Code Formatting
 
-- **Max. Zeilenlänge:** 120 Zeichen
-- **Indentation:** Tabs (nicht Spaces)
-- **Line Endings:** LF (außer Windows-Scripts)
-- **Encoding:** UTF-8 ohne BOM
+- **Line length:** Max 120 characters — but *use* the available width, don't break unnecessarily at 80
+- **Indentation:** Tabs (not spaces)
+- **Line endings:** LF (except Windows scripts)
+- **Encoding:** UTF-8 without BOM
 
-### File Header (jede .cs Datei)
+### File Header (every .cs file)
 
 ```csharp
 // Copyright (c) 2025 LumaCoreTech
@@ -19,14 +19,14 @@ Kondensierte Regeln für die Arbeit an LumaCore. Bei Unsicherheit: Originaldokum
 // Project: https://github.com/LumaCoreTech/LumaCore
 ```
 
-### Using-Reihenfolge (mit Leerzeilen getrennt)
+### Using Order (separated by blank lines)
 
 1. System.*
 2. Microsoft.*
 3. Third-party (Serilog, etc.)
 4. LumaCore.*
 
-### Member-Reihenfolge in Klassen
+### Member Order in Classes
 
 1. Constants
 2. Static fields (`s` prefix)
@@ -41,9 +41,9 @@ Kondensierte Regeln für die Arbeit an LumaCore. Bei Unsicherheit: Originaldokum
 
 ## Naming
 
-| Element | Konvention | Beispiel |
-|---------|------------|----------|
-| Klasse/Record/Interface | PascalCase (`I` prefix) | `JwtTokenFactory`, `IJwtTokenFactory` |
+| Element | Convention | Example |
+|---------|------------|---------|
+| Class/Record/Interface | PascalCase (`I` prefix) | `JwtTokenFactory`, `IJwtTokenFactory` |
 | Method/Property | PascalCase | `CreateToken`, `AccessToken` |
 | Instance field | `m` + camelCase | `mLogger`, `mOptions` |
 | Static field | `s` + camelCase | `sDefaultValue`, `sCache` |
@@ -56,62 +56,84 @@ Kondensierte Regeln für die Arbeit an LumaCore. Bei Unsicherheit: Originaldokum
 
 ## Types
 
-- `class` für Services, Behavior → `sealed` by default
-- `record` für DTOs, Configs, Value-Equality
-- `readonly struct` wenn Value-Type nötig
-- `static class` nur für Extension Methods
+- `class` for services, behavior → `sealed` by default
+- `record` for DTOs, configs, value equality
+- `readonly struct` when value type is needed
+- `static class` only for extension methods
+
+---
+
+## Contracts vs. Core Documentation
+
+**Contracts (API consumer view):** What does the value mean? How do I interpret it?
+
+**Core (developer view):** Same as Contracts + implementation details (configuration, APIs, OS specifics)
+
+| Contracts ✓ | Core ✓ (additionally) |
+|-------------|----------------------|
+| `.NET`, `managed heap` | `DOTNET_GCHeapHardLimit` |
+| `Server GC`, `IOCP`, `cgroup` | `runtimeconfig.json`, `epoll/kqueue` |
+| Concepts (throttling) | Concrete values (`500ms`) |
+| WHAT the value means | HOW it's retrieved/configured |
 
 ---
 
 ## Async/Await
 
-- **`ConfigureAwait(false)`** in allen Library/Service-Methoden
-- **Niemals** `.Result` oder `.Wait()` – async all the way
-- `Task` by default, `ValueTask` nur wenn profiled
+- **`ConfigureAwait(false)`** in all library/service methods
+- **Never** `.Result` or `.Wait()` – async all the way
+- `Task` by default, `ValueTask` only when profiled
 
 ---
 
 ## Null Handling
 
 ```csharp
-public string Name { get; set; } = string.Empty;     // Nie null
-public string? OptionalName { get; set; }            // Explizit nullable
-public List<User> Users { get; set; } = [];          // Collections nie null
+public string Name { get; set; } = string.Empty;     // Never null
+public string? OptionalName { get; set; }            // Explicitly nullable
+public List<User> Users { get; set; } = [];          // Collections never null
 
-ArgumentNullException.ThrowIfNull(user);             // Moderne Prüfung
+ArgumentNullException.ThrowIfNull(user);             // Modern validation
 ```
 
 ---
 
 ## XML Documentation
 
-Alle public Members dokumentieren.
+Document all public members. **Use the 120 characters** – don't break unnecessarily at 85.
+Break at logical points (end of sentence, new thought).
 
 ```csharp
 /// <summary>Brief description.</summary>
-/// <param name="name">Parameter.</param>
+/// <remarks>
+///     <para><b>Section header</b></para>
+///     <para>Detailed explanation that uses the full 120 characters available per line for better readability.</para>
+/// </remarks>
+/// <param name="name">Short, factual description.</param>
 /// <returns>Return value.</returns>
 /// <exception cref="Exception">When thrown.</exception>
 ```
 
-| Tag | Verwendung |
-|-----|------------|
-| `<see cref="Type"/>` | Link zu Type/Member |
+**Important:** `<remarks>` only at type/member level, **never** inside `<param>`!
+
+| Tag | Usage |
+|-----|-------|
+| `<see cref="Type"/>` | Link to type/member |
 | `<see langword="null"/>` | Keywords (`null`, `true`, `false`) |
-| `<c>code</c>` | Inline code (Strings, Zahlen) |
-| `<paramref name="x"/>` | Parameter referenzieren |
+| `<c>code</c>` | Inline code (strings, numbers) |
+| `<paramref name="x"/>` | Reference parameter |
 
 ---
 
-## Feature-Struktur
+## Feature Structure
 
 ```
 Features/
 └── FeatureName/
     ├── ServiceRegistration.cs    // AddFeature(), AddFeatureCore()
-    ├── EndpointMapping.cs        // MapFeature() - nur wenn API-Endpoints
-    ├── FeatureOptions.cs         // Options-Klasse mit SectionName
-    └── [weitere Services]
+    ├── EndpointMapping.cs        // MapFeature() - only if API endpoints
+    ├── FeatureOptions.cs         // Options class with SectionName
+    └── [additional services]
 ```
 
 ### ServiceRegistration Pattern
@@ -132,7 +154,7 @@ internal static void AddMyFeatureCore(IServiceCollection services, IConfiguratio
 
 ### Options Registration
 
-**Immer** `AddFeatureOptions<T>()` verwenden – nie raw `AddOptions<T>().Bind()`.
+**Always** use `AddFeatureOptions<T>()` – never raw `AddOptions<T>().Bind()`.
 
 ```csharp
 services.AddFeatureOptions<MyOptions>(configuration, MyOptions.SectionName);
@@ -145,7 +167,7 @@ public static RouteGroupBuilder MapMyFeature(this RouteGroupBuilder group)
 {
     group.MapGet("/path", (IService svc) => { ... })
         .MapToApiVersion(ApiVersions.V1)
-        .RequireAuthorization()  // oder .AllowAnonymous()
+        .RequireAuthorization()  // or .AllowAnonymous()
         .Produces<ResponseType>(StatusCodes.Status200OK)
         .WithSummary("Short summary")
         .WithDescription("Longer description.")
@@ -155,7 +177,7 @@ public static RouteGroupBuilder MapMyFeature(this RouteGroupBuilder group)
 }
 ```
 
-**Beachte:** 401/403 werden automatisch vom `SecurityResponsesTransformer` hinzugefügt.
+**Note:** 401/403 are automatically added by `SecurityResponsesTransformer`.
 
 ---
 
@@ -171,17 +193,17 @@ public static RouteGroupBuilder MapMyFeature(this RouteGroupBuilder group)
 
 `feat` | `fix` | `docs` | `refactor` | `test` | `perf` | `style` | `chore` | `revert`
 
-### Scopes (Auswahl)
+### Scopes (selection)
 
 `api` | `auth` | `core` | `health` | `openapi` | `cors` | `errors` | `roadmap` | `system` | `docs` | `build` | `ci`
 
-### Regeln
+### Rules
 
-- Header max. 72 Zeichen
-- Type/Scope lowercase, Subject Großbuchstabe am Anfang
-- Imperative mood: "Add feature" nicht "Added feature"
-- Kein Punkt am Ende
-- Body bei nicht-trivialen Changes
+- Header max 72 characters
+- Type/Scope lowercase, Subject capitalized
+- Imperative mood: "Add feature" not "Added feature"
+- No period at the end
+- Body for non-trivial changes
 
 ### Breaking Changes
 
@@ -195,10 +217,17 @@ BREAKING CHANGE: Response field "token" renamed to "accessToken".
 
 ## Feature Documentation (system.md etc.)
 
-### Struktur
+### Markdown Rules
 
-1. Title + Intro (Prosa, kein Bullet-List)
-2. Endpoints (falls vorhanden)
+- **Headings:** Never wrap (breaks Markdown rendering)
+- **Body text:** One paragraph = one line, renderer handles wrapping
+- **Intentional line breaks:** Two trailing spaces (`  `) for stylistic breaks
+- **Blank line** between paragraphs
+
+### Structure
+
+1. Title + Intro (prose, no bullet lists)
+2. Endpoints (if applicable)
 3. Configuration
 4. Registered Services
 5. Pipeline Order
@@ -206,40 +235,41 @@ BREAKING CHANGE: Response field "token" renamed to "accessToken".
 7. Related Features
 8. Copyright Footer
 
-### Stil
+### Style
 
-- Feature-Name in Prosa: *kursiv* (`*Auth*`)
-- Keine JSON-Beispiele in Endpoints (→ OpenAPI)
-- Keine .NET-Interna (`ClaimsPrincipal`, `AddOptions<T>()`)
-- Behavior als Prosa beschreiben, nicht als Liste
-- `**Requires:** admin role` bei geschützten Endpoints
+- Feature name in prose: *italics* (`*Auth*`)
+- No JSON examples in Endpoints (→ OpenAPI)
+- No .NET internals (`ClaimsPrincipal`, `AddOptions<T>()`)
+- Describe behavior as prose, not as lists
+- `**Requires:** admin role` for protected endpoints
 
 ---
 
-## Prinzipien (Kurzfassung)
+## Principles (Summary)
 
 - **SOLID** – SRP, OCP, LSP, ISP, DIP
-- **DRY** – Don't Repeat Yourself (aber nicht über-abstrahieren)
+- **DRY** – Don't Repeat Yourself (but don't over-abstract)
 - **KISS** – Keep It Simple, Stupid
 - **YAGNI** – You Ain't Gonna Need It
 
-**Goldene Regel:** Wenn du "vielleicht später" denkst → baue es nicht.
+**Golden rule:** If you think "maybe later" → don't build it.
 
 ---
 
-## Quick Checklist vor Commit
+## Quick Checklist Before Commit
 
-- [ ] Max. 120 Zeichen pro Zeile
-- [ ] Copyright Header vorhanden
-- [ ] Usings sortiert (System → Microsoft → Third-party → LumaCore)
-- [ ] `m` prefix für Instance Fields, `s` für Static
-- [ ] `sealed` auf Klassen (außer wenn Vererbung geplant)
-- [ ] `ConfigureAwait(false)` bei async
-- [ ] XML Docs auf public Members
-- [ ] Options via `AddFeatureOptions<T>()` registriert
-- [ ] Endpoints haben `MapToApiVersion()` und Auth-Deklaration
-- [ ] Commit Message folgt Conventional Commits
+- [ ] Line length: Max 120 characters, but also use the width
+- [ ] Copyright header present
+- [ ] Usings sorted (System → Microsoft → Third-party → LumaCore)
+- [ ] `m` prefix for instance fields, `s` for static
+- [ ] `sealed` on classes (unless inheritance is planned)
+- [ ] `ConfigureAwait(false)` on async
+- [ ] XML docs on public members
+- [ ] Options via `AddFeatureOptions<T>()` registered
+- [ ] Endpoints have `MapToApiVersion()` and auth declaration
+- [ ] Markdown: headings never wrap
+- [ ] Commit message follows Conventional Commits
 
 ---
 
-© 2025 LumaCoreTech • Für Claude's internen Gebrauch
+© 2025 LumaCoreTech • For Claude's internal use

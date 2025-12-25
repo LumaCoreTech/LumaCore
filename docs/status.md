@@ -22,8 +22,8 @@ which indicate when a capability is planned to reach — or has already reached 
 
 | Phase | Scope |
 |---|---|
-| **0 — Infrastructure Foundation** *(active)* | Versioning, Validation, OpenAPI, JWT Auth, CORS, Security Headers, HTTPS, Health, Proxy, Logging, Static Files, UI Shell, Status Page, System Diagnostics, Docker |
-| **1 — LLM Integration & Persistence** *(planned)* | Database (multi-DB), User Store, Ollama (models, health), Chat (sessions, SSE, history), Persona config, Web UI (Login, Chat), Docker Compose (Ollama/DB) |
+| **0 — Infrastructure Foundation** *(complete)* | Versioning, Validation, OpenAPI, JWT Auth, CORS, Security Headers, HTTPS, Health, Proxy, Logging, Static Files, UI Shell, Status Page, System Diagnostics, Docker |
+| **1 — LLM Integration & Persistence** *(active)* | Database (multi-DB), User Store, Ollama (models, health), Chat (sessions, SSE, history), Persona config, Web UI (Login, Chat), Docker Compose (Ollama/DB) |
 | **2 — Storage & Retrieval** *(planned)* | Vector embeddings, Semantic search, RAG, Advanced features (persona switching, search, export), Native deployment (Services), Admin APIs, Config Management, System Dashboard |
 | **3 — Observability & Hardening** *(planned)* | Log viewer, Metrics export, Security hardening (audit, rate limiting) |
 
@@ -224,7 +224,7 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 |--------------------|--------------|---------------------------|-----------------|
 | **Status Page**<br/>_Blazor page showing backend health status with refresh button and error handling._ | 🟡 Prototype | ✔ (P0) | P1 |
 | **System Diagnostics API**<br/>_Admin-only endpoints for runtime info and configuration inspection with automatic secret masking._ | 🟢 Functional | ✔ (P0) | P1 |
-| **System Metrics API**<br/>_Admin-only endpoint for memory, GC, and runtime metrics. Foundation for Prometheus export._ | ❌ None | P1 | P2 |
+| **System Metrics API**<br/>_Admin-only endpoint for memory, GC, process, and thread pool metrics. Extensible via IMetricsContributor for feature-specific metrics._ | 🟢 Functional | ✔ (P1) | P1 |
 | **System Dashboard**<br/>_Full dashboard with metrics, performance charts, and detailed system information._ | ❌ None | P2 | P3 |
 
 ### Observability
@@ -237,7 +237,7 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 
 ## 📊 Implementation Priority
 
-**Phase 0 (Current):** Foundation is stable
+**Phase 0 (Complete):** Foundation is stable
 - ✅ Basic API structure exists
 - ✅ API Versioning (URL segment `/api/v1/` with validation)
 - ✅ Request validation (DataAnnotations with ProblemDetails)
@@ -252,14 +252,15 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - ✅ Config validation on startup
 - ✅ Structured logging with TraceId correlation
 - ✅ Error handling with RFC 7807 ProblemDetails and TraceId (20 status codes mapped)
-- ✅ HTTPS works (Kestrel) — documentation needed
+- ✅ HTTPS works (Kestrel)
 - ✅ appsettings.json fully documented with comments
 - ✅ OpenAPI native (.NET 10, PowerShell generator for CI)
 - ✅ System diagnostics API (runtime info, configuration with secret masking)
 - ✅ Docker ready (Dockerfile, docker-compose.yml, native HealthCheck tool)
 - ⚠️ Hardcoded admin/changeme (bootstrap only, removed in P1)
 
-**Phase 1 (Next):** Make it **useful**
+**Phase 1 (Active):** Make it **useful**
+- ✅ System metrics API (memory, GC, process, thread pool with extensible IMetricsContributor)
 - 🎯 Database support (EF Core + multi-DB: SQLite, PostgreSQL, MySQL, MSSQL)
 - 🎯 User store & user management API (replaces hardcoded admin/changeme)
 - 🎯 Ollama integration (models, health checks, configuration)
@@ -269,7 +270,6 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - 🎯 Chat history storage & session metadata
 - 🎯 Web chat UI (login, chat interface)
 - 🎯 Docker Compose integration (Ollama, Database)
-- 🎯 System metrics API (memory, GC, runtime diagnostics)
 
 **Phase 2 (Later):** Make it **smart** and **manageable**
 - 📌 Vector embeddings & semantic search

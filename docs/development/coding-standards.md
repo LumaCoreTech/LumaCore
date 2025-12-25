@@ -847,6 +847,34 @@ Start with `<summary>` to explain *what* it does — this is what appears in Int
 public string CreateToken(ClaimsPrincipal principal)
 ```
 
+### Line Width in XML Documentation
+
+XML documentation comments follow the same 120-character line limit as code. **Use the available width** — don't break lines unnecessarily short. Longer lines improve readability by keeping related text together.
+
+```csharp
+// ❌ Too short — breaks mid-thought, harder to read
+/// <param name="ManagedLiveBytes">
+/// Approximate bytes used by live managed objects. This is memory
+/// that cannot be reclaimed because objects are still reachable.
+/// </param>
+
+// ✅ Better — uses available width, keeps thoughts together
+/// <param name="ManagedLiveBytes">
+/// Approximate bytes used by live managed objects. This is memory that cannot be reclaimed
+/// because objects are still reachable. A steadily growing value may indicate a memory leak.
+/// </param>
+```
+
+Break lines at logical points (end of sentence, before a new thought) rather than at arbitrary column positions.
+
+### Contracts vs. Core Documentation
+
+Documentation depth differs between API contracts (DTOs for external consumers) and Core types (internal implementation):
+
+**Contracts (Api.Contracts):** Document *what* the value means and how to interpret it. Include enough context to understand the metric but omit gory implementation details.
+
+**Core:** Document everything in Contracts *plus* implementation details: configuration options, OS-specific mechanisms, exact thresholds, and API sources.
+
 ### XML Documentation Tags
 
 #### Core Tags
@@ -965,8 +993,7 @@ public int? HttpsPort { get; set; }
 | `<value>` | What the value is | Valid values, defaults, constraints |
 | `<remarks>` | Why it matters | Context, warnings, usage guidance |
 
-If a property only needs value documentation (no context), use `<value>` alone.
-If it only needs context (value is obvious), use `<remarks>` alone.
+If a property only needs value documentation (no context), use `<value>` alone. If it only needs context (value is obvious), use `<remarks>` alone.
 
 **Rule of thumb:**
 - If the reader should be able to navigate to a definition → `<see cref=""/>`
@@ -1934,6 +1961,7 @@ An `.editorconfig` file at the repository root configures basic formatting:
 - **Indentation:** tabs (`indent_style = tabs`)
 - **Indent size:** displayed as 4 spaces by default (`indent_size = 4`)
 - **Max line length:** 120 characters for code files (`max_line_length = 120` for `.cs`, `.razor`, etc.)
+  - Use the available width — don't break lines unnecessarily short at 80 when 120 is available
 - **Encoding:** UTF-8 without BOM (`charset = utf-8`)
 - **Line endings:** LF for all source files (`end_of_line = lf`)
   - Exception: Windows scripts (`.bat`, `.cmd`, `.ps1`, `.psm1`, `.psd1`) may use CRLF where required
@@ -1954,6 +1982,14 @@ Windows PowerShell and batch scripts get CRLF because Windows Command Prompt and
 
 > [!TIP]
 > If your editor doesn't seem to respect the settings, check that it is opened **at or below** the repository root so that `.editorconfig` is discovered.
+
+### Markdown Documentation
+
+Markdown files (`.md`) follow slightly different rules than code:
+
+- **Headings:** Never wrap (wrapped headings break Markdown rendering)
+- **Body text:** One paragraph = one line, renderer handles wrapping
+- **Intentional line breaks:** Use two trailing spaces (`  `) for stylistic breaks within a paragraph
 
 ### Code Analysis Tools
 

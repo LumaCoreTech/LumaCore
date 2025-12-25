@@ -17,7 +17,8 @@ namespace LumaCore.Api.Features.System;
 ///     <para>
 ///     The System feature exposes diagnostic endpoints for monitoring and troubleshooting:
 ///     <list type="bullet">
-///         <item><c>GET /api/v1/system/info</c> – Runtime information (environment, version, machine)</item>
+///         <item><c>GET /api/v1/system/info</c> – Instance identity (environment, version, machine)</item>
+///         <item><c>GET /api/v1/system/metrics</c> – Runtime metrics (memory, GC, process, thread pool)</item>
 ///         <item><c>GET /api/v1/system/configuration</c> – All configuration sections with secrets masked</item>
 ///         <item><c>GET /api/v1/system/configuration/{section}</c> – A specific configuration section</item>
 ///         <item><c>GET /api/v1/system/configuration/{section}/{key}</c> – A specific configuration value</item>
@@ -42,7 +43,7 @@ static class EndpointMapping
 
 		// ────────────────────────────────────────────────────────────────────────
 		// GET /api/v1/system/info
-		// Returns runtime information about the LumaCore instance.
+		// Returns identity information about the LumaCore instance.
 		// ────────────────────────────────────────────────────────────────────────
 		group.MapGet(
 				"/info",
@@ -75,13 +76,37 @@ static class EndpointMapping
 			.MapToApiVersion(ApiVersions.V1)
 			.RequireAuthorization(policy => policy.RequireRole("admin"))
 			.Produces<V1.SystemInfoResponse>(StatusCodes.Status200OK)
-			.WithSummary("Returns runtime information about the LumaCore instance.")
+			.WithSummary("Returns identity information about the LumaCore instance.")
 			.WithDescription(
-				"Returns a snapshot of the running LumaCore instance including environment, " +
-				"version, machine name, and current server time. Useful for verifying " +
-				"which instance is being accessed and for time synchronization debugging. " +
-				"Requires the 'admin' role.")
+				"Returns static identity information including environment, version, machine name, " +
+				"and current server time. For runtime metrics (memory, GC, thread pool), use the " +
+				"/metrics endpoint instead. Requires the 'admin' role.")
 			.WithName("SystemInfo");
+
+		// ────────────────────────────────────────────────────────────────────────
+		// GET /api/v1/system/metrics
+		// Returns runtime metrics for monitoring and diagnostics.
+		// ────────────────────────────────────────────────────────────────────────
+		group.MapGet(
+				"/metrics",
+				async (MetricsAggregator aggregator, CancellationToken cancellationToken) =>
+				{
+					V1.SystemMetricsResponse response = await aggregator
+						                                    .CollectAllAsync(cancellationToken)
+						                                    .ConfigureAwait(false);
+
+					return Results.Ok(response);
+				})
+			.MapToApiVersion(ApiVersions.V1)
+			.RequireAuthorization(policy => policy.RequireRole("admin"))
+			.Produces<V1.SystemMetricsResponse>(StatusCodes.Status200OK)
+			.WithSummary("Returns runtime metrics for the LumaCore instance.")
+			.WithDescription(
+				"Returns a comprehensive snapshot of runtime diagnostics including memory usage, " +
+				"garbage collection statistics, process resources, and thread pool state. " +
+				"Additional metrics may be included from registered features. " +
+				"All values represent a point-in-time snapshot. Requires the 'admin' role.")
+			.WithName("SystemMetrics");
 
 		// ────────────────────────────────────────────────────────────────────────
 		// GET /api/v1/system/configuration

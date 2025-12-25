@@ -107,8 +107,13 @@ LumaCore.Api.Contracts/
 
 #### LumaCore.Core
 **Type:** `Microsoft.NET.Sdk` (class library)  
-**Purpose:** Core persona logic, memory, and intelligence  
-**Status:** Empty — reserved for future implementation
+**Purpose:** Core abstractions, diagnostics, and shared functionality  
+**Status:** Operational with diagnostics infrastructure
+
+**Current responsibilities:**
+- Runtime diagnostics (memory, GC, process, thread pool metrics)
+- `IMetricsContributor` interface for extensible metrics
+- Shared abstractions used across features
 
 **Planned responsibilities:**
 - Persona runtime and state management
@@ -120,6 +125,16 @@ LumaCore.Api.Contracts/
 - **Testability** — Core logic can be unit tested without HTTP
 - **Reusability** — Could be used by CLI, desktop app, or other frontends
 - **Clarity** — Clear separation between communication (API) and intelligence (Core)
+
+**Structure:**
+```
+LumaCore.Core/
+└── Diagnostics/
+    ├── IMetricsContributor.cs       # Interface for metrics extensibility
+    ├── *Metrics.cs                  # Diagnostic snapshots (Memory, Gc, Process, ThreadPool)
+    ├── *MetricsFactory.cs           # Static factories for snapshot creation
+    └── *MetricsContributor.cs       # Built-in contributors for DI integration
+```
 
 ---
 

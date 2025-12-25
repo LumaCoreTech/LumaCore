@@ -44,6 +44,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenApi", "OpenApi", "{D3C2C9BE-AF6C-44FB-B2C2-4BE20F179036}"
 	ProjectSection(SolutionItems) = preProject
 		build.net\OpenApi\generate-api-docs.ps1 = build.net\OpenApi\generate-api-docs.ps1
+		build.net\OpenApi\generate-openapi-json.ps1 = build.net\OpenApi\generate-openapi-json.ps1
 		build.net\OpenApi\README.md = build.net\OpenApi\README.md
 		build.net\OpenApi\verify-api-docs.ps1 = build.net\OpenApi\verify-api-docs.ps1
 	EndProjectSection
