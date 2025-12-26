@@ -1,0 +1,171 @@
+@using System.Net
+@using System.Text.Json
+@inject HttpClient Http
+
+@*
+	StatusContent Component - Reusable status monitoring logic
+	
+	This component can be embedded in:
+	- Admin Overlay (modal)
+	- Standalone Status page
+	- Future: Dashboard widgets
+	
+	Shows backend health check status and allows manual refresh.
+*@
+
+<h2>Instance Status</h2>
+
+@if (mIsLoading)
+{
+	@* Initial and refresh state while the health check is running *@
+	<p>Checking backend health…</p>
+}
+else if (mError is not null)
+{
+	@* Error state if the health endpoint cannot be reached or returns invalid data *@
+	<p class="lc-status-badge lc-status-badge-error">Backend unreachable</p>
+	<p class="lc-note">@mError</p>
+}
+else if (mStatus is not null)
+{
+	@* Healthy state with the reported status text from the backend *@
+	<p class="lc-status-badge lc-status-badge-ok">Backend reachable</p>
+	<p class="lc-note">Reported status: @mStatus</p>
+}
+else
+{
+	@* Fallback in case no explicit status text was returned *@
+	<p class="lc-status-badge">Backend status unknown</p>
+	<p class="lc-note">
+		The backend did not return a status value. Check the orchestrator logs
+		or retry the health check.
+	</p>
+}
+
+<p>
+	<button class="lc-button lc-button-secondary" @onclick="OnRefreshAsync" disabled="@mIsLoading">
+		@(mIsLoading ? "Checking…" : "Recheck backend health")
+	</button>
+</p>
+
+@code
+{
+	// Indicates whether a health check request is currently in progress.
+	private bool mIsLoading = true;
+
+	// Holds the last error message from a failed health check, if any.
+	private string? mError;
+
+	// Holds the textual status reported by the backend, if available.
+	private string? mStatus;
+
+	/// <summary>
+	/// Called by the Blazor framework when the component is first initialized.
+	/// Triggers the initial backend health check.
+	/// </summary>
+	/// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+	protected override Task OnInitializedAsync()
+	{
+		return LoadStatusAsync();
+	}
+
+	/// <summary>
+	/// Handles clicks on the "Recheck backend health" button by re-running the health check workflow.
+	/// </summary>
+	/// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+	private Task OnRefreshAsync()
+	{
+		return LoadStatusAsync();
+	}
+
+	/// <summary>
+	/// Calls the backend live health endpoint and updates the local status fields.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     Sends an HTTP GET request to the <c>api/v1/health/live</c> endpoint and distinguishes between:
+	///     HTTP status failures, payload format issues, and a valid JSON response.
+	///     </para>
+	/// </remarks>
+	/// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+	private async Task LoadStatusAsync()
+	{
+		// Reset state for a fresh health check.
+		mIsLoading = true;
+		mError = null;
+		mStatus = null;
+
+		try
+		{
+			// Perform a lightweight GET request and inspect the status code explicitly.
+			using HttpResponseMessage response =
+				await Http.GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				mError = MapHttpError(response.StatusCode);
+				return;
+			}
+
+			try
+			{
+				// Attempt to deserialize the JSON payload into the shared API contract.
+				var dto = await response.Content.ReadFromJsonAsync<ApiHealthLiveResponse>();
+
+				if (dto is null)
+				{
+					mError = "Backend health endpoint returned an empty response.";
+				}
+				else if (string.IsNullOrWhiteSpace(dto.Status))
+				{
+					mError = "Backend health endpoint returned an empty status value.";
+				}
+				else
+				{
+					mStatus = dto.Status;
+				}
+			}
+			catch (JsonException)
+			{
+				mError = "Backend health endpoint returned data in an unexpected format.";
+			}
+		}
+		catch (HttpRequestException ex)
+		{
+			mError = $"Could not reach backend health endpoint: {ex.Message}";
+		}
+		catch (Exception ex)
+		{
+			mError = $"Unexpected error while checking backend health: {ex.Message}";
+		}
+		finally
+		{
+			// Ensure the loading flag is reset so the UI can leave the "Checking…" state.
+			mIsLoading = false;
+		}
+	}
+
+	/// <summary>
+	/// Maps a non-success HTTP status code from the backend health endpoint to a user-friendly error message.
+	/// </summary>
+	/// <param name="statusCode">The HTTP status code returned by the backend.</param>
+	/// <returns>A short descriptive error message.</returns>
+	private static string MapHttpError(HttpStatusCode statusCode)
+	{
+		int code = (int)statusCode;
+
+		return statusCode switch
+		{
+			HttpStatusCode.NotFound =>
+				"Backend health endpoint not found (HTTP 404).",
+			HttpStatusCode.ServiceUnavailable =>
+				"Backend service unavailable (HTTP 503).",
+			HttpStatusCode.Unauthorized =>
+				"Backend requires authentication for the health endpoint (HTTP 401).",
+			HttpStatusCode.Forbidden =>
+				"Access to the backend health endpoint is forbidden (HTTP 403).",
+			var _ =>
+				$"Backend health endpoint returned HTTP {code} ({statusCode})."
+		};
+	}
+}

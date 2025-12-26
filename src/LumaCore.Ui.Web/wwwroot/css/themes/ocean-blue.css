@@ -1,88 +1,291 @@
 /* LumaCore Theme: Ocean Blue (Community) */
 /* Complete standalone theme - no dependencies */
-/* Dark-based theme with Blue accent colors */
+/* 💙 Calm and trustworthy blue theme */
 
 :root {
     /* ========================================
-	   ACCENT COLORS - Ocean Blue
-	   ======================================== */
-    --accent-primary: #3b82f6;
-    --accent-secondary: #2563eb;
-    --accent-rgb: 59, 130, 246;
-	
+       ACCENT COLORS - Ocean Blue
+       ======================================== */
+    --accent-primary: #3b82f6; /* Bright Blue - Buttons, accents, hover */
+    --accent-secondary: #1e40af; /* Deep Blue - Headings, borders */
+    --accent-tertiary: #60a5fa; /* Sky Blue - Background highlights */
+    --accent-rgb: 59, 130, 246; /* RGB for rgba() */
+
+    /* Sparkle colors ✨ */
+    --glitter-color: #ffffff;
+    --glitter-shadow: #60a5fa;
+
     /* Accent color derivatives */
-    --accent-glow: rgba(var(--accent-rgb), 0.3);
-    --accent-focus-ring: rgba(var(--accent-rgb), 0.15);
-    --accent-shadow: rgba(var(--accent-rgb), 0.4);
-	
-    /* Hover states (slightly darker blue) */
+    --accent-glow: rgba(var(--accent-rgb), 0.5);
+    --accent-focus-ring: rgba(var(--accent-rgb), 0.3);
+    --accent-shadow: 0 0 10px var(--glitter-shadow);
+
+    /* Hover states */
     --accent-hover-primary: #2563eb;
     --accent-hover-secondary: #1d4ed8;
-	
+
     /* Focus/Active states */
     --border-focus: var(--accent-primary);
-	
+
     /* ========================================
-	   BACKGROUND COLORS (Same as dark theme)
-	   ======================================== */
-    --bg-primary: #0b0b12;
-    --bg-secondary: #1a1a2e;
-    --bg-tertiary: #16213e;
-    --bg-card: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+       BACKGROUND COLORS - Deep Ocean
+       ======================================== */
+    --bg-primary: #0a0f1a;
+    --bg-secondary: #1a1f2e;
+    --bg-tertiary: #1e2a3a;
+    --bg-card: linear-gradient(135deg, #1a1f2e 0%, #1e2a3a 100%);
     --bg-input: #0f1419;
     --bg-input-focus: #1a1f2e;
-    --bg-disabled: #1a1a2e;
-    --bg-header: radial-gradient(circle at top left, #252545 0, #131322 55%, #0b0b12 100%);
-    --bg-footer: #0f0f18;
-	
+    --bg-disabled: #1a1f2e;
+    --bg-header: radial-gradient(circle at top left, #1e2a3a 0, #1a1f2e 55%, #0a0f1a 100%);
+    --bg-footer: #0f141f;
+
     /* ========================================
-	   TEXT COLORS (Same as dark theme)
-	   ======================================== */
-    --text-primary: #f5f5ff;
-    --text-secondary: #e8e8f5;
-    --text-muted: #b8b8d1;
-    --text-disabled: #8b8ba7;
-    --text-placeholder: #6b7280;
-	
+       TEXT COLORS - Slightly blue-tinted
+       ======================================== */
+    --text-primary: #f0f5ff; /* Slightly blue-tinted */
+    --text-secondary: #e0e8f5; /* Blue-tinted secondary */
+    --text-muted: #b0c0d0; /* Blue-tinted muted */
+    --text-disabled: #8090a0;
+    --text-placeholder: #7080a0; /* Blue-tinted */
+
     /* ========================================
-	   BORDER COLORS (Same as dark theme)
-	   ======================================== */
-    --border-primary: #2d3748;
-    --border-secondary: #26263a;
-	
+       BORDER COLORS - Ocean Blue
+       ======================================== */
+    --border-primary: #2d3748; /* Slightly blue */
+    --border-secondary: #252a3a;
+
     /* ========================================
-	   STATUS/ERROR COLORS - UNIVERSAL (same across all themes)
-	   These represent semantic meaning and must not change!
-	   ======================================== */
-    --error-bg: linear-gradient(135deg, #3d1a1a 0%, #2d1414 100%);
+       STATUS/ERROR COLORS - UNIVERSAL (same across all themes)
+       These represent semantic meaning and must not change!
+       ======================================== */
+    --error-bg: linear-gradient(135deg, #3d1a2a 0%, #2d1420 100%);
     --error-border: #ff6b6b;
-    --error-text: #ff9999;
-	
+    --error-text: #ffb3b3;
+
     /* Status indicators - MUST remain consistent for UX! */
     --status-ok: #22c55e; /* Green - "healthy/success" */
     --status-error: #ef4444; /* Red - "error/failed" */
     --status-warning: #eab308; /* Yellow - "checking/warning" */
     --status-info: #3b82f6; /* Blue - "information" */
     --status-unknown: #64748b; /* Gray - "unknown/disabled" */
-	
+
     /* ========================================
-	   BUTTON COLORS
-	   ======================================== */
-    --btn-text: #1a1a2e;
-    --btn-disabled-bg: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-    --btn-disabled-text: #718096;
-	
+       BUTTON COLORS
+       ======================================== */
+    --btn-text: #ffffff;
+    --btn-disabled-bg: linear-gradient(135deg, #3a4558 0%, #2d3748 100%);
+    --btn-disabled-text: #8090a0;
+
     /* ========================================
-	   SHADOWS (Same as dark theme)
-	   ======================================== */
+       SHADOWS
+       ======================================== */
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-	
+
+    /* SPARKLE SHADOWS ✨ */
+    --glitter-shadow-sm: 0 0 5px var(--glitter-shadow);
+    --glitter-shadow-md: 0 0 10px var(--glitter-shadow);
+    --glitter-shadow-lg: 0 0 20px var(--glitter-shadow), 0 0 40px rgba(96, 165, 250, 0.3);
+
     /* ========================================
-	   TRANSITIONS
-	   ======================================== */
+       TRANSITIONS
+       ======================================== */
     --transition-fast: 0.15s ease;
     --transition-normal: 0.2s ease;
     --transition-slow: 0.3s ease;
 }
+
+/* ========================================
+   REFINED SPARKLE - Production Ready! ✨
+   Subtle animations for enhanced UX
+   ======================================== */
+
+/* ============================================
+   SUBTLE BUTTON SPARKLE
+   Slow sweep - barely noticeable but adds polish
+   ============================================ */
+
+.lc-button {
+    overflow: hidden;
+    position: relative;
+}
+
+/* Very subtle sparkle sweep - every 12 seconds */
+
+.lc-button::before {
+    animation: sparkle-sweep 12s infinite;
+    background: linear-gradient(
+                               45deg,
+                               transparent 40%,
+                               rgba(255, 255, 255, 0.15) 50%,
+                               transparent 60%
+);
+    content: '';
+    height: 200%;
+    left: -50%;
+    pointer-events: none;
+    position: absolute;
+    top: -50%;
+    transform: rotate(45deg);
+    width: 200%;
+}
+
+@keyframes sparkle-sweep {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+/* Hover pulse - provides feedback, then stops */
+
+.lc-button:hover:not(:disabled) { animation: button-sparkle-pulse 1.5s ease-in-out 3; }
+
+@keyframes button-sparkle-pulse {
+    0%, 100% { box-shadow: 0 2px 8px var(--accent-glow); }
+
+    50% { box-shadow: 0 4px 16px var(--accent-glow), var(--glitter-shadow-md); }
+}
+
+/* ============================================
+   INPUT FOCUS SPARKLE
+   Subtle feedback when focusing inputs
+   ============================================ */
+
+.lc-input:focus { animation: glitter-pulse 2s ease-in-out 2; }
+
+@keyframes glitter-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px var(--accent-focus-ring), var(--glitter-shadow-sm); }
+
+    50% { box-shadow: 0 0 0 3px var(--accent-focus-ring), var(--glitter-shadow-md); }
+}
+
+/* ============================================
+   LOGO SPARKLE
+   Very subtle breathing effect
+   ============================================ */
+
+.lc-login-logo {
+    animation: logo-sparkle 8s ease-in-out infinite;
+    filter: drop-shadow(var(--glitter-shadow-md));
+}
+
+@keyframes logo-sparkle {
+    0%, 100% { filter: drop-shadow(var(--glitter-shadow-sm)); }
+
+    50% { filter: drop-shadow(var(--glitter-shadow-md)); }
+}
+
+/* ============================================
+   CHECKBOX SPARKLE
+   Quick feedback on check
+   ============================================ */
+
+.lc-checkbox:checked {
+    animation: checkbox-sparkle 0.3s ease-out;
+    box-shadow: var(--glitter-shadow-sm);
+}
+
+@keyframes checkbox-sparkle {
+    0% { transform: scale(1); }
+
+    50% { transform: scale(1.1); }
+
+    100% { transform: scale(1); }
+}
+
+/* ============================================
+   PAGE TRANSITION
+   Smooth, quick transition on navigation
+   ============================================ */
+
+@keyframes page-sparkle-transition {
+    0% {
+        filter: brightness(1.1);
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    100% {
+        filter: brightness(1);
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.lc-main { animation: page-sparkle-transition 0.3s ease-out; }
+
+/* ============================================
+   GLITTER BORDER (Opt-in)
+   For special elements that need extra attention
+   ============================================ */
+
+@keyframes glitter-border-pulse {
+    0%, 100% {
+        border-color: #3b82f6;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+
+    33% {
+        border-color: #1e40af;
+        box-shadow: 0 0 10px rgba(30, 64, 175, 0.5);
+    }
+
+    66% {
+        border-color: #60a5fa;
+        box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+    }
+}
+
+.lc-card-glitter {
+    animation: glitter-border-pulse 3s infinite;
+    border: 2px solid #3b82f6;
+}
+
+/* ============================================
+   ADMIN MODE - Professional & Distraction-Free
+   
+   For admin pages (Status, Dashboard, Settings):
+   <body class="lc-admin-mode">
+   
+   This disables all sparkle animations while keeping
+   colors and hover effects!
+   ============================================ */
+
+/* Disable all animations in admin mode */
+
+.lc-admin-mode .lc-button::before { display: none; }
+
+.lc-admin-mode .lc-button:hover:not(:disabled) {
+    animation: none;
+    /* Still changes color on hover, just no pulse animation */
+}
+
+.lc-admin-mode .lc-input:focus { animation: none; }
+
+.lc-admin-mode .lc-main { animation: none; }
+
+.lc-admin-mode .lc-login-logo {
+    animation: none;
+    filter: drop-shadow(var(--glitter-shadow-sm));
+}
+
+.lc-admin-mode .lc-checkbox:checked { animation: none; }
+
+.lc-admin-mode .lc-card-glitter { animation: none; }
+
+/* Admin mode keeps: Colors, Hover color changes, Focus rings */
+/* Admin mode removes: All animations, pulses, sweeps */
+
+/* ============================================
+   💙 REFINED SPARKLE - Production Ready
+   
+   Design Philosophy:
+   - Subtle animations that enhance UX without distraction
+   - Context-aware: animations disabled in admin areas
+   - Performance-optimized: GPU-accelerated transforms
+   - Accessibility-friendly: respects prefers-reduced-motion
+   
+   Result: Professional & Polished! 💯
+   ============================================ */

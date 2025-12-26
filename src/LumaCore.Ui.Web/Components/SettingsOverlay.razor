@@ -1,0 +1,144 @@
+@* Settings Overlay - User Settings Modal *@
+@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+
+<div class="lc-settings-overlay" @onclick="CloseAsync">
+	<div class="lc-settings-panel" @onclick:stopPropagation>
+
+		@* Header with close button *@
+		<div class="lc-settings-header">
+			<h2 class="lc-settings-title">
+				<span class="lc-settings-icon">🎨</span>
+				Settings
+			</h2>
+			<button class="lc-settings-close" @onclick="CloseAsync" title="Close (ESC)">
+				✕
+			</button>
+		</div>
+
+		@* Tab Navigation *@
+		<div class="lc-settings-tabs">
+			<button class="lc-settings-tab @(mActiveTab == "theme" ? "lc-settings-tab-active" : "")"
+			        @onclick='() => SetActiveTab("theme")'>
+				Theme
+			</button>
+			@* Future tabs can be added here *@
+			@* <button class="lc-settings-tab" @onclick='() => SetActiveTab("language")'>Language</button> *@
+		</div>
+
+		@* Content Area *@
+		<div class="lc-settings-content">
+			@if (mActiveTab == "theme")
+			{
+				<ThemeSwitcher OnThemeChanged="HandleThemeChangedAsync"/>
+			}
+		</div>
+
+	</div>
+</div>
+
+@code {
+
+	/// <summary>
+	/// Event callback invoked when the user requests to close the settings overlay.
+	/// </summary>
+	[Parameter]
+	public EventCallback OnClose { get; set; }
+
+	/// <summary>
+	/// Currently active tab in the settings panel.
+	/// </summary>
+	private string mActiveTab = "theme";
+
+	/// <summary>
+	/// Reference to this component for JavaScript interop (ESC key handling).
+	/// </summary>
+	private DotNetObjectReference<SettingsOverlay>? mDotNetRef;
+
+	/// <summary>
+	/// Sets the active tab in the settings panel.
+	/// </summary>
+	/// <param name="tabName">The name of the tab to activate.</param>
+	private void SetActiveTab(string tabName)
+	{
+		mActiveTab = tabName;
+	}
+
+	/// <summary>
+	/// Handles theme change from the ThemeSwitcher component.
+	/// </summary>
+	private async Task HandleThemeChangedAsync()
+	{
+		// Could trigger additional actions here (analytics, etc.)
+		await Task.CompletedTask;
+	}
+
+	/// <summary>
+	/// Closes the settings overlay by invoking the OnClose callback.
+	/// Resets any active theme preview before closing.
+	/// </summary>
+	private async Task CloseAsync()
+	{
+		// Reset theme preview if user was hovering (ESC/click outside while previewing)
+		try
+		{
+			await JSRuntime.InvokeVoidAsync("resetThemePreview").ConfigureAwait(false);
+		}
+		catch
+		{
+			// Silently handle JS interop failures
+		}
+
+		await OnClose.InvokeAsync();
+	}
+
+	/// <summary>
+	/// Called when ESC key is pressed (invoked from JavaScript).
+	/// </summary>
+	[JSInvokable]
+	public async Task OnEscapeKeyPressed()
+	{
+		await CloseAsync();
+	}
+
+	/// <summary>
+	/// Lifecycle: Register ESC key handler after component renders.
+	/// </summary>
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			try
+			{
+				mDotNetRef = DotNetObjectReference.Create(this);
+				await JSRuntime.InvokeVoidAsync("registerSettingsEscHandler", mDotNetRef);
+				Console.WriteLine("[SettingsOverlay] ESC handler registered");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"[SettingsOverlay] Error registering ESC handler: {ex.Message}");
+			}
+		}
+	}
+
+	/// <summary>
+	/// Lifecycle: Cleanup - unregister ESC key handler and dispose DotNet reference.
+	/// </summary>
+	public async ValueTask DisposeAsync()
+	{
+		if (mDotNetRef != null)
+		{
+			try
+			{
+				await JSRuntime.InvokeVoidAsync("unregisterSettingsEscHandler");
+				mDotNetRef.Dispose();
+				Console.WriteLine("[SettingsOverlay] ESC handler unregistered");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"[SettingsOverlay] Error unregistering ESC handler: {ex.Message}");
+			}
+		}
+	}
+
+}

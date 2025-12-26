@@ -1,0 +1,163 @@
+@inject NavigationManager NavigationManager
+@inject IJSRuntime        JSRuntime
+
+@*
+	Admin Overlay Component - Desktop-first admin panel as modal overlay
+	
+	Features:
+	- Opens as modal overlay on top of current page
+	- Contains admin tools (Status, Dashboard, Settings, etc.)
+	- ESC key to close
+	- Click outside to close
+	- Smooth animations
+	- Theme-aware styling
+	
+	Usage:
+	- Add to MainLayout
+	- Show/hide via @ref and ShowAsync()/HideAsync()
+*@
+
+@if (mIsVisible)
+{
+	<div class="lc-admin-overlay" @onclick="HandleBackdropClick">
+		<div class="lc-admin-panel" @onclick:stopPropagation="true">
+
+			<header class="lc-admin-header">
+				<h2>⚙️ Admin Panel</h2>
+				<button class="lc-admin-close" @onclick="HideAsync" title="Close (ESC)">
+					✕
+				</button>
+			</header>
+
+			<nav class="lc-admin-tabs">
+				<button class="lc-admin-tab @(mActiveTab == "status" ? "lc-admin-tab-active" : "")"
+				        @onclick='() => SetActiveTab("status")'>
+					Status
+				</button>
+				@* Future tabs can be added here:
+				<button class="lc-admin-tab @(mActiveTab == "dashboard" ? "lc-admin-tab-active" : "")"
+				        @onclick='() => SetActiveTab("dashboard")'>
+					Dashboard
+				</button>
+				<button class="lc-admin-tab @(mActiveTab == "settings" ? "lc-admin-tab-active" : "")"
+				        @onclick='() => SetActiveTab("settings")'>
+					Settings
+				</button>
+				*@
+			</nav>
+
+			<main class="lc-admin-content lc-admin-mode">
+				@if (mActiveTab == "status")
+				{
+					<StatusContent/>
+				}
+				@* Future tab content:
+				else if (mActiveTab == "dashboard")
+				{
+					<DashboardContent />
+				}
+				*@
+			</main>
+
+		</div>
+	</div>
+}
+
+@code {
+	private bool                                 mIsVisible = false;
+	private string                               mActiveTab = "status";
+	private DotNetObjectReference<AdminOverlay>? mThisRef;
+
+	/// <summary>
+	/// Shows the admin overlay with optional initial tab.
+	/// </summary>
+	/// <param name="initialTab">The tab to show initially (default: "status").</param>
+	public async Task ShowAsync(string initialTab = "status")
+	{
+		mActiveTab = initialTab;
+		mIsVisible = true;
+		StateHasChanged();
+
+		// Register ESC key handler
+		await RegisterEscKeyHandlerAsync().ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Hides the admin overlay.
+	/// </summary>
+	public async Task HideAsync()
+	{
+		mIsVisible = false;
+		StateHasChanged();
+
+		// Unregister ESC key handler
+		await UnregisterEscKeyHandlerAsync().ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Handles clicks on the backdrop (outside the panel).
+	/// Closes the overlay if click is on backdrop, not on panel.
+	/// </summary>
+	private async Task HandleBackdropClick()
+	{
+		await HideAsync().ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Sets the active tab.
+	/// </summary>
+	private void SetActiveTab(string tab)
+	{
+		mActiveTab = tab;
+		StateHasChanged();
+	}
+
+	/// <summary>
+	/// Registers ESC key event listener via JavaScript interop.
+	/// </summary>
+	private async Task RegisterEscKeyHandlerAsync()
+	{
+		try
+		{
+			mThisRef = DotNetObjectReference.Create(this);
+			await JSRuntime.InvokeVoidAsync("registerAdminEscHandler", mThisRef).ConfigureAwait(false);
+		}
+		catch
+		{
+			// Silently handle if JS interop fails
+		}
+	}
+
+	/// <summary>
+	/// Unregisters ESC key event listener.
+	/// </summary>
+	private async Task UnregisterEscKeyHandlerAsync()
+	{
+		try
+		{
+			await JSRuntime.InvokeVoidAsync("unregisterAdminEscHandler").ConfigureAwait(false);
+		}
+		catch
+		{
+			// Silently handle if JS interop fails
+		}
+	}
+
+	/// <summary>
+	/// Called from JavaScript when ESC key is pressed.
+	/// </summary>
+	[JSInvokable]
+	public async Task OnEscapeKeyPressed()
+	{
+		await HideAsync().ConfigureAwait(true);
+	}
+
+	/// <summary>
+	/// Cleanup on component disposal.
+	/// </summary>
+	public void Dispose()
+	{
+		mThisRef?.Dispose();
+	}
+
+}

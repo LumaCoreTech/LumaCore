@@ -33,8 +33,6 @@
 		<nav class="lc-nav">
 			@* Root/home entry; kept simple for the early preview version *@
 			<a href="">Home</a>
-			@* Internal status page (Blazor route) *@
-			<NavLink href="status" class="...">Status</NavLink>
 			@* External link to the public project site, opened in a separate tab *@
 			<a href="https://lumacore.tech" target="_blank" rel="noopener noreferrer">Project Site</a>
 
@@ -44,11 +42,25 @@
 					@* Show Protected link and Logout button when authenticated *@
 					<NavLink href="protected" class="...">Protected</NavLink>
 					<button @onclick="HandleLogoutAsync" class="lc-nav-button">Logout</button>
+
+					@* Settings Panel Toggle - Visible for all authenticated users *@
+					<button class="lc-settings-toggle" @onclick="ShowSettingsPanelAsync" title="Settings">
+						🎨
+					</button>
 				</Authorized>
 				<NotAuthorized>
 					@* Show Login link when not authenticated *@
 					<NavLink href="login" class="...">Login</NavLink>
 				</NotAuthorized>
+			</AuthorizeView>
+
+			@* Admin Panel Toggle - Only visible for admin role *@
+			<AuthorizeView Roles="admin">
+				<Authorized>
+					<button class="lc-admin-toggle" @onclick="ShowAdminPanelAsync" title="Admin Panel">
+						⚙️
+					</button>
+				</Authorized>
 			</AuthorizeView>
 		</nav>
 	</header>
@@ -63,6 +75,15 @@
 		<span>LumaCore UI (preview)</span>
 		<span>Self-hosted. Persona-focused. Yours.</span>
 	</footer>
+
+	@* Settings Overlay - opens on demand via 🎨 button *@
+	@if (mShowSettingsPanel)
+	{
+		<SettingsOverlay OnClose="HideSettingsPanelAsync"/>
+	}
+
+	@* Admin Overlay - opens on demand via ⚙️ button *@
+	<AdminOverlay @ref="mAdminOverlay"/>
 </div>
 
 @code {
@@ -76,23 +97,75 @@
 	[Inject]
 	private NavigationManager? Navigation { get; set; }
 
+	[Inject]
+	private IJSRuntime? JsRuntime { get; set; }
+
+	private AdminOverlay? mAdminOverlay;
+	private bool          mShowSettingsPanel = false;
+
 	/// <summary>
 	/// Handles the logout action when the user clicks the logout button.
 	/// </summary>
 	/// <remarks>
 	/// Clears the stored authentication token, notifies the authentication system of the state change,
-	/// and redirects the user to the home page.
+	/// resets the theme to default, and redirects the user to the home page.
 	/// </remarks>
 	private async Task HandleLogoutAsync()
 	{
-		if (AuthService is null || AuthStateProvider is null || Navigation is null)
+		// Ensure all dependencies are available.
+		// If any are missing, we cannot proceed with logout.
+		// This is a safeguard against misconfiguration or runtime issues.
+		if (AuthService is null || AuthStateProvider is null || Navigation is null || JsRuntime is null)
 			return;
 
-		// Clear authentication state
-		// Use ConfigureAwait(true) to ensure continuation on the original context for UI updates
+		// Reset theme to default before logout.
+		// Failures in JS interop are silently handled to avoid disrupting the logout flow
+		// (e.g., if JS is not available or the function is not defined).
+		try
+		{
+			await JsRuntime.InvokeVoidAsync("resetThemeToDefault").ConfigureAwait(true);
+		}
+		catch
+		{
+			// Silently handle JS interop failures
+		}
+
+		// Perform logout via AuthService and notify the authentication state provider.
+		// This will clear the auth token and update the UI accordingly.
 		await AuthService.LogoutAsync().ConfigureAwait(true);
 		AuthStateProvider.NotifyStateChanged();
 		Navigation.NavigateTo("/");
+	}
+
+	/// <summary>
+	/// Shows the settings panel overlay.
+	/// </summary>
+	private Task ShowSettingsPanelAsync()
+	{
+		mShowSettingsPanel = true;
+		StateHasChanged();
+		return Task.CompletedTask;
+	}
+
+	/// <summary>
+	/// Hides the settings panel overlay.
+	/// </summary>
+	private Task HideSettingsPanelAsync()
+	{
+		mShowSettingsPanel = false;
+		StateHasChanged();
+		return Task.CompletedTask;
+	}
+
+	/// <summary>
+	/// Shows the admin panel overlay.
+	/// </summary>
+	private async Task ShowAdminPanelAsync()
+	{
+		if (mAdminOverlay is not null)
+		{
+			await mAdminOverlay.ShowAsync().ConfigureAwait(true);
+		}
 	}
 
 }

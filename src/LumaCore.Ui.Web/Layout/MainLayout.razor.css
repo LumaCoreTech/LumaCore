@@ -111,31 +111,33 @@
 
 .lc-nav a[href^="https://"]:hover { opacity: 1.0; }
 
-/* Logout button in navigation */
+/* Logout button in navigation - matches admin toggle style */
 
 .lc-nav-button {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
-    border: none;
+    background: transparent;
+    border: 1px solid var(--border-primary);
     border-radius: 6px;
-    color: white;
+    color: var(--text-primary);
     cursor: pointer;
     font-family: inherit;
     font-size: 0.9rem;
     font-weight: 500;
     padding: 0.5rem 1rem;
-    transition: all 0.2s ease;
+    transition: var(--transition-normal);
 }
 
 .lc-nav-button:hover {
-    background: linear-gradient(135deg, #ee5a52, #dd4943);
-    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+    background: var(--error-border);
+    border-color: var(--error-border);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    color: white;
     transform: translateY(-1px);
 }
 
 .lc-nav-button:active { transform: translateY(0); }
 
 .lc-nav-button:focus-visible {
-    outline: 2px solid #ff6b6b;
+    outline: 2px solid var(--error-border);
     outline-offset: 2px;
 }
 

@@ -1,0 +1,192 @@
+/* ============================================
+   ADMIN OVERLAY - Desktop Admin Panel
+   Modal overlay for admin tools (Status, Dashboard, Settings)
+   ============================================ */
+
+/* Overlay backdrop - covers entire viewport */
+.lc-admin-overlay {
+    align-items: center;
+    animation: admin-overlay-fadein 0.2s ease;
+    backdrop-filter: blur(2px);
+    background: rgba(0, 0, 0, 0.65);
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    /* Smooth theme transitions */
+    transition: background 0.4s ease, backdrop-filter 0.4s ease;
+    z-index: 1000;
+}
+
+@keyframes admin-overlay-fadein {
+    from { opacity: 0; }
+
+    to { opacity: 1; }
+}
+
+/* Admin panel - the modal container */
+
+.lc-admin-panel {
+    animation: admin-panel-slidein 0.3s ease;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    height: 85vh;
+    max-width: 1400px;
+    overflow: hidden;
+    position: relative;
+    width: 90%;
+}
+
+@keyframes admin-panel-slidein {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Admin header - title and close button */
+
+.lc-admin-header {
+    align-items: center;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-primary);
+    display: flex;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+}
+
+.lc-admin-header h2 {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.lc-admin-close {
+    align-items: center;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    font-size: 1.5rem;
+    height: 36px;
+    justify-content: center;
+    transition: var(--transition-normal);
+    width: 36px;
+}
+
+.lc-admin-close:hover {
+    background: var(--error-border);
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Admin tabs - navigation within admin panel */
+
+.lc-admin-tabs {
+    border-bottom: 1px solid var(--border-secondary);
+    display: flex;
+    gap: 0.5rem;
+    padding: 0 1.5rem;
+}
+
+.lc-admin-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    transition: var(--transition-normal);
+}
+
+.lc-admin-tab:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.lc-admin-tab-active {
+    border-bottom-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.lc-admin-tab-active:hover { background: var(--bg-tertiary); }
+
+/* Admin content - main content area with scroll */
+
+.lc-admin-content {
+    background: var(--bg-primary);
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+/* Admin toggle button in header nav */
+
+.lc-admin-toggle {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    font-size: 1.1rem;
+    height: 36px;
+    justify-content: center;
+    padding: 0;
+    transition: var(--transition-normal);
+    width: 36px;
+}
+
+.lc-admin-toggle:hover {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: var(--btn-text);
+}
+
+/* Scrollbar styling for admin content */
+
+.lc-admin-content::-webkit-scrollbar { width: 8px; }
+
+.lc-admin-content::-webkit-scrollbar-track { background: var(--bg-secondary); }
+
+.lc-admin-content::-webkit-scrollbar-thumb {
+    background: var(--border-primary);
+    border-radius: 4px;
+}
+
+.lc-admin-content::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+/* ============================================
+   RESPONSIVE - Mobile (future)
+   For now, admin overlay is desktop-only
+   ============================================ */
+
+@media (max-width: 767px) {
+    /* TODO: Mobile implementation
+	   - Full-screen panel
+	   - No backdrop
+	   - Slide-in animation
+	*/
+    .lc-admin-panel {
+        border-radius: 0;
+        height: 100vh;
+        width: 100%;
+    }
+}

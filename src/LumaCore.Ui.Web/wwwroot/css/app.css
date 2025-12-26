@@ -7,6 +7,35 @@ html, body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     margin: 0;
     padding: 0;
+    
+    /* Smooth theme transitions */
+    transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* Smooth theme transitions for theme-aware elements */
+
+div, section, article, aside, header, footer, nav, main,
+button, input, textarea, select,
+.lc-root, .lc-header, .lc-main, .lc-footer,
+.lc-card, .lc-section, .lc-note,
+.lc-theme-card, .lc-settings-panel, .lc-admin-panel {
+    transition: background-color 0.4s ease,
+                color 0.4s ease,
+                border-color 0.4s ease;
+}
+
+/* Keep hover/focus interactions snappy */
+
+button:hover, a:hover,
+.lc-theme-card:hover,
+.lc-nav-button:hover,
+.lc-admin-toggle:hover,
+.lc-settings-toggle:hover {
+    transition: background-color 0.2s ease,
+                color 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
 }
 
 a {
@@ -55,18 +84,70 @@ a:hover { text-decoration: underline; }
 }
 
 .lc-nav {
+    align-items: center;
     display: flex;
     font-size: 0.9rem;
     gap: 1rem;
-    opacity: 0.85;
 }
+
+/* Navigation links - subtle style */
 
 .lc-nav a {
-    border-radius: 999px;
+    color: var(--text-primary);
     padding: 0.25rem 0.4rem;
+    position: relative;
+    text-decoration: none; /* Prevent default underline */
+    transition: var(--transition-normal);
 }
 
-.lc-nav a:hover { background: var(--border-primary); }
+/* Subtle underline on hover */
+
+.lc-nav a::after {
+    background: var(--accent-primary);
+    bottom: 0;
+    content: '';
+    height: 2px;
+    left: 0;
+    position: absolute;
+    transition: width 0.2s ease;
+    width: 0;
+}
+
+.lc-nav a:hover {
+    text-decoration: none; /* Override global a:hover rule */
+}
+
+.lc-nav a:hover::after { width: 100%; }
+
+/* Navigation buttons (logout, etc.) */
+
+.lc-nav-button {
+    background: transparent;
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: var(--transition-normal);
+}
+
+.lc-nav-button:hover {
+    background: var(--error-border);
+    border-color: var(--error-border);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.lc-nav-button:active { transform: translateY(0); }
+
+.lc-nav-button:focus-visible {
+    outline: 2px solid var(--error-border);
+    outline-offset: 2px;
+}
 
 .lc-main {
     flex: 1;
@@ -196,7 +277,8 @@ a:hover { text-decoration: underline; }
 
 .lc-button-secondary {
     background: var(--bg-tertiary);
-    border: 1px solid var(--border-primary);
+    border: 2px solid rgba(var(--accent-rgb), 0.5);
+    box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.15);
     color: var(--text-primary);
 }
 
