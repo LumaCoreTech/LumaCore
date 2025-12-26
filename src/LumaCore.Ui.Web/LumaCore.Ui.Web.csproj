@@ -3,14 +3,18 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<OverrideHtmlAssetPlaceholders>false</OverrideHtmlAssetPlaceholders> <!--TODO: Enable fingerprinting for production builds. -->
+		<OverrideHtmlAssetPlaceholders>false</OverrideHtmlAssetPlaceholders>
+		<!--TODO: Enable fingerprinting for production builds. -->
 		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
 		<TypeScriptLanguageVersion>ES2024</TypeScriptLanguageVersion>
 	</PropertyGroup>
-
 	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.1" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer"
+		                  Version="10.0.1"
+		                  PrivateAssets="all" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
 	</ItemGroup>
 
 	<ItemGroup>

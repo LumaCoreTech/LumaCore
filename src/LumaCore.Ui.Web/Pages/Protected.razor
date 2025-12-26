@@ -1,0 +1,84 @@
+@page "/protected"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+@* 
+    Protected page that requires authentication.
+    
+    This page demonstrates that the authentication system is working correctly.
+    Users who are not authenticated will be redirected to the login page.
+*@
+
+<h1>Protected Area</h1>
+
+<AuthorizeView>
+	<Authorized>
+		<div class="lc-section">
+			<h2>Welcome, @context.User.Identity?.Name!</h2>
+			<p>
+				You have successfully authenticated and can now access protected areas of the application.
+			</p>
+
+			<h3>Your Claims</h3>
+			<ul>
+				@foreach (Claim claim in context.User.Claims)
+				{
+					<li>
+						<strong>@claim.Type:</strong> @claim.Value
+					</li>
+				}
+			</ul>
+		</div>
+
+		<div class="lc-section">
+			<h3>Authentication Status</h3>
+			<table class="lc-status-table">
+				<tbody>
+				<tr>
+					<td>
+						<strong>Authenticated:</strong>
+					</td>
+					<td>@context.User.Identity?.IsAuthenticated</td>
+				</tr>
+				<tr>
+					<td>
+						<strong>Authentication Type:</strong>
+					</td>
+					<td>@context.User.Identity?.AuthenticationType</td>
+				</tr>
+				<tr>
+					<td>
+						<strong>Name:</strong>
+					</td>
+					<td>@context.User.Identity?.Name</td>
+				</tr>
+				<tr>
+					<td>
+						<strong>Total Claims:</strong>
+					</td>
+					<td>@context.User.Claims.Count()</td>
+				</tr>
+				</tbody>
+			</table>
+		</div>
+	</Authorized>
+	<NotAuthorized>
+		<p>You must be logged in to view this page.</p>
+	</NotAuthorized>
+</AuthorizeView>
+
+<style>
+	.lc-status-table {
+		border-collapse: collapse;
+		margin-top: 1rem;
+		width: 100%;
+	}
+
+	.lc-status-table td {
+		border-bottom: 1px solid #eee;
+		padding: 0.5rem;
+	}
+
+	.lc-status-table td:first-child { width: 200px; }
+</style>

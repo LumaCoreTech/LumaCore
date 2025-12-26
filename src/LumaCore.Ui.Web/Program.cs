@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Ui.Web.Services;
+
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -51,6 +54,15 @@ public class Program
 				BaseAddress = new Uri(effectiveBaseUrl)
 			};
 		});
+
+		// Register authentication services.
+		builder.Services.AddScoped<AuthService>();
+		builder.Services.AddScoped<JwtAuthenticationStateProvider>();
+		builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
+			sp.GetRequiredService<JwtAuthenticationStateProvider>());
+
+		// Add authorization services for [Authorize] attribute support.
+		builder.Services.AddAuthorizationCore();
 
 		return builder.Build().RunAsync();
 	}

@@ -111,6 +111,34 @@
 
 .lc-nav a[href^="https://"]:hover { opacity: 1.0; }
 
+/* Logout button in navigation */
+
+.lc-nav-button {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.lc-nav-button:hover {
+    background: linear-gradient(135deg, #ee5a52, #dd4943);
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+    transform: translateY(-1px);
+}
+
+.lc-nav-button:active { transform: translateY(0); }
+
+.lc-nav-button:focus-visible {
+    outline: 2px solid #ff6b6b;
+    outline-offset: 2px;
+}
+
 /* Main content area; grows to fill remaining space between header and footer */
 
 .lc-main {

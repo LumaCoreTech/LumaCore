@@ -1,0 +1,157 @@
+@page "/login"
+@using System.ComponentModel.DataAnnotations
+@inject AuthService                    AuthService
+@inject JwtAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager              Navigation
+
+@* 
+    Login page for the LumaCore Web UI.
+    
+    Provides a simple form to authenticate with username, password, and a "Remember Me" option.
+    On successful login, the user is redirected to the home page and the authentication state is updated.
+*@
+
+<PageTitle>Login - LumaCore</PageTitle>
+<HeadContent>
+	<link rel="stylesheet" href="css/login.css"/>
+</HeadContent>
+
+<div class="lc-login-container">
+	<div class="lc-login-card">
+		@* Header with logo and title *@
+		<div class="lc-login-header">
+			<img src="assets/branding/lumacore-logo.svg" alt="LumaCore Logo" class="lc-login-logo"/>
+			<h1>Welcome to LumaCore</h1>
+			<p class="lc-login-subtitle">Sign in to continue</p>
+		</div>
+
+		@* Login form *@
+		<EditForm Model="@mLoginModel" OnValidSubmit="HandleLoginAsync" class="lc-login-form">
+			<DataAnnotationsValidator/>
+
+			@* Username field *@
+			<div class="lc-form-group">
+				<label for="username">Username</label>
+				<InputText id="username"
+				           @bind-Value="mLoginModel.Username"
+				           class="lc-input"
+				           placeholder="Enter your username"
+				           autocomplete="username"
+				           autofocus/>
+				<ValidationMessage For="@(() => mLoginModel.Username)" class="lc-validation-error"/>
+			</div>
+
+			@* Password field *@
+			<div class="lc-form-group">
+				<label for="password">Password</label>
+				<InputText id="password"
+				           @bind-Value="mLoginModel.Password"
+				           type="password"
+				           class="lc-input"
+				           placeholder="Enter your password"
+				           autocomplete="current-password"/>
+				<ValidationMessage For="@(() => mLoginModel.Password)" class="lc-validation-error"/>
+			</div>
+
+			@* Remember Me checkbox *@
+			<div class="lc-form-group lc-checkbox-group">
+				<label class="lc-checkbox-label">
+					<InputCheckbox @bind-Value="mLoginModel.RememberMe" class="lc-checkbox"/>
+					<span>Remember me</span>
+				</label>
+			</div>
+
+			@* Error message display *@
+			@if (!string.IsNullOrEmpty(mErrorMessage))
+			{
+				<div class="lc-error-banner">
+					<span>@mErrorMessage</span>
+				</div>
+			}
+
+			@* Submit button *@
+			<button type="submit" class="lc-button lc-button-primary" disabled="@mIsLoggingIn">
+				@if (mIsLoggingIn)
+				{
+					<span>Signing in...</span>
+				}
+				else
+				{
+					<span>Sign In</span>
+				}
+			</button>
+		</EditForm>
+
+		@* Footer note *@
+		<div class="lc-login-footer">
+			<p>Self-hosted. Persona-focused. Yours.</p>
+		</div>
+	</div>
+</div>
+
+@code {
+
+	/// <summary>
+	/// Model for the login form with validation attributes.
+	/// </summary>
+	private sealed class LoginFormModel
+	{
+		[Required(ErrorMessage = "Username is required.")]
+		[StringLength(100, ErrorMessage = "Username must not exceed 100 characters.")]
+		public string Username { get; set; } = string.Empty;
+
+		[Required(ErrorMessage = "Password is required.")]
+		[MinLength(8, ErrorMessage = "Password must be at least 8 characters.")]
+		public string Password { get; set; } = string.Empty;
+
+		public bool RememberMe { get; set; }
+	}
+
+	private readonly LoginFormModel mLoginModel = new();
+	private          string?        mErrorMessage;
+	private          bool           mIsLoggingIn;
+
+	/// <summary>
+	/// Handles the login form submission.
+	/// </summary>
+	/// <remarks>
+	/// Attempts to authenticate with the provided credentials. On success, updates the authentication state
+	/// and redirects to the home page. On failure, displays an error message to the user.
+	/// </remarks>
+	private async Task HandleLoginAsync()
+	{
+		mIsLoggingIn = true;
+		mErrorMessage = null;
+		StateHasChanged();
+
+		try
+		{
+			// Attempt to log in using the AuthService.
+			// Use ConfigureAwait(true) to ensure continuation on the original context for UI updates.
+			// This is important in Blazor to avoid issues with rendering after async calls.
+			LoginResult result = await AuthService
+				                     .LoginAsync(mLoginModel.Username, mLoginModel.Password, mLoginModel.RememberMe)
+				                     .ConfigureAwait(true);
+
+			if (result.Success)
+			{
+				// Notify the authentication system that the user is now logged in.
+				AuthStateProvider.NotifyStateChanged();
+
+				// Redirect to home page.
+				Navigation.NavigateTo("/");
+			}
+			else
+			{
+				// Display error message from the service.
+				mErrorMessage = result.ErrorMessage ?? "Login failed. Please try again.";
+			}
+		}
+		finally
+		{
+			mIsLoggingIn = false;
+			StateHasChanged();
+		}
+	}
+
+}

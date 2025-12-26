@@ -1,6 +1,27 @@
 @using LumaCore.Ui.Web.Pages
-<Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(NotFound)">
-	<Found Context="routeData">
-		<RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
-	</Found>
-</Router>
+@* Root component that defines the routing and authentication context for the entire application. *@
+
+<CascadingAuthenticationState>
+	<Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(NotFound)">
+		<Found Context="routeData">
+			<AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+				<NotAuthorized>
+					@{
+						@* Redirect to login if user tries to access protected pages while not authenticated *@
+						if (context.User?.Identity?.IsAuthenticated != true)
+						{
+							NavigationManager.NavigateTo("login");
+						}
+					}
+				</NotAuthorized>
+			</AuthorizeRouteView>
+		</Found>
+	</Router>
+</CascadingAuthenticationState>
+
+@code {
+
+	[Inject]
+	private NavigationManager NavigationManager { get; set; } = default!;
+
+}

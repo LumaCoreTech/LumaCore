@@ -37,6 +37,19 @@
 			<NavLink href="status" class="...">Status</NavLink>
 			@* External link to the public project site, opened in a separate tab *@
 			<a href="https://lumacore.tech" target="_blank" rel="noopener noreferrer">Project Site</a>
+
+			@* Authentication-dependent navigation *@
+			<AuthorizeView>
+				<Authorized>
+					@* Show Protected link and Logout button when authenticated *@
+					<NavLink href="protected" class="...">Protected</NavLink>
+					<button @onclick="HandleLogoutAsync" class="lc-nav-button">Logout</button>
+				</Authorized>
+				<NotAuthorized>
+					@* Show Login link when not authenticated *@
+					<NavLink href="login" class="...">Login</NavLink>
+				</NotAuthorized>
+			</AuthorizeView>
 		</nav>
 	</header>
 
@@ -51,3 +64,35 @@
 		<span>Self-hosted. Persona-focused. Yours.</span>
 	</footer>
 </div>
+
+@code {
+
+	[Inject]
+	private AuthService? AuthService { get; set; }
+
+	[Inject]
+	private JwtAuthenticationStateProvider? AuthStateProvider { get; set; }
+
+	[Inject]
+	private NavigationManager? Navigation { get; set; }
+
+	/// <summary>
+	/// Handles the logout action when the user clicks the logout button.
+	/// </summary>
+	/// <remarks>
+	/// Clears the stored authentication token, notifies the authentication system of the state change,
+	/// and redirects the user to the home page.
+	/// </remarks>
+	private async Task HandleLogoutAsync()
+	{
+		if (AuthService is null || AuthStateProvider is null || Navigation is null)
+			return;
+
+		// Clear authentication state
+		// Use ConfigureAwait(true) to ensure continuation on the original context for UI updates
+		await AuthService.LogoutAsync().ConfigureAwait(true);
+		AuthStateProvider.NotifyStateChanged();
+		Navigation.NavigateTo("/");
+	}
+
+}
