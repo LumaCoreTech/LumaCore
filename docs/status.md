@@ -193,12 +193,21 @@ The web interface is where users **experience** LumaCore — chat with personas,
 | Capability      | Stage       | Functional Target (Phase) | Hardened Target (Phase) |
 |-----------------|-------------|---------------------------|-----------------|
 | **UI Shell (Layout)**<br/>_Blazor app shell with main layout, navigation, and health indicator in header._ | 🟢 Functional | ✔ (P0) | P1 |
-| **Login UI**<br/>_Login form with credentials input, token storage, and error handling._ | ❌ None | P1 | P2 |
+| **Login UI**<br/>_Login form with credentials input, token storage, and error handling. Theme-aware styling supports all 5 themes._ | 🟢 Functional | ✔ (P1) | P2 |
 | **Chat Interface**<br/>_Chat page with message input, history display, and persona integration._ | ❌ None | P1 | P2 |
 | **Message Display**<br/>_Render messages with Markdown support, syntax highlighting, and copy-to-clipboard._ | ❌ None | P1 | P2 |
 | **Streaming Display**<br/>_Show AI responses as they stream in real-time._ | ❌ None | P1 | P2 |
 | **Session Management UI**<br/>_Sidebar with session list, create new sessions, switch between or delete existing._ | ❌ None | P2 | P3 |
 | **Persona Selector**<br/>_Dropdown menu to switch personas with avatar preview and description._ | ❌ None | P2 | P3 |
+
+### Theming & Visual Design
+| Capability      | Stage       | Functional Target (Phase) | Hardened Target (Phase) |
+|-----------------|-------------|---------------------------|-----------------|
+| **Theme System (CSS Variables)**<br/>_CSS Custom Properties based theming system with hot-swappable themes via stylesheet link._ | 🟢 Functional | ✔ (P1) | P2 |
+| **Official Themes**<br/>_LumaCore Dark (default) and LumaCore Light themes with cohesive color palettes._ | 🟢 Functional | ✔ (P1) | P2 |
+| **Community Themes**<br/>_Missi Pink (playful pink/purple), Ocean Blue (calm blue tones), Forest Green (nature-inspired green). User-contributed themes ready._ | 🟢 Functional | ✔ (P1) | P2 |
+| **Refined Sparkle Effects**<br/>_Subtle animations with admin-mode toggle (animations disabled in professional contexts)._ | 🟢 Functional | ✔ (P1) | P2 |
+| **Responsive Design**<br/>_Mobile-optimized layouts with touch-friendly interactions and adaptive navigation._ | ❌ None | P1 | P2 |
 
 ---
 
@@ -261,6 +270,9 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 
 **Phase 1 (Active):** Make it **useful**
 - ✅ System metrics API (memory, GC, process, thread pool with extensible IMetricsContributor)
+- ✅ Login UI (theme-aware, AuthService integration, token management)
+- ✅ Theming System (5 themes: lumacore-dark/light, missi-pink, ocean-blue, forest-green)
+- ✅ Refined Sparkle Effects (subtle animations with admin-mode toggle)
 - 🎯 Database support (EF Core + multi-DB: SQLite, PostgreSQL, MySQL, MSSQL)
 - 🎯 User store & user management API (replaces hardcoded admin/changeme)
 - 🎯 Ollama integration (models, health checks, configuration)
@@ -268,7 +280,7 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - 🎯 Multi-turn conversations with context window management
 - 🎯 Persona configuration (personality, system prompts)
 - 🎯 Chat history storage & session metadata
-- 🎯 Web chat UI (login, chat interface)
+- 🎯 Web chat UI (chat interface, message display, streaming)
 - 🎯 Docker Compose integration (Ollama, Database)
 
 **Phase 2 (Later):** Make it **smart** and **manageable**
