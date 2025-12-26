@@ -1,0 +1,89 @@
+/* LumaCore Theme: Light Mode (Official) */
+/* Light variant of the official LumaCore brand theme */
+/* Maintains the signature Orange/Gold accent colors with inverted backgrounds */
+
+:root {
+    /* ========================================
+	   ACCENT COLORS - LumaCore Brand Identity
+	   Same as dark theme!
+	   ======================================== */
+    --accent-primary: #ff9800;
+    --accent-secondary: #f57c00;
+    --accent-rgb: 255,    152,    0;
+	
+    /* Accent color derivatives - adjusted for light backgrounds */
+    --accent-glow: rgba(var(--accent-rgb), 0.15);
+    --accent-focus-ring: rgba(var(--accent-rgb), 0.2);
+    --accent-shadow: rgba(var(--accent-rgb), 0.25);
+	
+    /* Hover states (slightly darker orange) */
+    --accent-hover-primary: #f57c00;
+    --accent-hover-secondary: #ef6c00;
+	
+    /* Focus/Active states */
+    --border-focus: var(--accent-primary);
+	
+    /* ========================================
+	   BACKGROUND COLORS - Light Mode
+	   ======================================== */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f7;
+    --bg-tertiary: #ebebef;
+    --bg-card: linear-gradient(135deg, #ffffff 0%, #f9f9fb 100%);
+    --bg-input: #f5f5f7;
+    --bg-input-focus: #ffffff;
+    --bg-disabled: #e8e8eb;
+    --bg-header: radial-gradient(circle at top left, #fafafa 0, #f0f0f2 55%, #e8e8ea 100%);
+    --bg-footer: #f9f9fb;
+	
+    /* ========================================
+	   TEXT COLORS - Light Mode (Inverted)
+	   ======================================== */
+    --text-primary: #1a1a2e;
+    --text-secondary: #2d2d44;
+    --text-muted: #5a5a6e;
+    --text-disabled: #8b8b9f;
+    --text-placeholder: #a0a0b0;
+	
+    /* ========================================
+	   BORDER COLORS - Light Mode
+	   ======================================== */
+    --border-primary: #d0d0d8;
+    --border-secondary: #e0e0e8;
+	
+    /* ========================================
+	   STATUS/ERROR COLORS - UNIVERSAL (same across all themes)
+	   These represent semantic meaning and must not change!
+	   ======================================== */
+    --error-bg: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    --error-border: #ef4444;
+    --error-text: #dc2626;
+	
+    /* Status indicators - MUST remain consistent for UX! */
+    --status-ok: #22c55e; /* Green - "healthy/success" */
+    --status-error: #ef4444; /* Red - "error/failed" */
+    --status-warning: #eab308; /* Yellow - "checking/warning" */
+    --status-info: #3b82f6; /* Blue - "information" */
+    --status-unknown: #64748b; /* Gray - "unknown/disabled" */
+	
+    /* ========================================
+	   BUTTON COLORS - Light Mode
+	   ======================================== */
+    --btn-text: #ffffff;
+    --btn-disabled-bg: linear-gradient(135deg, #e5e5ea 0%, #d0d0d8 100%);
+    --btn-disabled-text: #a0a0b0;
+	
+    /* ========================================
+	   SHADOWS - Light Mode (Subtler)
+	   ======================================== */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+	
+    /* ========================================
+	   TRANSITIONS
+	   ======================================== */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
+}

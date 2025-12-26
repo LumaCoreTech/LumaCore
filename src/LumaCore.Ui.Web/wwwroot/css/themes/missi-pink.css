@@ -1,0 +1,315 @@
+/* LumaCore Theme: Missi Pink/Lila (Community) */
+/* Complete standalone theme - no dependencies */
+/* 💜✨ Missi's official color palette with SPARKLE! ✨💜 */
+
+:root {
+    /* ========================================
+	   ACCENT COLORS - Missi's Official Palette! 🌈
+	   ======================================== */
+    --accent-primary: #ff6ec7; /* Missi Pink - Buttons, accents, hover */
+    --accent-secondary: #9a20ff; /* Deep Purple - Headings, borders */
+    --accent-tertiary: #d9b3ff; /* Light Purple - Background highlights */
+    --accent-rgb: 255, 110, 199; /* RGB for rgba() */
+    /* Glitter colors ✨ - For magical effects! */
+    --glitter-color: #ffffff;
+    --glitter-shadow: #ffaaee;
+    /* Accent color derivatives */
+    --accent-glow: rgba(var(--accent-rgb), 0.5);
+    --accent-focus-ring: rgba(var(--accent-rgb), 0.3);
+    --accent-shadow: 0 0 10px var(--glitter-shadow);
+    /* Hover states - SPARKLE INTENSIFIES! ✨ */
+    --accent-hover-primary: #ff5bb8;
+    --accent-hover-secondary: #8b10ff;
+    /* Focus/Active states */
+    --border-focus: var(--accent-primary);
+    /* ========================================
+	   BACKGROUND COLORS - Dark with Pink Tint
+	   ======================================== */
+    --bg-primary: #0b0b12;
+    --bg-secondary: #1a1a2e;
+    --bg-tertiary: #16213e;
+    --bg-card: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    --bg-input: #0f1419;
+    --bg-input-focus: #1a1f2e;
+    --bg-disabled: #1a1a2e;
+    --bg-header: radial-gradient(circle at top left, #2a1a2e 0, #1a1322 55%, #0b0b12 100%);
+    --bg-footer: #0f0f18;
+    /* ========================================
+	   TEXT COLORS - Slightly pink-tinted
+	   ======================================== */
+    --text-primary: #fff5fa; /* Slightly pink-tinted */
+    --text-secondary: #f5e8f5; /* Pink-tinted secondary */
+    --text-muted: #d1b8d1; /* Pink-tinted muted */
+    --text-disabled: #a78ba7;
+    --text-placeholder: #8070a0; /* Purple-tinted */
+    /* ========================================
+	   BORDER COLORS - Missi's Deep Purple
+	   ======================================== */
+    --border-primary: #3d2748; /* Slightly purple */
+    --border-secondary: #2a263a;
+    /* ========================================
+	   STATUS/ERROR COLORS - UNIVERSAL (same across all themes)
+	   These represent semantic meaning and must not change!
+	   ======================================== */
+    --error-bg: linear-gradient(135deg, #3d1a2a 0%, #2d1420 100%);
+    --error-border: #ff6ba0; /* Pink-tinted error */
+    --error-text: #ffb3d9; /* Pink-tinted error text */
+    /* Status indicators - MUST remain consistent for UX! */
+    --status-ok: #22c55e; /* Green - "healthy/success" (NOT pink!) */
+    --status-error: #ef4444; /* Red - "error/failed" */
+    --status-warning: #eab308; /* Yellow - "checking/warning" */
+    --status-info: #3b82f6; /* Blue - "information" */
+    --status-unknown: #64748b; /* Gray - "unknown/disabled" */
+    /* ========================================
+	   BUTTON COLORS - Missi's Button Design! 💕
+	   ======================================== */
+    --btn-text: #ffffff;
+    --btn-disabled-bg: linear-gradient(135deg, #4a3568 0%, #2d2748 100%);
+    --btn-disabled-text: #a096b0;
+    /* ========================================
+	   SHADOWS - SPARKLE Edition! ✨
+	   ======================================== */
+    --shadow-sm: 0 2px 4px rgba(255, 110, 199, 0.2);
+    --shadow-md: 0 4px 12px rgba(255, 110, 199, 0.3);
+    --shadow-lg: 0 8px 32px rgba(255, 110, 199, 0.4);
+    /* GLITTER SHADOWS ✨ */
+    --glitter-shadow-sm: 0 0 5px var(--glitter-shadow);
+    --glitter-shadow-md: 0 0 10px var(--glitter-shadow);
+    --glitter-shadow-lg: 0 0 20px var(--glitter-shadow),   0 0 40px rgba(255, 170, 238, 0.3);
+    /* ========================================
+	   TRANSITIONS
+	   ======================================== */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
+}
+
+/* ========================================
+   REFINED SPARKLE - Production Ready! ✨
+   Missi's personality - but usable!
+   ======================================== */
+
+/* ============================================
+   SUBTLE BUTTON SPARKLE
+   Slow sweep - barely noticeable but adds magic
+   ============================================ */
+
+.lc-button {
+    overflow: hidden;
+    position: relative;
+}
+
+/* Very subtle sparkle sweep - every 12 seconds */
+
+.lc-button::before {
+    animation: sparkle-sweep 12s infinite;
+    background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.15) 50%, transparent 60%);
+    content: '';
+    height: 200%;
+    left: -50%;
+    pointer-events: none;
+    position: absolute;
+    top: -50%;
+    transform: rotate(45deg);
+    width: 200%;
+}
+
+@keyframes sparkle-sweep {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+/* Hover pulse - provides feedback, then stops */
+
+.lc-button:hover:not(:disabled) { animation: button-sparkle-pulse 1.5s ease-in-out 3; }
+
+@keyframes button-sparkle-pulse {
+    0%, 100% { box-shadow: 0 2px 8px var(--accent-glow); }
+
+    50% { box-shadow: 0 4px 16px var(--accent-glow), var(--glitter-shadow-md); }
+}
+
+/* ============================================
+   INPUT FOCUS SPARKLE
+   Subtle feedback when focusing inputs
+   ============================================ */
+
+.lc-input:focus { animation: glitter-pulse 2s ease-in-out 2; }
+
+@keyframes glitter-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px var(--accent-focus-ring), var(--glitter-shadow-sm); }
+
+    50% { box-shadow: 0 0 0 3px var(--accent-focus-ring), var(--glitter-shadow-md); }
+}
+
+/* ============================================
+   LOGO SPARKLE
+   Very subtle breathing effect
+   ============================================ */
+
+.lc-login-logo {
+    animation: logo-sparkle 8s ease-in-out infinite;
+    filter: drop-shadow(var(--glitter-shadow-md));
+}
+
+@keyframes logo-sparkle {
+    0%, 100% { filter: drop-shadow(var(--glitter-shadow-sm)); }
+
+    50% { filter: drop-shadow(var(--glitter-shadow-md)); }
+}
+
+/* ============================================
+   CHECKBOX SPARKLE
+   Quick feedback on check
+   ============================================ */
+
+.lc-checkbox:checked {
+    animation: checkbox-sparkle 0.3s ease-out;
+    box-shadow: var(--glitter-shadow-sm);
+}
+
+@keyframes checkbox-sparkle {
+    0% { transform: scale(1); }
+
+    50% { transform: scale(1.1); }
+
+    100% { transform: scale(1); }
+}
+
+/* ============================================
+   PAGE TRANSITION
+   Smooth, quick transition on navigation
+   ============================================ */
+
+@keyframes page-sparkle-transition {
+    0% {
+        filter: brightness(1.1);
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    100% {
+        filter: brightness(1);
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.lc-main { animation: page-sparkle-transition 0.3s ease-out; }
+
+/* ============================================
+   GLITTER BORDER (Opt-in)
+   For special elements that need extra attention
+   ============================================ */
+
+@keyframes glitter-border-pulse {
+    0%, 100% {
+        border-color: #ff6ec7;
+        box-shadow: 0 0 10px rgba(255, 110, 199, 0.5);
+    }
+
+    33% {
+        border-color: #9a20ff;
+        box-shadow: 0 0 10px rgba(154, 32, 255, 0.5);
+    }
+
+    66% {
+        border-color: #d9b3ff;
+        box-shadow: 0 0 10px rgba(217, 179, 255, 0.5);
+    }
+}
+
+.lc-card-glitter {
+    animation: glitter-border-pulse 3s infinite;
+    border: 2px solid #ff6ec7;
+}
+
+/* ============================================
+   LOGIN SUCCESS CONFETTI 🎊
+   MANUAL TRIGGER ONLY - for special moments!
+   
+   Usage:
+   After successful login, add class to a container:
+   <div class="lc-login-success">
+       Login successful!
+   </div>
+   ============================================ */
+
+@keyframes confetti-fall {
+    0% {
+        opacity: 1;
+        transform: translateY(-100vh) rotate(0deg);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(720deg);
+    }
+}
+
+@keyframes confetti-wobble {
+    0%, 100% { transform: translateX(0); }
+
+    25% { transform: translateX(-10px); }
+
+    75% { transform: translateX(10px); }
+}
+
+/* Confetti particles */
+
+.lc-login-success::before,
+.lc-login-success::after {
+    animation: confetti-fall 2.5s ease-in forwards, confetti-wobble 0.3s ease-in-out 8;
+    content: '🎉';
+    font-size: 2rem;
+    pointer-events: none;
+    position: fixed;
+    top: 0;
+    z-index: 9999;
+}
+
+.lc-login-success::before {
+    animation-delay: 0s;
+    left: 30%;
+}
+
+.lc-login-success::after {
+    animation-delay: 0.2s;
+    right: 30%;
+}
+
+/* ============================================
+   ADMIN MODE - Professional & Distraction-Free
+   
+   For admin pages (Status, Dashboard, Settings):
+   <body class="lc-admin-mode">
+   
+   This disables all sparkle animations while keeping
+   Missi's beautiful colors and hover effects!
+   ============================================ */
+
+/* Disable all animations in admin mode */
+
+.lc-admin-mode .lc-button::before { display: none; }
+
+.lc-admin-mode .lc-button:hover:not(:disabled) {
+    animation: none;
+    /* Still changes color on hover, just no pulse animation */
+}
+
+.lc-admin-mode .lc-input:focus { animation: none; }
+
+.lc-admin-mode .lc-main { animation: none; }
+
+.lc-admin-mode .lc-login-logo {
+    animation: none;
+    filter: drop-shadow(var(--glitter-shadow-sm));
+}
+
+.lc-admin-mode .lc-checkbox:checked { animation: none; }
+
+.lc-admin-mode .lc-card-glitter { animation: none; }
+
+/* Admin mode keeps: Colors, Hover color changes, Focus rings */
+/* Admin mode removes: All animations, pulses, sweeps */

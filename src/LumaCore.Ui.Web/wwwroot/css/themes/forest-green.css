@@ -1,0 +1,88 @@
+/* LumaCore Theme: Forest Green (Community) */
+/* Complete standalone theme - no dependencies */
+/* Dark-based theme with Green accent colors */
+
+:root {
+    /* ========================================
+	   ACCENT COLORS - Forest Green
+	   ======================================== */
+    --accent-primary: #10b981;
+    --accent-secondary: #059669;
+    --accent-rgb: 16,  185,  129;
+	
+    /* Accent color derivatives */
+    --accent-glow: rgba(var(--accent-rgb), 0.3);
+    --accent-focus-ring: rgba(var(--accent-rgb), 0.15);
+    --accent-shadow: rgba(var(--accent-rgb), 0.4);
+	
+    /* Hover states (slightly darker green) */
+    --accent-hover-primary: #059669;
+    --accent-hover-secondary: #047857;
+	
+    /* Focus/Active states */
+    --border-focus: var(--accent-primary);
+	
+    /* ========================================
+	   BACKGROUND COLORS (Same as dark theme)
+	   ======================================== */
+    --bg-primary: #0b0b12;
+    --bg-secondary: #1a1a2e;
+    --bg-tertiary: #16213e;
+    --bg-card: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    --bg-input: #0f1419;
+    --bg-input-focus: #1a1f2e;
+    --bg-disabled: #1a1a2e;
+    --bg-header: radial-gradient(circle at top left, #252545 0, #131322 55%, #0b0b12 100%);
+    --bg-footer: #0f0f18;
+	
+    /* ========================================
+	   TEXT COLORS (Same as dark theme)
+	   ======================================== */
+    --text-primary: #f5f5ff;
+    --text-secondary: #e8e8f5;
+    --text-muted: #b8b8d1;
+    --text-disabled: #8b8ba7;
+    --text-placeholder: #6b7280;
+	
+    /* ========================================
+	   BORDER COLORS (Same as dark theme)
+	   ======================================== */
+    --border-primary: #2d3748;
+    --border-secondary: #26263a;
+	
+    /* ========================================
+	   STATUS/ERROR COLORS - UNIVERSAL (same across all themes)
+	   These represent semantic meaning and must not change!
+	   ======================================== */
+    --error-bg: linear-gradient(135deg, #3d1a1a 0%, #2d1414 100%);
+    --error-border: #ff6b6b;
+    --error-text: #ff9999;
+	
+    /* Status indicators - MUST remain consistent for UX! */
+    --status-ok: #22c55e; /* Green - "healthy/success" */
+    --status-error: #ef4444; /* Red - "error/failed" */
+    --status-warning: #eab308; /* Yellow - "checking/warning" */
+    --status-info: #3b82f6; /* Blue - "information" */
+    --status-unknown: #64748b; /* Gray - "unknown/disabled" */
+	
+    /* ========================================
+	   BUTTON COLORS
+	   ======================================== */
+    --btn-text: #1a1a2e;
+    --btn-disabled-bg: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    --btn-disabled-text: #718096;
+	
+    /* ========================================
+	   SHADOWS (Same as dark theme)
+	   ======================================== */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+	
+    /* ========================================
+	   TRANSITIONS
+	   ======================================== */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
+}
