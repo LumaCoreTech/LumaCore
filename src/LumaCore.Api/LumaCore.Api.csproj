@@ -53,7 +53,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.1" />
 
 		<!-- API Versioning for Minimal APIs -->
-		<PackageReference Include="Asp.Versioning.Http" Version="8.1.0" />
+		<PackageReference Include="Asp.Versioning.Http" Version="8.1.1" />
 
 		<!-- API Explorer for versioned OpenAPI document generation -->
 		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.1" />
