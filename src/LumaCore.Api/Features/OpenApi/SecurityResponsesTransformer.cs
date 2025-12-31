@@ -59,7 +59,6 @@ sealed class SecurityResponsesTransformer : IOpenApiOperationTransformer
 	/// <param name="cancellationToken">
 	/// A <see cref="CancellationToken"/> to cancel the operation.
 	/// </param>
-	/// <returns>A completed <see cref="Task"/>.</returns>
 	public Task TransformAsync(
 		OpenApiOperation                   operation,
 		OpenApiOperationTransformerContext context,

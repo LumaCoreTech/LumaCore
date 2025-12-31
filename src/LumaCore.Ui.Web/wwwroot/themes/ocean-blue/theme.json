@@ -1,0 +1,26 @@
+{
+  "id": "ocean-blue",
+  "name": {
+    "en": "Ocean Blue",
+    "de": "Ozeanblau"
+  },
+  "description": {
+    "en": "Deep blue accent for calm and focused work",
+    "de": "Tiefer blauer Akzent für ruhiges und fokussiertes Arbeiten"
+  },
+  "category": "community",
+  "categoryLabel": {
+    "en": "Community",
+    "de": "Community"
+  },
+  "icon": "icon.svg",
+  "author": "Community",
+  "version": "1.0.0",
+  "order": 4,
+  "colors": {
+    "preview": {
+      "background": "#0a0f1a",
+      "accent": "#3b82f6"
+    }
+  }
+}

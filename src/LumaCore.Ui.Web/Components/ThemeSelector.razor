@@ -1,0 +1,276 @@
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@* Theme Selector - Dynamic theme loading with i18n support *@
+@inject IJSRuntime JsRuntime
+
+<div class="lc-theme-selector">
+
+	<p class="lc-theme-description">@L.Get("components.settings.theme.title")</p>
+
+	<div class="lc-theme-grid">
+
+		@if (mAvailableThemes == null)
+		{
+			<p>@L.Get("common.messages.loading")</p>
+		}
+		else
+		{
+			@foreach (ThemeMetadata theme in mAvailableThemes)
+			{
+				<div class="lc-theme-card @(mCurrentTheme == theme.Id ? "lc-theme-card-active" : "")"
+				     @onmouseenter="@(() => PreviewThemeAsync(theme.Id))"
+				     @onmouseleave="ResetPreviewAsync"
+				     @onclick="@(() => SelectThemeAsync(theme.Id))">
+					<div class="lc-theme-icon">
+						<img src="themes/@theme.Id/@theme.Icon" alt="@GetLocalizedName(theme)" width="48" height="48"/>
+					</div>
+					<div class="lc-theme-name">@GetLocalizedName(theme)</div>
+					<div class="lc-theme-card-description">@GetLocalizedDescription(theme)</div>
+					<div class="lc-theme-label">@GetLocalizedCategoryLabel(theme)</div>
+					<div class="lc-theme-preview" style="background: linear-gradient(135deg, @theme.Colors.Preview.Background 66%, @theme.Colors.Preview.Accent 33%);"></div>
+					<div class="lc-theme-card-author">@(string.IsNullOrEmpty(theme.Author) ? "\u00A0" : $"{L.Get("components.settings.theme.authorPrefix")} {theme.Author}")</div>
+					@if (mCurrentTheme == theme.Id)
+					{
+						<div class="lc-theme-checkmark">
+							<LcIcon Name="checkmark"/>
+						</div>
+					}
+				</div>
+			}
+		}
+
+	</div>
+
+	<p class="lc-theme-hint">@L.Get("components.settings.theme.hint")</p>
+</div>
+
+@code {
+
+	/// <summary>
+	/// Event callback invoked when the selected theme changes.
+	/// </summary>
+	[Parameter]
+	public EventCallback OnThemeChanged { get; set; }
+
+	/// <summary>
+	/// Currently active theme name.
+	/// </summary>
+	private string mCurrentTheme = "lumacore-dark";
+
+	/// <summary>
+	/// Current locale for theme name/description translations.
+	/// </summary>
+	private string mCurrentLocale = "en";
+
+	/// <summary>
+	/// Available themes loaded from theme.json files.
+	/// </summary>
+	private List<ThemeMetadata>? mAvailableThemes;
+
+	/// <summary>
+	/// Lifecycle: Set locale from LocalizationService (no JS needed).
+	/// </summary>
+	protected override void OnInitialized()
+	{
+		mCurrentLocale = L.CurrentLocale;
+	}
+
+	/// <summary>
+	/// Lifecycle: Load themes via JS interop after first render.
+	/// </summary>
+	/// <remarks>
+	/// JS interop is only safe after the component has rendered. Using <c>OnAfterRenderAsync</c>
+	/// with <paramref name="firstRender"/> guarantees JavaScript is ready, avoiding the need
+	/// for fragile workarounds like <c>Task.Delay()</c>.
+	/// </remarks>
+	/// <param name="firstRender"><see langword="true"/> on the first render; <see langword="false"/> on subsequent renders.</param>
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!firstRender)
+			return;
+
+		try
+		{
+			// Get current theme from JavaScript (localStorage)
+			mCurrentTheme = await JsRuntime.InvokeAsync<string>("getThemeId").ConfigureAwait(true);
+
+			// Load available themes from JavaScript
+			JsonElement themesJson = await JsRuntime.InvokeAsync<JsonElement>("getAvailableThemes").ConfigureAwait(true);
+			var options = new JsonSerializerOptions
+			{
+				PropertyNameCaseInsensitive = true,
+				PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+			};
+
+			var themes = JsonSerializer.Deserialize<List<ThemeMetadata>>(themesJson.GetRawText(), options);
+			mAvailableThemes = themes?.OrderBy(t => t.Order).ToList();
+		}
+		catch
+		{
+			mCurrentTheme = "lumacore-dark";
+			mAvailableThemes = [];
+		}
+
+		// Trigger re-render now that themes are loaded
+		StateHasChanged();
+	}
+
+	/// <summary>
+	/// Preview a theme temporarily (on hover).
+	/// </summary>
+	private async Task PreviewThemeAsync(string themeName)
+	{
+		try
+		{
+			await JsRuntime.InvokeVoidAsync("previewTheme", themeName).ConfigureAwait(true);
+		}
+		catch
+		{
+			// Silently handle JS interop failures
+		}
+	}
+
+	/// <summary>
+	/// Reset preview back to current theme (on mouse leave).
+	/// </summary>
+	private async Task ResetPreviewAsync()
+	{
+		try
+		{
+			await JsRuntime.InvokeVoidAsync("resetThemePreview").ConfigureAwait(true);
+		}
+		catch
+		{
+			// Silently handle JS interop failures
+		}
+	}
+
+	/// <summary>
+	/// Select and persist a theme (on click).
+	/// </summary>
+	private async Task SelectThemeAsync(string themeName)
+	{
+		mCurrentTheme = themeName;
+
+		try
+		{
+			string toastMessage = L.Get("components.settings.theme.toasts.saved");
+			await JsRuntime.InvokeVoidAsync("selectTheme", themeName, toastMessage).ConfigureAwait(true);
+			await OnThemeChanged.InvokeAsync().ConfigureAwait(true);
+		}
+		catch
+		{
+			// Silently handle JS interop failures
+		}
+	}
+
+	/// <summary>
+	/// Get localized theme name from theme metadata.
+	/// </summary>
+	private string GetLocalizedName(ThemeMetadata theme)
+	{
+		if (theme.Name == null)
+			return theme.Id;
+
+		if (theme.Name.TryGetValue(mCurrentLocale, out string? localizedName))
+			return localizedName;
+
+		if (theme.Name.TryGetValue("en", out string? englishName))
+			return englishName;
+
+		return theme.Id;
+	}
+
+	/// <summary>
+	/// Get localized category label from theme metadata.
+	/// </summary>
+	private string GetLocalizedCategoryLabel(ThemeMetadata theme)
+	{
+		if (theme.CategoryLabel == null)
+			return theme.Category;
+
+		if (theme.CategoryLabel.TryGetValue(mCurrentLocale, out string? localizedLabel))
+			return localizedLabel;
+
+		if (theme.CategoryLabel.TryGetValue("en", out string? englishLabel))
+			return englishLabel;
+
+		return theme.Category;
+	}
+
+	/// <summary>
+	/// Get localized description from theme metadata, or <see langword="null"/> if not available.
+	/// </summary>
+	private string? GetLocalizedDescription(ThemeMetadata theme)
+	{
+		if (theme.Description == null)
+			return null;
+
+		if (theme.Description.TryGetValue(mCurrentLocale, out string? localizedDesc))
+			return localizedDesc;
+
+		return theme.Description.GetValueOrDefault("en");
+	}
+
+	// ReSharper disable ClassNeverInstantiated.Local
+	// ReSharper disable UnusedAutoPropertyAccessor.Local
+	// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
+	// Reason: JSON deserialization DTOs — instantiated and populated by JsonSerializer
+
+	/// <summary>
+	/// Theme metadata model matching the theme.json structure.
+	/// </summary>
+	private sealed record ThemeMetadata
+	{
+		[JsonRequired]
+		[JsonPropertyName("id")]
+		public required string Id { get; init; }
+
+		[JsonPropertyName("name")]
+		public Dictionary<string, string>? Name { get; init; }
+
+		[JsonPropertyName("description")]
+		public Dictionary<string, string>? Description { get; init; }
+
+		[JsonPropertyName("category")]
+		public string Category { get; init; } = string.Empty;
+
+		[JsonPropertyName("categoryLabel")]
+		public Dictionary<string, string>? CategoryLabel { get; init; }
+
+		[JsonPropertyName("icon")]
+		public string Icon { get; init; } = "icon.svg";
+
+		[JsonPropertyName("author")]
+		public string Author { get; init; } = string.Empty;
+
+		[JsonPropertyName("version")]
+		public string Version { get; init; } = string.Empty;
+
+		[JsonPropertyName("order")]
+		public int Order { get; init; }
+
+		[JsonPropertyName("colors")]
+		public ThemeColors Colors { get; init; } = new();
+	}
+
+	private sealed record ThemeColors
+	{
+		[JsonPropertyName("preview")]
+		public PreviewColors Preview { get; init; } = new();
+	}
+
+	private sealed record PreviewColors
+	{
+		[JsonPropertyName("background")]
+		public string Background { get; init; } = "#000000";
+
+		[JsonPropertyName("accent")]
+		public string Accent { get; init; } = "#ff8800";
+	}
+
+	// ReSharper restore UnusedAutoPropertyAccessor.Local
+	// ReSharper restore ClassNeverInstantiated.Local
+	// ReSharper restore AutoPropertyCanBeMadeGetOnly.Local
+
+}

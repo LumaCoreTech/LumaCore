@@ -1,90 +1,110 @@
 @inherits LayoutComponentBase
 
-@* 
+@*
     Main layout for the LumaCore Web UI preview.
 
     This layout defines:
     - A header with logo, backend health indicator, title, and navigation links.
     - A main content area where the current page is rendered via @Body.
     - A footer with a short tagline for the preview UI.
-*@
-<div class="lc-root">
-	<header class="lc-header">
-		<div class="lc-header-left">
-			@* Logo block with the LumaCore logo and a live backend health indicator *@
-			<div class="lc-logo-wrapper">
-				<img src="assets/branding/lumacore-logo.svg"
-				     alt="LumaCore Logo"
-				     class="lc-logo-img"/>
-				@* Small indicator that polls the backend and reflects its health state *@
-				<BackendHealthIndicator/>
-			</div>
 
-			@* Title and subtitle describing the project vision *@
-			<div class="lc-title-block">
-				<div class="lc-title">LumaCore</div>
-				<div class="lc-subtitle">
-					A home for AI personas — built with warmth, intention, and the freedom to grow.
+    Localization is handled in pure C# via @L.Get("key") — no JavaScript MutationObserver needed.
+*@
+
+@* Wait for localization to be initialized before rendering *@
+@* Wait for localization to be initialized before rendering *@
+@* Note: "Loading..." is intentionally hardcoded — L.Get() is not available until L.IsInitialized is true *@
+@if (!L.IsInitialized)
+{
+	<div class="lc-root">
+		<div class="lc-loading">Loading…</div>
+	</div>
+}
+else
+{
+	<div class="lc-root">
+		<header class="lc-header">
+			<div class="lc-header-left">
+				@* Logo block with the LumaCore logo and a live backend health indicator *@
+				<div class="lc-logo-wrapper">
+					<img src="assets/branding/lumacore-logo.svg"
+					     alt="LumaCore Logo"
+					     class="lc-logo-img"/>
+					@* Small indicator showing backend health state (checked on init and click) *@
+					<BackendHealthIndicator/>
+				</div>
+
+				@* Title and subtitle describing the project vision *@
+				<div class="lc-title-block">
+					<div class="lc-title">LumaCore</div>
+					<div class="lc-subtitle">@L.Get("app.subtitle")</div>
 				</div>
 			</div>
-		</div>
 
-		@* Primary navigation for the preview UI *@
-		<nav class="lc-nav">
-			@* Root/home entry; kept simple for the early preview version *@
-			<a href="">Home</a>
-			@* External link to the public project site, opened in a separate tab *@
-			<a href="https://lumacore.tech" target="_blank" rel="noopener noreferrer">Project Site</a>
+			@* Primary navigation for the preview UI *@
+			<nav class="lc-nav">
+				@* Root/home entry; kept simple for the early preview version *@
+				<a href="">@L.Get("components.navbar.home")</a>
+				@* External link to the public project site, opened in a separate tab *@
+				<a href="https://lumacore.tech" target="_blank" rel="noopener noreferrer">@L.Get("components.navbar.projectSite")</a>
 
-			@* Authentication-dependent navigation *@
-			<AuthorizeView>
-				<Authorized>
-					@* Show Protected link and Logout button when authenticated *@
-					<NavLink href="protected" class="...">Protected</NavLink>
-					<button @onclick="HandleLogoutAsync" class="lc-nav-button">Logout</button>
+				@* Authentication-dependent navigation *@
+				<AuthorizeView>
+					<Authorized>
+						@* Show Protected link and Logout button when authenticated *@
+						<NavLink href="protected" class="lc-nav-link">@L.Get("components.navbar.protected")</NavLink>
+						<button @onclick="HandleLogoutAsync" class="lc-nav-button lc-logout">@L.Get("components.navbar.logout")</button>
+					</Authorized>
+					<NotAuthorized>
+						@* Show Login link when not authenticated *@
+						<NavLink href="login" class="lc-nav-button lc-nav-button-login">@L.Get("components.navbar.login")</NavLink>
+					</NotAuthorized>
+				</AuthorizeView>
 
-					@* Settings Panel Toggle - Visible for all authenticated users *@
-					<button class="lc-settings-toggle" @onclick="ShowSettingsPanelAsync" title="Settings">
-						🎨
-					</button>
-				</Authorized>
-				<NotAuthorized>
-					@* Show Login link when not authenticated *@
-					<NavLink href="login" class="...">Login</NavLink>
-				</NotAuthorized>
-			</AuthorizeView>
+				@* Language Switcher - Always visible, even without login *@
+				<LanguageSwitcher/>
 
-			@* Admin Panel Toggle - Only visible for admin role *@
-			<AuthorizeView Roles="admin">
-				<Authorized>
-					<button class="lc-admin-toggle" @onclick="ShowAdminPanelAsync" title="Admin Panel">
-						⚙️
-					</button>
-				</Authorized>
-			</AuthorizeView>
-		</nav>
-	</header>
+				@* Settings Panel Toggle - Visible for all authenticated users *@
+				<AuthorizeView>
+					<Authorized>
+						<button class="lc-settings-toggle" @onclick="ShowSettingsPanelAsync" title="@L.Get("components.navbar.settings")">
+							<img src="assets/icons/icon-settings.svg" class="lc-nav-icon" alt=""/>
+						</button>
+					</Authorized>
+				</AuthorizeView>
 
-	@* Main area where the currently active page content is rendered *@
-	<main class="lc-main">
-		@Body
-	</main>
+				@* Admin Panel Toggle - Only visible for admin role *@
+				<AuthorizeView Roles="admin">
+					<Authorized>
+						<button class="lc-admin-toggle" @onclick="ShowAdminPanelAsync" title="@L.Get("components.navbar.admin")">
+							<img src="assets/icons/icon-admin.svg" class="lc-nav-icon" alt=""/>
+						</button>
+					</Authorized>
+				</AuthorizeView>
+			</nav>
+		</header>
 
-	@* Footer with a short, stable tagline for the preview UI *@
-	<footer class="lc-footer">
-		<span>LumaCore UI (preview)</span>
-		<span>Self-hosted. Persona-focused. Yours.</span>
-	</footer>
+		@* Main area where the currently active page content is rendered *@
+		<main class="lc-main">
+			@Body
+		</main>
 
-	@* Settings Overlay - opens on demand via 🎨 button *@
-	@if (mShowSettingsPanel)
-	{
-		<SettingsOverlay OnClose="HideSettingsPanelAsync"/>
-	}
+		@* Footer with a short, stable tagline for the preview UI *@
+		<footer class="lc-footer">
+			<span>LumaCore UI (preview)</span>
+			<span>@L.Get("app.tagline")</span>
+		</footer>
 
-	@* Admin Overlay - opens on demand via ⚙️ button *@
-	<AdminOverlay @ref="mAdminOverlay"/>
-</div>
+		@* Settings Overlay - opens on demand via settings button *@
+		@if (mShowSettingsPanel)
+		{
+			<SettingsOverlay OnClose="HideSettingsPanelAsync"/>
+		}
+
+		@* Admin Overlay - opens on demand via admin button *@
+		<AdminOverlay @ref="mAdminOverlay"/>
+	</div>
+}
 
 @code {
 
@@ -101,7 +121,17 @@
 	private IJSRuntime? JsRuntime { get; set; }
 
 	private AdminOverlay? mAdminOverlay;
-	private bool          mShowSettingsPanel = false;
+	private bool          mShowSettingsPanel;
+
+	/// <summary>
+	/// Lifecycle: Initialize LocalizationService by loading translations.
+	/// </summary>
+	protected override async Task OnInitializedAsync()
+	{
+		// Initialize localization — loads translations from JSON.
+		// The L.IsInitialized check in the markup prevents rendering until this completes.
+		await L.InitializeAsync().ConfigureAwait(true);
+	}
 
 	/// <summary>
 	/// Handles the logout action when the user clicks the logout button.
@@ -113,14 +143,11 @@
 	private async Task HandleLogoutAsync()
 	{
 		// Ensure all dependencies are available.
-		// If any are missing, we cannot proceed with logout.
-		// This is a safeguard against misconfiguration or runtime issues.
 		if (AuthService is null || AuthStateProvider is null || Navigation is null || JsRuntime is null)
 			return;
 
 		// Reset theme to default before logout.
-		// Failures in JS interop are silently handled to avoid disrupting the logout flow
-		// (e.g., if JS is not available or the function is not defined).
+		// TODO: Once admin-configurable default theme exists (database), reset to that instead of hardcoded default.
 		try
 		{
 			await JsRuntime.InvokeVoidAsync("resetThemeToDefault").ConfigureAwait(true);
@@ -131,7 +158,6 @@
 		}
 
 		// Perform logout via AuthService and notify the authentication state provider.
-		// This will clear the auth token and update the UI accordingly.
 		await AuthService.LogoutAsync().ConfigureAwait(true);
 		AuthStateProvider.NotifyStateChanged();
 		Navigation.NavigateTo("/");

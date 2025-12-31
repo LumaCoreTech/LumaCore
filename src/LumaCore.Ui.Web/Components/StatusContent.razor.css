@@ -1,0 +1,39 @@
+/* ============================================
+   STATUS CONTENT - Instance Status Display
+   Spacing and layout for admin status panel
+   ============================================ */
+
+/* Container */
+.lc-status-content { max-width: 600px; }
+
+/* Title */
+
+.lc-status-title {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 1.5rem 0;
+}
+
+/* Loading/fallback message */
+
+.lc-status-message {
+    color: var(--text-secondary);
+    margin: 0 0 1.5rem 0;
+}
+
+/* Detail text below badge */
+
+.lc-status-detail {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0.5rem 0 0 0;
+}
+
+/* Action buttons container */
+
+.lc-status-actions {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-secondary);
+}

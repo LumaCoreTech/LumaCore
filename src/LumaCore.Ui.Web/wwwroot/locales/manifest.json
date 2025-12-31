@@ -1,0 +1,15 @@
+{
+  "_comment": "List of available locales - add new locales here",
+  "locales": [
+    {
+      "code": "en",
+      "nativeName": "English",
+      "order": 1
+    },
+    {
+      "code": "de",
+      "nativeName": "Deutsch",
+      "order": 2
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+@using System.Text.Json
+@* Clickable backend health indicator shown next to the logo in the main layout. *@
+@inject HttpClient Http
+
+<div class="lc-logo-health-indicator"
+     @onclick="OnClickAsync"
+     title="@GetTooltip()">
+	<span class="lc-logo-health-dot @GetDotClass()"></span>
+</div>
+
+@code
+{
+	/// <summary>
+	/// Represents the current health state of the backend as observed by this component.
+	/// </summary>
+	private enum HealthState
+	{
+		Unknown,
+		Checking,
+		Ok,
+		Error
+	}
+
+	/// <summary>
+	/// Holds the latest known backend health state; initialized to Unknown before the first probe runs.
+	/// </summary>
+	private HealthState mState = HealthState.Unknown;
+
+	/// <summary>
+	/// Called by the Blazor framework when the component is first initialized.
+	/// Triggers an initial health check against the backend.
+	/// </summary>
+	protected override Task OnInitializedAsync()
+	{
+		return CheckHealthAsync();
+	}
+
+	/// <summary>
+	/// Handles click events on the health indicator and re-runs the health check.
+	/// </summary>
+	private Task OnClickAsync()
+	{
+		return CheckHealthAsync();
+	}
+
+	/// <summary>
+	/// Gets the localized tooltip for the current health state.
+	/// </summary>
+	/// <returns>The translated tooltip text.</returns>
+	private string GetTooltip() => mState switch
+	{
+		HealthState.Ok       => L.Get("components.healthIndicator.tooltips.reachable"),
+		HealthState.Error    => L.Get("components.healthIndicator.tooltips.unreachable"),
+		HealthState.Checking => L.Get("components.healthIndicator.tooltips.checking"),
+		var _                => L.Get("components.healthIndicator.tooltips.unknown")
+	};
+
+	/// <summary>
+	/// Checks the current health of the backend by calling the live health endpoint.
+	/// </summary>
+	private async Task CheckHealthAsync()
+	{
+		// Set state to "Checking" immediately so the UI can show a transitional state.
+		mState = HealthState.Checking;
+		StateHasChanged();
+
+		try
+		{
+			// Perform a lightweight GET request and inspect the status code explicitly.
+			using HttpResponseMessage response = await Http
+				                                     .GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead)
+				                                     .ConfigureAwait(true);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				mState = HealthState.Error;
+				StateHasChanged();
+				return;
+			}
+
+			try
+			{
+				// Attempt to deserialize the JSON payload into the shared API contract.
+				ApiHealthLiveResponse? dto = await response.Content
+					                             .ReadFromJsonAsync<ApiHealthLiveResponse>()
+					                             .ConfigureAwait(true);
+
+				if (dto is null || string.IsNullOrWhiteSpace(dto.Status))
+				{
+					mState = HealthState.Error;
+				}
+				else
+				{
+					mState = HealthState.Ok;
+				}
+			}
+			catch (JsonException)
+			{
+				// Response body was not valid JSON or didn't match expected structure
+				mState = HealthState.Error;
+			}
+		}
+		catch (HttpRequestException)
+		{
+			// Network error — backend unreachable, DNS failure, connection refused, etc.
+			mState = HealthState.Error;
+		}
+		catch
+		{
+			// Unexpected error — timeout, cancellation, or other unforeseen issue
+			mState = HealthState.Error;
+		}
+
+		StateHasChanged();
+	}
+
+	/// <summary>
+	/// Gets the CSS class suffix that represents the current health state.
+	/// </summary>
+	/// <returns>A CSS class name appended to the base class to style the indicator.</returns>
+	private string GetDotClass() => mState switch
+	{
+		HealthState.Ok       => "lc-logo-health-dot-ok",
+		HealthState.Error    => "lc-logo-health-dot-error",
+		HealthState.Checking => "lc-logo-health-dot-checking",
+		var _                => "lc-logo-health-dot-unknown"
+	};
+}

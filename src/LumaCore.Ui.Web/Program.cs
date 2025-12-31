@@ -55,11 +55,32 @@ public class Program
 			};
 		});
 
+		// Named HttpClient for loading static files from Blazor app's wwwroot directory.
+		// This client targets the Blazor app itself (builder.HostEnvironment.BaseAddress)
+		// and can be used by any service that needs to load static resources like:
+		// - Translation files (locales/*.json)
+		// - Theme files (themes/*.css)
+		// - Configuration files (data/*.json)
+		// - Static assets (images, fonts, etc.)
+		//
+		// This is separate from the default HttpClient which targets the backend API.
+		builder.Services.AddHttpClient(
+			"StaticFilesHttpClient",
+			client =>
+			{
+				client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+				Console.WriteLine(
+					$"[LumaCore UI] StaticFilesHttpClient base URL: {builder.HostEnvironment.BaseAddress}");
+			});
+
 		// Register authentication services.
 		builder.Services.AddScoped<AuthService>();
 		builder.Services.AddScoped<JwtAuthenticationStateProvider>();
 		builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
 			sp.GetRequiredService<JwtAuthenticationStateProvider>());
+
+		// Register localization service for i18n support.
+		builder.Services.AddScoped<LocalizationService>();
 
 		// Add authorization services for [Authorize] attribute support.
 		builder.Services.AddAuthorizationCore();

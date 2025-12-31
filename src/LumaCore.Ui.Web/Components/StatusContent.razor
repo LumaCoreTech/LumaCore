@@ -4,66 +4,79 @@
 
 @*
 	StatusContent Component - Reusable status monitoring logic
-	
+
 	This component can be embedded in:
 	- Admin Overlay (modal)
 	- Standalone Status page
 	- Future: Dashboard widgets
-	
+
 	Shows backend health check status and allows manual refresh.
 *@
 
-<h2>Instance Status</h2>
+<div class="lc-status-content">
+	<h2 class="lc-status-title">@L.Get("components.admin.status.title")</h2>
 
-@if (mIsLoading)
-{
-	@* Initial and refresh state while the health check is running *@
-	<p>Checking backend health…</p>
-}
-else if (mError is not null)
-{
-	@* Error state if the health endpoint cannot be reached or returns invalid data *@
-	<p class="lc-status-badge lc-status-badge-error">Backend unreachable</p>
-	<p class="lc-note">@mError</p>
-}
-else if (mStatus is not null)
-{
-	@* Healthy state with the reported status text from the backend *@
-	<p class="lc-status-badge lc-status-badge-ok">Backend reachable</p>
-	<p class="lc-note">Reported status: @mStatus</p>
-}
-else
-{
-	@* Fallback in case no explicit status text was returned *@
-	<p class="lc-status-badge">Backend status unknown</p>
-	<p class="lc-note">
-		The backend did not return a status value. Check the orchestrator logs
-		or retry the health check.
-	</p>
-}
+	@if (mIsLoading)
+	{
+		@* Initial and refresh state while the health check is running *@
+		<p class="lc-status-message">@L.Get("components.admin.status.checking")</p>
+	}
+	else if (mError is not null)
+	{
+		@* Error state if the health endpoint cannot be reached or returns invalid data *@
+		<p class="lc-status-badge lc-status-badge-error">@L.Get("components.admin.status.unreachable")</p>
+		<p class="lc-status-detail">@mError</p>
+	}
+	else if (mStatus is not null)
+	{
+		@* Healthy state with the reported status text from the backend *@
+		<p class="lc-status-badge lc-status-badge-ok">@L.Get("components.admin.status.reachable")</p>
+		<p class="lc-status-detail">
+			<span>@L.Get("components.admin.status.reportedLabel")</span> @mStatus
+		</p>
+	}
+	else
+	{
+		@* Fallback in case no explicit status text was returned *@
+		<p class="lc-status-badge">@L.Get("components.admin.status.unknown")</p>
+		<p class="lc-status-detail">@L.Get("components.admin.status.unknownHint")</p>
+	}
 
-<p>
-	<button class="lc-button lc-button-secondary" @onclick="OnRefreshAsync" disabled="@mIsLoading">
-		@(mIsLoading ? "Checking…" : "Recheck backend health")
-	</button>
-</p>
+	<div class="lc-status-actions">
+		<button class="lc-button lc-button-secondary" @onclick="OnRefreshAsync" disabled="@mIsLoading">
+			@if (mIsLoading)
+			{
+				<span>@L.Get("components.admin.status.btnChecking")</span>
+			}
+			else
+			{
+				<span>@L.Get("components.admin.status.btnRecheck")</span>
+			}
+		</button>
+	</div>
+</div>
 
 @code
 {
-	// Indicates whether a health check request is currently in progress.
+	/// <summary>
+	/// Indicates whether a health check request is currently in progress.
+	/// </summary>
 	private bool mIsLoading = true;
 
-	// Holds the last error message from a failed health check, if any.
+	/// <summary>
+	/// Holds the last error message from a failed health check, if any.
+	/// </summary>
 	private string? mError;
 
-	// Holds the textual status reported by the backend, if available.
+	/// <summary>
+	/// Holds the textual status reported by the backend, if available.
+	/// </summary>
 	private string? mStatus;
 
 	/// <summary>
 	/// Called by the Blazor framework when the component is first initialized.
 	/// Triggers the initial backend health check.
 	/// </summary>
-	/// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
 	protected override Task OnInitializedAsync()
 	{
 		return LoadStatusAsync();
@@ -72,7 +85,6 @@ else
 	/// <summary>
 	/// Handles clicks on the "Recheck backend health" button by re-running the health check workflow.
 	/// </summary>
-	/// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
 	private Task OnRefreshAsync()
 	{
 		return LoadStatusAsync();
@@ -87,7 +99,6 @@ else
 	///     HTTP status failures, payload format issues, and a valid JSON response.
 	///     </para>
 	/// </remarks>
-	/// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
 	private async Task LoadStatusAsync()
 	{
 		// Reset state for a fresh health check.
@@ -99,7 +110,9 @@ else
 		{
 			// Perform a lightweight GET request and inspect the status code explicitly.
 			using HttpResponseMessage response =
-				await Http.GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead);
+				await Http
+					.GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead)
+					.ConfigureAwait(true);
 
 			if (!response.IsSuccessStatusCode)
 			{
@@ -110,20 +123,16 @@ else
 			try
 			{
 				// Attempt to deserialize the JSON payload into the shared API contract.
-				var dto = await response.Content.ReadFromJsonAsync<ApiHealthLiveResponse>();
+				ApiHealthLiveResponse? dto = await response.Content
+					                             .ReadFromJsonAsync<ApiHealthLiveResponse>()
+					                             .ConfigureAwait(true);
 
 				if (dto is null)
-				{
 					mError = "Backend health endpoint returned an empty response.";
-				}
 				else if (string.IsNullOrWhiteSpace(dto.Status))
-				{
 					mError = "Backend health endpoint returned an empty status value.";
-				}
 				else
-				{
 					mStatus = dto.Status;
-				}
 			}
 			catch (JsonException)
 			{
@@ -142,6 +151,7 @@ else
 		{
 			// Ensure the loading flag is reset so the UI can leave the "Checking…" state.
 			mIsLoading = false;
+			StateHasChanged();
 		}
 	}
 
@@ -156,16 +166,11 @@ else
 
 		return statusCode switch
 		{
-			HttpStatusCode.NotFound =>
-				"Backend health endpoint not found (HTTP 404).",
-			HttpStatusCode.ServiceUnavailable =>
-				"Backend service unavailable (HTTP 503).",
-			HttpStatusCode.Unauthorized =>
-				"Backend requires authentication for the health endpoint (HTTP 401).",
-			HttpStatusCode.Forbidden =>
-				"Access to the backend health endpoint is forbidden (HTTP 403).",
-			var _ =>
-				$"Backend health endpoint returned HTTP {code} ({statusCode})."
+			HttpStatusCode.NotFound           => "Backend health endpoint not found (HTTP 404).",
+			HttpStatusCode.ServiceUnavailable => "Backend service unavailable (HTTP 503).",
+			HttpStatusCode.Unauthorized       => "Backend requires authentication for the health endpoint (HTTP 401).",
+			HttpStatusCode.Forbidden          => "Access to the backend health endpoint is forbidden (HTTP 403).",
+			var _                             => $"Backend health endpoint returned HTTP {code} ({statusCode})."
 		};
 	}
 }

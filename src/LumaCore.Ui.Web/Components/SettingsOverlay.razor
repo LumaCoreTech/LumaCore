@@ -1,18 +1,15 @@
 @* Settings Overlay - User Settings Modal *@
 @implements IAsyncDisposable
-@inject IJSRuntime JSRuntime
+@inject IJSRuntime JsRuntime
 
 <div class="lc-settings-overlay" @onclick="CloseAsync">
 	<div class="lc-settings-panel" @onclick:stopPropagation>
 
 		@* Header with close button *@
 		<div class="lc-settings-header">
-			<h2 class="lc-settings-title">
-				<span class="lc-settings-icon">🎨</span>
-				Settings
-			</h2>
-			<button class="lc-settings-close" @onclick="CloseAsync" title="Close (ESC)">
-				✕
+			<h2 class="lc-settings-title">@L.Get("components.settings.header.title")</h2>
+			<button class="lc-settings-close" @onclick="CloseAsync" title="@L.Get("components.settings.header.closeHint")">
+				<LcIcon Name="close"/>
 			</button>
 		</div>
 
@@ -20,17 +17,23 @@
 		<div class="lc-settings-tabs">
 			<button class="lc-settings-tab @(mActiveTab == "theme" ? "lc-settings-tab-active" : "")"
 			        @onclick='() => SetActiveTab("theme")'>
-				Theme
+				<span>@L.Get("components.settings.tabs.theme")</span>
 			</button>
-			@* Future tabs can be added here *@
-			@* <button class="lc-settings-tab" @onclick='() => SetActiveTab("language")'>Language</button> *@
+			<button class="lc-settings-tab @(mActiveTab == "language" ? "lc-settings-tab-active" : "")"
+			        @onclick='() => SetActiveTab("language")'>
+				<span>@L.Get("components.settings.tabs.language")</span>
+			</button>
 		</div>
 
 		@* Content Area *@
 		<div class="lc-settings-content">
 			@if (mActiveTab == "theme")
 			{
-				<ThemeSwitcher OnThemeChanged="HandleThemeChangedAsync"/>
+				<ThemeSelector OnThemeChanged="HandleThemeChangedAsync"/>
+			}
+			else if (mActiveTab == "language")
+			{
+				<LanguageSelector OnLanguageChanged="HandleLanguageChangedAsync"/>
 			}
 		</div>
 
@@ -56,6 +59,34 @@
 	private DotNetObjectReference<SettingsOverlay>? mDotNetRef;
 
 	/// <summary>
+	/// Reference to the collocated JavaScript module.
+	/// </summary>
+	private IJSObjectReference? mJsModule;
+
+	/// <summary>
+	/// Lifecycle: Initialize component - register ESC key handler.
+	/// </summary>
+	/// <param name="firstRender">Indicates whether this is the first time the component has been rendered.</param>
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			try
+			{
+				mJsModule = await JsRuntime
+					            .InvokeAsync<IJSObjectReference>("import", "./Components/SettingsOverlay.razor.js")
+					            .ConfigureAwait(true);
+				mDotNetRef = DotNetObjectReference.Create(this);
+				await mJsModule.InvokeVoidAsync("registerEscHandler", mDotNetRef).ConfigureAwait(true);
+			}
+			catch
+			{
+				// Silently handle JS interop failures
+			}
+		}
+	}
+
+	/// <summary>
 	/// Sets the active tab in the settings panel.
 	/// </summary>
 	/// <param name="tabName">The name of the tab to activate.</param>
@@ -67,10 +98,19 @@
 	/// <summary>
 	/// Handles theme change from the ThemeSwitcher component.
 	/// </summary>
-	private async Task HandleThemeChangedAsync()
+	private Task HandleThemeChangedAsync()
 	{
 		// Could trigger additional actions here (analytics, etc.)
-		await Task.CompletedTask;
+		return Task.CompletedTask;
+	}
+
+	/// <summary>
+	/// Handles language change from the LanguageSelector component.
+	/// </summary>
+	private Task HandleLanguageChangedAsync()
+	{
+		// Page will reload after language change
+		return Task.CompletedTask;
 	}
 
 	/// <summary>
@@ -79,17 +119,17 @@
 	/// </summary>
 	private async Task CloseAsync()
 	{
-		// Reset theme preview if user was hovering (ESC/click outside while previewing)
+		// Reset theme preview if user was hovering
 		try
 		{
-			await JSRuntime.InvokeVoidAsync("resetThemePreview").ConfigureAwait(false);
+			await JsRuntime.InvokeVoidAsync("resetThemePreview").ConfigureAwait(true);
 		}
 		catch
 		{
 			// Silently handle JS interop failures
 		}
 
-		await OnClose.InvokeAsync();
+		await OnClose.InvokeAsync().ConfigureAwait(true);
 	}
 
 	/// <summary>
@@ -98,47 +138,28 @@
 	[JSInvokable]
 	public async Task OnEscapeKeyPressed()
 	{
-		await CloseAsync();
+		await CloseAsync().ConfigureAwait(true);
 	}
 
 	/// <summary>
-	/// Lifecycle: Register ESC key handler after component renders.
-	/// </summary>
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (firstRender)
-		{
-			try
-			{
-				mDotNetRef = DotNetObjectReference.Create(this);
-				await JSRuntime.InvokeVoidAsync("registerSettingsEscHandler", mDotNetRef);
-				Console.WriteLine("[SettingsOverlay] ESC handler registered");
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"[SettingsOverlay] Error registering ESC handler: {ex.Message}");
-			}
-		}
-	}
-
-	/// <summary>
-	/// Lifecycle: Cleanup - unregister ESC key handler and dispose DotNet reference.
+	/// Lifecycle: Cleanup - unregister ESC key handler and dispose references.
 	/// </summary>
 	public async ValueTask DisposeAsync()
 	{
-		if (mDotNetRef != null)
+		if (mJsModule is not null)
 		{
 			try
 			{
-				await JSRuntime.InvokeVoidAsync("unregisterSettingsEscHandler");
-				mDotNetRef.Dispose();
-				Console.WriteLine("[SettingsOverlay] ESC handler unregistered");
+				await mJsModule.InvokeVoidAsync("unregisterEscHandler").ConfigureAwait(true);
+				await mJsModule.DisposeAsync().ConfigureAwait(true);
 			}
-			catch (Exception ex)
+			catch
 			{
-				Console.WriteLine($"[SettingsOverlay] Error unregistering ESC handler: {ex.Message}");
+				// Silently handle JS interop failures during disposal
 			}
 		}
+
+		mDotNetRef?.Dispose();
 	}
 
 }

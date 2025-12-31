@@ -1,0 +1,148 @@
+{
+  "_comment": "LumaCore UI Übersetzungen - Deutsch",
+  "_version": "1.0.0",
+
+  "app": {
+    "name": "LumaCore",
+    "tagline": "Self-hosted. Persona-focused. Yours.",
+    "subtitle": "A home for AI personas — built with warmth, intention, and the freedom to grow."
+  },
+
+  "common": {
+    "buttons": {
+      "close": "Schließen",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "ok": "OK",
+      "delete": "Löschen",
+      "edit": "Bearbeiten"
+    },
+    "messages": {
+      "loading": "Lädt…",
+      "saving": "Wird gespeichert…",
+      "saved": "Gespeichert!",
+      "error": "Ein Fehler ist aufgetreten",
+      "success": "Erfolgreich!"
+    },
+    "hints": {
+      "escToClose": "ESC zum Schließen drücken"
+    }
+  },
+
+  "components": {
+    "settings": {
+      "header": {
+        "title": "Einstellungen",
+        "closeHint": "Schließen (ESC)"
+      },
+      "tabs": {
+        "theme": "Design",
+        "language": "Sprache"
+      },
+      "theme": {
+        "title": "Wähle dein Design - hovern für Vorschau!",
+        "hint": "💡 Fahre mit der Maus über ein Design für eine sofortige Vorschau!",
+        "authorPrefix": "von",
+        "categories": {
+          "official": "Offiziell",
+          "community": "Community",
+          "default": "Standard"
+        },
+        "toasts": {
+          "saved": "Design gespeichert!",
+          "error": "Design konnte nicht gespeichert werden"
+        }
+      },
+      "language": {
+        "title": "Wähle deine Sprache",
+        "hint": "💡 Die Seite wird neu geladen, um die neue Sprache anzuwenden."
+      }
+    },
+
+    "admin": {
+      "header": {
+        "title": "Administration",
+        "closeHint": "Schließen (ESC)"
+      },
+      "tabs": {
+        "status": "Status"
+      },
+      "status": {
+        "title": "Instanz-Status",
+        "checking": "Prüfe Backend-Verbindung…",
+        "reachable": "Backend erreichbar",
+        "unreachable": "Backend nicht erreichbar",
+        "reportedLabel": "Gemeldeter Status:",
+        "unknown": "Backend-Verbindung unbekannt",
+        "unknownHint":
+          "Das Backend hat keinen Statuswert zurückgegeben. Überprüfe die Orchestrator-Logs oder wiederhole die Verbindungsprüfung.",
+        "btnChecking": "Prüfe…",
+        "btnRecheck": "Backend-Verbindung erneut prüfen"
+      }
+    },
+
+    "healthIndicator": {
+      "tooltips": {
+        "reachable": "Backend erreichbar. Klicke zum erneuten Prüfen.",
+        "unreachable": "Backend nicht erreichbar",
+        "checking": "Prüfe Backend-Verbindung…",
+        "unknown": "Backend-Verbindung unbekannt. Klicke zum Prüfen."
+      }
+    },
+
+    "navbar": {
+      "home": "Start",
+      "projectSite": "Projekt-Website",
+      "protected": "Geschützt",
+      "login": "Anmelden",
+      "logout": "Abmelden",
+      "settings": "Einstellungen",
+      "admin": "Administration",
+      "toasts": {
+        "logoutSuccess": "Erfolgreich abgemeldet"
+      }
+    },
+
+    "languageSwitcher": {
+      "tooltip": "Sprache ändern"
+    },
+
+    "login": {
+      "title": "Willkommen bei LumaCore",
+      "subtitle": "Melde dich an, um fortzufahren",
+      "fields": {
+        "username": "Benutzername",
+        "usernamePlaceholder": "Gib deinen Benutzernamen ein",
+        "password": "Passwort",
+        "passwordPlaceholder": "Gib dein Passwort ein"
+      },
+      "rememberMe": "Angemeldet bleiben",
+      "submit": "Anmelden",
+      "submitting": "Melde dich an…",
+      "footer": "Selbst-gehostet. Persona-fokussiert. Deins.",
+      "validation": {
+        "usernameRequired": "Benutzername ist erforderlich.",
+        "passwordRequired": "Passwort ist erforderlich."
+      },
+      "toasts": {
+        "success": "Willkommen zurück!",
+        "error": "Anmeldung fehlgeschlagen"
+      }
+    },
+
+    "backendHealth": {
+      "checking": "Prüfe…",
+      "healthy": "Backend: Intakt",
+      "unhealthy": "Backend: Gestört",
+      "unknown": "Backend: Unbekannt",
+      "clickForDetails": "Für Details klicken"
+    }
+  },
+
+  "pages": {
+    "notFound": {
+      "title": "Nicht gefunden",
+      "message": "Der gesuchte Inhalt existiert leider nicht."
+    }
+  }
+}

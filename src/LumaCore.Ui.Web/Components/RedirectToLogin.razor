@@ -1,0 +1,20 @@
+@inject NavigationManager Navigation
+
+@*
+    Redirect component for unauthenticated users.
+
+    This component performs navigation in OnInitialized (lifecycle method) rather than
+    in render markup, avoiding side-effects during the render phase.
+*@
+
+@code {
+
+	/// <summary>
+	/// Lifecycle: Redirect to login page immediately on initialization.
+	/// </summary>
+	protected override void OnInitialized()
+	{
+		Navigation.NavigateTo("login");
+	}
+
+}

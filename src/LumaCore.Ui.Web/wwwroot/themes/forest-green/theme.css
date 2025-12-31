@@ -1,19 +1,25 @@
-/* LumaCore Theme: Ocean Blue (Community) */
-/* Complete standalone theme - no dependencies */
-/* 💙 Calm and trustworthy blue theme */
+/* LumaCore Theme: Forest Green (Community) */
+/* Imports shared base styles, adds theme-specific variables and animations */
+/* 💚 Nature-inspired green theme */
+
+/* Import shared design system */
+@import url("../lumacore-base/theme.css");
 
 :root {
     /* ========================================
-       ACCENT COLORS - Ocean Blue
+       ACCENT COLORS - Forest Green
        ======================================== */
-    --accent-primary: #3b82f6; /* Bright Blue - Buttons, accents, hover */
-    --accent-secondary: #1e40af; /* Deep Blue - Headings, borders */
-    --accent-tertiary: #60a5fa; /* Sky Blue - Background highlights */
-    --accent-rgb: 59, 130, 246; /* RGB for rgba() */
+    --accent-primary: #10b981; /* Emerald - Buttons, accents, hover */
+    --accent-secondary: #047857; /* Forest Green - Headings, borders */
+    --accent-tertiary: #34d399; /* Mint Green - Background highlights */
+    --accent-rgb: 16, 185, 129; /* RGB for rgba() */
 
     /* Sparkle colors ✨ */
     --glitter-color: #ffffff;
-    --glitter-shadow: #60a5fa;
+    --glitter-shadow: #34d399;
+
+    /* Theme icon filter - invert black icons to white for dark theme */
+    --theme-icon-filter: invert(1);
 
     /* Accent color derivatives */
     --accent-glow: rgba(var(--accent-rgb), 0.5);
@@ -21,61 +27,53 @@
     --accent-shadow: 0 0 10px var(--glitter-shadow);
 
     /* Hover states */
-    --accent-hover-primary: #2563eb;
-    --accent-hover-secondary: #1d4ed8;
+    --accent-hover-primary: #059669;
+    --accent-hover-secondary: #065f46;
 
     /* Focus/Active states */
     --border-focus: var(--accent-primary);
 
     /* ========================================
-       BACKGROUND COLORS - Deep Ocean
+       BACKGROUND COLORS - Deep Forest
        ======================================== */
-    --bg-primary: #0a0f1a;
-    --bg-secondary: #1a1f2e;
-    --bg-tertiary: #1e2a3a;
-    --bg-card: linear-gradient(135deg, #1a1f2e 0%, #1e2a3a 100%);
-    --bg-input: #0f1419;
-    --bg-input-focus: #1a1f2e;
-    --bg-disabled: #1a1f2e;
-    --bg-header: radial-gradient(circle at top left, #1e2a3a 0, #1a1f2e 55%, #0a0f1a 100%);
-    --bg-footer: #0f141f;
+    --bg-primary: #0a120f;
+    --bg-secondary: #1a2e24;
+    --bg-tertiary: #1e3a2c;
+    --bg-card: linear-gradient(135deg, #1a2e24 0%, #1e3a2c 100%);
+    --bg-input: #0f1914;
+    --bg-input-focus: #1a2e24;
+    --bg-disabled: #1a2e24;
+    --bg-header: radial-gradient(circle at top left, #1e3a2c 0, #1a2e24 55%, #0a120f 100%);
+    --bg-footer: #0f181f;
 
     /* ========================================
-       TEXT COLORS - Slightly blue-tinted
+       TEXT COLORS - Slightly green-tinted
        ======================================== */
-    --text-primary: #f0f5ff; /* Slightly blue-tinted */
-    --text-secondary: #e0e8f5; /* Blue-tinted secondary */
-    --text-muted: #b0c0d0; /* Blue-tinted muted */
-    --text-disabled: #8090a0;
-    --text-placeholder: #7080a0; /* Blue-tinted */
+    --text-primary: #f0fff5;
+    --text-secondary: #e0f5e8;
+    --text-muted: #b0d0c0;
+    --text-disabled: #80a090;
+    --text-placeholder: #70a080;
 
     /* ========================================
-       BORDER COLORS - Ocean Blue
+       BORDER COLORS - Forest Green
        ======================================== */
-    --border-primary: #2d3748; /* Slightly blue */
-    --border-secondary: #252a3a;
+    --border-primary: #2d4838;
+    --border-secondary: #253a2a;
 
     /* ========================================
-       STATUS/ERROR COLORS - UNIVERSAL (same across all themes)
-       These represent semantic meaning and must not change!
+       ERROR COLORS - Theme-specific styling
+       Status colors (--status-*) are defined in theme-base.css
        ======================================== */
     --error-bg: linear-gradient(135deg, #3d1a2a 0%, #2d1420 100%);
     --error-border: #ff6b6b;
     --error-text: #ffb3b3;
-
-    /* Status indicators - MUST remain consistent for UX! */
-    --status-ok: #22c55e; /* Green - "healthy/success" */
-    --status-error: #ef4444; /* Red - "error/failed" */
-    --status-warning: #eab308; /* Yellow - "checking/warning" */
-    --status-info: #3b82f6; /* Blue - "information" */
-    --status-unknown: #64748b; /* Gray - "unknown/disabled" */
-
     /* ========================================
        BUTTON COLORS
        ======================================== */
     --btn-text: #ffffff;
-    --btn-disabled-bg: linear-gradient(135deg, #3a4558 0%, #2d3748 100%);
-    --btn-disabled-text: #8090a0;
+    --btn-disabled-bg: linear-gradient(135deg, #3a5848 0%, #2d4838 100%);
+    --btn-disabled-text: #80a090;
 
     /* ========================================
        SHADOWS
@@ -87,7 +85,7 @@
     /* SPARKLE SHADOWS ✨ */
     --glitter-shadow-sm: 0 0 5px var(--glitter-shadow);
     --glitter-shadow-md: 0 0 10px var(--glitter-shadow);
-    --glitter-shadow-lg: 0 0 20px var(--glitter-shadow), 0 0 40px rgba(96, 165, 250, 0.3);
+    --glitter-shadow-lg: 0 0 20px var(--glitter-shadow), 0 0 40px rgba(52, 211, 153, 0.3);
 
     /* ========================================
        TRANSITIONS
@@ -223,24 +221,24 @@
 
 @keyframes glitter-border-pulse {
     0%, 100% {
-        border-color: #3b82f6;
-        box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        border-color: #10b981;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
     }
 
     33% {
-        border-color: #1e40af;
-        box-shadow: 0 0 10px rgba(30, 64, 175, 0.5);
+        border-color: #047857;
+        box-shadow: 0 0 10px rgba(4, 120, 87, 0.5);
     }
 
     66% {
-        border-color: #60a5fa;
-        box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+        border-color: #34d399;
+        box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
     }
 }
 
 .lc-card-glitter {
     animation: glitter-border-pulse 3s infinite;
-    border: 2px solid #3b82f6;
+    border: 2px solid #10b981;
 }
 
 /* ============================================
@@ -279,7 +277,7 @@
 /* Admin mode removes: All animations, pulses, sweeps */
 
 /* ============================================
-   💙 REFINED SPARKLE - Production Ready
+   💚 REFINED SPARKLE - Production Ready
    
    Design Philosophy:
    - Subtle animations that enhance UX without distraction

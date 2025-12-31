@@ -1,0 +1,26 @@
+{
+  "id": "lumacore-light",
+  "name": {
+    "en": "LumaCore Light",
+    "de": "LumaCore Hell"
+  },
+  "description": {
+    "en": "Clean bright theme with high contrast",
+    "de": "Sauberes helles Design mit hohem Kontrast"
+  },
+  "category": "official",
+  "categoryLabel": {
+    "en": "Official",
+    "de": "Offiziell"
+  },
+  "icon": "icon.svg",
+  "author": "LumaCore Team",
+  "version": "1.0.0",
+  "order": 2,
+  "colors": {
+    "preview": {
+      "background": "#ffffff",
+      "accent": "#ff8800"
+    }
+  }
+}

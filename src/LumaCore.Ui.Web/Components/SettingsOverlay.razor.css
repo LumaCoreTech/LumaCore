@@ -1,0 +1,164 @@
+/* ============================================
+   SETTINGS OVERLAY - User Settings Modal
+   Similar structure to Admin Overlay but for all users
+   ============================================ */
+
+/* Overlay backdrop - covers entire viewport */
+.lc-settings-overlay {
+    align-items: center;
+    animation: settings-overlay-fadein 0.2s ease;
+    backdrop-filter: blur(2px);
+    background: rgba(0, 0, 0, 0.65);
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    /* Smooth theme transitions */
+    transition: background 0.4s ease, backdrop-filter 0.4s ease;
+    z-index: 1000;
+}
+
+@keyframes settings-overlay-fadein {
+    from { opacity: 0; }
+
+    to { opacity: 1; }
+}
+
+/* Settings panel - the modal card */
+
+.lc-settings-panel {
+    animation: settings-panel-slidein 0.3s ease;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    max-width: 95vw;
+    width: 95vw;
+}
+
+@keyframes settings-panel-slidein {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Settings header with title and close button */
+
+.lc-settings-header {
+    align-items: center;
+    border-bottom: 1px solid var(--border-primary);
+    display: flex;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+}
+
+.lc-settings-title {
+    align-items: center;
+    color: var(--text-primary);
+    display: flex;
+    font-size: 1.25rem;
+    font-weight: 600;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.lc-settings-icon { font-size: 1.5rem; }
+
+/* Close button */
+
+.lc-settings-close {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    font-size: 1.25rem;
+    height: 32px;
+    justify-content: center;
+    transition: var(--transition-normal);
+    width: 32px;
+}
+
+.lc-settings-close:hover {
+    background: var(--error-border);
+    border-color: var(--error-border);
+    color: white;
+}
+
+/* Tab navigation */
+
+.lc-settings-tabs {
+    border-bottom: 1px solid var(--border-secondary);
+    display: flex;
+    gap: 0.5rem;
+    padding: 0 1.5rem;
+}
+
+.lc-settings-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    transition: var(--transition-normal);
+}
+
+.lc-settings-tab:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.lc-settings-tab-active {
+    border-bottom-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+/* Settings content area */
+
+.lc-settings-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem 1.5rem;
+}
+
+/* Scrollbar styling for settings content */
+
+.lc-settings-content::-webkit-scrollbar { width: 8px; }
+
+.lc-settings-content::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+}
+
+.lc-settings-content::-webkit-scrollbar-thumb {
+    background: var(--border-primary);
+    border-radius: 4px;
+}
+
+.lc-settings-content::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+/* Mobile responsive */
+
+@media (max-width: 768px) {
+    .lc-settings-panel {
+        max-height: 95vh;
+        width: 95%;
+    }
+}

@@ -1,6 +1,9 @@
 /* LumaCore Theme: Dark (Official) */
-/* Complete standalone theme - no dependencies */
+/* Imports shared base styles, adds theme-specific variables and animations */
 /* 🧡 Professional dark theme with orange accents */
+
+/* Import shared design system from lumacore-base */
+@import url("../lumacore-base/theme.css");
 
 :root {
     /* ========================================
@@ -14,6 +17,9 @@
     /* Sparkle colors ✨ */
     --glitter-color: #ffffff;
     --glitter-shadow: #ffaa44;
+
+    /* Theme icon filter - invert black icons to white for dark theme */
+    --theme-icon-filter: invert(1);
 
     /* Accent color derivatives */
     --accent-glow: rgba(var(--accent-rgb), 0.5);
@@ -33,7 +39,7 @@
     --bg-primary: #0a0a0a;
     --bg-secondary: #1a1a1a;
     --bg-tertiary: #2a2a2a;
-    --bg-card: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    --bg-card: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     --bg-input: #141414;
     --bg-input-focus: #1e1e1e;
     --bg-disabled: #1a1a1a;
@@ -56,19 +62,13 @@
     --border-secondary: #2a2a2a;
 
     /* ========================================
-       STATUS/ERROR COLORS - UNIVERSAL (same across all themes)
-       These represent semantic meaning and must not change!
+       ERROR COLORS - Theme-specific styling
        ======================================== */
     --error-bg: linear-gradient(135deg, #3d1a1a 0%, #2d1414 100%);
     --error-border: #ff6b6b;
     --error-text: #ffb3b3;
 
-    /* Status indicators - MUST remain consistent for UX! */
-    --status-ok: #22c55e; /* Green - "healthy/success" */
-    --status-error: #ef4444; /* Red - "error/failed" */
-    --status-warning: #eab308; /* Yellow - "checking/warning" */
-    --status-info: #3b82f6; /* Blue - "information" */
-    --status-unknown: #64748b; /* Gray - "unknown/disabled" */
+    /* Status colors (--status-*) are defined in theme-base.css */
 
     /* ========================================
        BUTTON COLORS
@@ -99,7 +99,7 @@
 
 /* ========================================
    REFINED SPARKLE - Production Ready! ✨
-   Subtle animations for enhanced UX
+   Theme-specific animations (Dark theme only)
    ======================================== */
 
 /* ============================================

@@ -1,0 +1,148 @@
+{
+  "_comment": "LumaCore UI Translations - English",
+  "_version": "1.0.0",
+
+  "app": {
+    "name": "LumaCore",
+    "tagline": "Self-hosted. Persona-focused. Yours.",
+    "subtitle": "A home for AI personas — built with warmth, intention, and the freedom to grow."
+  },
+
+  "common": {
+    "buttons": {
+      "close": "Close",
+      "save": "Save",
+      "cancel": "Cancel",
+      "ok": "OK",
+      "delete": "Delete",
+      "edit": "Edit"
+    },
+    "messages": {
+      "loading": "Loading…",
+      "saving": "Saving…",
+      "saved": "Saved!",
+      "error": "An error occurred",
+      "success": "Success!"
+    },
+    "hints": {
+      "escToClose": "Press ESC to close"
+    }
+  },
+
+  "components": {
+    "settings": {
+      "header": {
+        "title": "Settings",
+        "closeHint": "Close (ESC)"
+      },
+      "tabs": {
+        "theme": "Theme",
+        "language": "Language"
+      },
+      "theme": {
+        "title": "Choose your theme - hover to preview!",
+        "hint": "💡 Hover over a theme to preview it instantly!",
+        "authorPrefix": "by",
+        "categories": {
+          "official": "Official",
+          "community": "Community",
+          "default": "Default"
+        },
+        "toasts": {
+          "saved": "Theme saved!",
+          "error": "Failed to save theme"
+        }
+      },
+      "language": {
+        "title": "Choose your language",
+        "hint": "💡 The page will reload to apply the new language."
+      }
+    },
+
+    "admin": {
+      "header": {
+        "title": "Admin",
+        "closeHint": "Close (ESC)"
+      },
+      "tabs": {
+        "status": "Status"
+      },
+      "status": {
+        "title": "Instance Status",
+        "checking": "Checking backend connection…",
+        "reachable": "Backend reachable",
+        "unreachable": "Backend unreachable",
+        "reportedLabel": "Reported status:",
+        "unknown": "Backend connection unknown",
+        "unknownHint":
+          "The backend did not return a status value. Check the orchestrator logs or retry the connection check.",
+        "btnChecking": "Checking…",
+        "btnRecheck": "Recheck backend connection"
+      }
+    },
+
+    "healthIndicator": {
+      "tooltips": {
+        "reachable": "Backend reachable. Click to recheck.",
+        "unreachable": "Backend unreachable",
+        "checking": "Checking backend connection…",
+        "unknown": "Backend connection unknown. Click to check."
+      }
+    },
+
+    "navbar": {
+      "home": "Home",
+      "projectSite": "Project Site",
+      "protected": "Protected",
+      "login": "Login",
+      "logout": "Logout",
+      "settings": "Settings",
+      "admin": "Admin",
+      "toasts": {
+        "logoutSuccess": "Logged out successfully"
+      }
+    },
+
+    "languageSwitcher": {
+      "tooltip": "Change language"
+    },
+
+    "login": {
+      "title": "Welcome to LumaCore",
+      "subtitle": "Sign in to continue",
+      "fields": {
+        "username": "Username",
+        "usernamePlaceholder": "Enter your username",
+        "password": "Password",
+        "passwordPlaceholder": "Enter your password"
+      },
+      "rememberMe": "Remember me",
+      "submit": "Sign In",
+      "submitting": "Signing in…",
+      "footer": "Self-hosted. Persona-focused. Yours.",
+      "validation": {
+        "usernameRequired": "Username is required.",
+        "passwordRequired": "Password is required."
+      },
+      "toasts": {
+        "success": "Welcome back!",
+        "error": "Login failed"
+      }
+    },
+
+    "backendHealth": {
+      "checking": "Checking…",
+      "healthy": "Backend: Healthy",
+      "unhealthy": "Backend: Unhealthy",
+      "unknown": "Backend: Unknown",
+      "clickForDetails": "Click for details"
+    }
+  },
+
+  "pages": {
+    "notFound": {
+      "title": "Not Found",
+      "message": "Sorry, the content you are looking for does not exist."
+    }
+  }
+}

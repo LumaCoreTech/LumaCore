@@ -1,6 +1,6 @@
 {
-  "name": "LumaCore.Ui.Web",
-  "short_name": "LumaCore.Ui.Web",
+  "name": "LumaCore",
+  "short_name": "LumaCore",
   "id": "./",
   "start_url": "./",
   "display": "standalone",

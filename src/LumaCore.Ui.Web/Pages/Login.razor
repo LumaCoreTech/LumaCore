@@ -1,5 +1,4 @@
 @page "/login"
-@using System.ComponentModel.DataAnnotations
 @inject AuthService                    AuthService
 @inject JwtAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager              Navigation
@@ -12,30 +11,26 @@
 *@
 
 <PageTitle>Login - LumaCore</PageTitle>
-<HeadContent>
-	<link rel="stylesheet" href="css/login.css"/>
-</HeadContent>
 
 <div class="lc-login-container">
 	<div class="lc-login-card">
 		@* Header with logo and title *@
 		<div class="lc-login-header">
 			<img src="assets/branding/lumacore-logo.svg" alt="LumaCore Logo" class="lc-login-logo"/>
-			<h1>Welcome to LumaCore</h1>
-			<p class="lc-login-subtitle">Sign in to continue</p>
+			<h1 class="lc-login-title">@L.Get("components.login.title")</h1>
+			<p class="lc-login-subtitle">@L.Get("components.login.subtitle")</p>
 		</div>
 
-		@* Login form *@
-		<EditForm Model="@mLoginModel" OnValidSubmit="HandleLoginAsync" class="lc-login-form">
-			<DataAnnotationsValidator/>
+		@* Login form with localized validation *@
+		<EditForm EditContext="@mEditContext" OnValidSubmit="HandleLoginAsync" class="lc-login-form">
 
 			@* Username field *@
 			<div class="lc-form-group">
-				<label for="username">Username</label>
+				<label for="username">@L.Get("components.login.fields.username")</label>
 				<InputText id="username"
 				           @bind-Value="mLoginModel.Username"
 				           class="lc-input"
-				           placeholder="Enter your username"
+				           placeholder="@L.Get("components.login.fields.usernamePlaceholder")"
 				           autocomplete="username"
 				           autofocus/>
 				<ValidationMessage For="@(() => mLoginModel.Username)" class="lc-validation-error"/>
@@ -43,12 +38,12 @@
 
 			@* Password field *@
 			<div class="lc-form-group">
-				<label for="password">Password</label>
+				<label for="password">@L.Get("components.login.fields.password")</label>
 				<InputText id="password"
 				           @bind-Value="mLoginModel.Password"
 				           type="password"
 				           class="lc-input"
-				           placeholder="Enter your password"
+				           placeholder="@L.Get("components.login.fields.passwordPlaceholder")"
 				           autocomplete="current-password"/>
 				<ValidationMessage For="@(() => mLoginModel.Password)" class="lc-validation-error"/>
 			</div>
@@ -57,7 +52,7 @@
 			<div class="lc-form-group lc-checkbox-group">
 				<label class="lc-checkbox-label">
 					<InputCheckbox @bind-Value="mLoginModel.RememberMe" class="lc-checkbox"/>
-					<span>Remember me</span>
+					<span>@L.Get("components.login.rememberMe")</span>
 				</label>
 			</div>
 
@@ -73,18 +68,18 @@
 			<button type="submit" class="lc-button lc-button-primary" disabled="@mIsLoggingIn">
 				@if (mIsLoggingIn)
 				{
-					<span>Signing in...</span>
+					<span>@L.Get("components.login.submitting")</span>
 				}
 				else
 				{
-					<span>Sign In</span>
+					<span>@L.Get("components.login.submit")</span>
 				}
 			</button>
 		</EditForm>
 
 		@* Footer note *@
 		<div class="lc-login-footer">
-			<p>Self-hosted. Persona-focused. Yours.</p>
+			<p class="lc-login-footer-text">@L.Get("components.login.footer")</p>
 		</div>
 	</div>
 </div>
@@ -92,24 +87,83 @@
 @code {
 
 	/// <summary>
-	/// Model for the login form with validation attributes.
+	/// Model for the login form.
 	/// </summary>
+	/// <remarks>
+	/// Validation is handled manually via <see cref="ValidateForm"/> to support localized error messages.
+	/// DataAnnotations cannot be used because their <c>ErrorMessage</c> must be a compile-time constant.
+	/// </remarks>
 	private sealed class LoginFormModel
 	{
-		[Required(ErrorMessage = "Username is required.")]
-		[StringLength(100, ErrorMessage = "Username must not exceed 100 characters.")]
-		public string Username { get; set; } = string.Empty;
-
-		[Required(ErrorMessage = "Password is required.")]
-		[MinLength(8, ErrorMessage = "Password must be at least 8 characters.")]
-		public string Password { get; set; } = string.Empty;
-
-		public bool RememberMe { get; set; }
+		public string Username   { get; set; } = string.Empty;
+		public string Password   { get; set; } = string.Empty;
+		public bool   RememberMe { get; set; }
 	}
 
-	private readonly LoginFormModel mLoginModel = new();
-	private          string?        mErrorMessage;
-	private          bool           mIsLoggingIn;
+	private readonly LoginFormModel          mLoginModel = new();
+	private          EditContext?            mEditContext;
+	private          ValidationMessageStore? mValidationMessageStore;
+	private          string?                 mErrorMessage;
+	private          bool                    mIsLoggingIn;
+
+	/// <summary>
+	/// Lifecycle: Initialize EditContext with custom validation.
+	/// </summary>
+	protected override void OnInitialized()
+	{
+		mEditContext = new EditContext(mLoginModel);
+		mValidationMessageStore = new ValidationMessageStore(mEditContext);
+
+		// Hook into validation requests to provide localized messages
+		mEditContext.OnValidationRequested += HandleValidationRequested;
+
+		// Clear field errors when the user modifies a field
+		mEditContext.OnFieldChanged += HandleFieldChanged;
+	}
+
+	/// <summary>
+	/// Handles validation requests by validating all fields with localized error messages.
+	/// </summary>
+	private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs e)
+	{
+		mValidationMessageStore?.Clear();
+		ValidateForm();
+	}
+
+	/// <summary>
+	/// Clears validation errors for a field when it changes, providing immediate feedback.
+	/// </summary>
+	private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
+	{
+		mValidationMessageStore?.Clear(e.FieldIdentifier);
+		mEditContext?.NotifyValidationStateChanged();
+	}
+
+	/// <summary>
+	/// Validates all form fields and adds localized error messages to the message store.
+	/// </summary>
+	/// <remarks>
+	/// Login validation intentionally only checks for empty fields. Password constraints (length, complexity)
+	/// are NOT enforced here because: (1) the backend validates credentials anyway, (2) policy changes
+	/// would lock out users with legacy passwords, (3) it leaks password policy to attackers.
+	/// Constraints belong in registration/password-change forms, not login.
+	/// </remarks>
+	private void ValidateForm()
+	{
+		// Username: just check not empty
+		if (string.IsNullOrWhiteSpace(mLoginModel.Username))
+		{
+			mValidationMessageStore?.Add(() => mLoginModel.Username, L.Get("components.login.validation.usernameRequired"));
+		}
+
+		// Password: just check not empty — no length/complexity constraints on login!
+		if (string.IsNullOrWhiteSpace(mLoginModel.Password))
+		{
+			mValidationMessageStore?.Add(() => mLoginModel.Password, L.Get("components.login.validation.passwordRequired"));
+		}
+
+		mEditContext?.NotifyValidationStateChanged();
+	}
 
 	/// <summary>
 	/// Handles the login form submission.
@@ -127,8 +181,6 @@
 		try
 		{
 			// Attempt to log in using the AuthService.
-			// Use ConfigureAwait(true) to ensure continuation on the original context for UI updates.
-			// This is important in Blazor to avoid issues with rendering after async calls.
 			LoginResult result = await AuthService
 				                     .LoginAsync(mLoginModel.Username, mLoginModel.Password, mLoginModel.RememberMe)
 				                     .ConfigureAwait(true);
@@ -143,8 +195,10 @@
 			}
 			else
 			{
-				// Display error message from the service.
-				mErrorMessage = result.ErrorMessage ?? "Login failed. Please try again.";
+				// Display error message from the service or localized default.
+				mErrorMessage = !string.IsNullOrEmpty(result.ErrorMessage)
+					                ? result.ErrorMessage
+					                : L.Get("components.login.toasts.error");
 			}
 		}
 		finally

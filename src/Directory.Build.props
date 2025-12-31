@@ -1,19 +1,15 @@
 <Project>
 
-	<!-- Repository roots -->
+	<!-- Repository root -->
 	<PropertyGroup>
-		<!-- Resolve repo root one level above /src -->
 		<RepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\'))</RepoRoot>
-		<ArtifactsRoot>$(RepoRoot)artifacts\</ArtifactsRoot>
 	</PropertyGroup>
 
-	<!-- Redirect all bin/obj output to /artifacts -->
+	<!-- Redirect all bin/obj output to /artifacts (official .NET 8+ feature) -->
 	<PropertyGroup>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<BaseOutputPath>$(ArtifactsRoot)bin\$(MSBuildProjectName)\</BaseOutputPath>
-		<OutputPath>$(BaseOutputPath)$(Platform).$(Configuration)\$(TargetFramework)\</OutputPath>
-		<BaseIntermediateOutputPath>$(ArtifactsRoot)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
-		<IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Platform).$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>
+		<UseArtifactsOutput>true</UseArtifactsOutput>
+		<ArtifactsRoot>$(RepoRoot)artifacts\</ArtifactsRoot>
+		<ArtifactsPath>$(ArtifactsRoot)</ArtifactsPath>
 	</PropertyGroup>
 
 	<!-- Language & code style defaults (applied to all projects) -->

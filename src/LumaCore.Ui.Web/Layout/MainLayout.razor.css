@@ -1,23 +1,23 @@
 /* Root container for the entire LumaCore UI layout */
 .lc-root {
-    background-color: #0b0b12; /* Subtle dark background for the whole UI */
-    color: #f5f5f5; /* Light text for readability on dark background */
-    display: flex; /* Stack header, main, and footer vertically */
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
     flex-direction: column;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    min-height: 100vh; /* Ensure the layout fills the full viewport height */
+    min-height: 100vh;
 }
 
 /* Top application header containing logo, title block, and navigation */
 
 .lc-header {
     align-items: center;
-    background: radial-gradient(circle at top left, #252545 0, #131322 55%, #0b0b12 100%);
-    border-bottom: 1px solid #26263a;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); /* Soft drop shadow below the header */
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border-primary);
+    box-shadow: var(--shadow-md);
     display: flex;
     justify-content: space-between;
-    padding: 0.75rem 1.75rem; /* Horizontal breathing room */
+    padding: 0.75rem 1.75rem;
 }
 
 /* Left side of the header: logo + title block */
@@ -25,22 +25,22 @@
 .lc-header-left {
     align-items: center;
     display: flex;
-    gap: 1.25rem; /* Space between logo block and title block */
+    gap: 1.25rem;
 }
 
 /* Wraps the LumaCore logo and the backend health indicator */
 
 .lc-logo-wrapper {
     align-items: center;
-    display: inline-flex; /* Align logo and indicator on the same baseline */
-    gap: 0.5rem; /* Space between the logo image and the indicator */
+    display: inline-flex;
+    gap: 0.5rem;
 }
 
 /* LumaCore logo image styling */
 
 .lc-logo-img {
     display: block;
-    height: 40px; /* Stable logo size in the header */
+    height: 40px;
     width: auto;
 }
 
@@ -49,12 +49,13 @@
 .lc-title-block {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem; /* Tight vertical spacing between title and subtitle */
+    gap: 0.15rem;
 }
 
 /* Main title "LumaCore" */
 
 .lc-title {
+    color: var(--text-primary);
     font-size: 1.35rem;
     font-weight: 600;
     letter-spacing: 0.03em;
@@ -63,10 +64,10 @@
 /* Subtitle line with the LumaCore tagline */
 
 .lc-subtitle {
-    color: #ccccdd; /* Slightly muted to avoid overpowering the title */
+    color: var(--text-secondary);
     font-size: 0.86rem;
     font-weight: 400;
-    max-width: 36rem; /* Limit line length for readability */
+    max-width: 36rem;
 }
 
 /* Main navigation area on the right side of the header */
@@ -75,22 +76,22 @@
     align-items: center;
     display: flex;
     font-size: 0.95rem;
-    gap: 1.25rem; /* Spacing between navigation links */
+    gap: 1.25rem;
 }
 
 /* Navigation links in the header */
 
 .lc-nav a {
-    color: #f5f5ff;
+    color: var(--text-primary);
     padding-bottom: 0.1rem;
-    position: relative; /* Enable pseudo-element underline animation */
+    position: relative;
     text-decoration: none;
 }
 
 /* Subtle underline effect on hover/focus for navigation links */
 
 .lc-nav a::after {
-    background: linear-gradient(90deg, #ffb347, #ffcc33);
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-tertiary));
     bottom: 0;
     content: "";
     height: 2px;
@@ -101,9 +102,7 @@
 }
 
 .lc-nav a:hover::after,
-.lc-nav a:focus-visible::after {
-    width: 100%; /* Slide underline in from left to right */
-}
+.lc-nav a:focus-visible::after { width: 100%; }
 
 /* Distinct styling for external link to the project site */
 
@@ -111,51 +110,21 @@
 
 .lc-nav a[href^="https://"]:hover { opacity: 1.0; }
 
-/* Logout button in navigation - matches admin toggle style */
-
-.lc-nav-button {
-    background: transparent;
-    border: 1px solid var(--border-primary);
-    border-radius: 6px;
-    color: var(--text-primary);
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 0.9rem;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    transition: var(--transition-normal);
-}
-
-.lc-nav-button:hover {
-    background: var(--error-border);
-    border-color: var(--error-border);
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
-    color: white;
-    transform: translateY(-1px);
-}
-
-.lc-nav-button:active { transform: translateY(0); }
-
-.lc-nav-button:focus-visible {
-    outline: 2px solid var(--error-border);
-    outline-offset: 2px;
-}
-
 /* Main content area; grows to fill remaining space between header and footer */
 
 .lc-main {
     box-sizing: border-box;
-    flex: 1; /* Take up all available vertical space */
-    padding: 1.5rem 1.75rem 2rem; /* Top, horizontal, bottom padding */
+    flex: 1;
+    padding: 1.5rem 1.75rem 2rem;
 }
 
 /* Footer at the bottom of the page with a short, calm message */
 
 .lc-footer {
     align-items: center;
-    background-color: #0f0f18;
-    border-top: 1px solid #26263a;
-    color: #aaaacc;
+    background-color: var(--bg-footer);
+    border-top: 1px solid var(--border-primary);
+    color: var(--text-muted);
     display: flex;
     font-size: 0.8rem;
     justify-content: space-between;
@@ -167,12 +136,12 @@
 @media (max-width: 640px) {
     .lc-header {
         align-items: flex-start;
-        flex-direction: column; /* Stack logo/title and nav vertically */
+        flex-direction: column;
         gap: 0.75rem;
     }
 
     .lc-nav {
-        flex-wrap: wrap; /* Allow nav items to wrap on small screens */
+        flex-wrap: wrap;
         gap: 0.75rem;
         justify-content: flex-start;
         width: 100%;
@@ -180,7 +149,7 @@
 
     .lc-footer {
         align-items: flex-start;
-        flex-direction: column; /* Stack footer information */
+        flex-direction: column;
         gap: 0.25rem;
     }
 

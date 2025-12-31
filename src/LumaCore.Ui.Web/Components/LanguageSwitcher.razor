@@ -1,0 +1,207 @@
+@* Language Switcher - Compact dropdown for navbar, always visible *@
+
+@inject IJSRuntime JsRuntime
+@implements IAsyncDisposable
+
+<div @ref="mDropdownElement"
+     class="lc-language-switcher @(mIsOpen ? "lc-language-switcher-open" : "")"
+     @onclick="ToggleDropdownAsync"
+     @onclick:stopPropagation="true">
+
+	@* Current language button *@
+	<button class="lc-language-switcher-btn"
+	        type="button"
+	        title="@L.Get("components.languageSwitcher.tooltip")">
+		<img src="locales/@mCurrentLocale/flag.svg" alt="@mCurrentLocale.ToUpperInvariant()" class="lc-language-switcher-flag"/>
+		<span class="lc-language-switcher-code">@mCurrentLocale.ToUpperInvariant()</span>
+		<span class="lc-language-switcher-arrow">▼</span>
+	</button>
+
+	@* Dropdown menu *@
+	@if (mIsOpen && mAvailableLocales != null)
+	{
+		<div class="lc-language-switcher-dropdown">
+			@foreach (LocalizationService.LocaleInfo locale in mAvailableLocales)
+			{
+				<button class="lc-language-switcher-option @(mCurrentLocale == locale.Code ? "lc-language-switcher-option-active" : "")"
+				        type="button"
+				        @onclick="() => SelectLanguageAsync(locale.Code)"
+				        @onclick:stopPropagation="true">
+					<img src="locales/@locale.Code/flag.svg" alt="@locale.NativeName" class="lc-language-switcher-flag"/>
+					<span class="lc-language-switcher-code">@locale.Code.ToUpperInvariant()</span>
+					@if (mCurrentLocale == locale.Code)
+					{
+						<span class="lc-language-switcher-check">
+							<LcIcon Name="checkmark"/>
+						</span>
+					}
+				</button>
+			}
+		</div>
+	}
+
+</div>
+
+@code {
+
+	/// <summary>
+	/// Reference to the dropdown container element.
+	/// </summary>
+	private ElementReference mDropdownElement;
+
+	/// <summary>
+	/// Reference to the collocated JavaScript module.
+	/// </summary>
+	private IJSObjectReference? mJsModule;
+
+	/// <summary>
+	/// Reference to this component for JS callbacks.
+	/// </summary>
+	private DotNetObjectReference<LanguageSwitcher>? mDotNetRef;
+
+	/// <summary>
+	/// Available locales loaded from manifest.
+	/// </summary>
+	private IReadOnlyList<LocalizationService.LocaleInfo>? mAvailableLocales;
+
+	/// <summary>
+	/// Currently selected locale code.
+	/// </summary>
+	private string mCurrentLocale = "en";
+
+	/// <summary>
+	/// Whether the dropdown is currently open.
+	/// </summary>
+	private bool mIsOpen;
+
+	/// <summary>
+	/// Lifecycle: Load current locale and available locales after first render.
+	/// </summary>
+	/// <param name="firstRender">Indicates whether this is the first time the component has been rendered.</param>
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			mCurrentLocale = L.CurrentLocale;
+			mAvailableLocales = await L.GetAvailableLocalesAsync().ConfigureAwait(true);
+
+			try
+			{
+				mJsModule = await JsRuntime
+					            .InvokeAsync<IJSObjectReference>("import", "./Components/LanguageSwitcher.razor.js")
+					            .ConfigureAwait(true);
+				mDotNetRef = DotNetObjectReference.Create(this);
+			}
+			catch
+			{
+				// Silently handle JS interop failures
+			}
+
+			StateHasChanged();
+		}
+	}
+
+	/// <summary>
+	/// Toggles the dropdown open/closed state.
+	/// </summary>
+	private async Task ToggleDropdownAsync()
+	{
+		mIsOpen = !mIsOpen;
+
+		if (mIsOpen)
+			await RegisterDropdownHandlersAsync().ConfigureAwait(true);
+		else
+			await UnregisterDropdownHandlersAsync().ConfigureAwait(true);
+	}
+
+	/// <summary>
+	/// Closes the dropdown. Called from JavaScript on outside click or ESC.
+	/// </summary>
+	[JSInvokable]
+	public async Task CloseDropdown()
+	{
+		if (!mIsOpen)
+			return;
+
+		mIsOpen = false;
+		await UnregisterDropdownHandlersAsync().ConfigureAwait(true);
+		StateHasChanged();
+	}
+
+	/// <summary>
+	/// Registers document event handlers for outside click and ESC key.
+	/// </summary>
+	private async Task RegisterDropdownHandlersAsync()
+	{
+		try
+		{
+			if (mJsModule is not null && mDotNetRef is not null)
+			{
+				await mJsModule
+					.InvokeVoidAsync("registerDropdownHandlers", mDotNetRef, mDropdownElement)
+					.ConfigureAwait(true);
+			}
+		}
+		catch
+		{
+			// Silently handle JS interop failures
+		}
+	}
+
+	/// <summary>
+	/// Unregisters document event handlers.
+	/// </summary>
+	private async Task UnregisterDropdownHandlersAsync()
+	{
+		try
+		{
+			if (mJsModule is not null)
+			{
+				await mJsModule.InvokeVoidAsync("unregisterDropdownHandlers").ConfigureAwait(true);
+			}
+		}
+		catch
+		{
+			// Silently handle JS interop failures
+		}
+	}
+
+	/// <summary>
+	/// Selects a new language and reloads the page.
+	/// </summary>
+	/// <param name="locale">The locale code to switch to.</param>
+	private async Task SelectLanguageAsync(string locale)
+	{
+		if (mCurrentLocale == locale)
+		{
+			await CloseDropdown().ConfigureAwait(true);
+			return;
+		}
+
+		mIsOpen = false;
+		await L.SetLocaleAsync(locale).ConfigureAwait(true);
+	}
+
+	/// <summary>
+	/// Cleanup: Unregister handlers and dispose references.
+	/// </summary>
+	public async ValueTask DisposeAsync()
+	{
+		await UnregisterDropdownHandlersAsync().ConfigureAwait(true);
+
+		if (mJsModule is not null)
+		{
+			try
+			{
+				await mJsModule.DisposeAsync().ConfigureAwait(true);
+			}
+			catch
+			{
+				// Silently handle JS interop failures during disposal
+			}
+		}
+
+		mDotNetRef?.Dispose();
+	}
+
+}

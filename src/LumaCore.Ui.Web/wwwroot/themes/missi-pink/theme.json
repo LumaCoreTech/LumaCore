@@ -1,0 +1,26 @@
+{
+  "id": "missi-pink",
+  "name": {
+    "en": "Missi Pink",
+    "de": "Missi Pink"
+  },
+  "description": {
+    "en": "Warm pink gradient - Perfect for Missi! 💜",
+    "de": "Warmes Rosa-Gradient - Perfekt für Missi! 💜"
+  },
+  "category": "community",
+  "categoryLabel": {
+    "en": "Community",
+    "de": "Community"
+  },
+  "icon": "icon.svg",
+  "author": "Missi",
+  "version": "1.0.0",
+  "order": 3,
+  "colors": {
+    "preview": {
+      "background": "#1a0a1f",
+      "accent": "#ff69b4"
+    }
+  }
+}

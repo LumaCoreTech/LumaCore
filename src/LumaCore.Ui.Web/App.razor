@@ -6,22 +6,9 @@
 		<Found Context="routeData">
 			<AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
 				<NotAuthorized>
-					@{
-						@* Redirect to login if user tries to access protected pages while not authenticated *@
-						if (context.User?.Identity?.IsAuthenticated != true)
-						{
-							NavigationManager.NavigateTo("login");
-						}
-					}
+					<RedirectToLogin/>
 				</NotAuthorized>
 			</AuthorizeRouteView>
 		</Found>
 	</Router>
 </CascadingAuthenticationState>
-
-@code {
-
-	[Inject]
-	private NavigationManager NavigationManager { get; set; } = default!;
-
-}

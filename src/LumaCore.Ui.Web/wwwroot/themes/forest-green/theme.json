@@ -1,0 +1,26 @@
+{
+  "id": "forest-green",
+  "name": {
+    "en": "Forest Green",
+    "de": "Waldgrün"
+  },
+  "description": {
+    "en": "Nature-inspired green theme, easy on the eyes",
+    "de": "Von der Natur inspiriertes grünes Design, angenehm für die Augen"
+  },
+  "category": "community",
+  "categoryLabel": {
+    "en": "Community",
+    "de": "Community"
+  },
+  "icon": "icon.svg",
+  "author": "Community",
+  "version": "1.0.0",
+  "order": 5,
+  "colors": {
+    "preview": {
+      "background": "#0a1a0f",
+      "accent": "#22c55e"
+    }
+  }
+}

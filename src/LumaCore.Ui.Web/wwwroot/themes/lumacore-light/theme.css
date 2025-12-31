@@ -1,93 +1,91 @@
-/* LumaCore Theme: Missi Pink/Lila (Community) */
-/* Complete standalone theme - no dependencies */
-/* 💜✨ Missi's official color palette with SPARKLE! ✨💜 */
+/* LumaCore Theme: Light (Official) */
+/* Imports shared base styles, adds theme-specific variables and animations */
+/* 🌟 Professional light theme with orange accents */
+
+/* Import shared design system */
+@import url("../lumacore-base/theme.css");
 
 :root {
     /* ========================================
-       ACCENT COLORS - Missi's Official Palette! 🌈
+       ACCENT COLORS - LumaCore Orange
        ======================================== */
-    --accent-primary: #ff6ec7; /* Missi Pink - Buttons, accents, hover */
-    --accent-secondary: #9a20ff; /* Deep Purple - Headings, borders */
-    --accent-tertiary: #d9b3ff; /* Light Purple - Background highlights */
-    --accent-rgb: 255, 110, 199; /* RGB for rgba() */
+    --accent-primary: #ff8800; /* LumaCore Orange - Buttons, accents, hover */
+    --accent-secondary: #cc6600; /* Dark Orange - Headings, borders */
+    --accent-tertiary: #ffaa44; /* Light Orange - Background highlights */
+    --accent-rgb: 255, 136, 0; /* RGB for rgba() */
 
-    /* Glitter colors ✨ - For magical effects! */
+    /* Sparkle colors ✨ */
     --glitter-color: #ffffff;
-    --glitter-shadow: #ffaaee;
+    --glitter-shadow: #ffaa44;
+
+    /* Theme icon filter - keep black icons on light theme */
+    --theme-icon-filter: invert(0);
 
     /* Accent color derivatives */
     --accent-glow: rgba(var(--accent-rgb), 0.5);
     --accent-focus-ring: rgba(var(--accent-rgb), 0.3);
     --accent-shadow: 0 0 10px var(--glitter-shadow);
 
-    /* Hover states - SPARKLE INTENSIFIES! ✨ */
-    --accent-hover-primary: #ff5bb8;
-    --accent-hover-secondary: #8b10ff;
+    /* Hover states */
+    --accent-hover-primary: #ff9922;
+    --accent-hover-secondary: #dd7711;
 
     /* Focus/Active states */
     --border-focus: var(--accent-primary);
 
     /* ========================================
-       BACKGROUND COLORS - Dark with Pink Tint
+       BACKGROUND COLORS - Clean Light
        ======================================== */
-    --bg-primary: #0b0b12;
-    --bg-secondary: #1a1a2e;
-    --bg-tertiary: #16213e;
-    --bg-card: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    --bg-input: #0f1419;
-    --bg-input-focus: #1a1f2e;
-    --bg-disabled: #1a1a2e;
-    --bg-header: radial-gradient(circle at top left, #2a1a2e 0, #1a1322 55%, #0b0b12 100%);
-    --bg-footer: #0f0f18;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f8f8;
+    --bg-tertiary: #f0f0f0;
+    --bg-card: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+    --bg-input: #ffffff;
+    --bg-input-focus: #fafafa;
+    --bg-disabled: #f0f0f0;
+    --bg-header: radial-gradient(circle at top left, #fff5e6 0, #fffaf2 55%, #ffffff 100%);
+    --bg-footer: #fafafa;
 
     /* ========================================
-       TEXT COLORS - Slightly pink-tinted
+   TEXT COLORS
        ======================================== */
-    --text-primary: #fff5fa; /* Slightly pink-tinted */
-    --text-secondary: #f5e8f5; /* Pink-tinted secondary */
-    --text-muted: #d1b8d1; /* Pink-tinted muted */
-    --text-disabled: #a78ba7;
-    --text-placeholder: #8070a0; /* Purple-tinted */
+    --text-primary: #1a1a1a;
+    --text-secondary: #4a4a4a;
+    --text-muted: #707070;
+    --text-disabled: #a0a0a0;
+    --text-placeholder: #909090;
 
     /* ========================================
-       BORDER COLORS - Missi's Deep Purple
+       BORDER COLORS
        ======================================== */
-    --border-primary: #3d2748; /* Slightly purple */
-    --border-secondary: #2a263a;
+    --border-primary: #d0d0d0;
+    --border-secondary: #e0e0e0;
 
     /* ========================================
-       STATUS/ERROR COLORS - UNIVERSAL (same across all themes)
-       These represent semantic meaning and must not change!
+       ERROR COLORS - Theme-specific styling
+       Status colors (--status-*) are defined in theme-base.css
        ======================================== */
-    --error-bg: linear-gradient(135deg, #3d1a2a 0%, #2d1420 100%);
-    --error-border: #ff6ba0; /* Pink-tinted error */
-    --error-text: #ffb3d9; /* Pink-tinted error text */
-
-    /* Status indicators - MUST remain consistent for UX! */
-    --status-ok: #22c55e; /* Green - "healthy/success" */
-    --status-error: #ef4444; /* Red - "error/failed" */
-    --status-warning: #eab308; /* Yellow - "checking/warning" */
-    --status-info: #3b82f6; /* Blue - "information" */
-    --status-unknown: #64748b; /* Gray - "unknown/disabled" */
-
+    --error-bg: linear-gradient(135deg, #ffe6e6 0%, #ffd6d6 100%);
+    --error-border: #ff6b6b;
+    --error-text: #cc0000;
     /* ========================================
-       BUTTON COLORS - Missi's Button Design! 💕
+       BUTTON COLORS
        ======================================== */
     --btn-text: #ffffff;
-    --btn-disabled-bg: linear-gradient(135deg, #4a3568 0%, #2d2748 100%);
-    --btn-disabled-text: #a096b0;
+    --btn-disabled-bg: linear-gradient(135deg, #d0d0d0 0%, #c0c0c0 100%);
+    --btn-disabled-text: #808080;
 
     /* ========================================
-       SHADOWS - SPARKLE Edition! ✨
+       SHADOWS
        ======================================== */
-    --shadow-sm: 0 2px 4px rgba(255, 110, 199, 0.2);
-    --shadow-md: 0 4px 12px rgba(255, 110, 199, 0.3);
-    --shadow-lg: 0 8px 32px rgba(255, 110, 199, 0.4);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
 
-    /* GLITTER SHADOWS ✨ */
+    /* SPARKLE SHADOWS ✨ */
     --glitter-shadow-sm: 0 0 5px var(--glitter-shadow);
     --glitter-shadow-md: 0 0 10px var(--glitter-shadow);
-    --glitter-shadow-lg: 0 0 20px var(--glitter-shadow), 0 0 40px rgba(255, 170, 238, 0.3);
+    --glitter-shadow-lg: 0 0 20px var(--glitter-shadow), 0 0 40px rgba(255, 170, 68, 0.3);
 
     /* ========================================
        TRANSITIONS
@@ -119,7 +117,7 @@
     background: linear-gradient(
                                45deg,
                                transparent 40%,
-                               rgba(255, 255, 255, 0.15) 50%,
+                               rgba(255, 255, 255, 0.3) 50%,
                                transparent 60%
 );
     content: '';
@@ -202,7 +200,7 @@
 
 @keyframes page-sparkle-transition {
     0% {
-        filter: brightness(1.1);
+        filter: brightness(1.05);
         opacity: 0;
         transform: scale(0.98);
     }
@@ -223,78 +221,24 @@
 
 @keyframes glitter-border-pulse {
     0%, 100% {
-        border-color: #ff6ec7;
-        box-shadow: 0 0 10px rgba(255, 110, 199, 0.5);
+        border-color: #ff8800;
+        box-shadow: 0 0 10px rgba(255, 136, 0, 0.5);
     }
 
     33% {
-        border-color: #9a20ff;
-        box-shadow: 0 0 10px rgba(154, 32, 255, 0.5);
+        border-color: #cc6600;
+        box-shadow: 0 0 10px rgba(204, 102, 0, 0.5);
     }
 
     66% {
-        border-color: #d9b3ff;
-        box-shadow: 0 0 10px rgba(217, 179, 255, 0.5);
+        border-color: #ffaa44;
+        box-shadow: 0 0 10px rgba(255, 170, 68, 0.5);
     }
 }
 
 .lc-card-glitter {
     animation: glitter-border-pulse 3s infinite;
-    border: 2px solid #ff6ec7;
-}
-
-/* ============================================
-   LOGIN SUCCESS CONFETTI 🎊
-   MANUAL TRIGGER ONLY - for special moments!
-   
-   Usage:
-   After successful login, add class to a container:
-   <div class="lc-login-success">
-       Login successful!
-   </div>
-   ============================================ */
-
-@keyframes confetti-fall {
-    0% {
-        opacity: 1;
-        transform: translateY(-100vh) rotate(0deg);
-    }
-
-    100% {
-        opacity: 0;
-        transform: translateY(100vh) rotate(720deg);
-    }
-}
-
-@keyframes confetti-wobble {
-    0%, 100% { transform: translateX(0); }
-
-    25% { transform: translateX(-10px); }
-
-    75% { transform: translateX(10px); }
-}
-
-/* Confetti particles */
-
-.lc-login-success::before,
-.lc-login-success::after {
-    animation: confetti-fall 2.5s ease-in forwards, confetti-wobble 0.3s ease-in-out 8;
-    content: '🎉';
-    font-size: 2rem;
-    pointer-events: none;
-    position: fixed;
-    top: 0;
-    z-index: 9999;
-}
-
-.lc-login-success::before {
-    animation-delay: 0s;
-    left: 30%;
-}
-
-.lc-login-success::after {
-    animation-delay: 0.2s;
-    right: 30%;
+    border: 2px solid #ff8800;
 }
 
 /* ============================================
@@ -304,7 +248,7 @@
    <body class="lc-admin-mode">
    
    This disables all sparkle animations while keeping
-   Missi's beautiful colors and hover effects!
+   colors and hover effects!
    ============================================ */
 
 /* Disable all animations in admin mode */
@@ -331,3 +275,15 @@
 
 /* Admin mode keeps: Colors, Hover color changes, Focus rings */
 /* Admin mode removes: All animations, pulses, sweeps */
+
+/* ============================================
+   🌟 REFINED SPARKLE - Production Ready
+   
+   Design Philosophy:
+   - Subtle animations that enhance UX without distraction
+   - Context-aware: animations disabled in admin areas
+   - Performance-optimized: GPU-accelerated transforms
+   - Accessibility-friendly: respects prefers-reduced-motion
+   
+   Result: Professional & Polished! 💯
+   ============================================ */

@@ -4,6 +4,192 @@ Condensed rules for working on LumaCore. When in doubt: consult the original doc
 
 ---
 
+## ⚠️ CRITICAL RULES - CHECK FIRST!
+
+### 🚫 NEVER ConfigureAwait(false) in Razor Components
+
+```csharp
+// ❌ WRONG - breaks thread safety
+await Something.DoAsync().ConfigureAwait(false);
+
+// ✅ CORRECT - always in .razor files
+await Something.DoAsync().ConfigureAwait(true);
+```
+
+**Rule:** In `.razor` files: `ConfigureAwait(true)` — **always, everywhere, no exceptions.**
+
+**Why:**
+1. **Thread-Safety:** `ConfigureAwait(false)` runs continuation on ThreadPool. Another event could fire on the Blazor Dispatcher, causing race conditions on component state.
+2. **JSInterop:** Requires Blazor synchronization context.
+3. **UI Updates:** `StateHasChanged()` needs correct context.
+
+**Common mistake:** "It's the last await, so `false` is okay" — **Wrong!** While awaiting, other events can still access component fields.
+
+**Decision Tree:**
+```
+Is it in a .razor file?                → ConfigureAwait(true)
+Does it use IJSRuntime?                → ConfigureAwait(true)
+Is it backend service (HTTP/DB)?       → ConfigureAwait(false)
+```
+
+**Files that NEVER get ConfigureAwait(false):**
+- ✅ `*.razor` - All Razor components
+- ✅ `LocalizationService.cs` - Uses IJSRuntime
+- ✅ Any service with `IJSRuntime` dependency
+
+**Files that ALWAYS get ConfigureAwait(false):**
+- ✅ `AuthService.cs` - HTTP/backend
+- ✅ `*Repository.cs` - Database
+- ✅ HTTP client wrappers
+
+**Golden Rule:**
+> ALWAYS be explicit — never omit ConfigureAwait().
+> - In `.razor` files: Always `ConfigureAwait(true)`
+> - In backend services: Always `ConfigureAwait(false)`
+> 
+> Omitting it defaults to `true`, which may not be what you want in backend code.
+
+### 🔒 Blazor Server Thread-Safety
+
+Blazor Server has one `SynchronizationContext` per user circuit — like a "virtual UI thread" (similar to WPF/WinForms Dispatcher).
+
+| Service Lifetime | Instances | Thread-Safety |
+|------------------|-----------|---------------|
+| **Scoped** | 1 per circuit | ✅ Automatically serialized |
+| **Singleton** | 1 for all users | ⚠️ Must lock yourself! |
+| **Transient** | New per inject | ✅ No sharing |
+
+**Dangerous — needs Lock/ConcurrentDictionary:**
+```csharp
+services.AddSingleton<GlobalCacheService>();  // ⚠️ All users share this!
+```
+
+**Safe without lock:**
+```csharp
+services.AddScoped<UserPreferencesService>();  // ✅ Isolated per circuit
+```
+
+**Caution with external callbacks** (Timer, SignalR, Events):
+```csharp
+// ❌ Does not run on the Blazor Dispatcher
+mTimer = new Timer(_ => mCounter++);
+
+// ✅ Use InvokeAsync
+mTimer = new Timer(_ => InvokeAsync(() => mCounter++));
+```
+
+**Blazor WASM:** Single-threaded, so not an issue.
+
+### 🚫 No Side-Effects in Razor Markup
+
+```razor
+@* ❌ WRONG - Side-effect during render *@
+<NotAuthorized>
+    @{
+        NavigationManager.NavigateTo("login");
+    }
+</NotAuthorized>
+
+@* ✅ CORRECT - Dedicated component with lifecycle method *@
+<NotAuthorized>
+    <RedirectToLogin />
+</NotAuthorized>
+```
+
+**Rule:** Never put `NavigateTo`, API calls, or state changes in `@{ }` blocks within markup.
+
+**Why:**
+1. **Multiple execution:** Blazor can re-render components multiple times — your side-effect runs each time.
+2. **Race conditions:** Navigation during render can conflict with the render process itself.
+3. **Debugging nightmare:** Side-effects in render are unpredictable — you don't know when/how often they run.
+
+**Solution:** Use lifecycle methods (`OnInitialized`, `OnAfterRender`) or create a dedicated component.
+
+### 🚫 No JS Interop in OnInitializedAsync
+
+```csharp
+// ❌ WRONG - JS may not be ready yet
+protected override async Task OnInitializedAsync()
+{
+    await Task.Delay(50); // Fragile hack!
+    var value = await JsRuntime.InvokeAsync<string>("getValue");
+}
+
+// ✅ CORRECT - JS is guaranteed to be ready after first render
+protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    if (!firstRender) return;
+    
+    var value = await JsRuntime.InvokeAsync<string>("getValue");
+    StateHasChanged(); // Trigger re-render with new data
+}
+```
+
+**Rule:** JS interop calls belong in `OnAfterRenderAsync(firstRender: true)`, not in `OnInitializedAsync`.
+
+**Why:** JavaScript and the DOM are only guaranteed to be ready after the first render. `OnInitializedAsync` runs before that.
+
+---
+
+## 🏗️ Architecture Principles
+
+### Discovery Systems — NO Hardcoded Lists!
+
+All discovery systems use **manifest files**. Never hardcode IDs in JavaScript or C#.
+
+| System | Manifest Location | To add new entry |
+|--------|-------------------|------------------|
+| **Themes** | `/wwwroot/themes/manifest.json` | Add folder + manifest entry |
+| **Locales** | `/wwwroot/locales/manifest.json` | Add folder + manifest entry |
+
+**Example — Adding a new theme:**
+```
+1. Create folder: /wwwroot/themes/my-theme/
+2. Add theme.json and theme.css in folder
+3. Add entry to manifest.json:
+   { "id": "my-theme", "order": 6 }
+```
+
+### Theme Inheritance
+
+```
+themes/
+├── lumacore-base/        ← Shared foundation (NOT selectable)
+│   ├── theme.css         ← Common CSS variables & rules
+│   └── icons/            ← Default icons (SVG)
+├── lumacore-dark/        ← @import "../lumacore-base/theme.css"
+├── lumacore-light/       ← @import "../lumacore-base/theme.css"
+└── missi-pink/           ← Can override icons in icons/ subfolder
+```
+
+**Rules:**
+- `lumacore-base` is NOT in manifest.json (not user-selectable)
+- Themes import from `lumacore-base`, not from each other
+- Icons fall back to `lumacore-base`, not to `lumacore-dark`
+- Theme-specific icons go in `themes/{id}/icons/`
+
+**Why this matters:**
+- ❌ Themes depending on `lumacore-dark` = implicit coupling
+- ✅ Themes depending on `lumacore-base` = explicit shared foundation
+- ✅ Theme authors can skip base entirely if they want full control
+
+### Consistency Check
+
+When refactoring discovery/loading systems, verify:
+- [ ] Is there a manifest file?
+- [ ] Does the code load from manifest (not hardcoded)?
+- [ ] Is the pattern consistent with other discovery systems?
+
+### Don't Describe What Isn't Built
+
+**CRITICAL:** Never tell the user "X works automatically" without verifying the code actually does that.
+
+- ❌ "Themes are discovered automatically when you add a folder" (if code has hardcoded list)
+- ✅ "Themes are discovered via manifest.json" (verified in code)
+- ✅ "Currently themes are hardcoded — should we add manifest-based discovery?"
+
+---
+
 ## Code Formatting
 
 - **Line length:** Max 120 characters — but *use* the available width, don't break unnecessarily at 80
@@ -80,7 +266,8 @@ Condensed rules for working on LumaCore. When in doubt: consult the original doc
 
 ## Async/Await
 
-- **`ConfigureAwait(false)`** in all library/service methods
+- **`ConfigureAwait(true)`** in all `.razor` files — no exceptions!
+- **`ConfigureAwait(false)`** in backend services (HTTP, DB, no UI context)
 - **Never** `.Result` or `.Wait()` – async all the way
 - `Task` by default, `ValueTask` only when profiled
 
@@ -122,6 +309,21 @@ Break at logical points (end of sentence, new thought).
 | `<see langword="null"/>` | Keywords (`null`, `true`, `false`) |
 | `<c>code</c>` | Inline code (strings, numbers) |
 | `<paramref name="x"/>` | Reference parameter |
+
+**No `<returns>` for async Task:**
+```csharp
+// ❌ Boilerplate — says nothing useful
+/// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+async Task DoSomethingAsync()
+
+// ✅ No returns tag for async Task (it's like async void)
+/// <summary>Does something.</summary>
+async Task DoSomethingAsync()
+
+// ✅ Only document returns when there's an actual value
+/// <returns>The user's name.</returns>
+async Task<string> GetUserNameAsync()
+```
 
 ---
 
@@ -263,12 +465,16 @@ BREAKING CHANGE: Response field "token" renamed to "accessToken".
 - [ ] Usings sorted (System → Microsoft → Third-party → LumaCore)
 - [ ] `m` prefix for instance fields, `s` for static
 - [ ] `sealed` on classes (unless inheritance is planned)
-- [ ] `ConfigureAwait(false)` on async
+- [ ] `ConfigureAwait(true)` in .razor, `ConfigureAwait(false)` in backend services
 - [ ] XML docs on public members
 - [ ] Options via `AddFeatureOptions<T>()` registered
 - [ ] Endpoints have `MapToApiVersion()` and auth declaration
 - [ ] Markdown: headings never wrap
 - [ ] Commit message follows Conventional Commits
+- [ ] **Discovery systems use manifests, not hardcoded lists**
+- [ ] **Don't claim features work a certain way without verifying code**
+- [ ] **No side-effects in Razor markup** — use lifecycle methods or dedicated components
+- [ ] **JS interop in OnAfterRenderAsync** — not in OnInitializedAsync
 
 ---
 

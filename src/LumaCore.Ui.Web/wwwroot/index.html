@@ -4,26 +4,28 @@
     <meta charset="utf-8"/>
     <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
     <link rel="alternate icon" href="favicon.svg"/>
+    <link rel="manifest" href="manifest.webmanifest"/>
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <title>LumaCore UI</title>
     <base href="/"/>
 
-    <!-- LumaCore Theme System: Load theme first to define CSS Custom Properties -->
+    <!-- Set HTML lang attribute from localStorage before any rendering -->
+    <script src="js/lumacore.locale.js"></script>
+
+    <!-- LumaCore Theme System: Initial theme loaded here, dynamic switching via JS -->
     <!-- Official themes: lumacore-dark (default), lumacore-light -->
-    <!-- Community themes: forest-green, missi-pink, ocean-blue -->
-    <!-- To change theme, update the href below or implement dynamic theme switching -->
-    <link rel="stylesheet" href="css/themes/lumacore-dark.css" id="theme-stylesheet"/>
+    <!-- Community themes: missi-pink, ocean-blue, forest-green -->
+    <link rel="stylesheet" href="themes/lumacore-dark/theme.css" id="theme-stylesheet"/>
 
     <!-- Application styles (use theme variables defined above) -->
-    <link rel="stylesheet" href="css/app.css"/>
-    <link rel="stylesheet" href="css/login.css"/>
-    <link rel="stylesheet" href="css/admin-overlay.css"/>
-    <link rel="stylesheet" href="css/settings-overlay.css"/>
+    <link rel="stylesheet" href="LumaCore.Ui.Web.styles.css"/>
+    <link rel="stylesheet" href="css/toast.css"/>
 
-    <!-- LumaCore JavaScript - MUST load before Blazor! Cache-busted with version parameter -->
-    <!-- TODO: Implement automatic cache-busting strategy! -->
-    <script src="js/lumacore.js?v=2025122605"></script>
+    <!-- LumaCore JavaScript - Theme MUST load before Blazor! -->
+    <script src="js/lumacore.theme.js"></script>
+    <script src="js/lumacore.icons.js"></script>
+    <script src="js/lumacore.toast.js"></script>
 </head>
 <body>
 <div id="app">Loading LumaCore UI…</div>

@@ -1,0 +1,78 @@
+@* 
+    LumaCore Icon Component
+    Theme-aware SVG icon loading with fallback to lumacore-base.
+    Uses the JavaScript icon system for caching and theme support.
+*@
+
+@inject IJSRuntime JsRuntime
+
+@if (!string.IsNullOrEmpty(mSvgContent))
+{
+	<span class="lc-icon @Class" @attributes="AdditionalAttributes">@((MarkupString)mSvgContent)</span>
+}
+
+@code {
+
+	/// <summary>
+	/// The icon name without extension (e.g., "close", "checkmark").
+	/// </summary>
+	[Parameter]
+	[EditorRequired]
+	public string Name { get; set; } = string.Empty;
+
+	/// <summary>
+	/// Additional CSS classes to apply to the icon container.
+	/// </summary>
+	[Parameter]
+	public string? Class { get; set; }
+
+	/// <summary>
+	/// Additional HTML attributes to apply to the icon container.
+	/// </summary>
+	[Parameter(CaptureUnmatchedValues = true)]
+	public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+	/// <summary>
+	/// The loaded SVG content.
+	/// </summary>
+	private string mSvgContent = string.Empty;
+
+	/// <summary>
+	/// Lifecycle: Load icon SVG on initialization.
+	/// </summary>
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadIconAsync().ConfigureAwait(true);
+	}
+
+	/// <summary>
+	/// Lifecycle: Reload icon if Name parameter changes.
+	/// </summary>
+	protected override async Task OnParametersSetAsync()
+	{
+		await LoadIconAsync().ConfigureAwait(true);
+	}
+
+	/// <summary>
+	/// Loads the icon SVG from the JavaScript icon system.
+	/// </summary>
+	private async Task LoadIconAsync()
+	{
+		if (string.IsNullOrEmpty(Name))
+		{
+			mSvgContent = string.Empty;
+			return;
+		}
+
+		try
+		{
+			mSvgContent = await JsRuntime.InvokeAsync<string>("getIcon", Name).ConfigureAwait(true);
+		}
+		catch
+		{
+			// Silently handle JS interop failures
+			mSvgContent = string.Empty;
+		}
+	}
+
+}
