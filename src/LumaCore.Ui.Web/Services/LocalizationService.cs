@@ -1,4 +1,4 @@
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
@@ -22,9 +22,8 @@ namespace LumaCore.Ui.Web.Services;
 ///     JavaScript is only used for localStorage access (persisting locale preference).
 ///     </para>
 ///     <para>
-///     <b>Thread-Safety:</b> This implementation assumes single-threaded Blazor WASM execution.
-///     The mutable fields (<see cref="mCurrentLocale"/>, <see cref="mTranslations"/>, <see cref="mAvailableLocales"/>)
-///     are not thread-safe. A thread-safety review is required if migrating to Blazor Server.
+///     <b>Thread-Safety:</b> This implementation uses immutable state snapshots with atomic swaps,
+///     making it safe for both Blazor WASM (single-threaded) and Blazor Server (concurrent access).
 ///     </para>
 /// </remarks>
 public sealed class LocalizationService
@@ -32,14 +31,11 @@ public sealed class LocalizationService
 	private readonly IHttpClientFactory mHttpClientFactory;
 	private readonly IJSRuntime         mJsRuntime;
 
-	/// <summary>The cached list of available locales. Not thread-safe.</summary>
-	private List<LocaleInfo>? mAvailableLocales;
-
-	/// <summary>The current locale code (e.g., <c>en</c>, <c>de</c>). Not thread-safe.</summary>
-	private string mCurrentLocale = "en";
-
-	/// <summary>The loaded translations dictionary. Not thread-safe.</summary>
-	private Dictionary<string, JsonElement>? mTranslations;
+	/// <summary>
+	/// The current localization state. Accessed via <see cref="Volatile"/> for thread-safe reads
+	/// and <see cref="Interlocked.Exchange{T}"/> for atomic writes.
+	/// </summary>
+	private LocalizationState? mState;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="LocalizationService"/> class.
@@ -53,15 +49,6 @@ public sealed class LocalizationService
 	}
 
 	/// <summary>
-	/// Gets a value indicating whether the localization service has been initialized.
-	/// </summary>
-	/// <remarks>
-	/// Components should check this property before rendering localized content
-	/// to avoid displaying placeholder text while translations are loading.
-	/// </remarks>
-	public bool IsInitialized => mTranslations != null;
-
-	/// <summary>
 	/// Gets the current locale code (e.g., <c>en</c>, <c>de</c>).
 	/// </summary>
 	/// <remarks>
@@ -69,7 +56,100 @@ public sealed class LocalizationService
 	/// In LumaCore, the MainLayout waits for initialization before rendering child components,
 	/// so this property is safe to use in all component lifecycle methods.
 	/// </remarks>
-	public string CurrentLocale => mCurrentLocale;
+	public string CurrentLocale => Volatile.Read(ref mState)?.Locale ?? "en";
+
+	/// <summary>
+	/// Gets a value indicating whether the localization service has been initialized.
+	/// </summary>
+	/// <remarks>
+	/// Components should check this property before rendering localized content
+	/// to avoid displaying placeholder text while translations are loading.
+	/// </remarks>
+	public bool IsInitialized => Volatile.Read(ref mState) != null;
+
+	/// <summary>
+	/// Gets a translated string for the specified key.
+	/// </summary>
+	/// <param name="key">The translation key (supports nested keys like <c>components.settings.header.title</c>).</param>
+	/// <returns>The translated string, or <c>?? key ??</c> if not found or not initialized.</returns>
+	/// <remarks>
+	/// This method is synchronous and performs no JavaScript interop, making it
+	/// suitable for use in Razor component render methods.
+	/// </remarks>
+	public string Get(string key)
+	{
+		LocalizationState? state = Volatile.Read(ref mState);
+
+		if (state == null)
+			return $"?? {key} ??";
+
+		return GetNestedValue(state.Translations, key) ?? $"?? {key} ??";
+	}
+
+	/// <summary>
+	/// Gets the list of available locales from the manifest file.
+	/// </summary>
+	/// <remarks>
+	/// Results are cached after the first call to avoid repeated HTTP requests.
+	/// </remarks>
+	/// <returns>A list of available locales sorted by display order.</returns>
+	public async Task<IReadOnlyList<LocaleInfo>> GetAvailableLocalesAsync()
+	{
+		// Return cached list if available
+		LocalizationState? state = Volatile.Read(ref mState);
+		if (state?.AvailableLocales != null)
+			return state.AvailableLocales;
+
+		try
+		{
+			HttpClient httpClient = mHttpClientFactory.CreateClient("StaticFilesHttpClient");
+			string json = await httpClient.GetStringAsync("locales/manifest.json").ConfigureAwait(false);
+
+			using JsonDocument doc = JsonDocument.Parse(json);
+			JsonElement localesArray = doc.RootElement.GetProperty("locales");
+
+			var locales = new List<LocaleInfo>();
+
+			foreach (JsonElement locale in localesArray.EnumerateArray())
+			{
+				string code = locale.GetProperty("code").GetString() ?? "en";
+				string nativeName = locale.GetProperty("nativeName").GetString() ?? code;
+				int order = locale.TryGetProperty("order", out JsonElement orderElement)
+					            ? orderElement.GetInt32()
+					            : 999;
+
+				locales.Add(new LocaleInfo(code, nativeName, order));
+			}
+
+			IReadOnlyList<LocaleInfo> sortedLocales = locales.OrderBy(l => l.Order).ToList().AsReadOnly();
+
+			// Atomic swap: preserve Locale and Translations
+			LocalizationState currentState = Volatile.Read(ref mState)
+			                                 ?? new LocalizationState(
+				                                 "en",
+				                                 new Dictionary<string, JsonElement>(),
+				                                 null);
+
+			Interlocked.Exchange(ref mState, currentState with { AvailableLocales = sortedLocales });
+
+			return sortedLocales;
+		}
+		catch
+		{
+			// Fallback to English only
+			IReadOnlyList<LocaleInfo> fallback = new List<LocaleInfo> { new("en", "English", 1) }.AsReadOnly();
+
+			LocalizationState currentState = (LocalizationState?)Volatile.Read(ref mState)
+			                                 ?? new LocalizationState(
+				                                 "en",
+				                                 new Dictionary<string, JsonElement>(),
+				                                 null);
+
+			Interlocked.Exchange(ref mState, currentState with { AvailableLocales = fallback });
+
+			return fallback;
+		}
+	}
 
 	/// <summary>
 	/// Initializes the localization service by loading the user's preferred locale.
@@ -102,115 +182,20 @@ public sealed class LocalizationService
 			{
 				// If even English fails, initialize with empty translations
 				// to prevent null reference exceptions
-				mTranslations = new Dictionary<string, JsonElement>();
-				mCurrentLocale = "en";
+				LocalizationState currentState = Volatile.Read(ref mState)
+				                                 ?? new LocalizationState(
+					                                 "en",
+					                                 new Dictionary<string, JsonElement>(),
+					                                 null);
+
+				LocalizationState newState = currentState with
+				{
+					Locale = "en",
+					Translations = new Dictionary<string, JsonElement>()
+				};
+
+				Interlocked.Exchange(ref mState, newState);
 			}
-		}
-	}
-
-	/// <summary>
-	/// Loads translation data for the specified locale.
-	/// </summary>
-	/// <param name="locale">The locale code (e.g., <c>en</c>, <c>de</c>).</param>
-	/// <exception cref="HttpRequestException">Thrown when the translation file cannot be loaded.</exception>
-	private async Task LoadTranslationsAsync(string locale)
-	{
-		HttpClient httpClient = mHttpClientFactory.CreateClient("StaticFilesHttpClient");
-
-		string url = $"locales/{locale}/translations.json";
-		string json = await httpClient.GetStringAsync(url).ConfigureAwait(false);
-
-		mTranslations = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
-		mCurrentLocale = locale;
-	}
-
-	/// <summary>
-	/// Gets a translated string for the specified key.
-	/// </summary>
-	/// <param name="key">The translation key (supports nested keys like <c>components.settings.header.title</c>).</param>
-	/// <returns>The translated string, or <c>?? key ??</c> if not found or not initialized.</returns>
-	/// <remarks>
-	/// This method is synchronous and performs no JavaScript interop, making it
-	/// suitable for use in Razor component render methods.
-	/// </remarks>
-	public string Get(string key)
-	{
-		if (mTranslations == null)
-			return $"?? {key} ??";
-
-		return GetNestedValue(mTranslations, key) ?? $"?? {key} ??";
-	}
-
-	/// <summary>
-	/// Navigates through nested JSON keys to find the translation value.
-	/// </summary>
-	/// <param name="dict">The root translation dictionary.</param>
-	/// <param name="key">The dot-separated key path (e.g., <c>components.navbar.logout</c>).</param>
-	/// <returns>The translated string or <see langword="null"/> if not found.</returns>
-	private static string? GetNestedValue(Dictionary<string, JsonElement> dict, string key)
-	{
-		string[] keys = key.Split('.');
-
-		// First key must be in the dictionary
-		if (!dict.TryGetValue(keys[0], out JsonElement current))
-			return null;
-
-		// Navigate through remaining keys in the JsonElement
-		for (int i = 1; i < keys.Length; i++)
-		{
-			if (current.ValueKind == JsonValueKind.Object && current.TryGetProperty(keys[i], out JsonElement property))
-				current = property;
-			else
-				return null;
-		}
-
-		// Return the string value
-		return current.ValueKind == JsonValueKind.String ? current.GetString() : null;
-	}
-
-	/// <summary>
-	/// Gets the list of available locales from the manifest file.
-	/// </summary>
-	/// <remarks>
-	/// Results are cached after the first call to avoid repeated HTTP requests.
-	/// </remarks>
-	/// <returns>A list of available locales sorted by display order.</returns>
-	public async Task<IReadOnlyList<LocaleInfo>> GetAvailableLocalesAsync()
-	{
-		// Return cached list if available
-		if (mAvailableLocales != null)
-			return mAvailableLocales;
-
-		try
-		{
-			HttpClient httpClient = mHttpClientFactory.CreateClient("StaticFilesHttpClient");
-			string json = await httpClient.GetStringAsync("locales/manifest.json").ConfigureAwait(false);
-
-			using JsonDocument doc = JsonDocument.Parse(json);
-			JsonElement localesArray = doc.RootElement.GetProperty("locales");
-
-			mAvailableLocales = [];
-
-			foreach (JsonElement locale in localesArray.EnumerateArray())
-			{
-				string code = locale.GetProperty("code").GetString() ?? "en";
-				string nativeName = locale.GetProperty("nativeName").GetString() ?? code;
-				int order = locale.TryGetProperty("order", out JsonElement orderElement)
-					            ? orderElement.GetInt32()
-					            : 999;
-
-				mAvailableLocales.Add(new LocaleInfo(code, nativeName, order));
-			}
-
-			mAvailableLocales = mAvailableLocales.OrderBy(l => l.Order).ToList();
-
-			return mAvailableLocales;
-		}
-		catch
-		{
-			// Fallback to English only
-			mAvailableLocales = [new LocaleInfo("en", "English", 1)];
-			return mAvailableLocales;
 		}
 	}
 
@@ -232,10 +217,75 @@ public sealed class LocalizationService
 	}
 
 	/// <summary>
+	/// Navigates through nested JSON keys to find the translation value.
+	/// </summary>
+	/// <param name="dict">The root translation dictionary.</param>
+	/// <param name="key">The dot-separated key path (e.g., <c>components.navbar.logout</c>).</param>
+	/// <returns>The translated string or <see langword="null"/> if not found.</returns>
+	private static string? GetNestedValue(IReadOnlyDictionary<string, JsonElement> dict, string key)
+	{
+		string[] keys = key.Split('.');
+
+		// First key must be in the dictionary
+		if (!dict.TryGetValue(keys[0], out JsonElement current))
+			return null;
+
+		// Navigate through remaining keys in the JsonElement
+		for (int i = 1; i < keys.Length; i++)
+		{
+			if (current.ValueKind == JsonValueKind.Object && current.TryGetProperty(keys[i], out JsonElement property))
+				current = property;
+			else
+				return null;
+		}
+
+		// Return the string value
+		return current.ValueKind == JsonValueKind.String ? current.GetString() : null;
+	}
+
+	/// <summary>
+	/// Loads translation data for the specified locale.
+	/// </summary>
+	/// <param name="locale">The locale code (e.g., <c>en</c>, <c>de</c>).</param>
+	/// <exception cref="HttpRequestException">Thrown when the translation file cannot be loaded.</exception>
+	private async Task LoadTranslationsAsync(string locale)
+	{
+		HttpClient httpClient = mHttpClientFactory.CreateClient("StaticFilesHttpClient");
+
+		string url = $"locales/{locale}/translations.json";
+		string json = await httpClient.GetStringAsync(url).ConfigureAwait(false);
+
+		var translations = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
+
+		// Atomic swap: preserve AvailableLocales if already loaded
+		LocalizationState currentState = Volatile.Read(ref mState)
+		                                 ?? new LocalizationState("en", new Dictionary<string, JsonElement>(), null);
+
+		LocalizationState newState = currentState with
+		{
+			Locale = locale,
+			Translations = translations ?? new Dictionary<string, JsonElement>()
+		};
+
+		Interlocked.Exchange(ref mState, newState);
+	}
+
+	/// <summary>
 	/// Represents information about an available locale.
 	/// </summary>
 	/// <param name="Code">The locale code (e.g., <c>en</c>, <c>de</c>).</param>
 	/// <param name="NativeName">The native name of the language (e.g., <c>English</c>, <c>Deutsch</c>).</param>
 	/// <param name="Order">The display order for sorting.</param>
 	public sealed record LocaleInfo(string Code, string NativeName, int Order);
+
+	/// <summary>
+	/// Immutable snapshot of localization state. Replaced atomically on locale changes.
+	/// </summary>
+	/// <param name="Locale">The current locale code (e.g., <c>en</c>, <c>de</c>).</param>
+	/// <param name="Translations">The loaded translations dictionary.</param>
+	/// <param name="AvailableLocales">The cached list of available locales, or <see langword="null"/> if not yet loaded.</param>
+	private sealed record LocalizationState(
+		string                                   Locale,
+		IReadOnlyDictionary<string, JsonElement> Translations,
+		IReadOnlyList<LocaleInfo>?               AvailableLocales);
 }
