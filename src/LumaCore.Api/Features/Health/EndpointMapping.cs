@@ -45,19 +45,19 @@ static class EndpointMapping
 	//
 	// The feature is split into two parts:
 	//
-	//   1. INFRASTRUCTURE (MapHealthProbesFeature)
-	//      - GET /health
-	//        The standard ASP.NET Core health check endpoint for readiness probes.
-	//        Aggregates all registered health checks and returns Healthy/Degraded/Unhealthy.
-	//        This endpoint is unversioned and mapped directly to the application root
-	//        for compatibility with Kubernetes, Docker, and other orchestrators.
-	//
-	//   2. VERSIONED API (MapHealthApiFeature)
+	//   1. VERSIONED API (MapHealthApiFeature)
 	//      - GET /api/v1/health/live
 	//        A lightweight JSON-based liveness probe that returns an instance of
 	//        ApiHealthLiveResponse. It is designed to be safe for frequent polling
 	//        and is intentionally kept anonymous so that the UI can display whether
 	//        the backend is reachable even before authentication is configured.
+	//
+	//   2. INFRASTRUCTURE (MapHealthProbesFeature)
+	//      - GET /health
+	//        The standard ASP.NET Core health check endpoint for readiness probes.
+	//        Aggregates all registered health checks and returns Healthy/Degraded/Unhealthy.
+	//        This endpoint is unversioned and mapped directly to the application root
+	//        for compatibility with Kubernetes, Docker, and other orchestrators.
 	//
 	// NOT YET IMPLEMENTED:
 	//
@@ -67,66 +67,6 @@ static class EndpointMapping
 	//
 	// These additional capabilities can be added to the versioned API in the future.
 	// -------------------------------------------------------------------------
-
-	/// <summary>
-	/// Maps the infrastructure health probe endpoint to the application root.
-	/// </summary>
-	/// <param name="app">
-	/// The <see cref="IEndpointRouteBuilder"/> to map endpoints to. This should be the
-	/// root application builder (<see cref="WebApplication"/>), not the versioned API group.
-	/// </param>
-	/// <returns>The <paramref name="app"/> builder for method chaining.</returns>
-	/// <remarks>
-	///     <para>
-	///     This method maps the standard ASP.NET Core health check endpoint:
-	///     </para>
-	///     <list type="bullet">
-	///         <item><c>GET /health</c> — Aggregated readiness probe for all registered health checks</item>
-	///     </list>
-	///     <para>
-	///         <b>Why Unversioned?</b>
-	///     </para>
-	///     <para>
-	///     The <c>/health</c> endpoint is intentionally unversioned because:
-	///     </para>
-	///     <list type="bullet">
-	///         <item>
-	///             <description>
-	///             Container orchestrators (Kubernetes, Docker) expect it at a fixed, well-known path.
-	///             </description>
-	///         </item>
-	///         <item>
-	///             <description>
-	///             The ASP.NET Core health check middleware follows this convention by default.
-	///             </description>
-	///         </item>
-	///         <item>
-	///             <description>
-	///             Infrastructure probes should not require knowledge of API versioning.
-	///             </description>
-	///         </item>
-	///     </list>
-	/// </remarks>
-	public static IEndpointRouteBuilder MapHealthProbesFeature(this IEndpointRouteBuilder app)
-	{
-		// -------------------------------------------------------------------------
-		// GET /health (ASP.NET Core Standard Health Check)
-		// -------------------------------------------------------------------------
-		// Maps the standard ASP.NET Core health check endpoint for readiness probes.
-		// This endpoint aggregates all registered health checks and returns a simple
-		// status (Healthy, Degraded, Unhealthy). Container orchestrators like
-		// Kubernetes typically use this for readiness probes.
-		//
-		// This endpoint is intentionally:
-		//   - Unversioned (no /api/v1 prefix)
-		//   - Anonymous (no authentication required)
-		//   - At the root path (standard convention)
-		// -------------------------------------------------------------------------
-		app.MapHealthChecks("/health")
-			.AllowAnonymous();
-
-		return app;
-	}
 
 	/// <summary>
 	/// Maps the health API endpoints to the versioned API route group.
@@ -204,5 +144,65 @@ static class EndpointMapping
 			.AllowAnonymous();
 
 		return endpoints;
+	}
+
+	/// <summary>
+	/// Maps the infrastructure health probe endpoint to the application root.
+	/// </summary>
+	/// <param name="app">
+	/// The <see cref="IEndpointRouteBuilder"/> to map endpoints to. This should be the
+	/// root application builder (<see cref="WebApplication"/>), not the versioned API group.
+	/// </param>
+	/// <returns>The <paramref name="app"/> builder for method chaining.</returns>
+	/// <remarks>
+	///     <para>
+	///     This method maps the standard ASP.NET Core health check endpoint:
+	///     </para>
+	///     <list type="bullet">
+	///         <item><c>GET /health</c> — Aggregated readiness probe for all registered health checks</item>
+	///     </list>
+	///     <para>
+	///         <b>Why Unversioned?</b>
+	///     </para>
+	///     <para>
+	///     The <c>/health</c> endpoint is intentionally unversioned because:
+	///     </para>
+	///     <list type="bullet">
+	///         <item>
+	///             <description>
+	///             Container orchestrators (Kubernetes, Docker) expect it at a fixed, well-known path.
+	///             </description>
+	///         </item>
+	///         <item>
+	///             <description>
+	///             The ASP.NET Core health check middleware follows this convention by default.
+	///             </description>
+	///         </item>
+	///         <item>
+	///             <description>
+	///             Infrastructure probes should not require knowledge of API versioning.
+	///             </description>
+	///         </item>
+	///     </list>
+	/// </remarks>
+	public static IEndpointRouteBuilder MapHealthProbesFeature(this IEndpointRouteBuilder app)
+	{
+		// -------------------------------------------------------------------------
+		// GET /health (ASP.NET Core Standard Health Check)
+		// -------------------------------------------------------------------------
+		// Maps the standard ASP.NET Core health check endpoint for readiness probes.
+		// This endpoint aggregates all registered health checks and returns a simple
+		// status (Healthy, Degraded, Unhealthy). Container orchestrators like
+		// Kubernetes typically use this for readiness probes.
+		//
+		// This endpoint is intentionally:
+		//   - Unversioned (no /api/v1 prefix)
+		//   - Anonymous (no authentication required)
+		//   - At the root path (standard convention)
+		// -------------------------------------------------------------------------
+		app.MapHealthChecks("/health")
+			.AllowAnonymous();
+
+		return app;
 	}
 }

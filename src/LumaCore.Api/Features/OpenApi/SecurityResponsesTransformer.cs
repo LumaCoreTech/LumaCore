@@ -106,31 +106,6 @@ sealed class SecurityResponsesTransformer : IOpenApiOperationTransformer
 	}
 
 	/// <summary>
-	/// Determines whether the <see cref="OpenApiOperation"/> has a request body.
-	/// </summary>
-	/// <param name="operation">The <see cref="OpenApiOperation"/> to check.</param>
-	/// <returns>
-	/// <see langword="true"/> if the operation has a request body; otherwise, <see langword="false"/>.
-	/// </returns>
-	private static bool HasRequestBody(OpenApiOperation operation)
-	{
-		return operation.RequestBody is not null;
-	}
-
-	/// <summary>
-	/// Determines whether the <see cref="IAuthorizeData"/> includes roles or policies.
-	/// </summary>
-	/// <param name="authorizeData">The <see cref="IAuthorizeData"/> to check.</param>
-	/// <returns>
-	/// <see langword="true"/> if roles or policies are specified; otherwise, <see langword="false"/>.
-	/// </returns>
-	private static bool HasRolesOrPolicies(IAuthorizeData authorizeData)
-	{
-		return !string.IsNullOrWhiteSpace(authorizeData.Roles) ||
-		       !string.IsNullOrWhiteSpace(authorizeData.Policy);
-	}
-
-	/// <summary>
 	/// Adds or updates an <see cref="OpenApiResponse"/> in the operation.
 	/// </summary>
 	/// <param name="operation">The <see cref="OpenApiOperation"/> to modify.</param>
@@ -165,5 +140,30 @@ sealed class SecurityResponsesTransformer : IOpenApiOperationTransformer
 		{
 			Description = description
 		};
+	}
+
+	/// <summary>
+	/// Determines whether the <see cref="OpenApiOperation"/> has a request body.
+	/// </summary>
+	/// <param name="operation">The <see cref="OpenApiOperation"/> to check.</param>
+	/// <returns>
+	/// <see langword="true"/> if the operation has a request body; otherwise, <see langword="false"/>.
+	/// </returns>
+	private static bool HasRequestBody(OpenApiOperation operation)
+	{
+		return operation.RequestBody is not null;
+	}
+
+	/// <summary>
+	/// Determines whether the <see cref="IAuthorizeData"/> includes roles or policies.
+	/// </summary>
+	/// <param name="authorizeData">The <see cref="IAuthorizeData"/> to check.</param>
+	/// <returns>
+	/// <see langword="true"/> if roles or policies are specified; otherwise, <see langword="false"/>.
+	/// </returns>
+	private static bool HasRolesOrPolicies(IAuthorizeData authorizeData)
+	{
+		return !string.IsNullOrWhiteSpace(authorizeData.Roles) ||
+		       !string.IsNullOrWhiteSpace(authorizeData.Policy);
 	}
 }

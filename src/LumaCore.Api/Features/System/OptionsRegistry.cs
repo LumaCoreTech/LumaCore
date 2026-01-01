@@ -51,35 +51,6 @@ sealed class OptionsRegistry
 	public IReadOnlyCollection<Type> OptionsTypes => mTracker.GetTrackedTypes();
 
 	/// <summary>
-	/// Gets the configuration section name for an Options type.
-	/// </summary>
-	/// <param name="optionsType">The Options type.</param>
-	/// <returns>
-	/// The section name from registration tracking if available;
-	/// otherwise the type name with the <c>Options</c> suffix removed (fallback).
-	/// </returns>
-	public string GetSectionName(Type optionsType)
-	{
-		ArgumentNullException.ThrowIfNull(optionsType);
-
-		// Priority: Section name from registration tracking (the source of truth).
-		string? trackedName = mTracker.GetSectionName(optionsType);
-
-		// Return tracked name if available.
-		if (trackedName is not null)
-			return trackedName;
-
-		// Fallback: Convention — strip "Options" suffix from type name.
-		// This should only be reached for external/framework Options types.
-		const string OptionsSuffix = "Options";
-		string typeName = optionsType.Name;
-
-		return typeName.EndsWith(OptionsSuffix, StringComparison.Ordinal)
-			       ? typeName[..^OptionsSuffix.Length]
-			       : typeName;
-	}
-
-	/// <summary>
 	/// Gets all configuration values, grouped by section name, with secrets masked.
 	/// </summary>
 	/// <returns>
@@ -144,6 +115,35 @@ sealed class OptionsRegistry
 		return options is null
 			       ? null
 			       : OptionsSanitizer.Sanitize(options, optionsType);
+	}
+
+	/// <summary>
+	/// Gets the configuration section name for an Options type.
+	/// </summary>
+	/// <param name="optionsType">The Options type.</param>
+	/// <returns>
+	/// The section name from registration tracking if available;
+	/// otherwise the type name with the <c>Options</c> suffix removed (fallback).
+	/// </returns>
+	public string GetSectionName(Type optionsType)
+	{
+		ArgumentNullException.ThrowIfNull(optionsType);
+
+		// Priority: Section name from registration tracking (the source of truth).
+		string? trackedName = mTracker.GetSectionName(optionsType);
+
+		// Return tracked name if available.
+		if (trackedName is not null)
+			return trackedName;
+
+		// Fallback: Convention — strip "Options" suffix from type name.
+		// This should only be reached for external/framework Options types.
+		const string OptionsSuffix = "Options";
+		string typeName = optionsType.Name;
+
+		return typeName.EndsWith(OptionsSuffix, StringComparison.Ordinal)
+			       ? typeName[..^OptionsSuffix.Length]
+			       : typeName;
 	}
 
 	/// <summary>

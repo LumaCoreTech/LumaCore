@@ -1,4 +1,4 @@
-// Copyright (c) 2026 LumaCoreTech
+// Copyright (c) 2025 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 

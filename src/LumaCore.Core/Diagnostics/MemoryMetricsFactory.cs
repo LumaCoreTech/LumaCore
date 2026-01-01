@@ -141,6 +141,24 @@ public static class MemoryMetricsFactory
 	}
 
 	/// <summary>
+	/// Parses a single line from <c>/proc/meminfo</c> and converts the reported kilobyte value to bytes.
+	/// </summary>
+	/// <param name="line">A line from <c>/proc/meminfo</c> in the format <c>"Key: value kB"</c>.</param>
+	/// <returns>The value in bytes, or <see langword="null"/> if parsing fails.</returns>
+	private static long? ParseMemInfoKbToBytes(string line)
+	{
+		// Expected format: "<Key>: <value> kB"
+		string[] parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+		if (parts.Length < 2)
+			return null;
+
+		if (!long.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out long kb))
+			return null;
+
+		return kb * 1024L;
+	}
+
+	/// <summary>
 	/// Attempts to read the container memory limit from Linux cgroup files.
 	/// </summary>
 	/// <returns>
@@ -286,27 +304,6 @@ public static class MemoryMetricsFactory
 	}
 
 	/// <summary>
-	/// Attempts to retrieve system-level physical memory information using OS-specific mechanisms.
-	/// </summary>
-	/// <returns>
-	/// A <see cref="SystemMemoryInfo"/> instance if supported on the current OS;
-	/// otherwise, <see langword="null"/>.
-	/// </returns>
-	private static SystemMemoryInfo? TryGetSystemMemory()
-	{
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-			return TryGetWindowsMemory();
-
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-			return TryGetLinuxMemory();
-
-		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-			return TryGetMacOSMemory();
-
-		return null;
-	}
-
-	/// <summary>
 	/// Retrieves system memory information on Linux systems by parsing <c>/proc/meminfo</c>.
 	/// </summary>
 	/// <returns>
@@ -348,46 +345,6 @@ public static class MemoryMetricsFactory
 	}
 
 	/// <summary>
-	/// Parses a single line from <c>/proc/meminfo</c> and converts the reported kilobyte value to bytes.
-	/// </summary>
-	/// <param name="line">A line from <c>/proc/meminfo</c> in the format <c>"Key: value kB"</c>.</param>
-	/// <returns>The value in bytes, or <see langword="null"/> if parsing fails.</returns>
-	private static long? ParseMemInfoKbToBytes(string line)
-	{
-		// Expected format: "<Key>: <value> kB"
-		string[] parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-		if (parts.Length < 2)
-			return null;
-
-		if (!long.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out long kb))
-			return null;
-
-		return kb * 1024L;
-	}
-
-	/// <summary>
-	/// Retrieves system memory information on Windows systems using the native <c>GlobalMemoryStatusEx</c> API.
-	/// </summary>
-	/// <returns>
-	/// A <see cref="SystemMemoryInfo"/> with total and available physical memory,
-	/// or <see langword="null"/> if the API call fails.
-	/// </returns>
-	private static SystemMemoryInfo? TryGetWindowsMemory()
-	{
-		var status = new MEMORYSTATUSEX
-		{
-			dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>()
-		};
-
-		if (!GlobalMemoryStatusEx(ref status))
-			return null;
-
-		return new SystemMemoryInfo(
-			TotalPhysicalBytes: unchecked((long)status.ullTotalPhys),
-			AvailablePhysicalBytes: unchecked((long)status.ullAvailPhys));
-	}
-
-	/// <summary>
 	/// Retrieves system memory information on macOS using native <c>sysctl</c> and <c>host_statistics64</c> APIs.
 	/// </summary>
 	/// <returns>
@@ -426,6 +383,49 @@ public static class MemoryMetricsFactory
 	}
 
 	/// <summary>
+	/// Attempts to retrieve system-level physical memory information using OS-specific mechanisms.
+	/// </summary>
+	/// <returns>
+	/// A <see cref="SystemMemoryInfo"/> instance if supported on the current OS;
+	/// otherwise, <see langword="null"/>.
+	/// </returns>
+	private static SystemMemoryInfo? TryGetSystemMemory()
+	{
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			return TryGetWindowsMemory();
+
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			return TryGetLinuxMemory();
+
+		if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			return TryGetMacOSMemory();
+
+		return null;
+	}
+
+	/// <summary>
+	/// Retrieves system memory information on Windows systems using the native <c>GlobalMemoryStatusEx</c> API.
+	/// </summary>
+	/// <returns>
+	/// A <see cref="SystemMemoryInfo"/> with total and available physical memory,
+	/// or <see langword="null"/> if the API call fails.
+	/// </returns>
+	private static SystemMemoryInfo? TryGetWindowsMemory()
+	{
+		var status = new MEMORYSTATUSEX
+		{
+			dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>()
+		};
+
+		if (!GlobalMemoryStatusEx(ref status))
+			return null;
+
+		return new SystemMemoryInfo(
+			TotalPhysicalBytes: unchecked((long)status.ullTotalPhys),
+			AvailablePhysicalBytes: unchecked((long)status.ullAvailPhys));
+	}
+
+	/// <summary>
 	/// Internal value type representing host-level physical memory values.
 	/// </summary>
 	/// <param name="TotalPhysicalBytes">Total physical RAM on the host machine.</param>
@@ -451,26 +451,26 @@ public static class MemoryMetricsFactory
 		/// <summary>Approximate percentage of physical memory currently in use (0-100).</summary>
 		public uint dwMemoryLoad;
 
-		/// <summary>Total size of physical memory (RAM) in bytes.</summary>
-		public ulong ullTotalPhys;
-
-		/// <summary>Available physical memory in bytes.</summary>
-		public ulong ullAvailPhys;
-
-		/// <summary>Total size of the paging file (swap) in bytes.</summary>
-		public ulong ullTotalPageFile;
+		/// <summary>Reserved. Always 0.</summary>
+		public ulong ullAvailExtendedVirtual;
 
 		/// <summary>Available space in the paging file in bytes.</summary>
 		public ulong ullAvailPageFile;
 
-		/// <summary>Total size of the user-mode virtual address space in bytes.</summary>
-		public ulong ullTotalVirtual;
+		/// <summary>Available physical memory in bytes.</summary>
+		public ulong ullAvailPhys;
 
 		/// <summary>Available user-mode virtual address space in bytes.</summary>
 		public ulong ullAvailVirtual;
 
-		/// <summary>Reserved. Always 0.</summary>
-		public ulong ullAvailExtendedVirtual;
+		/// <summary>Total size of the paging file (swap) in bytes.</summary>
+		public ulong ullTotalPageFile;
+
+		/// <summary>Total size of physical memory (RAM) in bytes.</summary>
+		public ulong ullTotalPhys;
+
+		/// <summary>Total size of the user-mode virtual address space in bytes.</summary>
+		public ulong ullTotalVirtual;
 	}
 
 	/// <summary>
@@ -566,23 +566,41 @@ public static class MemoryMetricsFactory
 	[StructLayout(LayoutKind.Sequential)]
 	private struct vm_statistics64_data
 	{
+		/// <summary>Pages in use by active processes.</summary>
+		public uint active_count;
+
+		/// <summary>Pages compressed.</summary>
+		public ulong compressions;
+
+		/// <summary>Compressed pages in compressor.</summary>
+		public uint compressor_page_count;
+
+		/// <summary>Copy-on-write faults.</summary>
+		public ulong cow_faults;
+
+		/// <summary>Pages decompressed.</summary>
+		public ulong decompressions;
+
+		/// <summary>External pages (file-backed).</summary>
+		public uint external_page_count;
+
+		/// <summary>Page faults.</summary>
+		public ulong faults;
+
 		/// <summary>Pages not in use (immediately available).</summary>
 		public uint free_count;
 
-		/// <summary>Pages in use by active processes.</summary>
-		public uint active_count;
+		/// <summary>Object hits.</summary>
+		public ulong hits;
 
 		/// <summary>Pages not recently used (candidates for reclamation).</summary>
 		public uint inactive_count;
 
-		/// <summary>Pages wired down (cannot be paged out).</summary>
-		public uint wire_count;
+		/// <summary>Internal pages (anonymous).</summary>
+		public uint internal_page_count;
 
-		/// <summary>Zero-filled pages.</summary>
-		public ulong zero_fill_count;
-
-		/// <summary>Page reactivations.</summary>
-		public ulong reactivations;
+		/// <summary>Object lookups.</summary>
+		public ulong lookups;
 
 		/// <summary>Pages paged in.</summary>
 		public ulong pageins;
@@ -590,32 +608,17 @@ public static class MemoryMetricsFactory
 		/// <summary>Pages paged out.</summary>
 		public ulong pageouts;
 
-		/// <summary>Page faults.</summary>
-		public ulong faults;
-
-		/// <summary>Copy-on-write faults.</summary>
-		public ulong cow_faults;
-
-		/// <summary>Object lookups.</summary>
-		public ulong lookups;
-
-		/// <summary>Object hits.</summary>
-		public ulong hits;
+		/// <summary>Purgeable pages count.</summary>
+		public uint purgeable_count;
 
 		/// <summary>Pages purged.</summary>
 		public ulong purges;
 
-		/// <summary>Purgeable pages count.</summary>
-		public uint purgeable_count;
+		/// <summary>Page reactivations.</summary>
+		public ulong reactivations;
 
 		/// <summary>Speculative pages count.</summary>
 		public uint speculative_count;
-
-		/// <summary>Pages decompressed.</summary>
-		public ulong decompressions;
-
-		/// <summary>Pages compressed.</summary>
-		public ulong compressions;
 
 		/// <summary>Pages swapped in.</summary>
 		public ulong swapins;
@@ -623,20 +626,17 @@ public static class MemoryMetricsFactory
 		/// <summary>Pages swapped out.</summary>
 		public ulong swapouts;
 
-		/// <summary>Compressed pages in compressor.</summary>
-		public uint compressor_page_count;
-
 		/// <summary>Throttled pages.</summary>
 		public uint throttled_count;
 
-		/// <summary>External pages (file-backed).</summary>
-		public uint external_page_count;
-
-		/// <summary>Internal pages (anonymous).</summary>
-		public uint internal_page_count;
-
 		/// <summary>Total uncompressed pages in compressor.</summary>
 		public ulong total_uncompressed_pages_in_compressor;
+
+		/// <summary>Pages wired down (cannot be paged out).</summary>
+		public uint wire_count;
+
+		/// <summary>Zero-filled pages.</summary>
+		public ulong zero_fill_count;
 	}
 
 	#endregion

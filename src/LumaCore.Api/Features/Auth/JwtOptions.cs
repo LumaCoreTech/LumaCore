@@ -32,21 +32,6 @@ namespace LumaCore.Api.Features.Auth;
 /// </remarks>
 sealed class JwtOptions
 {
-	private const string IssuerRequiredError =
-		"Jwt:Issuer must be configured. Set configuration key 'Jwt:Issuer' or environment variable 'Jwt__Issuer'.";
-
-	private const string AudienceRequiredError =
-		"Jwt:Audience must be configured. Set configuration key 'Jwt:Audience' or environment variable 'Jwt__Audience'.";
-
-	private const string SigningKeyRequiredError =
-		"Jwt:SigningKey must be configured. Set configuration key 'Jwt:SigningKey' or environment variable 'Jwt__SigningKey'.";
-
-	private const string SigningKeyMinLengthError =
-		"Jwt:SigningKey must be at least 32 characters long. Use a long, random secret and do not commit it to source control.";
-
-	private const string AccessTokenLifetimeRangeError =
-		"Jwt:AccessTokenLifetimeMinutes must be between 1 and 1440 minutes.";
-
 	/// <summary>
 	/// Gets the configuration section name used to bind <see cref="JwtOptions"/>.
 	/// </summary>
@@ -76,21 +61,37 @@ sealed class JwtOptions
 	/// </remarks>
 	public const string SectionName = "Jwt";
 
+	private const string AccessTokenLifetimeRangeError =
+		"Jwt:AccessTokenLifetimeMinutes must be between 1 and 1440 minutes.";
+
+	private const string AudienceRequiredError =
+		"Jwt:Audience must be configured. Set configuration key 'Jwt:Audience' or environment variable 'Jwt__Audience'.";
+
+	private const string IssuerRequiredError =
+		"Jwt:Issuer must be configured. Set configuration key 'Jwt:Issuer' or environment variable 'Jwt__Issuer'.";
+
+	private const string SigningKeyMinLengthError =
+		"Jwt:SigningKey must be at least 32 characters long. Use a long, random secret and do not commit it to source control.";
+
+	private const string SigningKeyRequiredError =
+		"Jwt:SigningKey must be configured. Set configuration key 'Jwt:SigningKey' or environment variable 'Jwt__SigningKey'.";
+
 	/// <summary>
-	/// Gets or sets the logical issuer for generated tokens.
+	/// Gets or sets the lifetime of access tokens in minutes.
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     The issuer is written to the <c>iss</c> claim of each token and is validated when tokens are received by
-	///     the API. Typical values are a deployment-specific identifier such as <c>"LumaCore"</c> or a fully-qualified
-	///     URL like <c>"https://lumacore.local"</c>.
+	///     Shorter lifetimes reduce the window in which a stolen token can be abused, at the cost of requiring clients
+	///     to re-authenticate more frequently. Longer lifetimes increase convenience but also increase potential impact
+	///     if a token is leaked.
 	///     </para>
 	///     <para>
-	///     This value is bound from configuration key <c>Jwt:Issuer</c> (or environment variable <c>Jwt__Issuer</c>).
+	///     This value is bound from configuration key <c>Jwt:AccessTokenLifetimeMinutes</c> (or environment variable
+	///     <c>Jwt__AccessTokenLifetimeMinutes</c>). The allowed range is between 1 and 1440 minutes (1 day).
 	///     </para>
 	/// </remarks>
-	[Required(ErrorMessage = IssuerRequiredError)]
-	public string Issuer { get; set; } = string.Empty;
+	[Range(1, 24 * 60, ErrorMessage = AccessTokenLifetimeRangeError)]
+	public int AccessTokenLifetimeMinutes { get; set; } = 60;
 
 	/// <summary>
 	/// Gets or sets the expected audience for generated tokens.
@@ -106,6 +107,22 @@ sealed class JwtOptions
 	/// </remarks>
 	[Required(ErrorMessage = AudienceRequiredError)]
 	public string Audience { get; set; } = string.Empty;
+
+	/// <summary>
+	/// Gets or sets the logical issuer for generated tokens.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     The issuer is written to the <c>iss</c> claim of each token and is validated when tokens are received by
+	///     the API. Typical values are a deployment-specific identifier such as <c>"LumaCore"</c> or a fully-qualified
+	///     URL like <c>"https://lumacore.local"</c>.
+	///     </para>
+	///     <para>
+	///     This value is bound from configuration key <c>Jwt:Issuer</c> (or environment variable <c>Jwt__Issuer</c>).
+	///     </para>
+	/// </remarks>
+	[Required(ErrorMessage = IssuerRequiredError)]
+	public string Issuer { get; set; } = string.Empty;
 
 	/// <summary>
 	/// Gets or sets the symmetric signing key used for HMAC-based JWT signing.
@@ -130,21 +147,4 @@ sealed class JwtOptions
 	[Required(ErrorMessage = SigningKeyRequiredError)]
 	[MinLength(32, ErrorMessage = SigningKeyMinLengthError)]
 	public string SigningKey { get; set; } = string.Empty;
-
-	/// <summary>
-	/// Gets or sets the lifetime of access tokens in minutes.
-	/// </summary>
-	/// <remarks>
-	///     <para>
-	///     Shorter lifetimes reduce the window in which a stolen token can be abused, at the cost of requiring clients
-	///     to re-authenticate more frequently. Longer lifetimes increase convenience but also increase potential impact
-	///     if a token is leaked.
-	///     </para>
-	///     <para>
-	///     This value is bound from configuration key <c>Jwt:AccessTokenLifetimeMinutes</c> (or environment variable
-	///     <c>Jwt__AccessTokenLifetimeMinutes</c>). The allowed range is between 1 and 1440 minutes (1 day).
-	///     </para>
-	/// </remarks>
-	[Range(1, 24 * 60, ErrorMessage = AccessTokenLifetimeRangeError)]
-	public int AccessTokenLifetimeMinutes { get; set; } = 60;
 }

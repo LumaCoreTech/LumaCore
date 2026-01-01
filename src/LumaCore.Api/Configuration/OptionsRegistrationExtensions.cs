@@ -44,25 +44,6 @@ static class OptionsRegistrationExtensions
 	private static readonly ConditionalWeakTable<IServiceCollection, OptionsTracker> sTrackers = new();
 
 	/// <summary>
-	/// Gets or creates an <see cref="OptionsTracker"/> for the specified service collection.
-	/// </summary>
-	/// <param name="services">The service collection.</param>
-	/// <returns>The <see cref="OptionsTracker"/> associated with this service collection.</returns>
-	private static OptionsTracker GetOrCreateTracker(IServiceCollection services)
-	{
-		// GetValue() is atomic — the factory delegate executes exactly once per key,
-		// even if multiple threads call this method concurrently.
-		return sTrackers.GetValue(
-			services,
-			static svc =>
-			{
-				var tracker = new OptionsTracker();
-				svc.AddSingleton(tracker);
-				return tracker;
-			});
-	}
-
-	/// <summary>
 	/// Registers an Options class with configuration binding and section tracking.
 	/// </summary>
 	/// <typeparam name="TOptions">The Options type to register.</typeparam>
@@ -148,5 +129,24 @@ static class OptionsRegistrationExtensions
 
 		OptionsTracker tracker = GetOrCreateTracker(services);
 		tracker.Validate(services);
+	}
+
+	/// <summary>
+	/// Gets or creates an <see cref="OptionsTracker"/> for the specified service collection.
+	/// </summary>
+	/// <param name="services">The service collection.</param>
+	/// <returns>The <see cref="OptionsTracker"/> associated with this service collection.</returns>
+	private static OptionsTracker GetOrCreateTracker(IServiceCollection services)
+	{
+		// GetValue() is atomic — the factory delegate executes exactly once per key,
+		// even if multiple threads call this method concurrently.
+		return sTrackers.GetValue(
+			services,
+			static svc =>
+			{
+				var tracker = new OptionsTracker();
+				svc.AddSingleton(tracker);
+				return tracker;
+			});
 	}
 }

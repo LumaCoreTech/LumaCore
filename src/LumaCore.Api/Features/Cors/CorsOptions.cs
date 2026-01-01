@@ -17,26 +17,45 @@ namespace LumaCore.Api.Features.Cors;
 /// </remarks>
 sealed class CorsOptions : IValidatableObject
 {
-	private const string PreflightMaxAgeRangeError =
-		"PreflightMaxAge must be greater than or equal to 0 when specified.";
-
 	/// <summary>
 	/// The configuration section name used to bind these options.
 	/// </summary>
 	public const string SectionName = "Cors";
 
+	private const string PreflightMaxAgeRangeError =
+		"PreflightMaxAge must be greater than or equal to 0 when specified.";
+
 	/// <summary>
-	/// Gets or sets a value indicating whether CORS should be enabled.
+	/// Gets or sets a value indicating whether credentials (cookies, authorization headers) should be allowed in
+	/// cross-origin requests.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     When <see langword="true"/>, the server will include <c>Access-Control-Allow-Credentials: true</c> in
+	///     responses, allowing browsers to include cookies and authorization headers in cross-origin requests.
+	///     </para>
+	///     <para>
+	///     <strong>Security:</strong> Cannot be used with <c>AllowedOrigins = ["*"]</c>. You must specify exact
+	///     origins when credentials are allowed.
+	///     </para>
+	/// </remarks>
+	public bool AllowCredentials { get; set; }
+
+	/// <summary>
+	/// Gets or sets the list of allowed HTTP headers in cross-origin requests.
 	/// </summary>
 	/// <value>
-	/// <see langword="true"/> to enable CORS with the configured policy;
-	/// <see langword="false"/> to block cross-origin requests (default).
+	/// A list of header names (e.g. <c>["Content-Type", "Authorization"]</c>). If empty, all headers are allowed.
 	/// </value>
-	/// <remarks>
-	/// When <see langword="false"/>, no CORS policy is applied and cross-origin requests will be blocked by
-	/// browsers (secure-by-default behavior).
-	/// </remarks>
-	public bool Enabled { get; set; }
+	public List<string> AllowedHeaders { get; set; } = [];
+
+	/// <summary>
+	/// Gets or sets the list of allowed HTTP methods for cross-origin requests.
+	/// </summary>
+	/// <value>
+	/// A list of HTTP methods (e.g. <c>["GET", "POST", "PUT", "DELETE"]</c>). If empty, all methods are allowed.
+	/// </value>
+	public List<string> AllowedMethods { get; set; } = [];
 
 	/// <summary>
 	/// Gets or sets the list of allowed origins for cross-origin requests.
@@ -56,36 +75,17 @@ sealed class CorsOptions : IValidatableObject
 	public List<string> AllowedOrigins { get; set; } = [];
 
 	/// <summary>
-	/// Gets or sets a value indicating whether credentials (cookies, authorization headers) should be allowed in
-	/// cross-origin requests.
+	/// Gets or sets a value indicating whether CORS should be enabled.
 	/// </summary>
+	/// <value>
+	/// <see langword="true"/> to enable CORS with the configured policy;
+	/// <see langword="false"/> to block cross-origin requests (default).
+	/// </value>
 	/// <remarks>
-	///     <para>
-	///     When <see langword="true"/>, the server will include <c>Access-Control-Allow-Credentials: true</c> in
-	///     responses, allowing browsers to include cookies and authorization headers in cross-origin requests.
-	///     </para>
-	///     <para>
-	///     <strong>Security:</strong> Cannot be used with <c>AllowedOrigins = ["*"]</c>. You must specify exact
-	///     origins when credentials are allowed.
-	///     </para>
+	/// When <see langword="false"/>, no CORS policy is applied and cross-origin requests will be blocked by
+	/// browsers (secure-by-default behavior).
 	/// </remarks>
-	public bool AllowCredentials { get; set; }
-
-	/// <summary>
-	/// Gets or sets the list of allowed HTTP methods for cross-origin requests.
-	/// </summary>
-	/// <value>
-	/// A list of HTTP methods (e.g. <c>["GET", "POST", "PUT", "DELETE"]</c>). If empty, all methods are allowed.
-	/// </value>
-	public List<string> AllowedMethods { get; set; } = [];
-
-	/// <summary>
-	/// Gets or sets the list of allowed HTTP headers in cross-origin requests.
-	/// </summary>
-	/// <value>
-	/// A list of header names (e.g. <c>["Content-Type", "Authorization"]</c>). If empty, all headers are allowed.
-	/// </value>
-	public List<string> AllowedHeaders { get; set; } = [];
+	public bool Enabled { get; set; }
 
 	/// <summary>
 	/// Gets or sets the list of response headers that should be exposed to the client in cross-origin responses.

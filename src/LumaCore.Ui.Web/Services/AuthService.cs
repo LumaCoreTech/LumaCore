@@ -28,11 +28,6 @@ namespace LumaCore.Ui.Web.Services;
 public sealed class AuthService
 {
 	/// <summary>
-	/// The key used to store the JWT token in browser storage.
-	/// </summary>
-	private const string TokenStorageKey = "lumacore_token";
-
-	/// <summary>
 	/// The key used to store the storage type preference in localStorage.
 	/// </summary>
 	private const string StorageTypeKey = "lumacore_storage_type";
@@ -47,6 +42,11 @@ public sealed class AuthService
 	/// </summary>
 	private const string StorageTypeSession = "session";
 
+	/// <summary>
+	/// The key used to store the JWT token in browser storage.
+	/// </summary>
+	private const string TokenStorageKey = "lumacore_token";
+
 	private readonly HttpClient mHttpClient;
 	private readonly IJSRuntime mJsRuntime;
 
@@ -59,6 +59,72 @@ public sealed class AuthService
 	{
 		mHttpClient = httpClient;
 		mJsRuntime = jsRuntime;
+	}
+
+	/// <summary>
+	/// Retrieves the currently stored JWT token, if any.
+	/// </summary>
+	/// <returns>The JWT token if one is stored; otherwise, <see langword="null"/>.</returns>
+	/// <remarks>
+	/// Returns <see langword="null"/> if browser storage is unavailable (e.g., during SSR/prerendering).
+	/// </remarks>
+	public async Task<string?> GetTokenAsync()
+	{
+		try
+		{
+			// First, check which storage type was used (if any).
+			string? storageType = await mJsRuntime
+				                      .InvokeAsync<string?>("localStorage.getItem", StorageTypeKey)
+				                      .ConfigureAwait(false);
+
+			if (string.IsNullOrEmpty(storageType))
+			{
+				// No storage type recorded, check both (fallback for edge cases).
+				string? token = await mJsRuntime
+					                .InvokeAsync<string?>("localStorage.getItem", TokenStorageKey)
+					                .ConfigureAwait(false);
+
+				// If found in localStorage, return it.
+				if (!string.IsNullOrEmpty(token))
+					return token;
+
+				// Otherwise, check sessionStorage.
+				return await mJsRuntime
+					       .InvokeAsync<string?>("sessionStorage.getItem", TokenStorageKey)
+					       .ConfigureAwait(false);
+			}
+
+			// Use the recorded storage type.
+			string storageMethod = storageType == StorageTypeLocal ? "localStorage" : "sessionStorage";
+			return await mJsRuntime
+				       .InvokeAsync<string?>(storageMethod + ".getItem", TokenStorageKey)
+				       .ConfigureAwait(false);
+		}
+		catch (JSException)
+		{
+			// JS runtime not available (SSR, prerendering) - treat as not authenticated.
+			return null;
+		}
+		catch (InvalidOperationException)
+		{
+			// JSInterop not ready - treat as not authenticated.
+			return null;
+		}
+	}
+
+	/// <summary>
+	/// Checks whether the user is currently authenticated (has a valid token stored).
+	/// </summary>
+	/// <returns>
+	/// <see langword="true"/> if a token is stored; otherwise, <see langword="false"/>.
+	/// </returns>
+	/// <remarks>
+	/// This method only checks for token presence, not token validity. The token may have expired.
+	/// </remarks>
+	public async Task<bool> IsAuthenticatedAsync()
+	{
+		string? token = await GetTokenAsync().ConfigureAwait(false);
+		return !string.IsNullOrEmpty(token);
 	}
 
 	/// <summary>
@@ -145,72 +211,6 @@ public sealed class AuthService
 		{
 			// Best effort cleanup - if storage is unavailable, there's nothing to clean up anyway.
 		}
-	}
-
-	/// <summary>
-	/// Retrieves the currently stored JWT token, if any.
-	/// </summary>
-	/// <returns>The JWT token if one is stored; otherwise, <see langword="null"/>.</returns>
-	/// <remarks>
-	/// Returns <see langword="null"/> if browser storage is unavailable (e.g., during SSR/prerendering).
-	/// </remarks>
-	public async Task<string?> GetTokenAsync()
-	{
-		try
-		{
-			// First, check which storage type was used (if any).
-			string? storageType = await mJsRuntime
-				                      .InvokeAsync<string?>("localStorage.getItem", StorageTypeKey)
-				                      .ConfigureAwait(false);
-
-			if (string.IsNullOrEmpty(storageType))
-			{
-				// No storage type recorded, check both (fallback for edge cases).
-				string? token = await mJsRuntime
-					                .InvokeAsync<string?>("localStorage.getItem", TokenStorageKey)
-					                .ConfigureAwait(false);
-
-				// If found in localStorage, return it.
-				if (!string.IsNullOrEmpty(token))
-					return token;
-
-				// Otherwise, check sessionStorage.
-				return await mJsRuntime
-					       .InvokeAsync<string?>("sessionStorage.getItem", TokenStorageKey)
-					       .ConfigureAwait(false);
-			}
-
-			// Use the recorded storage type.
-			string storageMethod = storageType == StorageTypeLocal ? "localStorage" : "sessionStorage";
-			return await mJsRuntime
-				       .InvokeAsync<string?>(storageMethod + ".getItem", TokenStorageKey)
-				       .ConfigureAwait(false);
-		}
-		catch (JSException)
-		{
-			// JS runtime not available (SSR, prerendering) - treat as not authenticated.
-			return null;
-		}
-		catch (InvalidOperationException)
-		{
-			// JSInterop not ready - treat as not authenticated.
-			return null;
-		}
-	}
-
-	/// <summary>
-	/// Checks whether the user is currently authenticated (has a valid token stored).
-	/// </summary>
-	/// <returns>
-	/// <see langword="true"/> if a token is stored; otherwise, <see langword="false"/>.
-	/// </returns>
-	/// <remarks>
-	/// This method only checks for token presence, not token validity. The token may have expired.
-	/// </remarks>
-	public async Task<bool> IsAuthenticatedAsync()
-	{
-		string? token = await GetTokenAsync().ConfigureAwait(false);
-		return !string.IsNullOrEmpty(token);
 	}
 
 	/// <summary>

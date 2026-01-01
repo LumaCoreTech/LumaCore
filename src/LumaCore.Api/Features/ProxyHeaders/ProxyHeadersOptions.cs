@@ -18,13 +18,22 @@ namespace LumaCore.Api.Features.ProxyHeaders;
 /// </remarks>
 sealed class ProxyHeadersOptions : IValidatableObject
 {
-	private const string ForwardLimitRangeError =
-		"ForwardLimit must be greater than or equal to 1 when specified.";
-
 	/// <summary>
 	/// The configuration section name used to bind these options.
 	/// </summary>
 	public const string SectionName = "ProxyHeaders";
+
+	private const string ForwardLimitRangeError =
+		"ForwardLimit must be greater than or equal to 1 when specified.";
+
+	/// <summary>
+	/// Gets or sets the maximum number of proxy hops to consider when processing forwarded headers.
+	/// </summary>
+	/// <value>
+	/// A positive integer, or <see langword="null"/> to use a conservative default of 1 (single proxy scenario).
+	/// </value>
+	[Range(1, int.MaxValue, ErrorMessage = ForwardLimitRangeError)]
+	public int? ForwardLimit { get; set; }
 
 	/// <summary>
 	/// Gets or sets the mode for processing forwarded headers. Defaults to
@@ -38,30 +47,6 @@ sealed class ProxyHeadersOptions : IValidatableObject
 	///     </list>
 	/// </value>
 	public ForwardedHeaderMode Mode { get; set; } = ForwardedHeaderMode.Disabled;
-
-	/// <summary>
-	/// Gets or sets the maximum number of proxy hops to consider when processing forwarded headers.
-	/// </summary>
-	/// <value>
-	/// A positive integer, or <see langword="null"/> to use a conservative default of 1 (single proxy scenario).
-	/// </value>
-	[Range(1, int.MaxValue, ErrorMessage = ForwardLimitRangeError)]
-	public int? ForwardLimit { get; set; }
-
-	/// <summary>
-	/// Gets or sets the list of proxy IP addresses that are considered trusted. Only relevant in
-	/// <see cref="ForwardedHeaderMode.SelfManaged"/> mode.
-	/// </summary>
-	/// <remarks>
-	///     <para>
-	///     <strong>SelfManaged mode:</strong> Must contain at least one entry (this list OR
-	///     <see cref="TrustedNetworks"/>). Startup validation will fail if both lists are empty.
-	///     </para>
-	///     <para><strong>Cloud mode:</strong> This list is ignored (cloud platforms control headers).</para>
-	///     <para><strong>Disabled mode:</strong> This list is ignored (no header processing).</para>
-	///     <para>Example: <c>["10.0.0.100", "192.168.1.50"]</c></para>
-	/// </remarks>
-	public List<string> TrustedProxies { get; set; } = [];
 
 	/// <summary>
 	/// Gets or sets the list of network addresses (CIDR notation) that are considered trusted. Only relevant in
@@ -78,6 +63,21 @@ sealed class ProxyHeadersOptions : IValidatableObject
 	///     <para>Example: <c>["10.0.0.0/8", "192.168.0.0/16"]</c></para>
 	/// </remarks>
 	public List<string> TrustedNetworks { get; set; } = [];
+
+	/// <summary>
+	/// Gets or sets the list of proxy IP addresses that are considered trusted. Only relevant in
+	/// <see cref="ForwardedHeaderMode.SelfManaged"/> mode.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     <strong>SelfManaged mode:</strong> Must contain at least one entry (this list OR
+	///     <see cref="TrustedNetworks"/>). Startup validation will fail if both lists are empty.
+	///     </para>
+	///     <para><strong>Cloud mode:</strong> This list is ignored (cloud platforms control headers).</para>
+	///     <para><strong>Disabled mode:</strong> This list is ignored (no header processing).</para>
+	///     <para>Example: <c>["10.0.0.100", "192.168.1.50"]</c></para>
+	/// </remarks>
+	public List<string> TrustedProxies { get; set; } = [];
 
 	/// <inheritdoc/>
 	public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

@@ -50,6 +50,44 @@ sealed class OptionsTracker
 	private bool mIsFinalized;
 
 	/// <summary>
+	/// Gets the configuration section name for a registered Options type.
+	/// </summary>
+	/// <param name="optionsType">The Options type.</param>
+	/// <returns>
+	/// The section name if registered via <see cref="OptionsRegistrationExtensions.AddFeatureOptions{TOptions}"/>;
+	/// otherwise, <see langword="null"/>.
+	/// </returns>
+	public string? GetSectionName(Type optionsType)
+	{
+		ArgumentNullException.ThrowIfNull(optionsType);
+
+		// Use frozen dictionary if available (after finalization).
+		if (mFrozenSectionNames is not null)
+			return mFrozenSectionNames.GetValueOrDefault(optionsType);
+
+		// Fall back to regular dictionary during startup.
+		lock (mLock)
+		{
+			return mSectionNamesByType.GetValueOrDefault(optionsType);
+		}
+	}
+
+	/// <summary>
+	/// Gets all tracked Options types.
+	/// </summary>
+	/// <returns>A read-only collection of tracked Options types.</returns>
+	public IReadOnlyCollection<Type> GetTrackedTypes()
+	{
+		if (mFrozenSectionNames is not null)
+			return mFrozenSectionNames.Keys;
+
+		lock (mLock)
+		{
+			return mTrackedOptionsTypes.ToList().AsReadOnly();
+		}
+	}
+
+	/// <summary>
 	/// Tracks an Options type and its configuration section name.
 	/// </summary>
 	/// <typeparam name="TOptions">The Options type being registered.</typeparam>
@@ -118,44 +156,6 @@ sealed class OptionsTracker
 			// Finalize and freeze for runtime access.
 			mIsFinalized = true;
 			mFrozenSectionNames = mSectionNamesByType.ToFrozenDictionary();
-		}
-	}
-
-	/// <summary>
-	/// Gets the configuration section name for a registered Options type.
-	/// </summary>
-	/// <param name="optionsType">The Options type.</param>
-	/// <returns>
-	/// The section name if registered via <see cref="OptionsRegistrationExtensions.AddFeatureOptions{TOptions}"/>;
-	/// otherwise, <see langword="null"/>.
-	/// </returns>
-	public string? GetSectionName(Type optionsType)
-	{
-		ArgumentNullException.ThrowIfNull(optionsType);
-
-		// Use frozen dictionary if available (after finalization).
-		if (mFrozenSectionNames is not null)
-			return mFrozenSectionNames.GetValueOrDefault(optionsType);
-
-		// Fall back to regular dictionary during startup.
-		lock (mLock)
-		{
-			return mSectionNamesByType.GetValueOrDefault(optionsType);
-		}
-	}
-
-	/// <summary>
-	/// Gets all tracked Options types.
-	/// </summary>
-	/// <returns>A read-only collection of tracked Options types.</returns>
-	public IReadOnlyCollection<Type> GetTrackedTypes()
-	{
-		if (mFrozenSectionNames is not null)
-			return mFrozenSectionNames.Keys;
-
-		lock (mLock)
-		{
-			return mTrackedOptionsTypes.ToList().AsReadOnly();
 		}
 	}
 }

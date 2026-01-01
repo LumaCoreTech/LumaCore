@@ -17,12 +17,12 @@ namespace LumaCore.Api.Features.HttpsRedirection;
 /// </remarks>
 sealed class HttpsRedirectionOptions
 {
-	private const string HttpsPortRangeError = "HttpsRedirection:HttpsPort must be between 1 and 65535.";
-
 	/// <summary>
 	/// The configuration section name used to bind these options.
 	/// </summary>
 	public const string SectionName = "HttpsRedirection";
+
+	private const string HttpsPortRangeError = "HttpsRedirection:HttpsPort must be between 1 and 65535.";
 
 	/// <summary>
 	/// Gets or sets a value indicating whether HTTP requests should be redirected to HTTPS.

@@ -51,14 +51,6 @@ return await HealthCheckRunner.ExecuteAsync(args).ConfigureAwait(false);
 static class HealthCheckRunner
 {
 	/// <summary>
-	/// The default URL to check when no URL is provided via arguments or environment.
-	/// </summary>
-	/// <value>
-	/// <c>http://localhost:5080/api/v1/health/live</c> — the LumaCore API liveness endpoint.
-	/// </value>
-	private const string DefaultUrl = "http://localhost:5080/api/v1/health/live";
-
-	/// <summary>
 	/// The default timeout in seconds for health check requests.
 	/// </summary>
 	/// <value>
@@ -68,14 +60,22 @@ static class HealthCheckRunner
 	private const int DefaultTimeoutSeconds = 5;
 
 	/// <summary>
-	/// Environment variable name for configuring the health check URL.
+	/// The default URL to check when no URL is provided via arguments or environment.
 	/// </summary>
-	private const string EnvVarUrl = "HEALTHCHECK_URL";
+	/// <value>
+	/// <c>http://localhost:5080/api/v1/health/live</c> — the LumaCore API liveness endpoint.
+	/// </value>
+	private const string DefaultUrl = "http://localhost:5080/api/v1/health/live";
 
 	/// <summary>
 	/// Environment variable name for configuring the request timeout.
 	/// </summary>
 	private const string EnvVarTimeout = "HEALTHCHECK_TIMEOUT_SECONDS";
+
+	/// <summary>
+	/// Environment variable name for configuring the health check URL.
+	/// </summary>
+	private const string EnvVarUrl = "HEALTHCHECK_URL";
 
 	/// <summary>
 	/// Exit code indicating a successful health check.
@@ -159,27 +159,20 @@ static class HealthCheckRunner
 	}
 
 	/// <summary>
-	/// Resolves the target URL from arguments, environment, or defaults.
+	/// Creates an <see cref="HttpClient"/> configured for health check requests.
 	/// </summary>
-	/// <param name="args">Command-line arguments.</param>
-	/// <returns>The URL to check.</returns>
-	private static string ResolveUrl(string[] args)
+	/// <param name="timeoutSeconds">The request timeout in seconds.</param>
+	/// <returns>A new <see cref="HttpClient"/> instance.</returns>
+	/// <remarks>
+	/// The client is configured with a short timeout suitable for health checks.
+	/// The caller is responsible for disposing the returned instance.
+	/// </remarks>
+	private static HttpClient CreateHttpClient(int timeoutSeconds)
 	{
-		// Priority 1: Command-line argument
-		if (args.Length > 0 && !string.IsNullOrWhiteSpace(args[0]))
+		return new HttpClient
 		{
-			return args[0];
-		}
-
-		// Priority 2: Environment variable
-		string? envUrl = Environment.GetEnvironmentVariable(EnvVarUrl);
-		if (!string.IsNullOrWhiteSpace(envUrl))
-		{
-			return envUrl;
-		}
-
-		// Priority 3: Default
-		return DefaultUrl;
+			Timeout = TimeSpan.FromSeconds(timeoutSeconds)
+		};
 	}
 
 	/// <summary>
@@ -209,20 +202,27 @@ static class HealthCheckRunner
 	}
 
 	/// <summary>
-	/// Creates an <see cref="HttpClient"/> configured for health check requests.
+	/// Resolves the target URL from arguments, environment, or defaults.
 	/// </summary>
-	/// <param name="timeoutSeconds">The request timeout in seconds.</param>
-	/// <returns>A new <see cref="HttpClient"/> instance.</returns>
-	/// <remarks>
-	/// The client is configured with a short timeout suitable for health checks.
-	/// The caller is responsible for disposing the returned instance.
-	/// </remarks>
-	private static HttpClient CreateHttpClient(int timeoutSeconds)
+	/// <param name="args">Command-line arguments.</param>
+	/// <returns>The URL to check.</returns>
+	private static string ResolveUrl(string[] args)
 	{
-		return new HttpClient
+		// Priority 1: Command-line argument
+		if (args.Length > 0 && !string.IsNullOrWhiteSpace(args[0]))
 		{
-			Timeout = TimeSpan.FromSeconds(timeoutSeconds)
-		};
+			return args[0];
+		}
+
+		// Priority 2: Environment variable
+		string? envUrl = Environment.GetEnvironmentVariable(EnvVarUrl);
+		if (!string.IsNullOrWhiteSpace(envUrl))
+		{
+			return envUrl;
+		}
+
+		// Priority 3: Default
+		return DefaultUrl;
 	}
 
 	/// <summary>

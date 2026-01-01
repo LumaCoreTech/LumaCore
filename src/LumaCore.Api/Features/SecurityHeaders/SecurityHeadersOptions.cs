@@ -18,21 +18,12 @@ namespace LumaCore.Api.Features.SecurityHeaders;
 /// </remarks>
 sealed class SecurityHeadersOptions : IValidatableObject
 {
-	private const string HstsMaxAgeRangeError = "HstsMaxAgeSeconds must be a non-negative value.";
-
 	/// <summary>
 	/// The configuration section name used to bind these options.
 	/// </summary>
 	public const string SectionName = "SecurityHeaders";
 
-	/// <summary>
-	/// Valid values for the <c>X-Frame-Options</c> header.
-	/// </summary>
-	private static readonly HashSet<string> sValidXFrameOptions = new(StringComparer.OrdinalIgnoreCase)
-	{
-		"DENY",
-		"SAMEORIGIN"
-	};
+	private const string HstsMaxAgeRangeError = "HstsMaxAgeSeconds must be a non-negative value.";
 
 	/// <summary>
 	/// Valid values for the <c>Referrer-Policy</c> header.
@@ -50,105 +41,13 @@ sealed class SecurityHeadersOptions : IValidatableObject
 	};
 
 	/// <summary>
-	/// Gets or sets a value indicating whether security headers should be added to responses.
+	/// Valid values for the <c>X-Frame-Options</c> header.
 	/// </summary>
-	/// <value>
-	/// <see langword="true"/> to add security headers; <see langword="false"/> to disable.
-	/// Default is <see langword="true"/>.
-	/// </value>
-	public bool Enabled { get; set; } = true;
-
-	/// <summary>
-	/// Gets or sets a value indicating whether HSTS (HTTP Strict Transport Security) should be enabled.
-	/// </summary>
-	/// <remarks>
-	///     <para>
-	///     HSTS tells browsers to only connect via HTTPS for a specified duration. This prevents protocol downgrade
-	///     attacks and cookie hijacking.
-	///     </para>
-	///     <para>
-	///     <strong>Warning:</strong> Only enable HSTS when your site fully supports HTTPS. Once enabled, browsers
-	///     will refuse HTTP connections for the specified duration.
-	///     </para>
-	///     <para>
-	///     <strong>Development:</strong> Consider setting this to <see langword="false"/> in
-	///     <c>appsettings.Development.json</c> to avoid localhost HTTPS enforcement issues.
-	///     </para>
-	///     <para>Default is <see langword="true"/>.</para>
-	/// </remarks>
-	public bool EnableHsts { get; set; } = true;
-
-	/// <summary>
-	/// Gets or sets the HSTS max-age in seconds.
-	/// </summary>
-	/// <value>
-	/// Duration in seconds that browsers remember to use HTTPS only. Common values:
-	/// <list type="bullet">
-	///     <item>0 — Disable HSTS (clears browser's HSTS entry)</item>
-	///     <item>86400 — 1 day (testing)</item>
-	///     <item>2592000 — 30 days (initial rollout)</item>
-	///     <item>31536000 — 1 year (production, default)</item>
-	/// </list>
-	/// </value>
-	[Range(0, int.MaxValue, ErrorMessage = HstsMaxAgeRangeError)]
-	public int HstsMaxAgeSeconds { get; set; } = 31536000;
-
-	/// <summary>
-	/// Gets or sets a value indicating whether HSTS should include subdomains.
-	/// </summary>
-	/// <value>
-	/// <see langword="true"/> to apply HSTS to all subdomains; <see langword="false"/> for the main domain only.
-	/// Default is <see langword="false"/>.
-	/// </value>
-	public bool HstsIncludeSubDomains { get; set; }
-
-	/// <summary>
-	/// Gets or sets the <c>X-Frame-Options</c> header value.
-	/// </summary>
-	/// <value>
-	/// Valid values:
-	/// <list type="bullet">
-	///     <item><c>"DENY"</c> — Never allow framing (most secure, default)</item>
-	///     <item><c>"SAMEORIGIN"</c> — Allow framing by same origin only</item>
-	///     <item><see langword="null"/> — Don't set this header</item>
-	/// </list>
-	/// </value>
-	/// <remarks>
-	/// Protects against clickjacking attacks. <c>ALLOW-FROM</c> is deprecated and not supported.
-	/// </remarks>
-	public string? XFrameOptions { get; set; } = "DENY";
-
-	/// <summary>
-	/// Gets or sets a value indicating whether <c>X-Content-Type-Options: nosniff</c> should be set.
-	/// </summary>
-	/// <value>
-	/// <see langword="true"/> to add the header; <see langword="false"/> to omit it.
-	/// Default is <see langword="true"/>.
-	/// </value>
-	/// <remarks>
-	/// Prevents browsers from MIME-sniffing a response away from the declared content-type. Protects against
-	/// drive-by download attacks.
-	/// </remarks>
-	public bool EnableNoSniff { get; set; } = true;
-
-	/// <summary>
-	/// Gets or sets the <c>Referrer-Policy</c> header value.
-	/// </summary>
-	/// <value>
-	/// Controls how much referrer information is included with requests. Valid values:
-	/// <list type="bullet">
-	///     <item><c>"no-referrer"</c> — Never send referrer</item>
-	///     <item><c>"no-referrer-when-downgrade"</c> — No referrer on HTTPS→HTTP</item>
-	///     <item><c>"origin"</c> — Only send origin</item>
-	///     <item><c>"origin-when-cross-origin"</c> — Full URL same-origin, origin cross-origin</item>
-	///     <item><c>"same-origin"</c> — Only send for same-origin requests</item>
-	///     <item><c>"strict-origin"</c> — Origin only, no downgrade</item>
-	///     <item><c>"strict-origin-when-cross-origin"</c> — Full URL same-origin, origin cross-origin, no downgrade (default)</item>
-	///     <item><c>"unsafe-url"</c> — Always send full URL (not recommended)</item>
-	///     <item><see langword="null"/> — Don't set this header</item>
-	/// </list>
-	/// </value>
-	public string? ReferrerPolicy { get; set; } = "strict-origin-when-cross-origin";
+	private static readonly HashSet<string> sValidXFrameOptions = new(StringComparer.OrdinalIgnoreCase)
+	{
+		"DENY",
+		"SAMEORIGIN"
+	};
 
 	/// <summary>
 	/// Gets or sets the <c>Content-Security-Policy</c> header value.
@@ -206,6 +105,107 @@ sealed class SecurityHeadersOptions : IValidatableObject
 		"font-src 'self'; " +
 		"connect-src 'self'; " +
 		"frame-ancestors 'none'";
+
+	/// <summary>
+	/// Gets or sets a value indicating whether security headers should be added to responses.
+	/// </summary>
+	/// <value>
+	/// <see langword="true"/> to add security headers; <see langword="false"/> to disable.
+	/// Default is <see langword="true"/>.
+	/// </value>
+	public bool Enabled { get; set; } = true;
+
+	/// <summary>
+	/// Gets or sets a value indicating whether HSTS (HTTP Strict Transport Security) should be enabled.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     HSTS tells browsers to only connect via HTTPS for a specified duration. This prevents protocol downgrade
+	///     attacks and cookie hijacking.
+	///     </para>
+	///     <para>
+	///     <strong>Warning:</strong> Only enable HSTS when your site fully supports HTTPS. Once enabled, browsers
+	///     will refuse HTTP connections for the specified duration.
+	///     </para>
+	///     <para>
+	///     <strong>Development:</strong> Consider setting this to <see langword="false"/> in
+	///     <c>appsettings.Development.json</c> to avoid localhost HTTPS enforcement issues.
+	///     </para>
+	///     <para>Default is <see langword="true"/>.</para>
+	/// </remarks>
+	public bool EnableHsts { get; set; } = true;
+
+	/// <summary>
+	/// Gets or sets a value indicating whether <c>X-Content-Type-Options: nosniff</c> should be set.
+	/// </summary>
+	/// <value>
+	/// <see langword="true"/> to add the header; <see langword="false"/> to omit it.
+	/// Default is <see langword="true"/>.
+	/// </value>
+	/// <remarks>
+	/// Prevents browsers from MIME-sniffing a response away from the declared content-type. Protects against
+	/// drive-by download attacks.
+	/// </remarks>
+	public bool EnableNoSniff { get; set; } = true;
+
+	/// <summary>
+	/// Gets or sets a value indicating whether HSTS should include subdomains.
+	/// </summary>
+	/// <value>
+	/// <see langword="true"/> to apply HSTS to all subdomains; <see langword="false"/> for the main domain only.
+	/// Default is <see langword="false"/>.
+	/// </value>
+	public bool HstsIncludeSubDomains { get; set; }
+
+	/// <summary>
+	/// Gets or sets the HSTS max-age in seconds.
+	/// </summary>
+	/// <value>
+	/// Duration in seconds that browsers remember to use HTTPS only. Common values:
+	/// <list type="bullet">
+	///     <item>0 — Disable HSTS (clears browser's HSTS entry)</item>
+	///     <item>86400 — 1 day (testing)</item>
+	///     <item>2592000 — 30 days (initial rollout)</item>
+	///     <item>31536000 — 1 year (production, default)</item>
+	/// </list>
+	/// </value>
+	[Range(0, int.MaxValue, ErrorMessage = HstsMaxAgeRangeError)]
+	public int HstsMaxAgeSeconds { get; set; } = 31536000;
+
+	/// <summary>
+	/// Gets or sets the <c>Referrer-Policy</c> header value.
+	/// </summary>
+	/// <value>
+	/// Controls how much referrer information is included with requests. Valid values:
+	/// <list type="bullet">
+	///     <item><c>"no-referrer"</c> — Never send referrer</item>
+	///     <item><c>"no-referrer-when-downgrade"</c> — No referrer on HTTPS→HTTP</item>
+	///     <item><c>"origin"</c> — Only send origin</item>
+	///     <item><c>"origin-when-cross-origin"</c> — Full URL same-origin, origin cross-origin</item>
+	///     <item><c>"same-origin"</c> — Only send for same-origin requests</item>
+	///     <item><c>"strict-origin"</c> — Origin only, no downgrade</item>
+	///     <item><c>"strict-origin-when-cross-origin"</c> — Full URL same-origin, origin cross-origin, no downgrade (default)</item>
+	///     <item><c>"unsafe-url"</c> — Always send full URL (not recommended)</item>
+	///     <item><see langword="null"/> — Don't set this header</item>
+	/// </list>
+	/// </value>
+	public string? ReferrerPolicy { get; set; } = "strict-origin-when-cross-origin";
+
+	/// <summary>
+	/// Gets or sets the <c>X-Frame-Options</c> header value.
+	/// </summary>
+	/// <value>
+	/// Valid values:
+	/// <list type="bullet">
+	///     <item><c>"DENY"</c> — Never allow framing (most secure, default)</item>
+	///     <item><c>"SAMEORIGIN"</c> — Allow framing by same origin only</item>
+	///     <item><see langword="null"/> — Don't set this header</item>
+	/// </list>
+	/// </value>
+	/// <remarks>
+	/// Protects against clickjacking attacks. <c>ALLOW-FROM</c> is deprecated and not supported.
+	/// </remarks>
+	public string? XFrameOptions { get; set; } = "DENY";
 
 	/// <inheritdoc/>
 	public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

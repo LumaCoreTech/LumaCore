@@ -111,35 +111,24 @@ static class OptionsSanitizer
 	}
 
 	/// <summary>
-	/// Masks a secret value for safe output.
+	/// Gets the element type of an enumerable type.
 	/// </summary>
-	/// <param name="value">The secret value to mask.</param>
-	/// <param name="showLength">Whether to include the length in the masked output.</param>
+	/// <param name="enumerableType">The enumerable type (e.g., <c>List&lt;string&gt;</c>).</param>
 	/// <returns>
-	/// <see langword="null"/> if <paramref name="value"/> is <see langword="null"/>;<br/>
-	/// <c>***</c> if <paramref name="showLength"/> is <see langword="false"/>,
-	/// or <c>*** (length N)</c> if <paramref name="showLength"/> is <see langword="true"/>.
+	/// The element type (e.g., <c>string</c>), or <see langword="null"/> if it cannot be determined.
 	/// </returns>
-	private static string? MaskSecret(object? value, bool showLength)
+	private static Type? GetElementType(Type enumerableType)
 	{
-		// Null values remain null.
-		if (value is null)
-			return null;
+		// Arrays have a dedicated method.
+		if (enumerableType.IsArray)
+			return enumerableType.GetElementType();
 
-		// If length display is disabled, return simple mask.
-		if (!showLength)
-			return MaskedValue;
+		// Generic collections (List<T>, IEnumerable<T>, etc.) — extract T.
+		if (enumerableType.IsGenericType)
+			return enumerableType.GetGenericArguments().FirstOrDefault();
 
-		// Determine length based on value type.
-		int length = value switch
-		{
-			string s      => s.Length,
-			ICollection c => c.Count,
-			IEnumerable e => e.Cast<object>().Count(),
-			var _         => value.ToString()?.Length ?? 0
-		};
-
-		return $"{MaskedValue} (length {length})";
+		// Non-generic collections (ArrayList, etc.) — element type unknown.
+		return null;
 	}
 
 	/// <summary>
@@ -169,6 +158,38 @@ static class OptionsSanitizer
 		       || underlyingType == typeof(TimeSpan)
 		       || underlyingType == typeof(Guid)
 		       || underlyingType == typeof(Uri);
+	}
+
+	/// <summary>
+	/// Masks a secret value for safe output.
+	/// </summary>
+	/// <param name="value">The secret value to mask.</param>
+	/// <param name="showLength">Whether to include the length in the masked output.</param>
+	/// <returns>
+	/// <see langword="null"/> if <paramref name="value"/> is <see langword="null"/>;<br/>
+	/// <c>***</c> if <paramref name="showLength"/> is <see langword="false"/>,
+	/// or <c>*** (length N)</c> if <paramref name="showLength"/> is <see langword="true"/>.
+	/// </returns>
+	private static string? MaskSecret(object? value, bool showLength)
+	{
+		// Null values remain null.
+		if (value is null)
+			return null;
+
+		// If length display is disabled, return simple mask.
+		if (!showLength)
+			return MaskedValue;
+
+		// Determine length based on value type.
+		int length = value switch
+		{
+			string s      => s.Length,
+			ICollection c => c.Count,
+			IEnumerable e => e.Cast<object>().Count(),
+			var _         => value.ToString()?.Length ?? 0
+		};
+
+		return $"{MaskedValue} (length {length})";
 	}
 
 	/// <summary>
@@ -207,26 +228,5 @@ static class OptionsSanitizer
 		}
 
 		return list;
-	}
-
-	/// <summary>
-	/// Gets the element type of an enumerable type.
-	/// </summary>
-	/// <param name="enumerableType">The enumerable type (e.g., <c>List&lt;string&gt;</c>).</param>
-	/// <returns>
-	/// The element type (e.g., <c>string</c>), or <see langword="null"/> if it cannot be determined.
-	/// </returns>
-	private static Type? GetElementType(Type enumerableType)
-	{
-		// Arrays have a dedicated method.
-		if (enumerableType.IsArray)
-			return enumerableType.GetElementType();
-
-		// Generic collections (List<T>, IEnumerable<T>, etc.) — extract T.
-		if (enumerableType.IsGenericType)
-			return enumerableType.GetGenericArguments().FirstOrDefault();
-
-		// Non-generic collections (ArrayList, etc.) — element type unknown.
-		return null;
 	}
 }
