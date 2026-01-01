@@ -1,4 +1,4 @@
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
@@ -33,27 +33,34 @@ public class Program
 		// If not set, fall back to the Blazor host base address (same origin scenario).
 		string? backendBaseUrl = builder.Configuration["LumaCore:BackendBaseUrl"];
 
-		// HttpClient configured with a placeholder base address.
-		builder.Services.AddScoped(_ =>
+		// Compute effective backend URL once for reuse.
+		string effectiveBaseUrl = !string.IsNullOrWhiteSpace(backendBaseUrl)
+			                          ? backendBaseUrl
+			                          : builder.HostEnvironment.BaseAddress;
+
+		// Ensure the URL ends with a trailing slash so relative paths behave as expected.
+		if (!effectiveBaseUrl.EndsWith("/", StringComparison.Ordinal))
 		{
-			// Use configured backend URL if present; otherwise default to the host base address.
-			string effectiveBaseUrl = !string.IsNullOrWhiteSpace(backendBaseUrl)
-				                          ? backendBaseUrl
-				                          : builder.HostEnvironment.BaseAddress;
+			effectiveBaseUrl += "/";
+		}
 
-			// Ensure the URL ends with a trailing slash so relative paths behave as expected.
-			if (!effectiveBaseUrl.EndsWith("/", StringComparison.Ordinal))
-			{
-				effectiveBaseUrl += "/";
-			}
+		Console.WriteLine($"[LumaCore UI] Effective backend base URL: {effectiveBaseUrl}");
 
-			Console.WriteLine($"[LumaCore UI] Effective backend base URL: {effectiveBaseUrl}");
+		// Register the JWT authorization handler as transient (created per HttpClient instance).
+		builder.Services.AddTransient<JwtAuthorizationHandler>();
 
-			return new HttpClient
-			{
-				BaseAddress = new Uri(effectiveBaseUrl)
-			};
-		});
+		// Named HttpClient for API requests with automatic JWT authorization.
+		// This client targets the backend API and automatically attaches the JWT token
+		// to all outgoing requests via JwtAuthorizationHandler.
+		builder.Services.AddHttpClient(
+				"ApiHttpClient",
+				client => client.BaseAddress = new Uri(effectiveBaseUrl))
+			.AddHttpMessageHandler<JwtAuthorizationHandler>();
+
+		// Register a default HttpClient that resolves to the API client.
+		// Services that inject HttpClient directly (like AuthService) will get this client.
+		builder.Services.AddScoped(sp =>
+			sp.GetRequiredService<IHttpClientFactory>().CreateClient("ApiHttpClient"));
 
 		// Named HttpClient for loading static files from Blazor app's wwwroot directory.
 		// This client targets the Blazor app itself (builder.HostEnvironment.BaseAddress)
@@ -63,7 +70,7 @@ public class Program
 		// - Configuration files (data/*.json)
 		// - Static assets (images, fonts, etc.)
 		//
-		// This is separate from the default HttpClient which targets the backend API.
+		// This client does NOT use JwtAuthorizationHandler since static files don't require auth.
 		builder.Services.AddHttpClient(
 			"StaticFilesHttpClient",
 			client =>
