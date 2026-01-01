@@ -1,6 +1,7 @@
 @using System.Net
 @using System.Text.Json
-@inject HttpClient Http
+@inject HttpClient         Http
+@inject BackendHealthState BackendHealth
 
 @*
 	StatusContent Component - Reusable status monitoring logic
@@ -91,6 +92,11 @@
 	}
 
 	/// <summary>
+	/// Timeout for health check requests. Short timeout to avoid UI hanging on unresponsive backends.
+	/// </summary>
+	private static readonly TimeSpan HealthCheckTimeout = TimeSpan.FromSeconds(5);
+
+	/// <summary>
 	/// Calls the backend live health endpoint and updates the local status fields.
 	/// </summary>
 	/// <remarks>
@@ -108,10 +114,13 @@
 
 		try
 		{
+			// Use a short timeout to avoid hanging on unresponsive backends.
+			using var cts = new CancellationTokenSource(HealthCheckTimeout);
+
 			// Perform a lightweight GET request and inspect the status code explicitly.
 			using HttpResponseMessage response =
 				await Http
-					.GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead)
+					.GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead, cts.Token)
 					.ConfigureAwait(true);
 
 			if (!response.IsSuccessStatusCode)
@@ -124,7 +133,7 @@
 			{
 				// Attempt to deserialize the JSON payload into the shared API contract.
 				ApiHealthLiveResponse? dto = await response.Content
-					                             .ReadFromJsonAsync<ApiHealthLiveResponse>()
+					                             .ReadFromJsonAsync<ApiHealthLiveResponse>(cts.Token)
 					                             .ConfigureAwait(true);
 
 				if (dto is null)
@@ -149,6 +158,13 @@
 		}
 		finally
 		{
+			// Update shared health state based on the result.
+			// This syncs the BackendHealthIndicator with our findings.
+			if (mError is not null)
+				BackendHealth.MarkUnhealthy();
+			else if (mStatus is not null)
+				BackendHealth.MarkHealthy();
+
 			// Ensure the loading flag is reset so the UI can leave the "Checking…" state.
 			mIsLoading = false;
 			StateHasChanged();

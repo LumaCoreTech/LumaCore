@@ -1,7 +1,9 @@
 @using System.Text.Json
-@* Clickable backend health indicator shown next to the logo in the main layout. *@
-@inject HttpClient Http
+@implements IDisposable
+@inject HttpClient         Http
+@inject BackendHealthState BackendHealth
 
+@* Clickable backend health indicator shown next to the logo in the main layout. *@
 <div class="lc-logo-health-indicator"
      @onclick="OnClickAsync"
      title="@GetTooltip()">
@@ -27,12 +29,42 @@
 	private HealthState mState = HealthState.Unknown;
 
 	/// <summary>
+	/// Guards against overlapping health checks (e.g., rapid clicks).
+	/// </summary>
+	private bool mIsChecking;
+
+	/// <summary>
 	/// Called by the Blazor framework when the component is first initialized.
-	/// Triggers an initial health check against the backend.
+	/// Subscribes to health state changes and triggers an initial health check.
 	/// </summary>
 	protected override Task OnInitializedAsync()
 	{
+		// Subscribe to passive health updates from API traffic.
+		BackendHealth.OnHealthChanged += OnHealthStateChanged;
+
+		// Sync initial state from shared state (may already be set from previous requests).
+		mState = BackendHealth.IsHealthy ? HealthState.Ok : HealthState.Error;
+
+		// Perform an active health check to verify the backend is reachable.
 		return CheckHealthAsync();
+	}
+
+	/// <summary>
+	/// Indicates whether the component has been disposed.
+	/// </summary>
+	private bool mIsDisposed;
+
+	/// <summary>
+	/// Handles health state changes from <see cref="BackendHealthState"/>.
+	/// </summary>
+	private void OnHealthStateChanged()
+	{
+		// Guard against events firing after disposal.
+		if (mIsDisposed)
+			return;
+
+		mState = BackendHealth.IsHealthy ? HealthState.Ok : HealthState.Error;
+		InvokeAsync(StateHasChanged);
 	}
 
 	/// <summary>
@@ -56,25 +88,38 @@
 	};
 
 	/// <summary>
+	/// Timeout for health check requests. Short timeout to avoid UI hanging on unresponsive backends.
+	/// </summary>
+	private static readonly TimeSpan HealthCheckTimeout = TimeSpan.FromSeconds(5);
+
+	/// <summary>
 	/// Checks the current health of the backend by calling the live health endpoint.
 	/// </summary>
 	private async Task CheckHealthAsync()
 	{
+		// Prevent overlapping checks (e.g., rapid clicks).
+		if (mIsChecking)
+			return;
+
+		mIsChecking = true;
+
 		// Set state to "Checking" immediately so the UI can show a transitional state.
 		mState = HealthState.Checking;
 		StateHasChanged();
 
 		try
 		{
+			// Use a short timeout to avoid hanging on unresponsive backends.
+			using var cts = new CancellationTokenSource(HealthCheckTimeout);
+
 			// Perform a lightweight GET request and inspect the status code explicitly.
 			using HttpResponseMessage response = await Http
-				                                     .GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead)
+				                                     .GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead, cts.Token)
 				                                     .ConfigureAwait(true);
 
 			if (!response.IsSuccessStatusCode)
 			{
 				mState = HealthState.Error;
-				StateHasChanged();
 				return;
 			}
 
@@ -82,17 +127,12 @@
 			{
 				// Attempt to deserialize the JSON payload into the shared API contract.
 				ApiHealthLiveResponse? dto = await response.Content
-					                             .ReadFromJsonAsync<ApiHealthLiveResponse>()
+					                             .ReadFromJsonAsync<ApiHealthLiveResponse>(cts.Token)
 					                             .ConfigureAwait(true);
 
-				if (dto is null || string.IsNullOrWhiteSpace(dto.Status))
-				{
-					mState = HealthState.Error;
-				}
-				else
-				{
-					mState = HealthState.Ok;
-				}
+				mState = dto is null || string.IsNullOrWhiteSpace(dto.Status)
+					         ? HealthState.Error
+					         : HealthState.Ok;
 			}
 			catch (JsonException)
 			{
@@ -110,8 +150,17 @@
 			// Unexpected error — timeout, cancellation, or other unforeseen issue
 			mState = HealthState.Error;
 		}
+		finally
+		{
+			// Sync shared health state with our findings.
+			if (mState == HealthState.Ok)
+				BackendHealth.MarkHealthy();
+			else if (mState == HealthState.Error)
+				BackendHealth.MarkUnhealthy();
 
-		StateHasChanged();
+			mIsChecking = false;
+			StateHasChanged();
+		}
 	}
 
 	/// <summary>
@@ -125,4 +174,13 @@
 		HealthState.Checking => "lc-logo-health-dot-checking",
 		var _                => "lc-logo-health-dot-unknown"
 	};
+
+	/// <summary>
+	/// Unsubscribes from health state events when the component is disposed.
+	/// </summary>
+	public void Dispose()
+	{
+		mIsDisposed = true;
+		BackendHealth.OnHealthChanged -= OnHealthStateChanged;
+	}
 }

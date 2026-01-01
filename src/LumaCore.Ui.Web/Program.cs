@@ -46,16 +46,19 @@ public class Program
 
 		Console.WriteLine($"[LumaCore UI] Effective backend base URL: {effectiveBaseUrl}");
 
-		// Register the JWT authorization handler as transient (created per HttpClient instance).
+		// Register the HTTP message handlers as transient (created per HttpClient instance).
 		builder.Services.AddTransient<JwtAuthorizationHandler>();
+		builder.Services.AddTransient<HealthTrackingHandler>();
 
-		// Named HttpClient for API requests with automatic JWT authorization.
-		// This client targets the backend API and automatically attaches the JWT token
-		// to all outgoing requests via JwtAuthorizationHandler.
+		// Named HttpClient for API requests with automatic JWT authorization and health tracking.
+		// This client targets the backend API and automatically:
+		// - Attaches JWT tokens via JwtAuthorizationHandler
+		// - Tracks backend health via HealthTrackingHandler
 		builder.Services.AddHttpClient(
 				"ApiHttpClient",
 				client => client.BaseAddress = new Uri(effectiveBaseUrl))
-			.AddHttpMessageHandler<JwtAuthorizationHandler>();
+			.AddHttpMessageHandler<JwtAuthorizationHandler>()
+			.AddHttpMessageHandler<HealthTrackingHandler>();
 
 		// Register a default HttpClient that resolves to the API client.
 		// Services that inject HttpClient directly (like AuthService) will get this client.
@@ -85,6 +88,10 @@ public class Program
 		builder.Services.AddScoped<JwtAuthenticationStateProvider>();
 		builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
 			sp.GetRequiredService<JwtAuthenticationStateProvider>());
+
+		// Register backend health state for passive health monitoring.
+		// Updated by HealthTrackingHandler, observed by BackendHealthIndicator.
+		builder.Services.AddScoped<BackendHealthState>();
 
 		// Register localization service for i18n support.
 		builder.Services.AddScoped<LocalizationService>();
