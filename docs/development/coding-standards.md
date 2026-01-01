@@ -28,13 +28,15 @@ If you just need to know *what to do*, this is the place.
 4. [XML Documentation](#xml-documentation)
 5. [Formatting](#formatting)
 6. [Async/Await Patterns](#asyncawait-patterns)
-7. [Null Handling](#null-handling)
-8. [Error Handling](#error-handling)
-9. [Testing Conventions](#testing-conventions)
-10. [Quick Reference Checklist](#quick-reference-checklist)
-11. [When to Break the Rules](#when-to-break-the-rules)
-12. [Tools and Automation](#tools-and-automation)
-13. [Learning Resources](#learning-resources)
+7. [Blazor/Razor Specific Rules](#blazorrazor-specific-rules)
+8. [Null Handling](#null-handling)
+9. [Error Handling](#error-handling)
+10. [Logging](#logging)
+11. [Testing Conventions](#testing-conventions)
+12. [Quick Reference Checklist](#quick-reference-checklist)
+13. [When to Break the Rules](#when-to-break-the-rules)
+14. [Tools and Automation](#tools-and-automation)
+15. [Learning Resources](#learning-resources)
 
 ---
 
@@ -47,7 +49,7 @@ Each heading links to the full explanation and rationale.
 *→ [Full details](#file-structure)*
 
 ```csharp
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
@@ -66,10 +68,11 @@ namespace LumaCore.Api.Features.Auth;  // File-scoped, one type per file
 2. Static fields
 3. Instance fields (readonly first)
 4. Constructors
-5. Properties
-6. Public methods
-7. Protected/Internal methods
-8. Private methods
+5. Dispose / DisposeAsync
+6. Properties
+7. Public methods
+8. Protected/Internal methods
+9. Private methods
 
 ### Naming
 *→ [Full details](#naming-conventions)*
@@ -95,7 +98,7 @@ namespace LumaCore.Api.Features.Auth;  // File-scoped, one type per file
 
 - **Structs** are value types (copied when passed):
   - Prefer `readonly struct` or `readonly record struct`
-  - Mutable structs only in localized performance scenarios
+  - Mutable structs only in localized performance scenarios (mutations affect the copy, not the original — easy source of bugs)
 
 - **Static classes** only for extension methods, utility functions, and constants
 
@@ -104,7 +107,7 @@ namespace LumaCore.Api.Features.Auth;  // File-scoped, one type per file
 
 - **Tabs** for indentation (not spaces)
 - **`var`** only when type is evident (`new`, cast) – explicit for built-in types and unclear cases
-- **[`ConfigureAwait(false)`](#asyncawait-patterns)** in all library/service code
+- **[`ConfigureAwait(false)`](#asyncawait-patterns)** in backend/library code (NOT in Blazor UI services)
 - **`Task`** by default, `ValueTask` only when profiled
 - **Async all the way** – never `.Result` or `.Wait()`
 
@@ -131,8 +134,8 @@ ArgumentNullException.ThrowIfNull(user);             // Modern null check
 /// <remarks>Additional details.</remarks>
 ```
 
-| Tag | Purpose |
-|-----|---------|
+| Inline Tag | Purpose |
+|------------|---------|
 | `<see cref="Type"/>` | Link to type or member |
 | `<see langword="null"/>` | Keyword (`null`, `true`, `false`) |
 | `<paramref name="name"/>` | Reference a parameter |
@@ -147,7 +150,7 @@ ArgumentNullException.ThrowIfNull(user);             // Modern null check
 - **Test class:** `<ClassUnderTest>Tests` → `JwtTokenFactoryTests`
 - **Test name:** `MethodName_Condition_ExpectedResult`
 - **Structure:** Arrange → Act → Assert
-- **Attributes:** `[Fact]` for single tests, `[Theory]` for parameterized
+- **Attributes:** `[Fact]` for single tests, `[Theory]` for parameterized tests
 - **Categories:** `Unit` (isolated class) · `Integration` (combined systems)
 
 ```csharp
@@ -186,7 +189,7 @@ These rules make sure that every file feels familiar — no matter who wrote it.
 Every `.cs` file must start with:
 
 ```csharp
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 ```
@@ -216,11 +219,11 @@ using LumaCore.Api.Contracts.V1.Auth;
 using LumaCore.Api.Features.Auth;
 ```
 
-This ordering makes imports easy to scan and keeps diffs clean. When everyone uses the same structure, merge conflicts around `using` statements become rare.
+This ordering makes imports easy to scan — you always know where to look for framework vs. project namespaces.
 
 ### File-Scoped Namespaces
 
-Use file-scoped namespaces (C# 10+) — they reduce indentation and keep the focus on the code that matters.
+Use file-scoped namespaces (C# 10+) — they reduce indentation and boilerplate.
 
 ```csharp
 // ✅ Good - File-scoped
@@ -230,71 +233,13 @@ public class JwtTokenFactory
 {
     // ...
 }
-```
 
-```csharp
-// ❌ Bad - Block-scoped
+// ❌ Bad - Block-scoped (extra indentation, extra braces)
 namespace LumaCore.Api.Features.Auth
 {
     public class JwtTokenFactory
     {
         // ...
-    }
-}
-```
-
-**Why file-scoped is preferred:**
-
-1. **Less indentation, more readable:** Every line in your file saves one level of indentation.
-
-   ```
-   Block-scoped:    namespace { class { method { if { ... }}}}  = 4 levels
-   File-scoped:     class { method { if { ... }}}               = 3 levels
-   ```
-
-   One level less may not look dramatic, but across a whole project it adds up to cleaner, flatter code.
-
-2. **More vertical space for real code:** Without namespace braces, you save two lines per file that would otherwise be wasted on wrapping braces.
-
-3. **One file, one namespace:** Modern C# code usually has a single primary type per file. File-scoped namespaces match that reality and avoid unnecessary structure.
-
-4. **Less boilerplate:** No closing brace to maintain.
-
-**Real-world comparison**
-
-Block-scoped:
-
-```csharp
-namespace LumaCore.Api.Features.Auth
-{
-    public class JwtTokenFactory
-    {
-        public string CreateToken()
-        {
-            if (condition)
-            {
-                return "token";
-            }
-            return string.Empty;
-        }
-    }
-}
-```
-
-File-scoped:
-
-```csharp
-namespace LumaCore.Api.Features.Auth;
-
-public class JwtTokenFactory
-{
-    public string CreateToken()
-    {
-        if (condition)
-        {
-            return "token";
-        }
-        return string.Empty;
     }
 }
 ```
@@ -310,56 +255,7 @@ JwtOptions.cs           → class JwtOptions
 LoginRequest.cs         → record LoginRequest
 ```
 
-**Exception:** Private nested types stay in the parent class file.
-
-**Why one type per file:**
-
-1. **Easy to locate**
-
-   If you want `JwtTokenFactory`, you open `JwtTokenFactory.cs`. No guessing, you find it where you expect it.
-
-2. **Cleaner diffs**
-
-   When each file contains one type, a change to that type results in a small, focused diff. Multi-type files tend to show unrelated changes together, which makes reviews harder.
-
-3. **Natural size limit**
-
-   Single-type files tend to stay at a manageable size. When a file starts to grow very large, it's a clear signal that the type may need refactoring.
-
-4. **Encourages smaller, focused types**
-
-   You are more likely to split responsibilities into separate types instead of piling more code into an already busy file.
-
-**Example problem:**
-
-```csharp
-// BadFile.cs - Don't do this!
-public class JwtTokenFactory { ... }
-public class JwtTokenValidator { ... }
-public class JwtOptions { ... }
-public interface IJwtTokenFactory { ... }
-```
-
-When you scroll through a file like this, you lose track of which class you're in — the header scrolls off-screen, and the filename doesn't help.
-
-Better:
-
-```csharp
-// JwtTokenFactory.cs
-public class JwtTokenFactory { ... }
-
-// JwtTokenValidator.cs
-public class JwtTokenValidator { ... }
-
-// JwtOptions.cs
-public class JwtOptions { ... }
-
-// IJwtTokenFactory.cs
-public interface IJwtTokenFactory { ... }
-```
-
-**Nested types:**  
-Private nested helper types that only exist to support their parent class may stay in the same file:
+**Exception:** Private nested helper types may stay in the parent class file:
 
 ```csharp
 // JwtTokenFactory.cs
@@ -372,14 +268,12 @@ public sealed class JwtTokenFactory
 }
 ```
 
-Everything else gets its own file.
-
 ### Member Order
 
 Organize class members in this order:
 
 ```csharp
-public sealed class MyService
+public sealed class MyService : IDisposable
 {
     // 1. Constants
     private const int MaxRetries = 3;
@@ -400,41 +294,25 @@ public sealed class MyService
         mLogger = logger;
     }
 
-    // 5. Properties
+    // 5. Dispose / DisposeAsync (lifecycle: construction and cleanup together)
+    public void Dispose() { }
+
+    // 6. Properties
     public string Name { get; set; }
     public bool IsEnabled => mConfig["Enabled"] == "true";
 
-    // 6. Public methods
+    // 7. Public methods
     public void DoWork() { }
 
-    // 7. Protected/Internal methods
+    // 8. Protected/Internal methods
     protected virtual void ProcessData() { }
 
-    // 8. Private methods
+    // 9. Private methods
     private void HelperMethod() { }
 }
 ```
 
-**Why this specific order:**
-
-It follows a **"general to specific"** and **"public to private"** flow:
-
-1. **Constants** — Most general, least likely to change, compile-time values.
-2. **Static fields** — Shared state and class-level concerns.
-3. **Instance fields** — The actual state of this object (readonly first because they are stable once set).
-4. **Constructors** — How the object is created and what it needs.
-5. **Properties** — How the outside world reads or writes state.
-6. **Public methods** — What the class does for its callers.
-7. **Protected/Internal methods** — For inheritance or internal collaboration.
-8. **Private methods** — Implementation details at the bottom.
-
-When you open a class, you quickly see:
-- what it depends on (fields),
-- how to construct it (constructors),
-- what it can do (public methods),
-- and only then the internal mechanics (private methods).
-
-Once you develop muscle memory for this order, navigating a new class becomes much faster: dependencies at the top, public surface in the middle, details at the bottom.
+**Why this order:** It follows a **"general to specific"** and **"public to private"** flow. When you open a class, you quickly see what it depends on (fields), how to construct it, and what it can do (public methods) — implementation details come last.
 
 ### When Classes Grow Large
 
@@ -500,30 +378,12 @@ LumaCore uses a light form of Hungarian notation for **private fields**:
 - Static fields use the `s` prefix (for **s**tatic)
 
 ```csharp
-public sealed class MyService
+private static readonly string sDefaultValue = "default";  // s = static
+private readonly ILogger<MyService> mLogger;               // m = member
+
+public MyService(ILogger<MyService> logger)  // parameter: no prefix
 {
-    // Static fields - 's' prefix
-    private static readonly string sDefaultValue = "default";
-    private static readonly ILogger sStaticLogger = ...;
-    private static int sInstanceCount = 0;
-
-    // Instance fields - 'm' prefix
-    private readonly ILogger<MyService> mLogger;
-    private readonly MyOptions mOptions;
-
-    // Parameter - no prefix
-    public MyService(ILogger<MyService> logger, MyOptions options)
-    {
-        mLogger = logger;   // Clear distinction
-        mOptions = options; // between fields and parameters
-    }
-
-    public void DoWork()
-    {
-        string result = ProcessData(); // Local variable - no prefix
-        int count = GetCount();
-        ...
-    }
+    mLogger = logger;
 }
 ```
 
@@ -553,7 +413,8 @@ public async Task HandleLogin(HttpContext context);
 **Rules:**
 
 - Methods that return `Task` / `Task<T>` / `ValueTask<T>` get the `Async` suffix.
-- `void`-returning async methods (typically event handlers) should also use `Async`, e.g. `OnMessageReceivedAsync`.
+- `void`-returning async methods (typically event handlers) should also use `Async`, e.g. `OnMessageReceivedAsync`.  
+  ⚠️ **Avoid `async void`** except for event handlers — exceptions cannot be caught and will crash the process. Use `async Task` instead.
 - Properties are never asynchronous.
 
 **Why:**
@@ -604,7 +465,7 @@ public IEnumerable<Claim> ClaimCollection { get; }  // Type repeated
 
 - The type already communicates that this is a collection.
 - The name should describe **what** the collection contains, not that it *is* a collection.
-- Plural names make calling code read naturally: `foreach (var user in Users)`.
+- Plural names make calling code read naturally: `foreach (User user in Users)`.
 
 ---
 
@@ -698,45 +559,28 @@ A `readonly record struct` combines stack allocation with compiler-generated val
 
 ```csharp
 public readonly record struct Point(int X, int Y);
-public readonly record struct Color(byte R, byte G, byte B, byte A);
 
 var point = new Point(10, 20);
-Console.WriteLine(point);
-// Output: Point { X = 10, Y = 20 }
+var moved = point with { X = 30 };  // Copy with selective change
+Console.WriteLine(moved);
+// Output: Point { X = 30, Y = 20 }
 ```
 
 ---
 
 ### Sealed by Default
 
-Most classes should be `sealed` — only unseal when you have a deliberate inheritance design (e.g., base classes, framework hooks).
+Most classes should be `sealed` — only unseal when you have a deliberate inheritance design.
 
 ```csharp
 // ✅ Good
-public sealed class JwtTokenFactory : IJwtTokenFactory
-{
-    // ...
-}
+public sealed class JwtTokenFactory : IJwtTokenFactory { /* ... */ }
 
-// Only when you explicitly design for inheritance:
-public abstract class PersonaStoreBase
-{
-    // ...
-}
+// Only when explicitly designed for inheritance:
+public abstract class PersonaStoreBase { /* ... */ }
 ```
 
-**Why `sealed` by default:**
-
-1. **Clear intent:** A sealed class says: *"This type is not meant to be extended via inheritance."* If you need variation, you use composition or interfaces instead.
-
-2. **Safer changes:** Non-sealed classes can have unknown inheritors outside your assembly. A seemingly harmless change (adding a virtual call, changing a protected behavior) can break consumers you don't see.
-
-3. **Performance**
-
-   The JIT compiler can optimize calls to sealed classes better:
-   - Devirtualization (no virtual dispatch)
-   - Inlining of methods
-   - More predictable codegen
+**Why:** Sealed classes communicate clear intent, are safer to change (no unknown inheritors), and enable better JIT optimization.
 
 ---
 
@@ -785,24 +629,6 @@ public sealed class AuditLogger
         mLogger = logger;
         mCategory = category;
     }
-
-    public void Log(string message)
-    {
-        mLogger.LogInformation("[{Category}] {Message}", mCategory, message);
-    }
-}
-```
-
-If you try to reassign them, the compiler will protect you:
-
-```csharp
-public void DoWork()
-{
-    mLogger.LogInformation("Starting work");
-
-    mLogger = null;  // Compiler error: Cannot assign to readonly field
-
-    mLogger.LogInformation("Done");
 }
 ```
 
@@ -811,12 +637,11 @@ public void DoWork()
 ## XML Documentation
 
 > [!TIP]
-> **Why it matters:** XML documentation isn't just comments – it powers **IntelliSense** in your IDE and generates **Swagger/OpenAPI documentation** for your APIs. When you write `/// <summary>`, that text appears when other developers hover over your method. For API endpoints, it becomes the description in the OpenAPI spec that API consumers see.
+> **Why it matters:** XML documentation powers **IntelliSense** in your IDE — when you write `/// <summary>`, that text appears when developers hover over your method. For DTOs and models, it also populates the **OpenAPI schema descriptions** automatically.
 
 Good XML docs mean:
 - Developers understand your code without reading the implementation
-- API consumers get accurate, up-to-date documentation automatically
-- Swagger UI shows meaningful descriptions instead of empty boxes
+- API schemas show meaningful property descriptions in Swagger UI
 
 ### Full Documentation Required
 
@@ -869,11 +694,9 @@ Break lines at logical points (end of sentence, before a new thought) rather tha
 
 ### Contracts vs. Core Documentation
 
-Documentation depth differs between API contracts (DTOs for external consumers) and Core types (internal implementation):
+XML docs on **Contracts** (DTOs) end up in the OpenAPI schema — API consumers see them. Keep it user-focused: *what* the value means, not *how* it's computed internally.
 
-**Contracts (Api.Contracts):** Document *what* the value means and how to interpret it. Include enough context to understand the metric but omit gory implementation details.
-
-**Core:** Document everything in Contracts *plus* implementation details: configuration options, OS-specific mechanisms, exact thresholds, and API sources.
+XML docs on **Core** types don't appear in the REST API documentation, so you can include implementation details: OS-specific behavior, exact thresholds, configuration options, and API sources.
 
 ### XML Documentation Tags
 
@@ -946,7 +769,7 @@ var token = factory.CreateToken(principal);
 | String literals | `<c>` | `<c>"Bearer"</c>` |
 | Code snippets | `<c>` | `<c>obj.Method()</c>` |
 | Sentinel/special values | `<c>` | `<c>-1</c>` means "not found" |
-| Numbers in prose | plain text | "Defaults to 150" |
+| Numbers in prose | plain text | The default timeout is 150 seconds. |
 | Config section names | `<c>` | `<c>"Jwt"</c>`, `<c>"Cors"</c>` |
 | JSON field names | `<c>` | `<c>traceId</c>` |
 | HTTP status codes | `<c>` | `<c>400 Bad Request</c>` |
@@ -1027,47 +850,11 @@ public class MyClass
 }
 ```
 
-**Why tabs, not spaces:**
+**Why tabs:**
 
-1. **Accessibility:** Developers with visual impairments can configure their editor to display tabs at their preferred width. Some people need 8 spaces of indentation to see code structure clearly; others prefer 2. With tabs, everyone can choose their own viewing preference while the file stays identical.
-
-2. **Smaller file size:** One tab character = 1 byte. Four spaces = 4 bytes. For large codebases, this adds up.
-
-3. **Semantic meaning:** A tab means "one level of indentation." Spaces mean "whitespace." Tabs are semantically correct for indentation.
-
-4. **No arguments about width:** With spaces, teams argue: 2 spaces? 4 spaces? 8 spaces? With tabs, everyone can use their own preference without changing the file.
-
-5. **Easier to navigate:** One keypress moves one indentation level. With spaces, you're hitting arrow keys 2–4–8 times per level.
-
-**Real-world example**
-
-Developer A has reduced vision and needs 8-space indentation to see structure:
-
-```csharp
-// With spaces (locked to 4):
-public class MyClass
-{
-    public void Method()        // Hard to see
-    {
-        if (condition)
-        {
-            DoWork();
-        }
-    }
-}
-
-// With tabs (they can configure 8-space display):
-public class MyClass
-{
-→       public void Method()    // Much clearer!
-→       {
-→       →       if (condition)
-→       →       {
-→       →       →       DoWork();
-→       →       }
-→       }
-}
-```
+- **Accessibility:** Developers can configure their preferred display width (2, 4, 8 spaces) without changing the file
+- **Semantic:** A tab means "one indentation level" — spaces mean "whitespace"
+- **No width debates:** Everyone uses their own preference
 
 ---
 
@@ -1083,15 +870,15 @@ int count = GetCount();
 string name = GetName();
 bool isValid = CheckValidity();
 
-// ✅ Type is evident (new, cast, literal): var is fine
+// ✅ Type is evident (new, cast): var is fine
 var user = new User();
-var logger = loggerFactory.CreateLogger<MyService>();
 var items = new List<string>();
+var stream = (MemoryStream)GetStream();
 
 // ✅ Type is not evident: explicit
 User user = GetUser();
 HttpClient client = GetClient();
-IEnumerable<Order> orders = LoadOrders();
+ILogger<MyService> logger = loggerFactory.CreateLogger<MyService>();
 ```
 
 **Why this approach:**
@@ -1118,10 +905,10 @@ These rules keep asynchronous code **correct**, **predictable**, and **efficient
 
 ### ConfigureAwait(false) in Library Code
 
-In library code (services, repositories, utilities), **always** use `ConfigureAwait(false)` when awaiting tasks. In ASP.NET Core it's technically not needed, but it doesn't hurt and keeps the code portable.
+In library code (services, repositories, utilities), use `ConfigureAwait(false)` when awaiting tasks. This prevents deadlocks and keeps your code portable across different hosting environments.
 
 ```csharp
-// ✅ Good — library code
+// ✅ Library code — use ConfigureAwait(false)
 public async Task<User> GetUserAsync(int id)
 {
     var user = await mRepository
@@ -1132,47 +919,102 @@ public async Task<User> GetUserAsync(int id)
 }
 ```
 
-> [!TIP]
-> Think of `ConfigureAwait(false)` as the default for all non-UI library code.
-> It tells the runtime: "I don't care which thread I continue on — just resume as soon as possible."
+> [!NOTE]
+> **Exception:** Blazor UI services that use `IJSRuntime` MUST NOT use `ConfigureAwait(false)`. See the [Blazor Development Guide](blazor-guide.md#configureawait-in-blazor) for details.
 
-**Why `ConfigureAwait(false)` matters:**
+#### Why This Matters
 
-The main reason is **deadlock prevention** and avoiding unnecessary context capture.
+The main reason is **deadlock prevention**. In environments with a `SynchronizationContext` — Blazor Server, legacy ASP.NET, WPF, WinForms — async continuations try to resume on the original thread. If that thread is blocked waiting for the async operation, you get a deadlock. `ConfigureAwait(false)` tells the runtime "continue on any thread" and breaks this cycle.
+
+In ASP.NET Core Web API there is no `SynchronizationContext`, so deadlocks don't happen there. But Blazor Server *does* have one (per circuit), and library code can be reused in different contexts — so we treat `ConfigureAwait(false)` as the safe default.
+
+See [How deadlocks happen](#how-deadlocks-happen) for a detailed example.
+
+#### The Side Effect: Multi-Threading
+
+Using `ConfigureAwait(false)` means your continuation may run on a *different thread* than the code before `await`. Combined with the fact that library methods can be called concurrently from multiple callers, this has an important implication:
+
+> [!IMPORTANT]
+> **Async library code with mutable shared state must be thread-safe.**
 
 ```csharp
-// Potential deadlock scenario (in UI or old ASP.NET)
-public void SyncMethod()
+public async Task UpdateCounterAsync()
 {
-    // Blocks thread waiting for task
-    var result = GetDataAsync().Result;
-}
-
-async Task<Data> GetDataAsync()
-{
-    await mRepository.LoadAsync();  // Captures context by default
-    // Tries to resume on original context...
-    // But original thread is blocked above! 💀
-    // With ConfigureAwait(false), this doesn't happen.
-    return data;
+    mCounter++;  // Runs on caller's thread
+    
+    await SomeApiCallAsync().ConfigureAwait(false);
+    
+    mCounter++;  // ⚠️ May now be on a different thread!
+    // Concurrent calls → race condition without locks!
 }
 ```
 
-In ASP.NET Core there is no `SynchronizationContext`, so deadlocks like this are much less likely and the performance impact of `ConfigureAwait(false)` is small.  
-However, **library code can be reused** in UI apps or older ASP.NET applications — so we treat `ConfigureAwait(false)` as the safe default.
+If your code has mutable shared state, use proper synchronization or redesign to avoid shared state.
 
-**When you DO need the context** (e.g., UI code):
+#### When You Need the Context
 
-Use explicit `ConfigureAwait(true)` to make the intent clear:
+In UI code or Blazor components that interact with `IJSRuntime`, you *do* need to stay on the original context. Use explicit `ConfigureAwait(true)` to make the intent clear:
 
 ```csharp
-// WPF/WinForms UI code — needs UI thread
-public async Task LoadDataAsync()
+// Blazor JSInterop — needs Blazor context
+public async Task UpdateDomAsync()
 {
-    var data = await LoadFromDatabaseAsync().ConfigureAwait(true);  // Explicit: I NEED the UI thread
-    this.TextBox.Text = data;  // Must run on UI thread!
+    mElementValue = await mJsRuntime
+        .InvokeAsync<string>("getElementValue", "my-id")
+        .ConfigureAwait(true);  // Explicit: stay on Blazor context
+    
+    StateHasChanged();  // Requires Blazor context
 }
 ```
+
+For Blazor-specific guidance, see the [Blazor Development Guide](blazor-guide.md#configureawait-in-blazor).
+
+#### Synchronization Options
+
+**Locking / Exclusion**
+
+| Mechanism | Use Case | Async |
+|-----------|----------|:-----:|
+| [`lock`](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/lock) | Simple mutual exclusion for short critical sections | ✗ |
+| [`SemaphoreSlim`](https://learn.microsoft.com/en-us/dotnet/api/system.threading.semaphoreslim) | Limiting concurrent access | ✓ |
+| [`ReaderWriterLockSlim`](https://learn.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim) | Many readers, few writers | ✗ |
+| [`Mutex`](https://learn.microsoft.com/en-us/dotnet/api/system.threading.mutex) | Cross-process mutual exclusion | ✗ |
+
+**Concurrent Collections**
+
+| Mechanism | Use Case |
+|-----------|----------|
+| [`ConcurrentDictionary<K,V>`](https://learn.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentdictionary-2) | Thread-safe dictionary with atomic operations |
+| [`ConcurrentQueue<T>`](https://learn.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentqueue-1) | Thread-safe FIFO queue |
+| [`ConcurrentStack<T>`](https://learn.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentstack-1) | Thread-safe LIFO stack |
+| [`ConcurrentBag<T>`](https://learn.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentbag-1) | Thread-safe unordered collection (good for pools) |
+| [`BlockingCollection<T>`](https://learn.microsoft.com/en-us/dotnet/api/system.collections.concurrent.blockingcollection-1) | Producer/consumer wrapper with blocking |
+| [`Channel<T>`](https://learn.microsoft.com/en-us/dotnet/core/extensions/channels) | Async producer/consumer queues |
+
+**Atomic Operations**
+
+| Mechanism | Use Case |
+|-----------|----------|
+| [`Interlocked`](https://learn.microsoft.com/en-us/dotnet/api/system.threading.interlocked) | Atomic increment, exchange, compare-and-swap |
+
+**Signaling**
+
+| Mechanism | Use Case |
+|-----------|----------|
+| [`ManualResetEventSlim`](https://learn.microsoft.com/en-us/dotnet/api/system.threading.manualreseteventslim) | Signal multiple waiting threads (stays signaled) |
+| [`AutoResetEvent`](https://learn.microsoft.com/en-us/dotnet/api/system.threading.autoresetevent) | Signal one waiting thread (auto-resets) |
+| [`CountdownEvent`](https://learn.microsoft.com/en-us/dotnet/api/system.threading.countdownevent) | Wait for N signals (fork/join) |
+| [`Barrier`](https://learn.microsoft.com/en-us/dotnet/api/system.threading.barrier) | Coordinate phases across threads |
+
+**Immutability**
+
+| Mechanism | Use Case |
+|-----------|----------|
+| [`ImmutableList<T>`](https://learn.microsoft.com/en-us/dotnet/api/system.collections.immutable.immutablelist-1) | Immutable list |
+| [`ImmutableDictionary<K,V>`](https://learn.microsoft.com/en-us/dotnet/api/system.collections.immutable.immutabledictionary-2) | Immutable dictionary |
+| [`ImmutableHashSet<T>`](https://learn.microsoft.com/en-us/dotnet/api/system.collections.immutable.immutablehashset-1) | Immutable set |
+| [`ImmutableQueue<T>`](https://learn.microsoft.com/en-us/dotnet/api/system.collections.immutable.immutablequeue-1) | Immutable FIFO queue |
+| [`ImmutableStack<T>`](https://learn.microsoft.com/en-us/dotnet/api/system.collections.immutable.immutablestack-1) | Immutable LIFO stack |
 
 ---
 
@@ -1246,7 +1088,7 @@ public ValueTask<User?> GetFromCacheAsync(string key)
 
 ### Async All the Way
 
-Once you start using async, **stay async all the way up** the call chain.
+Once you start using async, **stay async throughout the entire call chain** — from entry point to the lowest-level call.
 
 In async methods, always use async variants of APIs:
 
@@ -1287,9 +1129,10 @@ public async Task<User> GetUserAsync(int id)
 }
 ```
 
+<a id="how-deadlocks-happen"></a>
 **How deadlocks happen:**
 
-In environments where async continuations try to resume on the original thread (WPF, WinForms, classic ASP.NET), blocking on `.Result` or `.Wait()` can deadlock that thread:
+In environments where async continuations try to resume on the original thread (WPF, WinForms, Blazor Server, classic ASP.NET), blocking on `.Result` or `.Wait()` can deadlock that thread:
 
 ```csharp
 // This can deadlock!
@@ -1302,7 +1145,7 @@ public void SyncMethod()
 public async Task<User> GetUserAsync(int id)
 {
     // Tries to resume on the same thread...
-    await mRepository.LoadAsync();
+    await mRepository.LoadAsync().ConfigureAwait(true);
     // ...but the thread is blocked in SyncMethod()
 }
 ```
@@ -1310,19 +1153,46 @@ public async Task<User> GetUserAsync(int id)
 In ASP.NET Core this is less common, but blocking calls still waste threads and reduce throughput.  
 That's why we avoid them as a general rule.
 
-**When you truly can't go async:**
+**When you truly can't go async (Sync-over-Async):**
 
 Sometimes you are forced to call async code from a synchronous entry point (legacy code, third-party APIs, framework constraints).  
 These cases should be **rare** and clearly documented.
 
 ```csharp
-// Option 1: Run on thread pool (safer, but adds overhead)
-User user = Task.Run(() => GetUserAsync(id)).GetAwaiter().GetResult();
+// ❌ DEADLOCK RISK — async method tries to resume on blocked thread!
+public void SyncMethod()
+{
+    var user = GetUserAsync(id).Result;  // Blocks the thread
+    // GetUserAsync tries to return here → but we're blocked → 💀 Deadlock
+}
 
-// Option 2: Design specifically for sync contexts
-// Only if you are absolutely sure about the synchronization context
+// ✅ SAFE — Task.Run() moves execution to ThreadPool (no SynchronizationContext)
+public void SyncMethod()
+{
+    // Task.Run() starts GetUserAsync on a ThreadPool thread and returns immediately.
+    // GetAwaiter().GetResult() blocks THIS thread until the result is ready.
+    // No deadlock because GetUserAsync runs on ThreadPool where there's no
+    // SynchronizationContext trying to marshal back to a specific thread.
+    User user = Task.Run(() => GetUserAsync(id)).GetAwaiter().GetResult();
+}
+```
+
+**Why `Task.Run()` prevents the deadlock:**
+
+`Task.Run()` moves the entire async operation to a ThreadPool thread, and that's the key: ThreadPool threads don't have a `SynchronizationContext`. When `GetUserAsync()` hits an `await`, it doesn't capture any context to return to — it just continues on whatever thread is available. Meanwhile, the original thread is still blocked waiting for the result. But that's okay now, because nothing inside the async chain is trying to get back to it.
+
+**Alternative (only if you control the async method):**
+
+```csharp
+// Only works if ConfigureAwait(false) is used ALL THE WAY DOWN the call chain
 User user = GetUserAsync(id).ConfigureAwait(false).GetAwaiter().GetResult();
 ```
+
+This approach tells the *outermost* await not to capture the context. But here's the problem: if `GetUserAsync()` internally calls other async methods, each of *those* awaits also needs `ConfigureAwait(false)`. If even one await deep in the call chain tries to resume on the original `SynchronizationContext`, it will wait for the blocked thread — and deadlock.
+
+You'd need to audit every async call in the entire chain, including third-party libraries. That's why `Task.Run()` is more robust: it moves the entire operation to a ThreadPool thread where no `SynchronizationContext` exists in the first place.
+
+The `Task.Run()` approach has slightly more overhead (thread pool queuing, potential context switch), but in sync-over-async scenarios correctness matters more than micro-optimization.
 
 ---
 
@@ -1370,6 +1240,21 @@ await foreach (var user in userService.GetAllUsersAsync(cancellationToken))
 
 ---
 
+## Blazor/Razor Specific Rules
+
+Blazor has unique requirements for `ConfigureAwait`, component lifecycle, and JavaScript interop that differ from standard .NET library code.
+
+**Quick rules:**
+
+- **In .razor files:** Always use `ConfigureAwait(true)`
+- **In UI services** (inject `IJSRuntime`): Always use `ConfigureAwait(true)`
+- **In backend services** (no browser interaction): Use `ConfigureAwait(false)`
+- **JSInterop:** Only call in `OnAfterRenderAsync`, not in `OnInitializedAsync` — the DOM isn't rendered yet during initialization
+
+> **For complete guidance** including the SynchronizationContext problem, service classification, decision guides, and common pitfalls, see the [Blazor Development Guide](blazor-guide.md#configureawait-in-blazor).
+
+---
+
 ## Null Handling
 
 Null is one of the most common sources of bugs in any codebase.  
@@ -1402,77 +1287,18 @@ public string Name { get; set; }  // Warning CS8618 — promises non-null but ne
 
 ### Collections Are Never Null
 
-Collections should represent "zero or more items", not "maybe a collection, maybe nothing".  
-We treat **empty collections** (`[]`) as the default, not `null`.
+Collections represent "zero or more items", not "maybe a collection, maybe nothing". Use **empty collections** (`[]`) as the default, not `null`.
 
 ```csharp
 // ✅ Good — initialized to empty
 public List<User> Users { get; set; } = [];
-public IEnumerable<Claim> Claims { get; set; } = Enumerable.Empty<Claim>();
+public IEnumerable<Claim> Claims { get; set; } = [];
 
 // ❌ Bad — nullable collection
 public List<User>? Users { get; set; }  // Don't do this
 ```
 
-**Why collections should never be null:**
-
-- `null` and "no items" are **different concepts**:
-  - `null` → "we don't know / not loaded / doesn't exist"
-  - empty → "we know, and there are zero items"
-- Most calling code only cares about "for each user" — having to treat `null` as a special case adds noise everywhere.
-- Many LINQ operations (`.Where`, `.Select`, `.Any`) work naturally on empty collections but throw on `null`.
-
-**The cost of nullable collections:**
-
-1. **Null checks everywhere:**
-   ```csharp
-   public void ProcessUsers(List<User>? users)
-   {
-       if (users == null) return;  // Defensive programming
-       foreach (var user in users) { ... }
-   }
-   ```
-
-2. **Cognitive load:**
-   ```csharp
-   public List<Order>? GetRecentOrders()
-   {
-       // Returns null if: error? no orders? not loaded? 🤔
-   }
-   ```
-
-3. **More bugs:**
-   ```csharp
-   var users = GetUsers();  // Returns null
-   var count = users.Count; // NullReferenceException 💥
-   ```
-
-**With initialized collections:**
-
-```csharp
-public List<User> Users { get; set; } = [];
-
-public void ProcessUsers(List<User> users)
-{
-    // No null check needed
-    foreach (var user in users) { ... }
-}
-```
-
-**Performance consideration:**
-
-Empty collections may seem like unnecessary allocations, but the overhead is minimal:
-
-```csharp
-// Allocates a new (small) List<T> per instance
-public List<User> Users { get; set; } = [];
-
-// Uses Array.Empty<T>() singleton — zero allocation
-public IEnumerable<User> Users { get; set; } = [];
-public IReadOnlyList<User> Users { get; set; } = [];
-```
-
-For mutable collections like `List<T>`, each instance needs its own list. For read-only interfaces, the compiler can use a shared singleton. For typical usage, this overhead is negligible.
+**Why:** `null` means "unknown/not loaded", empty means "zero items" — different concepts. LINQ operations work on empty collections but throw on `null`. Callers shouldn't need null checks just to iterate.
 
 ---
 
@@ -1523,7 +1349,7 @@ string displayName = user.Name ?? "Unknown";
 int count = users?.Count ?? 0;
 ```
 
-Avoid deeply nested `if (x != null)` ladders when the same logic can be expressed more clearly with `?.` and `??`.
+Avoid deeply nested null checks — use `?.` and `??` for cleaner code.
 
 ---
 
@@ -1651,14 +1477,31 @@ public sealed class PersonaNotFoundException : Exception
 
 - Create custom exceptions when a **domain concept** appears in multiple places and needs dedicated error handling.
 - Keep them **small and focused:** Message, key properties, and minimal constructors.
-- Prefer `sealed` exceptions unless you explicitly expect inheritance.
+- Prefer `sealed` exceptions — custom exceptions rarely need inheritance hierarchies, and you can always unseal later if needed.
 
 ---
 
+## Logging
+
+LumaCore uses [Serilog](https://serilog.net/) for structured logging.
+
+### Message Templates
+
+Use message templates with named placeholders — don't use string interpolation:
+
+```csharp
+// ✅ Good — structured, searchable
+mLogger.Information("User {UserId} logged in from {IpAddress}", userId, ip);
+
+// ❌ Bad — loses structure, can't query by UserId
+mLogger.Information($"User {userId} logged in from {ip}");
+```
+
+Named placeholders become structured properties, making logs filterable and queryable. String interpolation bakes values into the message, losing this capability.
+
 ### Logging Exceptions
 
-Exceptions should be logged with **structured context** close to the boundary where they are handled.  
-Inside the catch block:
+Exceptions should be logged with **structured context** close to the boundary where they are handled. Inside the catch block:
 
 1. Log the exception with contextual data.
 2. Re-throw to preserve the error flow, unless this is a known, fully handled case.
@@ -1894,14 +1737,15 @@ It is not a replacement for thinking — but it helps ensure we don't miss the b
 ### Code Organization and Formatting
 
 - [ ] Tabs used for indentation, spaces only for alignment
-- [ ] Member order respected (constants → static fields → instance fields → constructors → properties → public methods → protected/internal methods → private methods)
+- [ ] Member order respected (constants → static fields → instance fields → constructors → Dispose → properties → public methods → protected/internal methods → private methods)
 - [ ] No unnecessary `#region` blocks; large classes are split or refactored
 - [ ] Namespaces match the folder structure
 
 ### Async/Await
 
 - [ ] Async methods are truly asynchronous (no blocking `.Result`/`.Wait()`)
-- [ ] `ConfigureAwait(false)` is used in library code where appropriate
+- [ ] `ConfigureAwait(false)` is used in backend/library code
+- [ ] `ConfigureAwait(false)` is NOT used with `JSInterop` or in Blazor UI services
 - [ ] `Task` is used by default; `ValueTask` only in measured hot paths
 - [ ] Async methods have an `Async` suffix
 
@@ -1952,7 +1796,7 @@ For the full rationale on balancing rules with pragmatism, see [When to Break th
 
 ## Tools and Automation
 
-LumaCore uses tooling to make following these standards easier than ignoring them.
+LumaCore uses tooling to help follow these standards — primarily through editor configuration and optional analyzers.
 
 ### EditorConfig
 
@@ -2013,8 +1857,8 @@ LumaCore relies on several layers of analyzers:
   - Preferences aligned with these coding standards
 
 > [!NOTE]
-> ReSharper is **not required** to contribute to LumaCore.  
-> All critical rules are enforced via analyzers and CI. ReSharper settings are an additional convenience for those who use it.
+> ReSharper is **not required** to contribute to LumaCore.
+> The repository includes ReSharper settings for convenience, but there's no strict linting enforcement yet — we rely on code review to catch style issues.
 
 ---
 
@@ -2051,4 +1895,4 @@ When in doubt, follow existing code in the same area — and if that code looks 
 
 ---
 
-© 2025 LumaCoreTech • MIT License
+© 2026 LumaCoreTech • MIT License
