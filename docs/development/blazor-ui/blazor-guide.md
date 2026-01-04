@@ -529,13 +529,14 @@ When calling between Blazor and JavaScript in either direction, parameters are s
 
 **Requirements for custom types:**
 
-For classes/records to serialize correctly, they must follow `System.Text.Json` conventions:
+For classes/records to serialize correctly in JSInterop, follow these guidelines:
 
-- **Parameterless constructor required** — types must have a public constructor with no parameters (or all parameters optional)
-- **Properties, not fields** — only public properties with getters and setters are serialized. Public fields are ignored (unless annotated with `[JsonInclude]`, which isn't reliable in JSInterop due to non-configurable serializer options)
-- **Accessible members** — properties must be `public` with both `get` and `set`
+- **Prefer public properties with get/set** — the most reliable pattern for JSInterop
+- **Records and init-only properties work** — System.Text.Json supports modern C# patterns: `public record UserData(string Name, int Age)` or `public string Name { get; init; }`
+- **Parameterized constructors supported** — System.Text.Json can deserialize using constructor parameters that match property names (case-insensitive)
+- **Fields require `[JsonInclude]`** — but this annotation is unnecessarily fragile in JSInterop due to non-configurable serializer options. Stick to properties.
 
-Example of a **correct** type:
+**Recommended pattern (simple and reliable):**
 
 ```csharp
 public class UserData
@@ -545,21 +546,34 @@ public class UserData
 }
 ```
 
-Example of **incorrect** types:
+**Also works (modern C# records):**
 
 ```csharp
-public class BadExample1
-{
-    public string Name;  // ❌ Field - won't serialize
-}
+// Primary constructor - works fine!
+public record UserData(string Name, int Age);
 
-public class BadExample2
+// Init-only properties - works fine!
+public class UserData
 {
-    public string Name { get; }  // ❌ No setter - won't deserialize from JS
-    
-    public BadExample2(string name) => Name = name;  // ❌ No parameterless constructor
+    public string Name { get; init; } = "";
+    public int Age { get; init; }
 }
 ```
+
+**Doesn't work reliably:**
+
+```csharp
+public class BadExample
+{
+    public string Name;  // ❌ Field - requires [JsonInclude], unnecessarily fragile for JSInterop
+    
+    // ⚠️ Works if you manually JSON.stringify() in JS, but not via direct invokeMethodAsync()
+    public string City { get; }  // ❌ Getter-only property, no way to set from JS
+}
+```
+
+> [!TIP]
+> **When to manually serialize:** If you need custom converters, non-standard constructors, or complex initialization logic, serialize to JSON string manually in JavaScript (`JSON.stringify(data)`) and deserialize in C# (`JsonSerializer.Deserialize<T>(jsonString)`). This gives you full control over serializer options.
 
 **What doesn't work (without special handling):**
 
@@ -606,8 +620,11 @@ JavaScript side:
 const fileInput = document.getElementById('upload');
 const file = fileInput.files[0];
 
-// Pass to Blazor
-await dotNetRef.invokeMethodAsync('ReceiveFile', file);
+// Create stream reference (NOT passing file directly!)
+const streamRef = await DotNet.createJSStreamReference(file);
+
+// Pass stream reference to Blazor
+await dotNetRef.invokeMethodAsync('ReceiveFile', streamRef);
 ```
 
 C# side:
@@ -615,15 +632,20 @@ C# side:
 [JSInvokable]
 public async Task ReceiveFile(IJSStreamReference streamRef)
 {
-    // Limit stream size to prevent memory issues (default 500KB, max 2GB)
-    var maxSize = 10 * 1024 * 1024; // 10MB
+    // Set maxAllowedSize based on expected file size (default: ~512 KB if omitted)
+    var maxSize = 10 * 1024 * 1024; // 10MB - adjust based on your requirements
     await using var stream = await streamRef.OpenReadStreamAsync(maxSize);
     
-    // Process stream (save to disk, upload to service, etc.)
+    // Server-side example: save to disk
     using var fileStream = File.Create("uploaded.bin");
     await stream.CopyToAsync(fileStream);
+    
+    // WASM alternative: upload to backend API or use browser storage
 }
 ```
+
+> [!IMPORTANT]
+> **Why `createJSStreamReference`?** Blazor cannot directly deserialize browser `File` or `Blob` objects. The `createJSStreamReference` method wraps them into a format Blazor understands (`IJSStreamReference`), enabling efficient streaming without loading the entire file into memory.
 
 **Use cases:**
 - **File uploads:** User selects file in browser → stream to Blazor → save to disk/cloud
@@ -809,11 +831,15 @@ public class AppStateService
 ```
 
 > [!IMPORTANT]
-> **Thread-Safety:** If a service has mutable state, make it thread-safe. This is especially important for Singleton services in Blazor Server, but also relevant for Scoped services when background threads or timers are involved.
+> **Thread-Safety by Service Lifetime:**
 > 
-> The example above shows proper thread-safe implementation:
+> **Singleton services** must be thread-safe because in Blazor Server, multiple circuits (user sessions) access them concurrently across different threads. In WASM, Singletons are naturally safe (single-threaded), but we follow Server patterns for portability. Use `lock`, `Volatile.Read/Write`, or `Interlocked` operations.
+> 
+> **Scoped services** are automatically safe: In Blazor Server, each circuit has its own scoped instance, serialized by the Synchronization Context. In WASM, there's only one user anyway. Explicit synchronization isn't required unless you spawn background threads or timers.
+> 
+> **LumaCore standard:** We implement thread-safe patterns for all stateful services — even though LumaCore currently uses WASM (single-threaded). This ensures Blazor Server compatibility if we migrate later. The example above demonstrates proper thread-safe implementation:
 > - Event accessors (`add`/`remove`) use `lock` because C# events aren't thread-safe by default
-> - State property uses `lock` for get/set operations
+> - State property uses `lock` for get/set operations  
 > - Event is fired **outside** the lock to avoid potential deadlocks
 > 
 > **Note:** Components handle events from any thread safely via `InvokeAsync(StateHasChanged)` — the concern is protecting the service's own state from concurrent access.
@@ -990,7 +1016,7 @@ private async Task RefreshDataAsync()
 - Thread A finishes and returns to the pool
 - Later, continuation runs on Thread B (different thread, same circuit)
 - Multiple threads work on the circuit, but **never simultaneously** — Blazor guarantees "at any given point in time, work is performed on exactly one thread"
-- The difference from WASM isn't parallel execution — it's that **the circuit's work moves between threads**, which creates CPU cache coherency issues (explained below)
+- The difference from WASM isn't parallel execution — it's that **the circuit's work moves between threads**. However, Blazor's Synchronization Context guarantees memory visibility, so a simple bool flag is sufficient.
 
 **In both cases,** the cancellation token doesn't help because the async operation **already succeeded**.
 
@@ -999,8 +1025,7 @@ private async Task RefreshDataAsync()
 Add a flag that tracks disposal state:
 
 ```csharp
-// Use volatile to be safe for both WASM and Server
-private volatile bool mIsDisposed;
+private bool mIsDisposed;
 
 private async Task RefreshDataAsync()
 {
@@ -1020,76 +1045,9 @@ public void Dispose()
 }
 ```
 
-**Why `volatile` even though LumaCore uses WASM?**
+**Why a simple flag works:** In Blazor Server, the Synchronization Context emulates a single-threaded environment within each circuit, guaranteeing memory visibility and sequential consistency. In WASM, everything is actually single-threaded. The `await` points provide implicit memory barriers that ensure the disposed flag is visible across async operations. No explicit `volatile` needed for component-scoped state.
 
-While `volatile` is technically not needed in single-threaded WASM, using it makes the code **portable** and **future-proof**. Migrating to Blazor Server later, or changes to the WASM threading model, won't require updating this pattern. The performance overhead of `volatile` on a single boolean is negligible.
-
-**Best practice:** Use `volatile bool` for disposal flags in all Blazor components, regardless of hosting model. See the detailed explanation below for why `volatile` is critical in Blazor Server.
-
-**Why `volatile` for Blazor Server?**
-
-This is subtle and worth understanding in detail.
-
-**Blazor Server guarantees:** "At any given point in time within a circuit, work is performed on exactly one thread." This means there's **no parallel execution** within a circuit. When Thread A is working on your circuit, Thread B is doing something else (handling a different user's circuit, for example).
-
-**However,** the thread ID changes across await boundaries:
-- `RefreshDataAsync()` starts on Thread 5
-- After `await FetchDataAsync()`, the continuation runs on Thread 8
-- But never both at the same time!
-
-**So why do we need `volatile`?**
-
-Even without parallel execution, there's a **memory visibility** problem. The .NET runtime and JIT compiler are allowed to **reorder** reads and writes for optimization, and different threads may see updates in different orders.
-
-```csharp
-// Timeline in Blazor Server:
-
-1. Thread 5 runs Dispose()
-   → Sets mIsDisposed = true
-   → Thread 5 is done, goes back to thread pool
-
-2. Thread 8 picks up the continuation
-   → Reads mIsDisposed
-   → Might see "false" instead of "true" (stale value!)
-   → Runs mData = data (wrong!)
-```
-
-**Why Thread 8 might see stale data:**
-
-The .NET Memory Model allows the runtime to optimize by:
-- **Caching values in registers** (Thread 8's local copy of mIsDisposed might be outdated)
-- **Reordering reads/writes** (compiler/CPU can reorder for performance, unless told not to)
-- **Delaying visibility of writes** (Thread 5's write might not be visible to Thread 8 immediately)
-
-This isn't about "CPU cache" at the hardware level — it's about the **guarantees the .NET Memory Model provides** (or doesn't provide) across threads.
-
-**What `volatile` does:**
-
-`volatile` tells the .NET runtime: "Don't optimize this variable's access." Specifically:
-
-- **Acquire semantics on reads:** All subsequent reads/writes cannot be reordered before this read
-- **Release semantics on writes:** All previous reads/writes cannot be reordered after this write
-- **Visibility guarantee:** All threads see the latest value (no stale cached values)
-
-These guarantees are implemented using **memory barriers** (also called memory fences) — low-level CPU instructions that prevent reordering and ensure visibility across threads.
-
-```csharp
-// With volatile:
-
-1. Thread 5: mIsDisposed = true (volatile write)
-   → Release semantics: All prior writes are visible
-   → The write is immediately visible to all threads
-
-2. Thread 8: if (!mIsDisposed) ... (volatile read)
-   → Acquire semantics: Sees the latest value
-   → Thread 8 correctly sees "true" and skips the update
-```
-
-**Simplified explanation:**
-
-Without `volatile`, the compiler/runtime might assume "no other thread will change this value" and optimize by caching it. With `volatile`, you tell the runtime "other threads might change this, always check the latest value."
-
-This is why the best practice is to always use `volatile bool` for disposal flags, even in WASM — it makes the code portable without any meaningful performance cost.
+**LumaCore standard:** Use simple `bool` flags for disposal in components. We design for Blazor Server compatibility even though LumaCore currently uses WASM — if we migrate to Server later, we won't need to rewrite disposal patterns.
 
 **When to use this pattern:**
 
@@ -1101,7 +1059,7 @@ Use state guards when you have async operations that might complete after dispos
 
 **Why error boundaries matter:**
 
-In traditional server-side rendering, an exception on one page doesn't affect other pages. But in Blazor (both WASM and Server), the entire app runs in a single circuit. One unhandled exception can take down the whole thing.
+In traditional server-side rendering, an exception on one page doesn't affect other pages. But in Blazor (both WASM and Server), the entire app runs as a single application instance. One unhandled exception can take down the whole thing.
 
 `ErrorBoundary` **isolates** failures. If a component inside an error boundary throws an exception, only that boundary's content is replaced with fallback UI — the rest of the app keeps working.
 
@@ -1641,10 +1599,10 @@ Most apps never need this. If you're reaching for it, step back and reconsider t
 > [!NOTE]
 > **LumaCore context:** LumaCore UI is built as **standalone Blazor WebAssembly**, where `ConfigureAwait` technically has minimal impact (single-threaded browser environment). However, we enforce explicit `ConfigureAwait` usage as a **team standard** for two reasons: **(1) Portability** — the codebase could migrate to Blazor Server or be reused in libraries, and **(2) Best practice** — explicit intent is clearer than implicit defaults. This section explains the why behind the standard.
 
-Understanding when to use `ConfigureAwait(true)` vs `ConfigureAwait(false)` is critical in Blazor applications. Getting it wrong leads to subtle bugs that are hard to debug — things work sometimes, fail other times, with no clear error messages.
+Understanding when to use `ConfigureAwait(true)` vs `ConfigureAwait(false)` is important for Blazor Server applications. In Blazor WASM (single-threaded), the choice has minimal practical impact — but using it correctly ensures code portability and clear intent.
 
 > [!IMPORTANT]
-> **LumaCore standard:** Never omit `ConfigureAwait()`. Always be explicit — `true` in UI code, `false` in backend code.
+> **LumaCore standard:** Never omit `ConfigureAwait()`. Always be explicit — `true` in UI code, `false` in backend code. This makes our codebase Blazor Server-ready without requiring a full rewrite if we migrate later.
 
 ### Why This Matters: The SynchronizationContext
 
@@ -1652,18 +1610,17 @@ In traditional .NET, `ConfigureAwait(false)` tells the runtime: *"I don't need t
 
 **The Blazor reality:**
 
-- **Blazor WebAssembly** currently runs single-threaded in the browser. Today, `ConfigureAwait(false)` makes no practical difference — there's only one thread. However, this may change as WASM gains threading support.
+- **Blazor WebAssembly** runs single-threaded in the browser. `ConfigureAwait(false)` makes no practical difference — there's only one thread.
 
-- **Blazor Server** is multi-threaded and has a `SynchronizationContext` per circuit. Here, `ConfigureAwait(false)` *can* cause real problems — the continuation may run on a different thread, breaking `JSInterop` calls and UI updates.
+- **Blazor Server** is multi-threaded with a `SynchronizationContext` per circuit. Here, `ConfigureAwait(false)` breaks `JSInterop` calls and UI updates — the continuation runs on a different thread outside the Blazor context.
 
 **Why we require `ConfigureAwait(true)` in UI code:**
 
-1. **Portability:** Code that works in WASM today might run on Blazor Server tomorrow.
+1. **Portability:** If LumaCore migrates to Blazor Server later, we won't need to rewrite async patterns.
 2. **Consistency:** One rule is easier to remember than "it depends on the hosting model."
-3. **Future-proofing:** WASM will likely gain threading support.
-4. **Intent documentation:** Explicit `ConfigureAwait(true)` signals "this code needs the UI context."
+3. **Intent documentation:** Explicit `ConfigureAwait(true)` signals "this code needs the UI context."
 
-Think of it as defensive coding — it costs nothing in WASM and prevents bugs in Server.
+It costs nothing in WASM performance and prevents bugs in Server.
 
 ### The Decision: Where Does the Code Run?
 
@@ -1828,7 +1785,7 @@ External events happen outside Blazor's render cycle:
 - External events often run on different threads:
   - Timer events: ThreadPool threads
   - SignalR messages: Network threads
-  - JavaScript callbacks: Circuit's dispatcher thread (but not Blazor's render context)
+  - JavaScript callbacks: Blazor's dispatcher thread (but not necessarily the render context)
 - Calling `StateHasChanged()` from the wrong thread causes exceptions
 
 **The fix: `InvokeAsync`**
@@ -1991,7 +1948,16 @@ Put CSS in `wwwroot/css/` and use `<HeadContent>` to include it per-page:
 
 `HeadContent` injects content into the `<head>` tag at runtime (requires `<HeadOutlet>` registered in `Program.cs`). This bypasses the build-time CSS Isolation tooling entirely. The CSS is loaded only on pages that need it, similar to CSS Isolation, but without the fragile build dependencies.
 
-**Trade-off:** You lose automatic scoping (styles aren't scoped to the component). Use unique class names or CSS modules if global scope is a concern.
+> [!WARNING]
+> **Trade-off: Global CSS scope**
+> 
+> `HeadContent` loads CSS globally — styles aren't scoped to the component. This means selectors like `.container` will affect **all** elements on the page with that class, not just your component.
+> 
+> **Recommended:** Use a naming convention to avoid conflicts:
+> - Prefix with component name: `.login-container`, `.login-button`
+> - Or use a project prefix: `.lc-login-container`, `.lc-login-button`
+> 
+> This explicit naming makes the global scope manageable and prevents accidental style collisions across components.
 
 ---
 
@@ -2018,6 +1984,12 @@ Blazor development becomes predictable once you internalize a few key concepts:
 9. **If CSS Isolation doesn't work, check bundling first.** If it's still broken, use `wwwroot/css/` with `<HeadContent>` as a reliable fallback.
 
 10. **Always be explicit with `ConfigureAwait()`.** Use `true` in UI code (.razor files, UI services), `false` in backend services. Never omit it.
+
+---
+
+## Related Documentation
+
+For LumaCore-specific coding conventions (field naming, XML documentation, etc.), see [Coding Standards](../coding-standards.md).
 
 ---
 
