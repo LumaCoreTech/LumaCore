@@ -5,13 +5,13 @@
 
 <div class="lc-theme-selector">
 
-	<p class="lc-theme-description">@L.Get("components.settings.theme.title")</p>
+	<p class="lc-theme-description">@Localizer["components.settings.theme.title"]</p>
 
 	<div class="lc-theme-grid">
 
 		@if (mAvailableThemes == null)
 		{
-			<p>@L.Get("common.messages.loading")</p>
+			<p>@Localizer["common.messages.loading"]</p>
 		}
 		else
 		{
@@ -28,7 +28,7 @@
 					<div class="lc-theme-card-description">@GetLocalizedDescription(theme)</div>
 					<div class="lc-theme-label">@GetLocalizedCategoryLabel(theme)</div>
 					<div class="lc-theme-preview" style="background: linear-gradient(135deg, @theme.Colors.Preview.Background 66%, @theme.Colors.Preview.Accent 33%);"></div>
-					<div class="lc-theme-card-author">@(string.IsNullOrEmpty(theme.Author) ? "\u00A0" : $"{L.Get("components.settings.theme.authorPrefix")} {theme.Author}")</div>
+					<div class="lc-theme-card-author">@(string.IsNullOrEmpty(theme.Author) ? "\u00A0" : $"{Localizer["components.settings.theme.authorPrefix"]} {theme.Author}")</div>
 					@if (mCurrentTheme == theme.Id)
 					{
 						<div class="lc-theme-checkmark">
@@ -41,7 +41,7 @@
 
 	</div>
 
-	<p class="lc-theme-hint">@L.Get("components.settings.theme.hint")</p>
+	<p class="lc-theme-hint">@Localizer["components.settings.theme.hint"]</p>
 </div>
 
 @code {
@@ -72,7 +72,7 @@
 	/// </summary>
 	protected override void OnInitialized()
 	{
-		mCurrentLocale = L.CurrentLocale;
+		mCurrentLocale = Localizer.CurrentLocale;
 	}
 
 	/// <summary>
@@ -154,7 +154,7 @@
 
 		try
 		{
-			string toastMessage = L.Get("components.settings.theme.toasts.saved");
+			string toastMessage = Localizer["components.settings.theme.toasts.saved"];
 			await JsRuntime.InvokeVoidAsync("selectTheme", themeName, toastMessage).ConfigureAwait(true);
 			await OnThemeChanged.InvokeAsync().ConfigureAwait(true);
 		}

@@ -23,8 +23,8 @@
 		<div class="lc-admin-panel" @onclick:stopPropagation="true">
 
 			<header class="lc-admin-header">
-				<h2>@L.Get("components.admin.header.title")</h2>
-				<button class="lc-admin-close" @onclick="HideAsync" title="@L.Get("components.admin.header.closeHint")">
+                <h2>@Localizer["components.admin.header.title"]</h2>
+                <button class="lc-admin-close" @onclick="HideAsync" title="@Localizer["components.admin.header.closeHint"]">
 					<LcIcon Name="close"/>
 				</button>
 			</header>
@@ -32,7 +32,7 @@
 			<nav class="lc-admin-tabs">
 				<button class="lc-admin-tab @(mActiveTab == "status" ? "lc-admin-tab-active" : "")"
 				        @onclick='() => SetActiveTab("status")'>
-					<span>@L.Get("components.admin.tabs.status")</span>
+                    <span>@Localizer["components.admin.tabs.status"]</span>
 				</button>
 				@* Future tabs can be added here:
 				<button class="lc-admin-tab @(mActiveTab == "dashboard" ? "lc-admin-tab-active" : "")"

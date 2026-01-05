@@ -1,6 +1,7 @@
 @* Language Switcher - Compact dropdown for navbar, always visible *@
 
 @inject IJSRuntime JsRuntime
+@using LumaCore.Ui.Web.Models
 @implements IAsyncDisposable
 
 <div @ref="mDropdownElement"
@@ -11,7 +12,7 @@
 	@* Current language button *@
 	<button class="lc-language-switcher-btn"
 	        type="button"
-	        title="@L.Get("components.languageSwitcher.tooltip")">
+            title="@Localizer["components.languageSwitcher.tooltip"]">
 		<img src="locales/@mCurrentLocale/flag.svg" alt="@mCurrentLocale.ToUpperInvariant()" class="lc-language-switcher-flag"/>
 		<span class="lc-language-switcher-code">@mCurrentLocale.ToUpperInvariant()</span>
 		<span class="lc-language-switcher-arrow">▼</span>
@@ -21,7 +22,7 @@
 	@if (mIsOpen && mAvailableLocales != null)
 	{
 		<div class="lc-language-switcher-dropdown">
-			@foreach (LocalizationService.LocaleInfo locale in mAvailableLocales)
+			@foreach (LocaleInfo locale in mAvailableLocales)
 			{
 				<button class="lc-language-switcher-option @(mCurrentLocale == locale.Code ? "lc-language-switcher-option-active" : "")"
 				        type="button"
@@ -62,7 +63,7 @@
 	/// <summary>
 	/// Available locales loaded from manifest.
 	/// </summary>
-	private IReadOnlyList<LocalizationService.LocaleInfo>? mAvailableLocales;
+	private IReadOnlyList<LocaleInfo>? mAvailableLocales;
 
 	/// <summary>
 	/// Currently selected locale code.
@@ -82,8 +83,8 @@
 	{
 		if (firstRender)
 		{
-			mCurrentLocale = L.CurrentLocale;
-			mAvailableLocales = await L.GetAvailableLocalesAsync().ConfigureAwait(true);
+			mCurrentLocale = Localizer.CurrentLocale;
+			mAvailableLocales = await Localizer.GetAvailableLocalesAsync().ConfigureAwait(true);
 
 			try
 			{
@@ -179,7 +180,7 @@
 		}
 
 		mIsOpen = false;
-		await L.SetLocaleAsync(locale).ConfigureAwait(true);
+        await Localizer.SetLocaleAsync(locale).ConfigureAwait(true);
 	}
 
 	/// <summary>

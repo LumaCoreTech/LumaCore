@@ -14,7 +14,7 @@
 @* Wait for localization to be initialized before rendering *@
 @* Wait for localization to be initialized before rendering *@
 @* Note: "Loading..." is intentionally hardcoded — L.Get() is not available until L.IsInitialized is true *@
-@if (!L.IsInitialized)
+@if (!Localizer.IsInitialized())
 {
 	<div class="lc-root">
 		<div class="lc-loading">Loading…</div>
@@ -37,27 +37,27 @@ else
 				@* Title and subtitle describing the project vision *@
 				<div class="lc-title-block">
 					<div class="lc-title">LumaCore</div>
-					<div class="lc-subtitle">@L.Get("app.subtitle")</div>
+					<div class="lc-subtitle">@Localizer["app.subtitle"]</div>
 				</div>
 			</div>
 
 			@* Primary navigation for the preview UI *@
 			<nav class="lc-nav">
 				@* Root/home entry; kept simple for the early preview version *@
-				<a href="">@L.Get("components.navbar.home")</a>
+				<a href="">@Localizer["components.navbar.home"]</a>
 				@* External link to the public project site, opened in a separate tab *@
-				<a href="https://lumacore.tech" target="_blank" rel="noopener noreferrer">@L.Get("components.navbar.projectSite")</a>
+				<a href="https://lumacore.tech" target="_blank" rel="noopener noreferrer">@Localizer["components.navbar.projectSite"]</a>
 
 				@* Authentication-dependent navigation *@
 				<AuthorizeView>
 					<Authorized>
 						@* Show Protected link and Logout button when authenticated *@
-						<NavLink href="protected" class="lc-nav-link">@L.Get("components.navbar.protected")</NavLink>
-						<button @onclick="HandleLogoutAsync" class="lc-nav-button lc-logout">@L.Get("components.navbar.logout")</button>
+						<NavLink href="protected" class="lc-nav-link">@Localizer["components.navbar.protected"]</NavLink>
+						<button @onclick="HandleLogoutAsync" class="lc-nav-button lc-logout">@Localizer["components.navbar.logout"]</button>
 					</Authorized>
 					<NotAuthorized>
 						@* Show Login link when not authenticated *@
-						<NavLink href="login" class="lc-nav-button lc-nav-button-login">@L.Get("components.navbar.login")</NavLink>
+						<NavLink href="login" class="lc-nav-button lc-nav-button-login">@Localizer["components.navbar.login"]</NavLink>
 					</NotAuthorized>
 				</AuthorizeView>
 
@@ -67,7 +67,7 @@ else
 				@* Settings Panel Toggle - Visible for all authenticated users *@
 				<AuthorizeView>
 					<Authorized>
-						<button class="lc-settings-toggle" @onclick="ShowSettingsPanelAsync" title="@L.Get("components.navbar.settings")">
+						<button class="lc-settings-toggle" @onclick="ShowSettingsPanelAsync" title="@Localizer["components.navbar.settings"]">
 							<img src="assets/icons/icon-settings.svg" class="lc-nav-icon" alt=""/>
 						</button>
 					</Authorized>
@@ -76,7 +76,7 @@ else
 				@* Admin Panel Toggle - Only visible for admin role *@
 				<AuthorizeView Roles="admin">
 					<Authorized>
-						<button class="lc-admin-toggle" @onclick="ShowAdminPanelAsync" title="@L.Get("components.navbar.admin")">
+						<button class="lc-admin-toggle" @onclick="ShowAdminPanelAsync" title="@Localizer["components.navbar.admin"]">
 							<img src="assets/icons/icon-admin.svg" class="lc-nav-icon" alt=""/>
 						</button>
 					</Authorized>
@@ -92,7 +92,7 @@ else
 		@* Footer with a short, stable tagline for the preview UI *@
 		<footer class="lc-footer">
 			<span>LumaCore UI (preview)</span>
-			<span>@L.Get("app.tagline")</span>
+			<span>@Localizer["app.tagline"]</span>
 		</footer>
 
 		@* Settings Overlay - opens on demand via settings button *@
@@ -129,8 +129,8 @@ else
 	protected override async Task OnInitializedAsync()
 	{
 		// Initialize localization — loads translations from JSON.
-		// The L.IsInitialized check in the markup prevents rendering until this completes.
-		await L.InitializeAsync().ConfigureAwait(true);
+		// The Localizer.IsInitialized check in the markup prevents rendering until this completes.
+		await Localizer.InitializeAsync().ConfigureAwait(true);
 	}
 
 	/// <summary>

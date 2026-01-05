@@ -7,8 +7,8 @@
 
 		@* Header with close button *@
 		<div class="lc-settings-header">
-			<h2 class="lc-settings-title">@L.Get("components.settings.header.title")</h2>
-			<button class="lc-settings-close" @onclick="CloseAsync" title="@L.Get("components.settings.header.closeHint")">
+			<h2 class="lc-settings-title">@Localizer["components.settings.header.title"]</h2>
+			<button class="lc-settings-close" @onclick="CloseAsync" title="@Localizer["components.settings.header.closeHint"]">
 				<LcIcon Name="close"/>
 			</button>
 		</div>
@@ -17,11 +17,11 @@
 		<div class="lc-settings-tabs">
 			<button class="lc-settings-tab @(mActiveTab == "theme" ? "lc-settings-tab-active" : "")"
 			        @onclick='() => SetActiveTab("theme")'>
-				<span>@L.Get("components.settings.tabs.theme")</span>
+				<span>@Localizer["components.settings.tabs.theme"]</span>
 			</button>
 			<button class="lc-settings-tab @(mActiveTab == "language" ? "lc-settings-tab-active" : "")"
 			        @onclick='() => SetActiveTab("language")'>
-				<span>@L.Get("components.settings.tabs.language")</span>
+				<span>@Localizer["components.settings.tabs.language"]</span>
 			</button>
 		</div>
 

@@ -1,13 +1,14 @@
+@using LumaCore.Ui.Web.Models
 @* Language Selector - Choose UI language *@
 
 <div class="lc-language-selector">
 
-	<p class="lc-language-description">@L.Get("components.settings.language.title")</p>
+    <p class="lc-language-description">@Localizer["components.settings.language.title"]</p>
 
 	<div class="lc-language-grid">
 		@if (mAvailableLocales != null)
 		{
-			@foreach (LocalizationService.LocaleInfo locale in mAvailableLocales)
+			@foreach (LocaleInfo locale in mAvailableLocales)
 			{
 				<div class="lc-language-card @(mCurrentLocale == locale.Code ? "lc-language-card-active" : "")"
 				     @onclick="@(() => SelectLanguageAsync(locale.Code))">
@@ -26,7 +27,7 @@
 		}
 	</div>
 
-	<p class="lc-language-hint">@L.Get("components.settings.language.hint")</p>
+    <p class="lc-language-hint">@Localizer["components.settings.language.hint"]</p>
 </div>
 
 @code {
@@ -40,7 +41,7 @@
 	/// <summary>
 	/// Available locales loaded from manifest.
 	/// </summary>
-	private IReadOnlyList<LocalizationService.LocaleInfo>? mAvailableLocales;
+	private IReadOnlyList<LocaleInfo>? mAvailableLocales;
 
 	/// <summary>
 	/// Currently active locale.
@@ -54,8 +55,8 @@
 	{
 		try
 		{
-			mCurrentLocale = L.CurrentLocale;
-			mAvailableLocales = await L.GetAvailableLocalesAsync().ConfigureAwait(true);
+			mCurrentLocale = Localizer.CurrentLocale;
+            mAvailableLocales = await Localizer.GetAvailableLocalesAsync().ConfigureAwait(true);
 		}
 		catch
 		{
@@ -71,7 +72,7 @@
 		if (mCurrentLocale == locale)
 			return;
 
-		await L.SetLocaleAsync(locale).ConfigureAwait(true);
+		await Localizer.SetLocaleAsync(locale).ConfigureAwait(true);
 		await OnLanguageChanged.InvokeAsync().ConfigureAwait(true);
 	}
 

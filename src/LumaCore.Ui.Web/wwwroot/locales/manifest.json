@@ -3,13 +3,11 @@
   "locales": [
     {
       "code": "en",
-      "nativeName": "English",
-      "order": 1
+      "nativeName": "English"
     },
     {
       "code": "de",
-      "nativeName": "Deutsch",
-      "order": 2
+      "nativeName": "Deutsch"
     }
   ]
 }

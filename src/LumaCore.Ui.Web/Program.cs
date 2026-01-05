@@ -7,6 +7,7 @@ using LumaCore.Ui.Web.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.Localization;
 
 namespace LumaCore.Ui.Web;
 
@@ -93,8 +94,25 @@ public class Program
 		// Updated by HealthTrackingHandler, observed by BackendHealthIndicator.
 		builder.Services.AddScoped<BackendHealthState>();
 
-		// Register localization service for i18n support.
-		builder.Services.AddScoped<LocalizationService>();
+		// Register localization services for i18n support.
+		// We register both IStringLocalizer (via factory) and JsonStringLocalizer directly:
+		//
+		// - JsonStringLocalizer (direct, Scoped): Our concrete implementation with custom methods
+		//   (CurrentLocale, InitializeAsync, SetLocaleAsync, GetAvailableLocalesAsync).
+		//   Components inject this directly to access both standard IStringLocalizer
+		//   functionality and our extensions.
+		//
+		// - IStringLocalizer (via factory): Required by Blazor's validation system.
+		//   Validation attributes like [Required(ErrorMessage = "key")] automatically
+		//   look up IStringLocalizer from DI. The factory delegates to the DI container
+		//   to return the SAME JsonStringLocalizer instance, ensuring state consistency.
+		//
+		// This setup ensures only ONE instance exists per scope, preventing issues where
+		// changing locale in the component wouldn't affect validation messages.
+		builder.Services.AddLocalization();
+		builder.Services.AddSingleton<TranslationRepository>();
+		builder.Services.AddScoped<JsonStringLocalizer>();
+		builder.Services.AddSingleton<IStringLocalizerFactory, JsonStringLocalizerFactory>();
 
 		// Add authorization services for [Authorize] attribute support.
 		builder.Services.AddAuthorizationCore();

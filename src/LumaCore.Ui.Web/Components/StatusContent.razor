@@ -15,43 +15,43 @@
 *@
 
 <div class="lc-status-content">
-	<h2 class="lc-status-title">@L.Get("components.admin.status.title")</h2>
+	<h2 class="lc-status-title">@Localizer["components.admin.status.title"]</h2>
 
 	@if (mIsLoading)
 	{
 		@* Initial and refresh state while the health check is running *@
-		<p class="lc-status-message">@L.Get("components.admin.status.checking")</p>
+		<p class="lc-status-message">@Localizer["components.admin.status.checking"]</p>
 	}
 	else if (mError is not null)
 	{
 		@* Error state if the health endpoint cannot be reached or returns invalid data *@
-		<p class="lc-status-badge lc-status-badge-error">@L.Get("components.admin.status.unreachable")</p>
+		<p class="lc-status-badge lc-status-badge-error">@Localizer["components.admin.status.unreachable"]</p>
 		<p class="lc-status-detail">@mError</p>
 	}
 	else if (mStatus is not null)
 	{
 		@* Healthy state with the reported status text from the backend *@
-		<p class="lc-status-badge lc-status-badge-ok">@L.Get("components.admin.status.reachable")</p>
+		<p class="lc-status-badge lc-status-badge-ok">@Localizer["components.admin.status.reachable"]</p>
 		<p class="lc-status-detail">
-			<span>@L.Get("components.admin.status.reportedLabel")</span> @mStatus
+			<span>@Localizer["components.admin.status.reportedLabel"]</span> @mStatus
 		</p>
 	}
 	else
 	{
 		@* Fallback in case no explicit status text was returned *@
-		<p class="lc-status-badge">@L.Get("components.admin.status.unknown")</p>
-		<p class="lc-status-detail">@L.Get("components.admin.status.unknownHint")</p>
+		<p class="lc-status-badge">@Localizer["components.admin.status.unknown"]</p>
+		<p class="lc-status-detail">@Localizer["components.admin.status.unknownHint"]</p>
 	}
 
 	<div class="lc-status-actions">
 		<button class="lc-button lc-button-secondary" @onclick="OnRefreshAsync" disabled="@mIsLoading">
 			@if (mIsLoading)
 			{
-				<span>@L.Get("components.admin.status.btnChecking")</span>
+				<span>@Localizer["components.admin.status.btnChecking"]</span>
 			}
 			else
 			{
-				<span>@L.Get("components.admin.status.btnRecheck")</span>
+				<span>@Localizer["components.admin.status.btnRecheck"]</span>
 			}
 		</button>
 	</div>

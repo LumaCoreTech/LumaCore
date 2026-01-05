@@ -81,10 +81,10 @@
 	/// <returns>The translated tooltip text.</returns>
 	private string GetTooltip() => mState switch
 	{
-		HealthState.Ok       => L.Get("components.healthIndicator.tooltips.reachable"),
-		HealthState.Error    => L.Get("components.healthIndicator.tooltips.unreachable"),
-		HealthState.Checking => L.Get("components.healthIndicator.tooltips.checking"),
-		var _                => L.Get("components.healthIndicator.tooltips.unknown")
+		HealthState.Ok       => Localizer["components.healthIndicator.tooltips.reachable"],
+		HealthState.Error    => Localizer["components.healthIndicator.tooltips.unreachable"],
+		HealthState.Checking => Localizer["components.healthIndicator.tooltips.checking"],
+		var _                => Localizer["components.healthIndicator.tooltips.unknown"]
 	};
 
 	/// <summary>
