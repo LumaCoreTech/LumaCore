@@ -21,6 +21,7 @@
     <!-- Application styles (use theme variables defined above) -->
     <link rel="stylesheet" href="LumaCore.Ui.Web.styles.css"/>
     <link rel="stylesheet" href="css/toast.css"/>
+    <link rel="stylesheet" href="css/app-loading.css"/>
 
     <!-- LumaCore JavaScript - Theme MUST load before Blazor! -->
     <script src="js/lumacore.theme.js"></script>
@@ -28,7 +29,12 @@
     <script src="js/lumacore.toast.js"></script>
 </head>
 <body>
-<div id="app">Loading LumaCore UI…</div>
+<div id="app">
+    <div class="app-loading">
+        <img src="assets/branding/lumacore-logo.svg" alt="LumaCore" class="app-loading-logo"/>
+        <p class="app-loading-text">Loading LumaCore...</p>
+    </div>
+</div>
 
 <!-- ReSharper disable Html.PathError -->
 <script src="_framework/blazor.webassembly.js"></script>
