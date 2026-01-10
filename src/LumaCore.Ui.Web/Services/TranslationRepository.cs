@@ -38,7 +38,9 @@ public sealed partial class TranslationRepository
 	/// The cached repository state. Accessed via <see cref="Volatile"/> for thread-safe reads
 	/// and locked writes with atomic publication.
 	/// </summary>
-	private RepositoryState? mState;
+	private RepositoryState mState = new(
+		new Dictionary<string, TranslationTable>(),
+		new List<LocaleInfo>().AsReadOnly());
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="TranslationRepository"/> class.
@@ -61,8 +63,8 @@ public sealed partial class TranslationRepository
 	public async Task<IReadOnlyList<LocaleInfo>> GetAvailableLocalesAsync()
 	{
 		// Fast path: Return cached list if available (lock-free read)
-		RepositoryState? state = Volatile.Read(ref mState);
-		if (state?.AvailableLocales != null)
+		RepositoryState state = Volatile.Read(ref mState);
+		if (state.AvailableLocales.Count > 0)
 			return state.AvailableLocales;
 
 		try
@@ -90,14 +92,12 @@ public sealed partial class TranslationRepository
 			lock (mLock)
 			{
 				// Double-check inside lock
-				RepositoryState? current = Volatile.Read(ref mState);
-				if (current?.AvailableLocales != null)
+				RepositoryState current = Volatile.Read(ref mState);
+				if (current.AvailableLocales.Count > 0)
 					return current.AvailableLocales;
 
 				// Create new state with loaded locales
-				var updated = new RepositoryState(
-					current?.AllTranslations ?? new Dictionary<string, IReadOnlyDictionary<string, object>>(),
-					sortedLocales);
+				RepositoryState updated = current with { AvailableLocales = sortedLocales };
 
 				// Atomic publish
 				Volatile.Write(ref mState, updated);
@@ -114,13 +114,11 @@ public sealed partial class TranslationRepository
 
 			lock (mLock)
 			{
-				RepositoryState? current = Volatile.Read(ref mState);
-				if (current?.AvailableLocales != null)
+				RepositoryState current = Volatile.Read(ref mState);
+				if (current.AvailableLocales.Count > 0)
 					return current.AvailableLocales;
 
-				var updated = new RepositoryState(
-					current?.AllTranslations ?? new Dictionary<string, IReadOnlyDictionary<string, object>>(),
-					fallback);
+				RepositoryState updated = current with { AvailableLocales = fallback };
 
 				Volatile.Write(ref mState, updated);
 
@@ -135,26 +133,28 @@ public sealed partial class TranslationRepository
 	/// </summary>
 	/// <param name="locale">The locale code (e.g., <c>en</c>, <c>de</c>).</param>
 	/// <param name="key">The translation key (supports nested keys like <c>components.login.title</c>).</param>
-	/// <returns>The translated string, or <see langword="null"/> if not found.</returns>
+	/// <returns>A <see cref="Translation"/> containing the translated value and search location.</returns>
 	/// <remarks>
 	/// This method is synchronous and assumes translations for the locale are already loaded.
 	/// Translations must be loaded via <see cref="LoadTranslationsAsync"/> before calling this method.
 	/// Thread-safe - uses lock-free <see cref="Volatile.Read{T}(ref readonly T)"/> for high-performance concurrent access.
 	/// </remarks>
-	public string? GetTranslation(string locale, string key)
+	public Translation GetTranslation(string locale, string key)
 	{
-		// Lock-free read using Volatile.Read
-		RepositoryState? state = Volatile.Read(ref mState);
+		string searchedLocation = $"locales/{locale}/translations.json";
 
-		// Get translations for this locale (must already be loaded!)
-		if (state?.AllTranslations == null ||
-		    !state.AllTranslations.TryGetValue(locale, out IReadOnlyDictionary<string, object>? translations))
+		// Lock-free read using Volatile.Read
+		RepositoryState state = Volatile.Read(ref mState);
+
+		// Get translation table for this locale (must already be loaded!)
+		if (!state.AllTranslations.TryGetValue(locale, out TranslationTable? table))
 		{
-			return null;
+			return new Translation(null, searchedLocation);
 		}
 
 		// Navigate nested structure
-		return GetNestedValue(translations, key);
+		string? value = GetNestedValue(table.Mappings, key);
+		return new Translation(value, table.SearchedLocation);
 	}
 
 	/// <summary>
@@ -171,8 +171,8 @@ public sealed partial class TranslationRepository
 	public async Task LoadTranslationsAsync(string locale)
 	{
 		// Fast path: Check if already loaded (lock-free read)
-		RepositoryState? state = Volatile.Read(ref mState);
-		if (state?.AllTranslations.ContainsKey(locale) == true)
+		RepositoryState state = Volatile.Read(ref mState);
+		if (state.AllTranslations.ContainsKey(locale))
 			return;
 
 		// Get or create semaphore for THIS locale (allows parallel loading of different locales)
@@ -184,11 +184,11 @@ public sealed partial class TranslationRepository
 		{
 			// Double-check: Another thread might have loaded it while we were waiting
 			state = Volatile.Read(ref mState);
-			if (state?.AllTranslations.ContainsKey(locale) == true)
+			if (state.AllTranslations.ContainsKey(locale))
 				return;
 
 			// Load translation (expensive I/O operation, but other locales can load in parallel!)
-			IReadOnlyDictionary<string, object>? translations;
+			TranslationTable translationTable;
 
 			try
 			{
@@ -198,31 +198,31 @@ public sealed partial class TranslationRepository
 
 				using JsonDocument doc = JsonDocument.Parse(json);
 
-				// Convert JsonDocument to nested dictionaries.
-				translations = ConvertToNestedDictionary(doc.RootElement);
+				// Convert JsonDocument to nested dictionaries and wrap in TranslationTable.
+				IReadOnlyDictionary<string, object> mappings = ConvertToNestedDictionary(doc.RootElement);
+				translationTable = new TranslationTable(mappings, url);
 			}
 			catch
 			{
 				// If loading fails, use empty dictionary to prevent repeated failed attempts.
-				translations = new Dictionary<string, object>();
+				translationTable = new TranslationTable(
+					new Dictionary<string, object>(),
+					$"locales/{locale}/translations.json");
 			}
 
 			// Update state with lock (protects mState writes, short critical section)
 			lock (mLock)
 			{
 				// Read current state
-				RepositoryState? current = Volatile.Read(ref mState);
+				RepositoryState current = Volatile.Read(ref mState);
 
-				// Create new immutable state with added translation
-				var allTranslations = new Dictionary<string, IReadOnlyDictionary<string, object>>(
-					current?.AllTranslations ?? new Dictionary<string, IReadOnlyDictionary<string, object>>())
+				// Create new immutable state with added translation table
+				var allTranslations = new Dictionary<string, TranslationTable>(current.AllTranslations)
 				{
-					[locale] = translations
+					[locale] = translationTable
 				};
 
-				var updated = new RepositoryState(
-					allTranslations,
-					current?.AvailableLocales ?? new List<LocaleInfo>().AsReadOnly());
+				RepositoryState updated = current with { AllTranslations = allTranslations };
 
 				// Atomic publish - ensures cache coherency across CPU cores
 				Volatile.Write(ref mState, updated);

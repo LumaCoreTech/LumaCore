@@ -11,9 +11,9 @@ partial class TranslationRepository
 	/// <summary>
 	/// Immutable snapshot of repository state.
 	/// </summary>
-	/// <param name="AllTranslations">Dictionary mapping locale codes to translation dictionaries.</param>
+	/// <param name="AllTranslations">Dictionary mapping locale codes to translation tables.</param>
 	/// <param name="AvailableLocales">The list of available locales from the manifest.</param>
 	private sealed record RepositoryState(
-		IReadOnlyDictionary<string, IReadOnlyDictionary<string, object>> AllTranslations,
-		IReadOnlyList<LocaleInfo>                                        AvailableLocales);
+		IReadOnlyDictionary<string, TranslationTable> AllTranslations,
+		IReadOnlyList<LocaleInfo>                     AvailableLocales);
 }

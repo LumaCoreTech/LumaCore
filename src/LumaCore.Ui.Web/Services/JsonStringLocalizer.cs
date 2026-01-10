@@ -58,8 +58,12 @@ public sealed class JsonStringLocalizer : IStringLocalizer
 			if (!mIsInitialized)
 				return new LocalizedString(name, $"?? {name} ??", resourceNotFound: true);
 
-			string? value = mRepository.GetTranslation(CurrentLocale, name);
-			return new LocalizedString(name, value ?? $"?? {name} ??", resourceNotFound: value == null);
+			Translation translation = mRepository.GetTranslation(CurrentLocale, name);
+			return new LocalizedString(
+				name,
+				translation.Value ?? $"?? {name} ??",
+				resourceNotFound: translation.Value == null,
+				searchedLocation: translation.SearchedLocation);
 		}
 	}
 
