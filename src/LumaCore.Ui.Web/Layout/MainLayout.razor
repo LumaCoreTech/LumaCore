@@ -61,8 +61,12 @@ else
 					</NotAuthorized>
 				</AuthorizeView>
 
-				@* Language Switcher - Always visible, even without login *@
-				<LanguageSwitcher/>
+				@* Language Switcher - Only visible when not authenticated (logged-in users use Settings panel) *@
+				<AuthorizeView>
+					<NotAuthorized>
+						<LanguageSwitcher/>
+					</NotAuthorized>
+				</AuthorizeView>
 
 				@* Settings Panel Toggle - Visible for all authenticated users *@
 				<AuthorizeView>
