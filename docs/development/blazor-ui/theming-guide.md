@@ -191,7 +191,8 @@ Each theme folder contains a `theme.json` with metadata. The `name` and `descrip
 
 Themes define their appearance by setting CSS Custom Properties in `:root`. The base theme uses these variables throughout all component styles.
 
-> **Tip:** To see which variables affect a specific element, open your browser's DevTools (F12), inspect the element, and check the Computed styles—all theme variables are defined on `:root` and inherited throughout.
+> [!TIP]
+> To see which variables affect a specific element, open your browser's DevTools (F12), inspect the element, and check the Computed styles—all theme variables are defined on `:root` and inherited throughout.
 
 ### Variable Categories
 
@@ -421,7 +422,6 @@ Focus indicators are essential for keyboard navigation and accessibility. When a
 ```
 
 The `--border-focus` variable typically matches the accent color, and `--accent-focus-ring` provides a semi-transparent glow around the element. This combination creates a clear, visually appealing focus indicator that works across all themes.
-```
 
 ### Complete Component Example
 
