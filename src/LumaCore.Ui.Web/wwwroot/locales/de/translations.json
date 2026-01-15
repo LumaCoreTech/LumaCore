@@ -43,10 +43,11 @@
         "title": "Wähle dein Design - hovern für Vorschau!",
         "hint": "💡 Fahre mit der Maus über ein Design für eine sofortige Vorschau!",
         "authorPrefix": "von",
-        "categories": {
+        "tags": {
           "official": "Offiziell",
           "community": "Community",
-          "default": "Standard"
+          "dark": "Dunkel",
+          "light": "Hell"
         },
         "toasts": {
           "saved": "Design gespeichert!",

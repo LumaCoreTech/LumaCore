@@ -8,15 +8,10 @@
     "en": "Deep blue accent for calm and focused work",
     "de": "Tiefer blauer Akzent für ruhiges und fokussiertes Arbeiten"
   },
-  "category": "community",
-  "categoryLabel": {
-    "en": "Community",
-    "de": "Community"
-  },
+  "tags": ["official", "dark"],
   "icon": "icon.svg",
-  "author": "Community",
+  "author": "LumaCore Team",
   "version": "1.0.0",
-  "order": 4,
   "colors": {
     "preview": {
       "background": "#0a0f1a",

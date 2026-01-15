@@ -3,7 +3,7 @@
 
 <div class="lc-language-selector">
 
-    <p class="lc-language-description">@Localizer["components.settings.language.title"]</p>
+	<p class="lc-language-description">@Localizer["components.settings.language.title"]</p>
 
 	<div class="lc-language-grid">
 		@if (mAvailableLocales != null)
@@ -27,7 +27,7 @@
 		}
 	</div>
 
-    <p class="lc-language-hint">@Localizer["components.settings.language.hint"]</p>
+	<p class="lc-language-hint">@Localizer["components.settings.language.hint"]</p>
 </div>
 
 @code {
@@ -56,7 +56,7 @@
 		try
 		{
 			mCurrentLocale = Localizer.CurrentLocale;
-            mAvailableLocales = await Localizer.GetAvailableLocalesAsync().ConfigureAwait(true);
+			mAvailableLocales = await Localizer.GetAvailableLocalesAsync().ConfigureAwait(true);
 		}
 		catch
 		{

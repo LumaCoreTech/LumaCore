@@ -43,9 +43,7 @@ button, input, textarea, select,
 .lc-root, .lc-header, .lc-main, .lc-footer,
 .lc-card, .lc-section, .lc-note,
 .lc-theme-card, .lc-settings-panel, .lc-admin-panel {
-    transition: background-color 0.4s ease,
-                color 0.4s ease,
-                border-color 0.4s ease;
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
 }
 
 /* Keep hover/focus interactions snappy */
@@ -55,11 +53,7 @@ button:hover, a:hover,
 .lc-nav-button:hover,
 .lc-admin-toggle:hover,
 .lc-settings-toggle:hover {
-    transition: background-color 0.2s ease,
-                color 0.2s ease,
-                border-color 0.2s ease,
-                transform 0.2s ease,
-                box-shadow 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* ========================================
@@ -73,11 +67,17 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0;
 }
 
-h1 { font-size: 2rem; }
+h1 {
+    font-size: 2rem;
+}
 
-h2 { font-size: 1.5rem; }
+h2 {
+    font-size: 1.5rem;
+}
 
-h3 { font-size: 1.25rem; }
+h3 {
+    font-size: 1.25rem;
+}
 
 p {
     color: var(--text-secondary);
@@ -89,7 +89,9 @@ a {
     text-decoration: none;
 }
 
-a:hover { text-decoration: underline; }
+a:hover {
+    text-decoration: underline;
+}
 
 /* ========================================
    ICONS (LcIcon Component)
@@ -168,7 +170,9 @@ a:hover { text-decoration: underline; }
     padding: 0.6rem 1.25rem;
 }
 
-.lc-section { margin-top: 1.75rem; }
+.lc-section {
+    margin-top: 1.75rem;
+}
 
 .lc-section h2 {
     font-size: 1.15rem;
@@ -191,7 +195,7 @@ a:hover { text-decoration: underline; }
     gap: 1rem;
 }
 
-.lc-nav a {
+.lc-nav a:not(.lc-nav-button) {
     color: var(--text-primary);
     padding: 0.25rem 0.4rem;
     position: relative;
@@ -199,9 +203,9 @@ a:hover { text-decoration: underline; }
     transition: var(--transition-normal);
 }
 
-/* Subtle underline on hover */
+/* Subtle underline on hover (text links only, not buttons) */
 
-.lc-nav a::after {
+.lc-nav a:not(.lc-nav-button)::after {
     background: var(--accent-primary);
     bottom: 0;
     content: '';
@@ -212,9 +216,13 @@ a:hover { text-decoration: underline; }
     width: 0;
 }
 
-.lc-nav a:hover { text-decoration: none; }
+.lc-nav a:not(.lc-nav-button):hover {
+    text-decoration: none;
+}
 
-.lc-nav a:hover::after { width: 100%; }
+.lc-nav a:not(.lc-nav-button):hover::after {
+    width: 100%;
+}
 
 .lc-nav-button {
     align-items: center;
@@ -237,9 +245,12 @@ a:hover { text-decoration: underline; }
 .lc-nav-button:hover {
     background: var(--bg-tertiary);
     border-color: var(--accent-primary);
+    text-decoration: none;
 }
 
-.lc-nav-button:active { transform: translateY(0); }
+.lc-nav-button:active {
+    transform: translateY(0);
+}
 
 .lc-nav-button:focus-visible {
     outline: 2px solid var(--accent-primary);
@@ -258,7 +269,9 @@ a:hover { text-decoration: underline; }
 
 /* Login button - prominent with background */
 
-.lc-nav-button-login { background: var(--bg-tertiary); }
+.lc-nav-button-login {
+    background: var(--bg-tertiary);
+}
 
 .lc-nav-button-login:hover {
     background: var(--accent-primary);
@@ -339,7 +352,9 @@ a:hover { text-decoration: underline; }
     width: 100% !important;
 }
 
-.lc-input::placeholder { color: var(--text-placeholder); }
+.lc-input::placeholder {
+    color: var(--text-placeholder);
+}
 
 .lc-input:focus {
     background-color: var(--bg-input-focus);
@@ -377,7 +392,9 @@ a:hover { text-decoration: underline; }
     width: 100%;
 }
 
-.lc-checkbox-group { margin-top: 0.25rem; }
+.lc-checkbox-group {
+    margin-top: 0.25rem;
+}
 
 .lc-checkbox-label {
     align-items: center;
@@ -433,7 +450,9 @@ a:hover { text-decoration: underline; }
     transform: translateY(-2px);
 }
 
-.lc-button-primary:active:not(:disabled) { transform: translateY(0); }
+.lc-button-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
 
 .lc-button-primary:disabled {
     background: var(--btn-disabled-bg);
@@ -458,7 +477,9 @@ a:hover { text-decoration: underline; }
     transform: translateY(-1px);
 }
 
-.lc-button-secondary:active:not(:disabled) { transform: translateY(0); }
+.lc-button-secondary:active:not(:disabled) {
+    transform: translateY(0);
+}
 
 /* ========================================
    CARDS
@@ -530,11 +551,17 @@ a:hover { text-decoration: underline; }
    UTILITY CLASSES
    ======================================== */
 
-.lc-text-muted { color: var(--text-muted); }
+.lc-text-muted {
+    color: var(--text-muted);
+}
 
-.lc-text-disabled { color: var(--text-disabled); }
+.lc-text-disabled {
+    color: var(--text-disabled);
+}
 
-.lc-text-center { text-align: center; }
+.lc-text-center {
+    text-align: center;
+}
 
 /* ========================================
    THEME SELECTOR
@@ -655,7 +682,9 @@ a:hover { text-decoration: underline; }
 }
 
 .lc-settings-toggle:hover .lc-nav-icon,
-.lc-admin-toggle:hover .lc-nav-icon { filter: invert(0); }
+.lc-admin-toggle:hover .lc-nav-icon {
+    filter: invert(0);
+}
 
 /* Language Switcher in navigation */
 
@@ -696,7 +725,9 @@ a:hover { text-decoration: underline; }
     width: 24px;
 }
 
-.lc-language-switcher-code { font-weight: 500; }
+.lc-language-switcher-code {
+    font-weight: 500;
+}
 
 .lc-language-switcher-arrow {
     font-size: 0.65rem;
@@ -732,7 +763,9 @@ a:hover { text-decoration: underline; }
     transition: var(--transition-normal);
 }
 
-.lc-language-switcher-option:hover { background: var(--bg-tertiary); }
+.lc-language-switcher-option:hover {
+    background: var(--bg-tertiary);
+}
 
 .lc-language-switcher-option-active {
     background: var(--bg-tertiary);
@@ -869,7 +902,9 @@ a:hover { text-decoration: underline; }
 /* Mobile responsive */
 
 @media (max-width: 768px) {
-    .lc-theme-grid { grid-template-columns: 1fr; }
+    .lc-theme-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ========================================

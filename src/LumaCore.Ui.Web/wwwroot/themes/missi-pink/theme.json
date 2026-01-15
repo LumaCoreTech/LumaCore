@@ -8,15 +8,10 @@
     "en": "Warm pink gradient - Perfect for Missi! 💜",
     "de": "Warmes Rosa-Gradient - Perfekt für Missi! 💜"
   },
-  "category": "community",
-  "categoryLabel": {
-    "en": "Community",
-    "de": "Community"
-  },
+  "tags": ["community", "dark"],
   "icon": "icon.svg",
   "author": "Missi",
   "version": "1.0.0",
-  "order": 3,
   "colors": {
     "preview": {
       "background": "#1a0a1f",

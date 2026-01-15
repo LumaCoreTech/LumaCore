@@ -8,15 +8,10 @@
     "en": "Nature-inspired green theme, easy on the eyes",
     "de": "Von der Natur inspiriertes grünes Design, angenehm für die Augen"
   },
-  "category": "community",
-  "categoryLabel": {
-    "en": "Community",
-    "de": "Community"
-  },
+  "tags": ["official", "dark"],
   "icon": "icon.svg",
-  "author": "Community",
+  "author": "LumaCore Team",
   "version": "1.0.0",
-  "order": 5,
   "colors": {
     "preview": {
       "background": "#0a1a0f",

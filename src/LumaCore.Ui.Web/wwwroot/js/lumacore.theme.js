@@ -18,12 +18,10 @@
  * @property {string} id - Unique theme identifier (e.g., "lumacore-dark").
  * @property {Object<string, string>} name - Localized theme names keyed by locale code.
  * @property {Object<string, string>} [description] - Localized theme descriptions.
- * @property {string} category - Theme category (e.g., "official", "community").
- * @property {Object<string, string>} [categoryLabel] - Localized category labels.
+ * @property {string[]} tags - Theme tags for filtering/grouping (e.g., ["official", "dark"]). Labels are in translations.json.
  * @property {string} icon - Icon filename (e.g., "icon.svg").
  * @property {string} author - Theme author name.
  * @property {string} version - Theme version string.
- * @property {number} order - Display order for sorting.
  * @property {ThemeColors} colors - Theme color definitions.
  */
 
@@ -43,14 +41,7 @@
 /**
  * Theme manifest structure as defined in themes/manifest.json.
  * @typedef {Object} ThemeManifest
- * @property {ThemeManifestEntry[]} themes - Array of theme entries.
- */
-
-/**
- * Single entry in the theme manifest.
- * @typedef {Object} ThemeManifestEntry
- * @property {string} id - Unique theme identifier matching the folder name.
- * @property {number} order - Display order for sorting in the theme selector.
+ * @property {string[]} themes - Array of theme IDs. Order determines display order.
  */
 
 // ============================================
@@ -110,10 +101,10 @@ async function discoverThemes() {
 
         const manifest = await manifestResponse.json();
 
-        // Load metadata for each theme in manifest
-        for (const entry of manifest.themes) {
+        // Load metadata for each theme in manifest (array order determines display order)
+        for (const themeId of manifest.themes) {
             try {
-                const response = await fetch(resolveUrl(`themes/${entry.id}/theme.json`));
+                const response = await fetch(resolveUrl(`themes/${themeId}/theme.json`));
                 if (response.ok) {
                     const themeMetadata = await response.json();
                     themes.push(themeMetadata);
@@ -126,8 +117,6 @@ async function discoverThemes() {
         console.error('[Theme] Error discovering themes:', error);
     }
 
-    // Sort by order property for consistent display
-    themes.sort((a, b) => a.order - b.order);
     availableThemes = themes;
 
     return themes;

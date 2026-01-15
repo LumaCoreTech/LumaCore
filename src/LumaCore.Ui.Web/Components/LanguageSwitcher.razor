@@ -12,7 +12,7 @@
 	@* Current language button *@
 	<button class="lc-language-switcher-btn"
 	        type="button"
-            title="@Localizer["components.languageSwitcher.tooltip"]">
+	        title="@Localizer["components.languageSwitcher.tooltip"]">
 		<img src="locales/@mCurrentLocale/flag.svg" alt="@mCurrentLocale.ToUpperInvariant()" class="lc-language-switcher-flag"/>
 		<span class="lc-language-switcher-code">@mCurrentLocale.ToUpperInvariant()</span>
 		<span class="lc-language-switcher-arrow">▼</span>
@@ -180,7 +180,7 @@
 		}
 
 		mIsOpen = false;
-        await Localizer.SetLocaleAsync(locale).ConfigureAwait(true);
+		await Localizer.SetLocaleAsync(locale).ConfigureAwait(true);
 	}
 
 	/// <summary>

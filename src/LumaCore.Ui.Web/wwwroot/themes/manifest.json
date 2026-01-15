@@ -1,25 +1,9 @@
 {
-  "_comment": "List of available themes - add new themes here",
   "themes": [
-    {
-      "id": "lumacore-dark",
-      "order": 1
-    },
-    {
-      "id": "lumacore-light",
-      "order": 2
-    },
-    {
-      "id": "missi-pink",
-      "order": 3
-    },
-    {
-      "id": "ocean-blue",
-      "order": 4
-    },
-    {
-      "id": "forest-green",
-      "order": 5
-    }
+    "lumacore-dark",
+    "lumacore-light",
+    "missi-pink",
+    "ocean-blue",
+    "forest-green"
   ]
 }

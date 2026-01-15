@@ -131,19 +131,29 @@
 }
 
 @keyframes sparkle-sweep {
-    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
 
-    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
 }
 
 /* Hover pulse - provides feedback, then stops */
 
-.lc-button:hover:not(:disabled) { animation: button-sparkle-pulse 1.5s ease-in-out 3; }
+.lc-button:hover:not(:disabled) {
+    animation: button-sparkle-pulse 1.5s ease-in-out 3;
+}
 
 @keyframes button-sparkle-pulse {
-    0%, 100% { box-shadow: 0 2px 8px var(--accent-glow); }
+    0%, 100% {
+        box-shadow: 0 2px 8px var(--accent-glow);
+    }
 
-    50% { box-shadow: 0 4px 16px var(--accent-glow), var(--glitter-shadow-md); }
+    50% {
+        box-shadow: 0 4px 16px var(--accent-glow), var(--glitter-shadow-md);
+    }
 }
 
 /* ============================================
@@ -151,12 +161,18 @@
    Subtle feedback when focusing inputs
    ============================================ */
 
-.lc-input:focus { animation: glitter-pulse 2s ease-in-out 2; }
+.lc-input:focus {
+    animation: glitter-pulse 2s ease-in-out 2;
+}
 
 @keyframes glitter-pulse {
-    0%, 100% { box-shadow: 0 0 0 3px var(--accent-focus-ring), var(--glitter-shadow-sm); }
+    0%, 100% {
+        box-shadow: 0 0 0 3px var(--accent-focus-ring), var(--glitter-shadow-sm);
+    }
 
-    50% { box-shadow: 0 0 0 3px var(--accent-focus-ring), var(--glitter-shadow-md); }
+    50% {
+        box-shadow: 0 0 0 3px var(--accent-focus-ring), var(--glitter-shadow-md);
+    }
 }
 
 /* ============================================
@@ -170,9 +186,13 @@
 }
 
 @keyframes logo-sparkle {
-    0%, 100% { filter: drop-shadow(var(--glitter-shadow-sm)); }
+    0%, 100% {
+        filter: drop-shadow(var(--glitter-shadow-sm));
+    }
 
-    50% { filter: drop-shadow(var(--glitter-shadow-md)); }
+    50% {
+        filter: drop-shadow(var(--glitter-shadow-md));
+    }
 }
 
 /* ============================================
@@ -186,11 +206,17 @@
 }
 
 @keyframes checkbox-sparkle {
-    0% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
 
-    50% { transform: scale(1.1); }
+    50% {
+        transform: scale(1.1);
+    }
 
-    100% { transform: scale(1); }
+    100% {
+        transform: scale(1);
+    }
 }
 
 /* ============================================
@@ -212,7 +238,9 @@
     }
 }
 
-.lc-main { animation: page-sparkle-transition 0.3s ease-out; }
+.lc-main {
+    animation: page-sparkle-transition 0.3s ease-out;
+}
 
 /* ============================================
    GLITTER BORDER (Opt-in)
@@ -253,25 +281,35 @@
 
 /* Disable all animations in admin mode */
 
-.lc-admin-mode .lc-button::before { display: none; }
+.lc-admin-mode .lc-button::before {
+    display: none;
+}
 
 .lc-admin-mode .lc-button:hover:not(:disabled) {
     animation: none;
     /* Still changes color on hover, just no pulse animation */
 }
 
-.lc-admin-mode .lc-input:focus { animation: none; }
+.lc-admin-mode .lc-input:focus {
+    animation: none;
+}
 
-.lc-admin-mode .lc-main { animation: none; }
+.lc-admin-mode .lc-main {
+    animation: none;
+}
 
 .lc-admin-mode .lc-login-logo {
     animation: none;
     filter: drop-shadow(var(--glitter-shadow-sm));
 }
 
-.lc-admin-mode .lc-checkbox:checked { animation: none; }
+.lc-admin-mode .lc-checkbox:checked {
+    animation: none;
+}
 
-.lc-admin-mode .lc-card-glitter { animation: none; }
+.lc-admin-mode .lc-card-glitter {
+    animation: none;
+}
 
 /* Admin mode keeps: Colors, Hover color changes, Focus rings */
 /* Admin mode removes: All animations, pulses, sweeps */

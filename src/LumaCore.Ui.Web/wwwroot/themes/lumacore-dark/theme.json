@@ -8,15 +8,10 @@
     "en": "Professional dark theme with orange accent",
     "de": "Professionelles dunkles Design mit orangem Akzent"
   },
-  "category": "official",
-  "categoryLabel": {
-    "en": "Default",
-    "de": "Standard"
-  },
+  "tags": ["official", "dark"],
   "icon": "icon.svg",
   "author": "LumaCore Team",
   "version": "1.0.0",
-  "order": 1,
   "colors": {
     "preview": {
       "background": "#0a0a0a",

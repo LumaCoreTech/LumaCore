@@ -75,28 +75,36 @@
 
 /* Toast types */
 
-.lc-toast-success { border-left: 4px solid #22c55e; }
+.lc-toast-success {
+    border-left: 4px solid #22c55e;
+}
 
 .lc-toast-success .lc-toast-icon {
     background: rgba(34, 197, 94, 0.2);
     color: #22c55e;
 }
 
-.lc-toast-error { border-left: 4px solid #ef4444; }
+.lc-toast-error {
+    border-left: 4px solid #ef4444;
+}
 
 .lc-toast-error .lc-toast-icon {
     background: rgba(239, 68, 68, 0.2);
     color: #ef4444;
 }
 
-.lc-toast-info { border-left: 4px solid var(--accent-color); }
+.lc-toast-info {
+    border-left: 4px solid var(--accent-color);
+}
 
 .lc-toast-info .lc-toast-icon {
     background: var(--accent-transparent);
     color: var(--accent-color);
 }
 
-.lc-toast-warning { border-left: 4px solid #f59e0b; }
+.lc-toast-warning {
+    border-left: 4px solid #f59e0b;
+}
 
 .lc-toast-warning .lc-toast-icon {
     background: rgba(245, 158, 11, 0.2);

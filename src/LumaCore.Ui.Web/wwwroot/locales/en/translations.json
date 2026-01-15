@@ -43,10 +43,11 @@
         "title": "Choose your theme - hover to preview!",
         "hint": "💡 Hover over a theme to preview it instantly!",
         "authorPrefix": "by",
-        "categories": {
+        "tags": {
           "official": "Official",
           "community": "Community",
-          "default": "Default"
+          "dark": "Dark",
+          "light": "Light"
         },
         "toasts": {
           "saved": "Theme saved!",
