@@ -47,7 +47,8 @@
           "official": "Offiziell",
           "community": "Community",
           "dark": "Dunkel",
-          "light": "Hell"
+          "light": "Hell",
+          "high-contrast": "Hoher Kontrast"
         },
         "toasts": {
           "saved": "Design gespeichert!",

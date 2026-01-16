@@ -47,7 +47,8 @@
           "official": "Official",
           "community": "Community",
           "dark": "Dark",
-          "light": "Light"
+          "light": "Light",
+          "high-contrast": "High Contrast"
         },
         "toasts": {
           "saved": "Theme saved!",
