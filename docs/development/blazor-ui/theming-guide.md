@@ -319,7 +319,7 @@ That's it—a complete theme-aware card in just a few lines. In the dark theme, 
 
 ### Working with Transitions and Shadows
 
-For consistent animation timing across the UI, use the transition variables:
+For consistent animation timing in your custom components, use the transition variables:
 
 ```css
 .button {
@@ -329,6 +329,9 @@ For consistent animation timing across the UI, use the transition variables:
 ```
 
 The three levels (`--transition-fast`, `--transition-normal`, `--transition-slow`) give you enough flexibility for most animations. Fast works well for hover feedback, normal for most UI changes, and slow for larger transitions like modals appearing.
+
+> [!NOTE]
+> The base theme's built-in components use a mix of these variables and hardcoded values (e.g., `0.4s` for theme-switch transitions). For your own components, using the variables ensures consistency with whichever theme is active.
 
 Similarly, shadows follow a size hierarchy:
 
@@ -540,6 +543,9 @@ The `theme.json` file contains your theme's metadata—everything the UI needs t
 | `version` | No | Semantic version for tracking changes. |
 | `colors.preview` | Yes | The `background` and `accent` colors shown in the theme selector card. Pick colors that represent your theme at a glance. |
 
+> [!WARNING]
+> The system does **not** validate that `theme.json.id` matches the folder name. If they differ, the `theme.json` will load but icons and CSS paths will break because the UI uses `theme.Id` for path construction. Always double-check this match manually.
+
 **Available tags:**
 
 Tags are defined centrally in `translations.json` under `components.settings.theme.tags`. The built-in tags are:
@@ -635,14 +641,18 @@ This approach is simpler and ensures your theme inherits all UI component styles
 }
 ```
 
-**Must-have variables:** If you forget to define any of these, the base theme's defaults will be used, which might clash with your color scheme:
+**Must-have variables:** The base theme does **not** define fallback values for these variables. If you forget to define them, your UI will appear broken (transparent backgrounds, invisible text, missing borders):
 
 - All `--accent-*` variables (especially `--accent-rgb` for transparency effects)
 - All `--bg-*` variables
 - All `--text-*` variables
+- All `--border-*` variables
 - `--theme-icon-filter` (otherwise icons will be invisible or wrong color)
 
-**Nice-to-have variables:** These have sensible defaults but you may want to customize them:
+> [!TIP]
+> For new themes, copy `lumacore-dark/theme.css` or `lumacore-light/theme.css` as a starting point and modify the values. This ensures you have all required variables defined.
+
+**Nice-to-have variables:** These have sensible defaults or are only used in specific contexts:
 
 - `--shadow-*` (adjust opacity for your background colors)
 - `--glitter-*` (if you want glow effects to match your accent)
@@ -949,19 +959,19 @@ LumaCore uses a theme-aware icon system with automatic fallback. When a componen
 3. Results are cached to avoid repeated network requests
 
 ```javascript
-// Simplified flow
+// Simplified pseudo-code (see lumacore.icons.js for actual implementation)
 window.getIcon = async function(iconName) {
     const theme = getCurrentTheme();
     
     // Try current theme first
-    let svg = await fetch(`themes/${theme}/icons/${iconName}.svg`);
+    let response = await fetch(`themes/${theme}/icons/${iconName}.svg`);
     
     // Fallback to base theme
-    if (!svg) {
-        svg = await fetch(`themes/lumacore-base/icons/${iconName}.svg`);
+    if (!response.ok) {
+        response = await fetch(`themes/lumacore-base/icons/${iconName}.svg`);
     }
     
-    return svg;
+    return response.ok ? await response.text() : null;
 };
 ```
 
@@ -1005,11 +1015,19 @@ Themes can define an "admin mode" that disables decorative animations while keep
 }
 ```
 
-To enable admin mode, add the class to the body:
+To enable admin mode, add the class to a container that wraps the admin UI:
 
 ```html
+<!-- Option 1: On body for entire page -->
 <body class="lc-admin-mode">
+
+<!-- Option 2: On a container for partial admin sections -->
+<div class="lc-admin-mode">
+    <!-- Admin content here - animations disabled -->
+</div>
 ```
+
+The CSS selectors use descendant matching (`.lc-admin-mode .lc-button`), so any ancestor element works.
 
 ### Theme Reset on Logout
 
