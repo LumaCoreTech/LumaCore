@@ -40,19 +40,16 @@
 		<MinVerDefaultPreReleaseIdentifiers>ci</MinVerDefaultPreReleaseIdentifiers>
 	</PropertyGroup>
 
-	<!-- Central package management -->
+	<!-- Tooling packages (kept private; versions are centralized via Directory.Packages.props) -->
 	<ItemGroup>
-		<!-- Automatic semantic versioning -->
-		<PackageReference Include="MinVer" Version="6.1.0">
+		<PackageReference Include="Microsoft.SourceLink.GitHub">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-
-		<!-- SourceLink for GitHub -->
-		<PackageReference
-			Include="Microsoft.SourceLink.GitHub"
-			Version="8.0.0"
-			PrivateAssets="all" />
+		<PackageReference Include="MinVer">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 </Project>
