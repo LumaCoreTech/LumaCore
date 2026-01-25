@@ -20,12 +20,29 @@ namespace LumaCore.Ui.Web.Services;
 ///     that are actually used are loaded and cached.
 ///     </para>
 ///     <para>
-///     <b>Thread-Safety:</b> Each locale has its own <see cref="SemaphoreSlim"/> to allow parallel loading
-///     of different locales while preventing duplicate loads of the same locale. Reads use
-///     <see cref="Volatile.Read{T}(ref readonly T)"/> for lock-free access. State updates are protected by a lock
-///     and use <see cref="Volatile.Write{T}(ref T, T)"/> to atomically publish new immutable state snapshots.
-///     This ensures cache coherency across CPU cores while maintaining high read performance and parallel loading
-///     capability.
+///         <b>Thread-Safety:</b>
+///     </para>
+///     <list type="bullet">
+///         <item>
+///             <description>
+///             Each locale has its own <see cref="SemaphoreSlim"/> to allow parallel loading of different locales while
+///             preventing duplicate loads of the same locale.
+///             </description>
+///         </item>
+///         <item>
+///             <description>
+///             Reads use <see cref="Volatile.Read{T}(ref readonly T)"/> for lock-free access.
+///             </description>
+///         </item>
+///         <item>
+///             <description>
+///             State updates are protected by a lock and use <see cref="Volatile.Write{T}(ref T, T)"/> to atomically
+///             publish new immutable state snapshots.
+///             </description>
+///         </item>
+///     </list>
+///     <para>
+///     This ensures cache coherency across CPU cores while maintaining high read performance.
 ///     </para>
 /// </remarks>
 public sealed partial class TranslationRepository
@@ -56,9 +73,18 @@ public sealed partial class TranslationRepository
 	/// </summary>
 	/// <returns>A read-only list of available locales in manifest order.</returns>
 	/// <remarks>
-	/// Results are cached after the first call. Returns English-only fallback if manifest cannot be loaded.
-	/// Locales appear in the order they are listed in the manifest.json file.
-	/// Thread-safe - uses lock-free reads with locked writes.
+	///     <para>
+	///     Results are cached after the first call.
+	///     </para>
+	///     <para>
+	///     Returns an English-only fallback if <c>locales/manifest.json</c> cannot be loaded.
+	///     </para>
+	///     <para>
+	///     Locales appear in the order they are listed in <c>locales/manifest.json</c>.
+	///     </para>
+	///     <para>
+	///     Thread-safe: uses lock-free reads with locked writes.
+	///     </para>
 	/// </remarks>
 	public async Task<IReadOnlyList<LocaleInfo>> GetAvailableLocalesAsync()
 	{
@@ -135,9 +161,15 @@ public sealed partial class TranslationRepository
 	/// <param name="key">The translation key (supports nested keys like <c>components.login.title</c>).</param>
 	/// <returns>A <see cref="Translation"/> containing the translated value and search location.</returns>
 	/// <remarks>
-	/// This method is synchronous and assumes translations for the locale are already loaded.
-	/// Translations must be loaded via <see cref="LoadTranslationsAsync"/> before calling this method.
-	/// Thread-safe - uses lock-free <see cref="Volatile.Read{T}(ref readonly T)"/> for high-performance concurrent access.
+	///     <para>
+	///     This method is synchronous and assumes translations for the locale are already loaded.
+	///     </para>
+	///     <para>
+	///     Call <see cref="LoadTranslationsAsync"/> before calling this method.
+	///     </para>
+	///     <para>
+	///     Thread-safe: uses lock-free <see cref="Volatile.Read{T}(ref readonly T)"/> for high-performance concurrent access.
+	///     </para>
 	/// </remarks>
 	public Translation GetTranslation(string locale, string key)
 	{
@@ -162,11 +194,28 @@ public sealed partial class TranslationRepository
 	/// </summary>
 	/// <param name="locale">The locale code (e.g., <c>en</c>, <c>de</c>).</param>
 	/// <remarks>
-	/// This method is async to avoid blocking in WASM. Translations are cached after loading.
-	/// Call this method during initialization before attempting to retrieve translations.
-	/// Thread-safe - uses per-locale semaphores to allow parallel loading of different locales while preventing
-	/// duplicate loads of the same locale. State updates use <see langword="lock"/> and volatile read/write
-	/// for atomic publication.
+	///     <para>
+	///     This method is async to avoid blocking in WASM. Translations are cached after loading.
+	///     </para>
+	///     <para>
+	///     Call this method during initialization before attempting to retrieve translations.
+	///     </para>
+	///     <para>
+	///     Thread-safety:
+	///     </para>
+	///     <list type="bullet">
+	///         <item>
+	///             <description>
+	///             Uses per-locale semaphores to allow parallel loading of different locales while preventing duplicate loads
+	///             of the same locale.
+	///             </description>
+	///         </item>
+	///         <item>
+	///             <description>
+	///             State updates use <see langword="lock"/> and volatile reads/writes for atomic publication.
+	///             </description>
+	///         </item>
+	///     </list>
 	/// </remarks>
 	public async Task LoadTranslationsAsync(string locale)
 	{

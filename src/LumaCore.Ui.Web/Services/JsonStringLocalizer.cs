@@ -167,7 +167,7 @@ public sealed class JsonStringLocalizer : IStringLocalizer
 	/// </summary>
 	/// <param name="locale">The locale code to set (e.g., <c>en</c>, <c>de</c>).</param>
 	/// <remarks>
-	/// This method persists the locale to localStorage and triggers a full page reload
+	/// This method persists the locale to <c>localStorage</c> and triggers a full page reload
 	/// to ensure all components re-render with the new locale.
 	/// </remarks>
 	public async Task SetLocaleAsync(string locale)
