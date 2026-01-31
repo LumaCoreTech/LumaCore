@@ -36,15 +36,42 @@ jobs:
         reporter: dotnet-trx
         fail-on-error: true
 
-    - name: Upload Coverage to Codecov
-      uses: codecov/codecov-action@v4
-      if: github.ref == 'refs/heads/main'
+    - name: Generate Test Badge
+      if: github.ref == 'refs/heads/main' && always()
+      run: |
+        # Parse test results from TRX file
+        $trxFile = Get-ChildItem -Path . -Filter "test-results.trx" -Recurse | Select-Object -First 1
+        if ($trxFile) {
+          [xml]$trx = Get-Content $trxFile.FullName
+          $total = [int]$trx.TestRun.ResultSummary.Counters.total
+          $passed = [int]$trx.TestRun.ResultSummary.Counters.passed
+          $failed = [int]$trx.TestRun.ResultSummary.Counters.failed
+          
+          $color = if ($failed -eq 0) { "brightgreen" } elseif ($failed -lt 3) { "yellow" } else { "red" }
+          $message = "$passed/$total passed"
+          
+          $badge = @{
+            schemaVersion = 1
+            label = "Tests"
+            message = $message
+            color = $color
+          } | ConvertTo-Json -Compress
+          
+          echo $badge > lumacore-ubuntu-test-badge.json
+          echo "TEST_BADGE=$badge" >> $env:GITHUB_ENV
+          echo "Test Badge: $message ($color)"
+        }
+      shell: pwsh
+
+    - name: Update Test Badge Gist
+      if: github.ref == 'refs/heads/main' && always() && env.TEST_BADGE != ''
+      uses: exuanbo/actions-deploy-gist@v1
       with:
-        files: '**/coverage.cobertura.xml'
-        flags: ubuntu
-        name: ubuntu-coverage
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        token: ${{ secrets.GIST_TOKEN }}
+        gist_id: d3957602a84fcab1aa66ebfef44da7eb
+        file_path: lumacore-ubuntu-test-badge.json
+        gist_file_name: lumacore-ubuntu-test-badge.json
+        file_type: text
 
     # ──────────────────────────────────────────────────────────────────────────
     # API Documentation Verification
