@@ -4,6 +4,18 @@
        width="340" />
 </p>
 
+<p align="center">
+  <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/windows-build.yml">
+    <img src="https://github.com/LumaCoreTech/LumaCore/actions/workflows/windows-build.yml/badge.svg" alt="Windows CI" />
+  </a>
+  <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml">
+    <img src="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml/badge.svg" alt="Ubuntu CI" />
+  </a>
+  <a href="https://codecov.io/gh/LumaCoreTech/LumaCore">
+    <img src="https://codecov.io/gh/LumaCoreTech/LumaCore/branch/main/graph/badge.svg" alt="Code Coverage" />
+  </a>
+</p>
+
 <h3 align="center">
   A home for AI personas — built with warmth, intention, and the freedom to grow.
 </h3>
