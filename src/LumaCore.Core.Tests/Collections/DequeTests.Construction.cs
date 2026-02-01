@@ -201,7 +201,9 @@ public partial class DequeTests
 	public void Constructor_WithStackAllocatedSpan_CreatesDequeWithAllElements()
 	{
 		// Arrange
+#pragma warning disable IDE0302
 		Span<int> stackItems = stackalloc int[] { 10, 20, 30 };
+#pragma warning restore IDE0302
 
 		// Act
 		var deque = new Deque<int>(stackItems);

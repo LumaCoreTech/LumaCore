@@ -85,7 +85,6 @@ public class CollectionHelpersTests
 			yield return 3;
 		}
 
-		;
 		IEnumerable<int> enumerable = Generate();
 
 		// Act

@@ -163,7 +163,7 @@ public partial class DequeTests
 
 		// Assert
 		Assert.False(success);
-		Assert.Equal(default, result);
+		Assert.Equal(0, result);
 		AssertDequeState(
 			deque,
 			expectedCount: 0,

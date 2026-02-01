@@ -392,7 +392,9 @@ public partial class DequeTests
 	{
 		// Arrange
 		var deque = new Deque<int>([1, 5]);
+#pragma warning disable IDE0302 // Simplify collection initialization
 		Span<int> stackItems = stackalloc int[] { 2, 3, 4 };
+#pragma warning restore IDE0302 // Simplify collection initialization
 
 		// Act
 		deque.InsertRange(1, stackItems);

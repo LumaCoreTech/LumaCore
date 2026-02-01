@@ -6,6 +6,8 @@ using LumaCore.Core.Collections;
 
 using Xunit;
 
+#pragma warning disable IDE0017
+
 namespace LumaCore.Core.Tests.Collections;
 
 public partial class DequeTests

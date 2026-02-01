@@ -28,6 +28,7 @@ public partial class DequeTests
 	///     <item><see cref="Deque{T}.ToArray"/> returns <paramref name="expectedElements"/></item>
 	/// </list>
 	/// </remarks>
+	// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 	private static void AssertDequeState<T>(
 		Deque<T> deque,
 		int      expectedCount,
@@ -40,6 +41,7 @@ public partial class DequeTests
 		Assert.Equal(expectedCount == expectedCapacity, deque.IsFull);
 		Assert.Equal(expectedElements, deque.ToArray());
 	}
+	// ReSharper restore ParameterOnlyUsedForPreconditionCheck.Local
 
 	/// <summary>
 	/// Yields elements from the source array one by one, simulating a pure <see cref="IEnumerable{T}"/>

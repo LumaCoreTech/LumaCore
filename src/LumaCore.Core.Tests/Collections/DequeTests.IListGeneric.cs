@@ -6,6 +6,9 @@ using LumaCore.Core.Collections;
 
 using Xunit;
 
+// ReSharper disable CollectionNeverQueried.Local
+// ReSharper disable CollectionNeverUpdated.Local
+
 namespace LumaCore.Core.Tests.Collections;
 
 public partial class DequeTests

@@ -6,6 +6,8 @@ using LumaCore.Core.Collections;
 
 using Xunit;
 
+#pragma warning disable IDE0017
+
 // ReSharper disable CollectionNeverUpdated.Local
 
 namespace LumaCore.Core.Tests.Collections;
