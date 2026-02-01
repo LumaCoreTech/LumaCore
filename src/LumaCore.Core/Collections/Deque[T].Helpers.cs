@@ -72,7 +72,7 @@ public sealed partial class Deque<T>
 		{
 			// The existing buffer is split, so we have to copy it in parts
 			int length = Capacity - mOffset;
-		Array.Copy(mBuffer, mOffset, array, arrayIndex, length);
+			Array.Copy(mBuffer, mOffset, array, arrayIndex, length);
 			Array.Copy(mBuffer, 0, array, arrayIndex + length, Count - length);
 		}
 		else
@@ -204,7 +204,7 @@ public sealed partial class Deque<T>
 	///     </para>
 	///     <para>
 	///     Optimizes for front/back insertions by delegating to <see cref="DoAddToFront"/> or <see cref="DoAddToBack"/>.
-	///     Middle insertions use <see cref="DoInsertRange"/>.
+	///     Middle insertions use <see cref="DoInsertRange(int,IReadOnlyCollection{T})"/>.
 	///     </para>
 	/// </remarks>
 	private void DoInsert(int index, T item)
