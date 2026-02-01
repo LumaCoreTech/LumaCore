@@ -18,27 +18,6 @@ namespace LumaCore.Core.Tests.Collections;
 [Trait("Category", "Unit")]
 public class CollectionHelpersTests
 {
-	#region ReifyCollection - Error / Exception
-
-	/// <summary>
-	/// Verifies that <see cref="CollectionHelpers.ReifyCollection{T}"/> throws <see cref="ArgumentNullException"/> when source
-	/// is <see langword="null"/>.
-	/// </summary>
-	[Fact]
-	public void ReifyCollection_WhenSourceIsNull_ThrowsArgumentNullException()
-	{
-		// Arrange
-		IEnumerable<int> source = null!;
-
-		// Act + Assert
-		var ex = Assert.Throws<ArgumentNullException>(() => CollectionHelpers.ReifyCollection(source));
-		Assert.Equal("source", ex.ParamName);
-	}
-
-	#endregion
-
-	#region ReifyCollection - Happy Path
-
 	/// <summary>
 	/// Verifies that <see cref="CollectionHelpers.ReifyCollection{T}"/> returns the same instance when source is already
 	/// <see cref="IReadOnlyCollection{T}"/>.
@@ -206,7 +185,20 @@ public class CollectionHelpersTests
 		Assert.Equal(3, items.Count);
 	}
 
-	#endregion
+	/// <summary>
+	/// Verifies that <see cref="CollectionHelpers.ReifyCollection{T}"/> throws <see cref="ArgumentNullException"/> when source
+	/// is <see langword="null"/>.
+	/// </summary>
+	[Fact]
+	public void ReifyCollection_WhenSourceIsNull_ThrowsArgumentNullException()
+	{
+		// Arrange
+		IEnumerable<int> source = null!;
+
+		// Act + Assert
+		var ex = Assert.Throws<ArgumentNullException>(() => CollectionHelpers.ReifyCollection(source));
+		Assert.Equal("source", ex.ParamName);
+	}
 
 	#region Helper Classes
 

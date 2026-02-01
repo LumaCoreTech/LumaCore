@@ -10,25 +10,7 @@ namespace LumaCore.Core.Tests.Collections;
 
 public partial class DequeTests
 {
-	#region PeekFront - Error / Exception
-
-	/// <summary>
-	/// Verifies that <see cref="Deque{T}.PeekFront"/> throws <see cref="InvalidOperationException"/> when the deque is empty.
-	/// </summary>
-	[Fact]
-	public void PeekFront_WhenEmpty_ThrowsInvalidOperationException()
-	{
-		// Arrange
-		var deque = new Deque<int>();
-
-		// Act + Assert
-		var ex = Assert.Throws<InvalidOperationException>(() => deque.PeekFront());
-		Assert.Equal("The deque is empty.", ex.Message);
-	}
-
-	#endregion
-
-	#region PeekFront - Happy Path
+	#region PeekFront()
 
 	/// <summary>
 	/// Verifies that <see cref="Deque{T}.PeekFront"/> returns the first element without removing it.
@@ -50,6 +32,24 @@ public partial class DequeTests
 			expectedCapacity: 3,
 			expectedElements: [10, 20, 30]);
 	}
+
+	/// <summary>
+	/// Verifies that <see cref="Deque{T}.PeekFront"/> throws <see cref="InvalidOperationException"/> when the deque is empty.
+	/// </summary>
+	[Fact]
+	public void PeekFront_WhenEmpty_ThrowsInvalidOperationException()
+	{
+		// Arrange
+		var deque = new Deque<int>();
+
+		// Act + Assert
+		var ex = Assert.Throws<InvalidOperationException>(() => deque.PeekFront());
+		Assert.Equal("The deque is empty.", ex.Message);
+	}
+
+	#endregion
+
+	#region TryPeekFront()
 
 	/// <summary>
 	/// Verifies that <see cref="Deque{T}.TryPeekFront"/> returns <see langword="true"/> and the element when successful.

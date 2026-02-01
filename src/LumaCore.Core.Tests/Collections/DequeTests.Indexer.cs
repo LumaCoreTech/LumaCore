@@ -6,11 +6,13 @@ using LumaCore.Core.Collections;
 
 using Xunit;
 
+// ReSharper disable CollectionNeverUpdated.Local
+
 namespace LumaCore.Core.Tests.Collections;
 
 public partial class DequeTests
 {
-	#region Indexer - Happy Path
+	#region this[int]
 
 	/// <summary>
 	/// Verifies that the <see cref="Deque{T}.this[int]"/> indexer returns the correct element at each position.
@@ -55,46 +57,6 @@ public partial class DequeTests
 	}
 
 	/// <summary>
-	/// Verifies that the <see cref="Deque{T}.this[Index]"/> indexer (^) works correctly for accessing elements from the end.
-	/// </summary>
-	[Fact]
-	public void IndexerWithIndex_FromEnd_ReturnsCorrectElement()
-	{
-		// Arrange
-		var deque = new Deque<int>([1, 2, 3, 4, 5]);
-
-		// Act + Assert
-		Assert.Equal(5, deque[^1]);
-		Assert.Equal(4, deque[^2]);
-		Assert.Equal(1, deque[^5]);
-		AssertDequeState(
-			deque,
-			expectedCount: 5,
-			expectedCapacity: 5,
-			expectedElements: [1, 2, 3, 4, 5]);
-	}
-
-	/// <summary>
-	/// Verifies that the <see cref="Deque{T}.this[Index]"/> indexer can set values using from-end syntax.
-	/// </summary>
-	[Fact]
-	public void IndexerWithIndex_SetFromEnd_UpdatesElement()
-	{
-		// Arrange
-		var deque = new Deque<int>([1, 2, 3]);
-
-		// Act
-		deque[^1] = 99;
-
-		// Assert
-		AssertDequeState(
-			deque,
-			expectedCount: 3,
-			expectedCapacity: 3,
-			expectedElements: [1, 2, 99]);
-	}
-
-	/// <summary>
 	/// Verifies that accessing elements via the indexer works correctly after the buffer wraps around.
 	/// </summary>
 	[Fact]
@@ -122,10 +84,6 @@ public partial class DequeTests
 			expectedCapacity: 4,
 			expectedElements: [3, 4, 5, 6]);
 	}
-
-	#endregion
-
-	#region Indexer - Error / Exception
 
 	/// <summary>
 	/// Verifies that the <see cref="Deque{T}.this[int]"/> indexer throws <see cref="ArgumentOutOfRangeException"/> when
@@ -171,6 +129,50 @@ public partial class DequeTests
 		// Act + Assert
 		var ex = Assert.Throws<ArgumentOutOfRangeException>(() => deque[5] = 99);
 		Assert.Equal("index", ex.ParamName);
+	}
+
+	#endregion
+
+	#region this[Index]
+
+	/// <summary>
+	/// Verifies that the <see cref="Deque{T}.this[Index]"/> indexer (^) works correctly for accessing elements from the end.
+	/// </summary>
+	[Fact]
+	public void IndexerWithIndex_FromEnd_ReturnsCorrectElement()
+	{
+		// Arrange
+		var deque = new Deque<int>([1, 2, 3, 4, 5]);
+
+		// Act + Assert
+		Assert.Equal(5, deque[^1]);
+		Assert.Equal(4, deque[^2]);
+		Assert.Equal(1, deque[^5]);
+		AssertDequeState(
+			deque,
+			expectedCount: 5,
+			expectedCapacity: 5,
+			expectedElements: [1, 2, 3, 4, 5]);
+	}
+
+	/// <summary>
+	/// Verifies that the <see cref="Deque{T}.this[Index]"/> indexer can set values using from-end syntax.
+	/// </summary>
+	[Fact]
+	public void IndexerWithIndex_SetFromEnd_UpdatesElement()
+	{
+		// Arrange
+		var deque = new Deque<int>([1, 2, 3]);
+
+		// Act
+		deque[^1] = 99;
+
+		// Assert
+		AssertDequeState(
+			deque,
+			expectedCount: 3,
+			expectedCapacity: 3,
+			expectedElements: [1, 2, 99]);
 	}
 
 	#endregion

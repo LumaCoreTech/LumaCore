@@ -12,57 +12,7 @@ namespace LumaCore.Core.Tests.Collections;
 
 public partial class DequeTests
 {
-	#region CopyTo (Span) - Error / Exception
-
-	/// <summary>
-	/// Verifies that <see cref="Deque{T}.CopyTo(Span{T})"/> throws <see cref="ArgumentException"/> when span is too small.
-	/// </summary>
-	[Fact]
-	public void CopyToSpan_WhenSpanTooSmall_ThrowsArgumentException()
-	{
-		// Arrange
-		var deque = new Deque<int>([1, 2, 3, 4, 5]);
-		int[] destinationArray = new int[3];
-
-		// Act + Assert
-		var ex = Assert.Throws<ArgumentException>(() => deque.CopyTo(destinationArray.AsSpan()));
-		Assert.Equal("destination", ex.ParamName);
-		AssertDequeState(
-			deque,
-			expectedCount: 5,
-			expectedCapacity: 5,
-			expectedElements: [1, 2, 3, 4, 5]);
-	}
-
-	#endregion
-
-	#region CopyTo (Array) - Happy Path
-
-	/// <summary>
-	/// Verifies that <see cref="Deque{T}.CopyTo(T[], int)"/> copies elements to an array starting at the specified index.
-	/// </summary>
-	[Fact]
-	public void CopyToArray_CopiesElementsAtIndex()
-	{
-		// Arrange
-		var deque = new Deque<int>([1, 2, 3]);
-		int[] array = new int[5];
-
-		// Act
-		deque.CopyTo(array, 1);
-
-		// Assert
-		Assert.Equal([0, 1, 2, 3, 0], array);
-		AssertDequeState(
-			deque,
-			expectedCount: 3,
-			expectedCapacity: 3,
-			expectedElements: [1, 2, 3]);
-	}
-
-	#endregion
-
-	#region CopyTo (Span) - Happy Path
+	#region CopyTo(Span<T>)
 
 	/// <summary>
 	/// Verifies that <see cref="Deque{T}.CopyTo(Span{T})"/> copies elements to a span.
@@ -144,9 +94,51 @@ public partial class DequeTests
 			expectedElements: [3, 4, 5, 6]);
 	}
 
+	/// <summary>
+	/// Verifies that <see cref="Deque{T}.CopyTo(Span{T})"/> throws <see cref="ArgumentException"/> when span is too small.
+	/// </summary>
+	[Fact]
+	public void CopyToSpan_WhenSpanTooSmall_ThrowsArgumentException()
+	{
+		// Arrange
+		var deque = new Deque<int>([1, 2, 3, 4, 5]);
+		int[] destinationArray = new int[3];
+
+		// Act + Assert
+		var ex = Assert.Throws<ArgumentException>(() => deque.CopyTo(destinationArray.AsSpan()));
+		Assert.Equal("destination", ex.ParamName);
+		AssertDequeState(
+			deque,
+			expectedCount: 5,
+			expectedCapacity: 5,
+			expectedElements: [1, 2, 3, 4, 5]);
+	}
+
 	#endregion
 
-	#region CopyTo (Array) - Error / Exception
+	#region CopyTo(T[], int)
+
+	/// <summary>
+	/// Verifies that <see cref="Deque{T}.CopyTo(T[], int)"/> copies elements to an array starting at the specified index.
+	/// </summary>
+	[Fact]
+	public void CopyToArray_CopiesElementsAtIndex()
+	{
+		// Arrange
+		var deque = new Deque<int>([1, 2, 3]);
+		int[] array = new int[5];
+
+		// Act
+		deque.CopyTo(array, 1);
+
+		// Assert
+		Assert.Equal([0, 1, 2, 3, 0], array);
+		AssertDequeState(
+			deque,
+			expectedCount: 3,
+			expectedCapacity: 3,
+			expectedElements: [1, 2, 3]);
+	}
 
 	/// <summary>
 	/// Verifies that <see cref="Deque{T}.CopyTo(T[], int)"/> throws <see cref="ArgumentNullException"/>
@@ -210,7 +202,7 @@ public partial class DequeTests
 
 	#endregion
 
-	#region TryCopyTo - Happy Path
+	#region TryCopyTo(Span<T>)
 
 	/// <summary>
 	/// Verifies that <see cref="Deque{T}.TryCopyTo"/> returns <see langword="true"/> and copies elements when destination is
@@ -336,10 +328,6 @@ public partial class DequeTests
 			expectedCapacity: 4,
 			expectedElements: [3, 4, 5, 6]);
 	}
-
-	#endregion
-
-	#region TryCopyTo - Failure Cases
 
 	/// <summary>
 	/// Verifies that <see cref="Deque{T}.TryCopyTo"/> returns <see langword="false"/> when destination is too small.

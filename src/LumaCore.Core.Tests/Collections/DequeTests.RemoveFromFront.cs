@@ -10,26 +10,7 @@ namespace LumaCore.Core.Tests.Collections;
 
 public partial class DequeTests
 {
-	#region RemoveFromFront - Error / Exception
-
-	/// <summary>
-	/// Verifies that <see cref="Deque{T}.RemoveFromFront"/> throws <see cref="InvalidOperationException"/> when the deque is
-	/// empty.
-	/// </summary>
-	[Fact]
-	public void RemoveFromFront_WhenEmpty_ThrowsInvalidOperationException()
-	{
-		// Arrange
-		var deque = new Deque<int>();
-
-		// Act + Assert
-		var ex = Assert.Throws<InvalidOperationException>(() => deque.RemoveFromFront());
-		Assert.Equal("The deque is empty.", ex.Message);
-	}
-
-	#endregion
-
-	#region RemoveFromFront - Happy Path
+	#region RemoveFromFront()
 
 	/// <summary>
 	/// Verifies that <see cref="Deque{T}.RemoveFromFront"/> removes and returns the first element.
@@ -99,6 +80,54 @@ public partial class DequeTests
 	}
 
 	/// <summary>
+	/// Verifies that <see cref="Deque{T}.RemoveFromFront"/> works correctly with wrap-around.
+	/// </summary>
+	[Fact]
+	public void RemoveFromFront_WithWrapAround_HandlesOffsetCorrectly()
+	{
+		// Arrange
+		var deque = new Deque<int>(4);
+		deque.AddToBack(1);
+		deque.AddToBack(2);
+		deque.AddToBack(3);
+		deque.AddToBack(4);
+		deque.RemoveFromFront();
+		deque.RemoveFromFront();
+		deque.AddToBack(5);
+		deque.AddToBack(6);
+
+		// Act
+		int result = deque.RemoveFromFront();
+
+		// Assert
+		Assert.Equal(3, result);
+		AssertDequeState(
+			deque,
+			expectedCount: 3,
+			expectedCapacity: 4,
+			expectedElements: [4, 5, 6]);
+	}
+
+	/// <summary>
+	/// Verifies that <see cref="Deque{T}.RemoveFromFront"/> throws <see cref="InvalidOperationException"/> when the deque is
+	/// empty.
+	/// </summary>
+	[Fact]
+	public void RemoveFromFront_WhenEmpty_ThrowsInvalidOperationException()
+	{
+		// Arrange
+		var deque = new Deque<int>();
+
+		// Act + Assert
+		var ex = Assert.Throws<InvalidOperationException>(() => deque.RemoveFromFront());
+		Assert.Equal("The deque is empty.", ex.Message);
+	}
+
+	#endregion
+
+	#region TryRemoveFromFront()
+
+	/// <summary>
 	/// Verifies that <see cref="Deque{T}.TryRemoveFromFront"/> returns <see langword="true"/> and the element when successful.
 	/// </summary>
 	[Fact]
@@ -163,35 +192,6 @@ public partial class DequeTests
 			expectedCount: 0,
 			expectedCapacity: 8,
 			expectedElements: []);
-	}
-
-	/// <summary>
-	/// Verifies that <see cref="Deque{T}.RemoveFromFront"/> works correctly with wrap-around.
-	/// </summary>
-	[Fact]
-	public void RemoveFromFront_WithWrapAround_HandlesOffsetCorrectly()
-	{
-		// Arrange
-		var deque = new Deque<int>(4);
-		deque.AddToBack(1);
-		deque.AddToBack(2);
-		deque.AddToBack(3);
-		deque.AddToBack(4);
-		deque.RemoveFromFront();
-		deque.RemoveFromFront();
-		deque.AddToBack(5);
-		deque.AddToBack(6);
-
-		// Act
-		int result = deque.RemoveFromFront();
-
-		// Assert
-		Assert.Equal(3, result);
-		AssertDequeState(
-			deque,
-			expectedCount: 3,
-			expectedCapacity: 4,
-			expectedElements: [4, 5, 6]);
 	}
 
 	#endregion

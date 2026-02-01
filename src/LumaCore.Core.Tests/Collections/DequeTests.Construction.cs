@@ -10,7 +10,7 @@ namespace LumaCore.Core.Tests.Collections;
 
 public partial class DequeTests
 {
-	#region Constructor - Happy Path
+	#region Deque()
 
 	/// <summary>
 	/// Verifies that the default <see cref="Deque{T}()"/> constructor creates an empty deque with the default capacity.
@@ -28,6 +28,10 @@ public partial class DequeTests
 			expectedCapacity: 8,
 			expectedElements: []);
 	}
+
+	#endregion
+
+	#region Deque(int)
 
 	/// <summary>
 	/// Verifies that the <see cref="Deque{T}(int)"/> constructor creates an empty deque with the specified capacity.
@@ -50,6 +54,25 @@ public partial class DequeTests
 			expectedCapacity: capacity,
 			expectedElements: []);
 	}
+
+	/// <summary>
+	/// Verifies that the <see cref="Deque{T}(int)"/> constructor throws <see cref="ArgumentOutOfRangeException"/> when given a
+	/// negative capacity.
+	/// </summary>
+	[Fact]
+	public void Constructor_WithNegativeCapacity_ThrowsArgumentOutOfRangeException()
+	{
+		// Arrange
+		int negativeCapacity = -1;
+
+		// Act + Assert
+		var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new Deque<int>(negativeCapacity));
+		Assert.Equal("capacity", ex.ParamName);
+	}
+
+	#endregion
+
+	#region Deque(IEnumerable<T>)
 
 	/// <summary>
 	/// Verifies that the <see cref="Deque{T}(IEnumerable{T})"/> constructor creates a deque
@@ -111,25 +134,6 @@ public partial class DequeTests
 			expectedElements: [10, 20, 30]);
 	}
 
-	#endregion
-
-	#region Constructor - Error / Exception
-
-	/// <summary>
-	/// Verifies that the <see cref="Deque{T}(int)"/> constructor throws <see cref="ArgumentOutOfRangeException"/> when given a
-	/// negative capacity.
-	/// </summary>
-	[Fact]
-	public void Constructor_WithNegativeCapacity_ThrowsArgumentOutOfRangeException()
-	{
-		// Arrange
-		int negativeCapacity = -1;
-
-		// Act + Assert
-		var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new Deque<int>(negativeCapacity));
-		Assert.Equal("capacity", ex.ParamName);
-	}
-
 	/// <summary>
 	/// Verifies that the <see cref="Deque{T}(IEnumerable{T})"/> constructor throws <see cref="ArgumentNullException"/>
 	/// when given a <see langword="null"/> collection.
@@ -147,7 +151,7 @@ public partial class DequeTests
 
 	#endregion
 
-	#region Constructor(ReadOnlySpan<T>) - Happy Path
+	#region Deque(ReadOnlySpan<T>)
 
 	/// <summary>
 	/// Verifies that the <see cref="Deque{T}(ReadOnlySpan{T})"/> constructor creates a deque with all elements from the span.

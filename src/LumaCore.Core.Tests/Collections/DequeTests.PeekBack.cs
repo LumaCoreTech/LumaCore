@@ -10,25 +10,7 @@ namespace LumaCore.Core.Tests.Collections;
 
 public partial class DequeTests
 {
-	#region PeekBack - Error / Exception
-
-	/// <summary>
-	/// Verifies that <see cref="Deque{T}.PeekBack"/> throws <see cref="InvalidOperationException"/> when the deque is empty.
-	/// </summary>
-	[Fact]
-	public void PeekBack_WhenEmpty_ThrowsInvalidOperationException()
-	{
-		// Arrange
-		var deque = new Deque<int>();
-
-		// Act + Assert
-		var ex = Assert.Throws<InvalidOperationException>(() => deque.PeekBack());
-		Assert.Equal("The deque is empty.", ex.Message);
-	}
-
-	#endregion
-
-	#region PeekBack - Happy Path
+	#region PeekBack()
 
 	/// <summary>
 	/// Verifies that <see cref="Deque{T}.PeekBack"/> returns the last element without removing it.
@@ -50,6 +32,24 @@ public partial class DequeTests
 			expectedCapacity: 3,
 			expectedElements: [10, 20, 30]);
 	}
+
+	/// <summary>
+	/// Verifies that <see cref="Deque{T}.PeekBack"/> throws <see cref="InvalidOperationException"/> when the deque is empty.
+	/// </summary>
+	[Fact]
+	public void PeekBack_WhenEmpty_ThrowsInvalidOperationException()
+	{
+		// Arrange
+		var deque = new Deque<int>();
+
+		// Act + Assert
+		var ex = Assert.Throws<InvalidOperationException>(() => deque.PeekBack());
+		Assert.Equal("The deque is empty.", ex.Message);
+	}
+
+	#endregion
+
+	#region TryPeekBack()
 
 	/// <summary>
 	/// Verifies that <see cref="Deque{T}.TryPeekBack"/> returns <see langword="true"/> and the element when successful.
