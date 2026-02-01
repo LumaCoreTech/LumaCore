@@ -35,4 +35,8 @@
 	<ItemGroup>
 		<ProjectReference Include="..\LumaCore.Core\LumaCore.Core.csproj" />
 	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
 </Project>
