@@ -5,6 +5,9 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 	<ItemGroup>
+		<InternalsVisibleTo Include="LumaCore.Core.Tests" />
+	</ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 
 		<!-- Configuration and Options for OptionsTracker -->
