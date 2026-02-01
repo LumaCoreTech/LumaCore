@@ -4,6 +4,8 @@
 
 using System.Reflection;
 
+using LumaCore.Core;
+
 using Serilog;
 
 /// <summary>
@@ -40,6 +42,25 @@ public static partial class Program
 			.MinimumLevel.Information()
 			.WriteTo.Console()
 			.CreateBootstrapLogger();
+
+		// Register FailFast handler to ensure logs are flushed before application termination.
+		// This handler is invoked when FailFast.TerminateApplication() is called from anywhere
+		// in the application (e.g., from LifecycleManagement on critical errors).
+		// After this handler completes, FailFast automatically calls Environment.FailFast() to terminate the process.
+		FailFast.TerminationRequested += (message, exception) =>
+		{
+			if (exception != null)
+			{
+				Log.Fatal(exception, "Application terminating due to fatal error: {Message}", message);
+			}
+			else
+			{
+				Log.Fatal("Application terminating: {Message}", message);
+			}
+
+			// Flush all Serilog sinks to ensure no log messages are lost
+			Log.CloseAndFlush();
+		};
 
 		try
 		{
