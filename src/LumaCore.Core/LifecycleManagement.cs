@@ -156,7 +156,7 @@ public abstract partial class LifecycleManagement :
 		ArgumentNullException.ThrowIfNull(loggerFactory);
 		Sync = new object();
 		Log = loggerFactory.CreateLogger(GetType());
-		LifecycleState = new LifecycleState(Sync);
+		LifecycleState = new LifecycleState(Sync, GetType());
 	}
 
 	/// <summary>
@@ -171,7 +171,7 @@ public abstract partial class LifecycleManagement :
 		ArgumentNullException.ThrowIfNull(loggerFactory);
 		Sync = sync ?? throw new ArgumentNullException(nameof(sync));
 		Log = loggerFactory.CreateLogger(GetType());
-		LifecycleState = new LifecycleState(Sync);
+		LifecycleState = new LifecycleState(Sync, GetType());
 	}
 
 	#endregion
@@ -312,9 +312,8 @@ public abstract partial class LifecycleManagement :
 						GetType().FullName,
 						nameof(OnShuttingDownAsync));
 
-					Debug.Fail("OnShuttingDownAsync() should NEVER throw an exception, but it did.");
 					FailFast.TerminateApplication(sex);
-					// --- will not be reached anymore ---
+					throw new UnreachableException();
 				}
 
 				lock (LifecycleState.Sync)
@@ -387,15 +386,15 @@ public abstract partial class LifecycleManagement :
 		{
 			LifecycleState.EnsureNotDisposingOrDisposed();
 
-			// Abort if the object is not initialized and not initializing
-			// => It must be shutting down, disposing or disposed.
-			// => Nothing to do.
-			if (!LifecycleState.IsInitialized && !LifecycleState.IsInitializing)
+			if (LifecycleState.IsShuttingDown)
 			{
-				return;
+				// Another thread is already shutting the object down.
+				// => Wait for the shutdown to complete (actual waiting is done below).
+				// => Do NOT increment pending count - we're just waiting, not actively working.
+				waitForShutdownToCompleteEvent = new AsyncManualResetEvent(set: false);
+				mWaitForShutdownToCompleteEvents.Add(waitForShutdownToCompleteEvent);
 			}
-
-			if (LifecycleState.IsInitializing)
+			else if (LifecycleState.IsInitializing)
 			{
 				// Another thread is initializing the object at the moment.
 				// => Wait for the initialization to complete (actual waiting is done below).
@@ -403,13 +402,11 @@ public abstract partial class LifecycleManagement :
 				waitForInitializationToCompleteEvent = new AsyncManualResetEvent(set: false);
 				mWaitForInitializationToCompleteEvents.Add(waitForInitializationToCompleteEvent);
 			}
-			else if (LifecycleState.IsShuttingDown)
+			else if (!LifecycleState.IsInitialized)
 			{
-				// Another thread is already shutting the object down.
-				// => Wait for the shutdown to complete (actual waiting is done below).
-				// => Do NOT increment pending count - we're just waiting, not actively working.
-				waitForShutdownToCompleteEvent = new AsyncManualResetEvent(set: false);
-				mWaitForShutdownToCompleteEvents.Add(waitForShutdownToCompleteEvent);
+				// The object is not initialized, not initializing, and not shutting down.
+				// => Nothing to do.
+				return;
 			}
 			else
 			{
@@ -469,9 +466,8 @@ public abstract partial class LifecycleManagement :
 					GetType().FullName,
 					nameof(OnShuttingDownAsync));
 
-				Debug.Fail("OnShuttingDownAsync should NEVER throw an exception, but it did.");
 				FailFast.TerminateApplication(ex);
-				// --- will not be reached anymore ---
+				throw new UnreachableException();
 			}
 
 			lock (LifecycleState.Sync)
@@ -595,9 +591,8 @@ public abstract partial class LifecycleManagement :
 					GetType().FullName,
 					nameof(OnShuttingDownAsync));
 
-				Debug.Fail("OnShuttingDownAsync should NEVER throw an exception, but it did.");
 				FailFast.TerminateApplication(ex);
-				// --- will not be reached anymore ---
+				throw new UnreachableException();
 			}
 		}
 
@@ -614,9 +609,8 @@ public abstract partial class LifecycleManagement :
 				GetType().FullName,
 				nameof(OnDisposingAsync));
 
-			Debug.Fail(message: "Disposing should NEVER throw an exception, but it did...");
 			FailFast.TerminateApplication(ex);
-			// --- will not be reached anymore ---
+			throw new UnreachableException();
 		}
 
 		LifecycleState.Dispose();

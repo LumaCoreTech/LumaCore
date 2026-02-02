@@ -54,15 +54,28 @@ public sealed class LifecycleState : IDisposable
 	/// <see cref="Monitor.Exit(object)"/>) to synchronize all state transitions.
 	/// This must be the same object used by the owning <see cref="LifecycleManagement"/> instance.
 	/// </param>
+	/// <param name="ownerType">
+	/// The type of the object that owns this <see cref="LifecycleState"/>. Used for exception messages
+	/// (e.g., <see cref="ObjectDisposedException.ObjectName"/>).
+	/// </param>
 	/// <remarks>
 	/// The constructor immediately captures a <see cref="CancellationToken"/> from a newly created
 	/// <see cref="CancellationTokenSource"/> and exposes it via <see cref="ShutdownToken"/>.
 	/// </remarks>
-	internal LifecycleState(object sync)
+	internal LifecycleState(object sync, Type ownerType)
 	{
 		Sync = sync;
+		OwnerType = ownerType;
 		ShutdownToken = mShutdownCancellationTokenSource.Token;
 	}
+
+	/// <summary>
+	/// Gets the type of the object that owns this <see cref="LifecycleState"/>.
+	/// </summary>
+	/// <remarks>
+	/// Used for exception messages, specifically the <see cref="ObjectDisposedException.ObjectName"/> property.
+	/// </remarks>
+	public Type OwnerType { get; }
 
 	#region Synchronization
 
@@ -476,7 +489,7 @@ public sealed class LifecycleState : IDisposable
 	{
 		Debug.Assert(Monitor.IsEntered(Sync));
 		if (mIsDisposed || mIsDisposing)
-			throw new ObjectDisposedException(GetType().FullName, "The object is disposing or already disposed.");
+			throw new ObjectDisposedException(OwnerType.FullName, "The object is disposing or already disposed.");
 	}
 
 	/// <summary>
@@ -500,7 +513,7 @@ public sealed class LifecycleState : IDisposable
 	{
 		Debug.Assert(Monitor.IsEntered(Sync));
 		if (mIsDisposed || mIsDisposing)
-			throw new ObjectDisposedException(GetType().FullName, "The object is disposing or already disposed.");
+			throw new ObjectDisposedException(OwnerType.FullName, "The object is disposing or already disposed.");
 		if (!mIsInitialized)
 			throw new InvalidOperationException("The object is not initialized.");
 	}
