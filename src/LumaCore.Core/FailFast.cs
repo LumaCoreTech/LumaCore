@@ -5,69 +5,106 @@
 namespace LumaCore.Core;
 
 /// <summary>
-/// Provides a mechanism to flush logging queues and terminate the application without losing log messages.
+/// Terminates the application after allowing log queues to flush.
 /// </summary>
 /// <remarks>
-///     <para>
-///     This class allows the logging infrastructure to register a termination handler that ensures all buffered log
-///     messages are written before the application terminates. The handler is invoked to perform cleanup operations
-///     (e.g., flushing logs), and then <see cref="Environment.FailFast(string)"/> is automatically called to terminate
-///     the process.
-///     </para>
-///     <para>
-///     To register a termination handler, subscribe to <see cref="TerminationRequested"/> during application startup.
-///     The handler should perform cleanup operations such as flushing log writers. The application will be terminated
-///     automatically after the handler completes.
-///     </para>
+/// Subscribe to <see cref="TerminationRequested"/> to flush logs before termination.
+/// Subscribe to <see cref="BeforeTermination"/> and set <see cref="FailFastEventArgs.Cancel"/> for unit testing.
 /// </remarks>
 public static class FailFast
 {
+	private static readonly Lock                             sLock = new();
+	private static          Action<string, Exception?>?      sTerminationRequested;
+	private static          EventHandler<FailFastEventArgs>? sBeforeTermination;
+
 	/// <summary>
-	/// Requests terminating the application specifying a message describing the reason for termination.
-	/// The process is terminated after buffered log messages have been processed by the logging subsystem.
+	/// Terminates the application with the specified message. Never returns normally.
 	/// </summary>
-	/// <param name="message">The message text describing the reason why application termination is requested.</param>
+	/// <param name="message">The reason for termination.</param>
+	/// <exception cref="FailFastCanceledException">Thrown if <see cref="BeforeTermination"/> cancels termination.</exception>
+	/// <remarks>
+	/// >
+	/// Use this method to terminate the application when continuing execution is unsafe.
+	/// </remarks>
 	public static void TerminateApplication(string message)
 	{
-		Action<string, Exception?>? handler = TerminationRequested;
+		lock (sLock)
+		{
+			// Check for cancellation BEFORE calling TerminationRequested
+			var beforeArgs = new FailFastEventArgs(message, null);
+			sBeforeTermination?.Invoke(null, beforeArgs);
 
-		// Invoke handler to perform cleanup (e.g., flush logs)
-		handler?.Invoke(message, null);
+			if (beforeArgs.Cancel)
+				throw new FailFastCanceledException(message, null);
 
-		// Terminate the application
-		Environment.FailFast(message);
+			// Not canceled - proceed with actual termination
+			sTerminationRequested?.Invoke(message, null);
+			Environment.FailFast(message);
+		}
 	}
 
 	/// <summary>
-	/// Requests terminating the application specifying the exception that caused the termination.
-	/// The process is terminated after buffered log messages have been processed by the logging subsystem.
+	/// Terminates the application due to an exception. Never returns normally.
 	/// </summary>
-	/// <param name="exception">The exception that is the reason why application termination is requested.</param>
+	/// <param name="exception">The exception that caused termination.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="exception"/> is <see langword="null"/>.</exception>
+	/// <exception cref="FailFastCanceledException">Thrown if <see cref="BeforeTermination"/> cancels termination.</exception>
+	/// <remarks>
+	/// >
+	/// Use this method to terminate the application when continuing execution is unsafe.
+	/// </remarks>
 	public static void TerminateApplication(Exception exception)
 	{
 		ArgumentNullException.ThrowIfNull(exception);
 
-		Action<string, Exception?>? handler = TerminationRequested;
-
-		if (handler != null)
+		lock (sLock)
 		{
-			// Invoke handler to perform cleanup (e.g., flush logs)
-			handler(exception.Message, exception);
-		}
+			// Check for cancellation BEFORE calling TerminationRequested
+			var beforeArgs = new FailFastEventArgs(exception.Message, exception);
+			sBeforeTermination?.Invoke(null, beforeArgs);
 
-		// Terminate the application
-		Environment.FailFast(exception.Message, exception);
+			if (beforeArgs.Cancel)
+				throw new FailFastCanceledException(exception.Message, exception);
+
+			// Not canceled - proceed with actual termination
+			sTerminationRequested?.Invoke(exception.Message, exception);
+			Environment.FailFast(exception.Message, exception);
+		}
 	}
 
 	/// <summary>
-	/// Occurs when the <see cref="TerminateApplication(string)"/> or <see cref="TerminateApplication(Exception)"/> method
-	/// is called. The logging infrastructure should subscribe to this event to flush all log writers before the application
-	/// terminates.
+	/// Raised before termination to allow flushing log queues and other cleanup.
+	/// </summary>
+	public static event Action<string, Exception?>? TerminationRequested
+	{
+		add
+		{
+			lock (sLock) { sTerminationRequested += value; }
+		}
+		remove
+		{
+			lock (sLock) { sTerminationRequested -= value; }
+		}
+	}
+
+	/// <summary>
+	/// Raised immediately before <see cref="Environment.FailFast(string)"/>. Set <see cref="FailFastEventArgs.Cancel"/>
+	/// to <see langword="true"/> to throw <see cref="FailFastCanceledException"/> instead (for testing).
 	/// </summary>
 	/// <remarks>
-	/// The handler receives a message and an optional exception. The handler should perform cleanup operations such as
-	/// flushing log writers. After the handler completes, <see cref="Environment.FailFast(string)"/> is automatically
-	/// called to terminate the application. The handler does <b>not</b> need to terminate the application itself.
+	/// <b>Usage:</b> This event is intended for unit testing only. Production code should not subscribe to this event!
+	/// Code using <see cref="TerminateApplication(string)"/> or <see cref="TerminateApplication(Exception)"/> expects
+	/// that the application will terminate. Usually the application is then in a state where it cannot continue safely.
 	/// </remarks>
-	public static event Action<string, Exception?>? TerminationRequested;
+	public static event EventHandler<FailFastEventArgs>? BeforeTermination
+	{
+		add
+		{
+			lock (sLock) { sBeforeTermination += value; }
+		}
+		remove
+		{
+			lock (sLock) { sBeforeTermination -= value; }
+		}
+	}
 }
