@@ -287,24 +287,33 @@ public abstract partial class LifecycleManagement :
 			{
 				await OnInitializingAsync(context, cancellationToken).ConfigureAwait(false);
 			}
-			catch (Exception)
+			catch (Exception iex)
 			{
 				// An exception occurred.
-				// => Shut down to try to bring the instance into a valid state and rethrow the exception.
+
+				// Log the exception, but do this at Debug level only, as initialization failures
+				// are expected to be handled by the caller.
+				Log.LogDebug(
+					iex,
+					"{TypeName}.{MethodName}() threw an unexpected exception. This should never occur",
+					GetType().FullName,
+					nameof(OnShuttingDownAsync));
+
+				// Shut down to try to bring the instance into a valid state and rethrow the exception.
 				try
 				{
 					await OnShuttingDownAsync(context).ConfigureAwait(false);
 				}
-				catch (Exception ex)
+				catch (Exception sex)
 				{
 					Log.LogCritical(
-						ex,
+						sex,
 						"{TypeName}.{MethodName}() threw an unexpected exception. This should never occur",
 						GetType().FullName,
 						nameof(OnShuttingDownAsync));
 
-					Debug.Fail("OnShuttingDownAsync should NEVER throw an exception, but it did.");
-					FailFast.TerminateApplication(ex);
+					Debug.Fail("OnShuttingDownAsync() should NEVER throw an exception, but it did.");
+					FailFast.TerminateApplication(sex);
 					// --- will not be reached anymore ---
 				}
 
