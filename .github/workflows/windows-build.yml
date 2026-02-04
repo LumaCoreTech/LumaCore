@@ -63,14 +63,52 @@ jobs:
         }
       shell: pwsh
 
-    - name: Update Test Badge Gist
-      if: github.ref == 'refs/heads/main' && always() && env.TEST_BADGE != ''
+    - name: Generate Coverage Badge
+      if: github.ref == 'refs/heads/main' && always()
+      run: |
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:TextSummary
+        
+        $summary = Get-Content "coveragereport/Summary.txt" | Out-String
+        
+        $lineCoverage = 0
+        if ($summary -match "Line coverage: (\d+\.?\d*)%") {
+          $lineCoverage = [math]::Round([double]$matches[1])
+        }
+        
+        $branchCoverage = 0
+        $hasBranch = $false
+        if ($summary -match "Branch coverage: (\d+\.?\d*)%") {
+          $branchCoverage = [math]::Round([double]$matches[1])
+          $hasBranch = $true
+        }
+        
+        $color = if ($lineCoverage -ge 90) { "brightgreen" } elseif ($lineCoverage -ge 75) { "yellow" } else { "red" }
+        
+        $message = "$lineCoverage%"
+        if ($hasBranch) {
+          $message = "L: $lineCoverage% | B: $branchCoverage%"
+        }
+        
+        $badge = @{
+          schemaVersion = 1
+          label = "Coverage"
+          message = $message
+          color = $color
+        } | ConvertTo-Json -Compress
+        
+        echo $badge > lumacore-windows-coverage-badge.json
+        echo "COVERAGE_BADGE=$badge" >> $env:GITHUB_ENV
+        echo "Coverage Badge: $message ($color)"
+      shell: pwsh
+
+    - name: Update Test Badges Gist
+      if: github.ref == 'refs/heads/main' && always()
       uses: exuanbo/actions-deploy-gist@v1
       with:
         token: ${{ secrets.GIST_TOKEN }}
         gist_id: d3957602a84fcab1aa66ebfef44da7eb
-        file_path: lumacore-windows-test-badge.json
-        gist_file_name: lumacore-windows-test-badge.json
+        file_path: 'lumacore-windows-*.json'
         file_type: text
 
     # ──────────────────────────────────────────────────────────────────────────

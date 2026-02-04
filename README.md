@@ -35,26 +35,22 @@
           <td align="center"><b>Windows</b></td>
           <td align="left">
             &nbsp;&nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/windows-build.yml">
-              <img src="https://img.shields.io/github/actions/workflow/status/LumaCoreTech/LumaCore/windows-build.yml?style=flat-square&label=Build" alt="Windows Build">
-            </a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/windows-build.yml"><img src="https://img.shields.io/github/actions/workflow/status/LumaCoreTech/LumaCore/windows-build.yml?style=flat-square&label=Build" alt="Windows Build"></a>
             &nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/windows-build.yml">
-              <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-windows-test-badge.json&style=flat-square" alt="Windows Tests">
-            </a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/windows-build.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-windows-test-badge.json&style=flat-square" alt="Windows Tests"></a>
+            &nbsp;
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/windows-build.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-windows-coverage-badge.json&style=flat-square" alt="Windows Coverage"></a>
           </td>
         </tr>
         <tr>
           <td align="center"><b>Ubuntu</b></td>
           <td align="left">
             &nbsp;&nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml">
-              <img src="https://img.shields.io/github/actions/workflow/status/LumaCoreTech/LumaCore/linux-build.yml?style=flat-square&label=Build" alt="Ubuntu Build">
-            </a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml"><img src="https://img.shields.io/github/actions/workflow/status/LumaCoreTech/LumaCore/linux-build.yml?style=flat-square&label=Build" alt="Ubuntu Build"></a>
             &nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml">
-              <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-ubuntu-test-badge.json&style=flat-square" alt="Ubuntu Tests">
-            </a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-ubuntu-test-badge.json&style=flat-square" alt="Ubuntu Tests"></a>
+            &nbsp;
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-ubuntu-coverage-badge.json&style=flat-square" alt="Ubuntu Coverage"></a>
           </td>
         </tr>
       </tbody>
