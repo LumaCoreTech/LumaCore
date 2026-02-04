@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-using LumaCore.Api.Configuration;
+using LumaCore.Configuration;
 
 namespace LumaCore.Api.Features.HttpsRedirection;
 

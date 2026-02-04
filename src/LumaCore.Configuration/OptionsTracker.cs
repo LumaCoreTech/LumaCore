@@ -1,12 +1,13 @@
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2025-2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using System.Collections.Frozen;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace LumaCore.Api.Configuration;
+namespace LumaCore.Configuration;
 
 /// <summary>
 /// Tracks Options registrations and their configuration section names.
@@ -22,7 +23,7 @@ namespace LumaCore.Api.Configuration;
 ///     DI container.
 ///     </para>
 /// </remarks>
-sealed class OptionsTracker
+public sealed class OptionsTracker
 {
 	/// <summary>
 	/// Lock object for thread-safe access to tracking collections during startup.

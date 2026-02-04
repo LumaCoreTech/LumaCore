@@ -346,7 +346,7 @@ public sealed class LifecycleState : IDisposable
 	/// </value>
 	/// <remarks>
 	///     <para>
-	///     The <see cref="LifecycleManagement.DisposeAsync"/> method awaits this event before releasing resources,
+	///     The <see cref="LifecycleManagement.DisposeAsync()"/> method awaits this event before releasing resources,
 	///     ensuring that all in-flight work has completed.
 	///     </para>
 	///     <para>

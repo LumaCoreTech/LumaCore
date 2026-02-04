@@ -5,7 +5,7 @@
 using System.Collections;
 using System.Reflection;
 
-using LumaCore.Api.Configuration;
+using LumaCore.Configuration;
 
 namespace LumaCore.Api.Features.System;
 

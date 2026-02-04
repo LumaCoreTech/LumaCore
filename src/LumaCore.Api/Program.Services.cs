@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-using LumaCore.Api.Configuration;
 using LumaCore.Api.Features.ApiVersioning;
 using LumaCore.Api.Features.Auth;
 using LumaCore.Api.Features.Cors;
@@ -13,6 +12,8 @@ using LumaCore.Api.Features.OpenApi;
 using LumaCore.Api.Features.ProxyHeaders;
 using LumaCore.Api.Features.SecurityHeaders;
 using LumaCore.Api.Features.System;
+using LumaCore.BackgroundProcessing;
+using LumaCore.Configuration;
 
 public static partial class Program
 {
@@ -90,6 +91,11 @@ public static partial class Program
 		// Register the System feature for diagnostic endpoints.
 		// Provides /api/v1/system/info and /api/v1/system/configuration endpoints.
 		builder.AddSystemFeature();
+
+		// Register the WorkQueueProcessor background processing service.
+		// Provides a thread-safe queue for fire-and-forget async operations with
+		// configurable concurrency, graceful shutdown, and ExecutionContext isolation.
+		builder.Services.AddWorkQueueProcessor(builder.Configuration);
 
 		// Validate that all LumaCore Options types were registered via AddFeatureOptions<T>().
 		// This ensures proper section name tracking for diagnostic endpoints and fails fast

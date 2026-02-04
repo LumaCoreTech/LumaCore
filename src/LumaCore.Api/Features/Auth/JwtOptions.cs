@@ -4,7 +4,7 @@
 
 using System.ComponentModel.DataAnnotations;
 
-using LumaCore.Api.Configuration;
+using LumaCore.Configuration;
 
 using Microsoft.IdentityModel.Tokens;
 

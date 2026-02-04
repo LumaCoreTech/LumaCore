@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-using LumaCore.Api.Configuration;
+using LumaCore.Configuration;
 using LumaCore.Core.Diagnostics;
 
 using Microsoft.Extensions.DependencyInjection.Extensions;

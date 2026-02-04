@@ -60,7 +60,7 @@ public partial class LifecycleManagementTests
 	#region Concurrent Disposal
 
 	/// <summary>
-	/// Verifies that concurrent <see cref="LifecycleManagement.DisposeAsync"/> calls wait for the first to complete.
+	/// Verifies that concurrent <see cref="LifecycleManagement.DisposeAsync()"/> calls wait for the first to complete.
 	/// </summary>
 	[Fact]
 	public async Task Dispose_WhenCalledConcurrently_SecondCallWaits()
@@ -244,7 +244,7 @@ public partial class LifecycleManagementTests
 	}
 
 	/// <summary>
-	/// Verifies that <see cref="LifecycleManagement.DisposeAsync"/> waits for ongoing
+	/// Verifies that <see cref="LifecycleManagement.DisposeAsync()"/> waits for ongoing
 	/// <see cref="LifecycleManagement.InitializeAsync"/> to complete.
 	/// </summary>
 	[Fact]

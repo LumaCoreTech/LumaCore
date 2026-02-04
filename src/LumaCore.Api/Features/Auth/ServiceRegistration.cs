@@ -4,7 +4,7 @@
 
 using System.Text;
 
-using LumaCore.Api.Configuration;
+using LumaCore.Configuration;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;

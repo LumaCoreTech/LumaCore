@@ -43,6 +43,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LumaCore.Api.Contracts\LumaCore.Api.Contracts.csproj" />
+		<ProjectReference Include="..\LumaCore.BackgroundProcessing\LumaCore.BackgroundProcessing.csproj" />
+		<ProjectReference Include="..\LumaCore.Configuration\LumaCore.Configuration.csproj" />
 		<ProjectReference Include="..\LumaCore.Core\LumaCore.Core.csproj" />
 		<ProjectReference Include="..\LumaCore.Ui.Web\LumaCore.Ui.Web.csproj" Condition="'$(IncludeBlazorUi)' == 'true'" />
 	</ItemGroup>
@@ -87,7 +89,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="logs\" />
+		<Folder Include="logs\" />
 	</ItemGroup>
 
 </Project>

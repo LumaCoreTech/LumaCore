@@ -1,12 +1,14 @@
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2025-2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using System.Runtime.CompilerServices;
 
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace LumaCore.Api.Configuration;
+namespace LumaCore.Configuration;
 
 /// <summary>
 /// Provides extension methods for registering feature Options with section tracking.
@@ -35,7 +37,7 @@ namespace LumaCore.Api.Configuration;
 /// }
 /// </code>
 /// </example>
-static class OptionsRegistrationExtensions
+public static class OptionsRegistrationExtensions
 {
 	/// <summary>
 	/// Associates each <see cref="IServiceCollection"/> with its own <see cref="OptionsTracker"/> instance.

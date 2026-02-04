@@ -1,8 +1,8 @@
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2025-2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-namespace LumaCore.Api.Configuration;
+namespace LumaCore.Configuration;
 
 /// <summary>
 /// Marks a property as containing secret data that should be masked in diagnostic output.
@@ -33,7 +33,7 @@ namespace LumaCore.Api.Configuration;
 /// </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Property)]
-sealed class SecretAttribute : Attribute
+public sealed class SecretAttribute : Attribute
 {
 	/// <summary>
 	/// Gets or sets a value indicating whether the length of the secret should be shown in masked output.

@@ -16,7 +16,7 @@ public partial class LifecycleManagementTests
 	/// <summary>
 	/// Verifies the complete lifecycle flow: <see cref="LifecycleManagement.InitializeAsync"/> →
 	/// <see cref="LifecycleManagement.BeginAsyncOperation"/> → <see cref="LifecycleManagement.ShutdownAsync"/> →
-	/// <see cref="LifecycleManagement.DisposeAsync"/>.
+	/// <see cref="LifecycleManagement.DisposeAsync()"/>.
 	/// </summary>
 	[Fact]
 	public async Task Lifecycle_InitializeOperateShutdownDispose_CompletesSuccessfully()
@@ -48,7 +48,7 @@ public partial class LifecycleManagementTests
 
 	/// <summary>
 	/// Verifies the minimal lifecycle:
-	/// <see cref="LifecycleManagement.InitializeAsync"/> → <see cref="LifecycleManagement.DisposeAsync"/>
+	/// <see cref="LifecycleManagement.InitializeAsync"/> → <see cref="LifecycleManagement.DisposeAsync()"/>
 	/// (skipping explicit shutdown). <see cref="LifecycleManagement.OnShuttingDownAsync"/> is called
 	/// automatically by dispose.
 	/// </summary>
@@ -79,7 +79,7 @@ public partial class LifecycleManagementTests
 	}
 
 	/// <summary>
-	/// Verifies that <see cref="LifecycleManagement.DisposeAsync"/> without prior
+	/// Verifies that <see cref="LifecycleManagement.DisposeAsync()"/> without prior
 	/// <see cref="LifecycleManagement.InitializeAsync"/> skips <see cref="LifecycleManagement.OnShuttingDownAsync"/>.
 	/// </summary>
 	[Fact]
@@ -289,7 +289,7 @@ public partial class LifecycleManagementTests
 	}
 
 	/// <summary>
-	/// Verifies that calling <see cref="LifecycleManagement.DisposeAsync"/> multiple times is idempotent.
+	/// Verifies that calling <see cref="LifecycleManagement.DisposeAsync()"/> multiple times is idempotent.
 	/// </summary>
 	[Fact]
 	public async Task Lifecycle_MultipleDisposeCalls_OnlyExecutesOnce()

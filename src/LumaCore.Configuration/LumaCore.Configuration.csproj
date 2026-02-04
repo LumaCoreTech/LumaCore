@@ -1,0 +1,26 @@
+<!-- Copyright (c) 2025-2026 LumaCoreTech -->
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Project: https://github.com/LumaCoreTech/LumaCore -->
+
+<Project Sdk="Microsoft.NET.Sdk">
+	<!--
+		Project: LumaCore.Configuration
+		Purpose: Configuration abstractions and options registration helpers.
+	-->
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<AssemblyName>LumaCore.Configuration</AssemblyName>
+		<RootNamespace>LumaCore.Configuration</RootNamespace>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+		<PackageReference Include="Microsoft.Extensions.Options" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+		<PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
+	</ItemGroup>
+</Project>
