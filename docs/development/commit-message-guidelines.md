@@ -77,6 +77,7 @@ The scope identifies the **affected feature or domain area**.
 | `ci` | GitHub Actions, workflows, CI/CD pipelines |
 | `deps` | Dependency updates (NuGet, npm) |
 | `docker` | Dockerfile, Docker Compose, container configuration |
+| `github` | GitHub configuration (.github folder, Copilot instructions) |
 | `tools` | IDE configuration, ReSharper settings, linter rules |
 
 **Documentation Scopes**
