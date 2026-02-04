@@ -96,18 +96,27 @@ public partial class AsyncAutoResetEventTests
 			}
 		}
 
+		// Queue waiters sequentially
 		Task waitTask1 = WaitAndRecordAsync(1);
 		Task waitTask2 = WaitAndRecordAsync(2);
 		Task waitTask3 = WaitAndRecordAsync(3);
 
-		// Act - release all waiters
+		// Act & Assert - Release 1st
 		are.Set();
-		are.Set();
-		are.Set();
+		await AwaitWithTimeoutAsync(waitTask1, "FIFO violation: Waiter 1 should be released first");
+		Assert.False(waitTask2.IsCompleted, "Waiter 2 should not be completed yet");
+		Assert.False(waitTask3.IsCompleted, "Waiter 3 should not be completed yet");
 
-		await AwaitWithTimeoutAsync(Task.WhenAll(waitTask1, waitTask2, waitTask3), "FIFO release timed out");
+		// Act & Assert - Release 2nd
+		are.Set();
+		await AwaitWithTimeoutAsync(waitTask2, "FIFO violation: Waiter 2 should be released second");
+		Assert.False(waitTask3.IsCompleted, "Waiter 3 should not be completed yet");
 
-		// Assert
+		// Act & Assert - Release 3rd
+		are.Set();
+		await AwaitWithTimeoutAsync(waitTask3, "FIFO violation: Waiter 3 should be released third");
+
+		// Assert integrity
 		Assert.Equal([1, 2, 3], completionOrder);
 	}
 
