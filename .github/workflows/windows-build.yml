@@ -102,13 +102,24 @@ jobs:
         echo "Coverage Badge: $message ($color)"
       shell: pwsh
 
-    - name: Update Test Badges Gist
-      if: github.ref == 'refs/heads/main' && always()
+    - name: Update Test Badge
+      if: github.ref == 'refs/heads/main' && always() && env.TEST_BADGE != ''
       uses: exuanbo/actions-deploy-gist@v1
       with:
         token: ${{ secrets.GIST_TOKEN }}
         gist_id: d3957602a84fcab1aa66ebfef44da7eb
-        file_path: 'lumacore-windows-*.json'
+        file_path: lumacore-windows-test-badge.json
+        gist_file_name: lumacore-windows-test-badge.json
+        file_type: text
+
+    - name: Update Coverage Badge
+      if: github.ref == 'refs/heads/main' && always() && env.COVERAGE_BADGE != ''
+      uses: exuanbo/actions-deploy-gist@v1
+      with:
+        token: ${{ secrets.GIST_TOKEN }}
+        gist_id: d3957602a84fcab1aa66ebfef44da7eb
+        file_path: lumacore-windows-coverage-badge.json
+        gist_file_name: lumacore-windows-coverage-badge.json
         file_type: text
 
     # ──────────────────────────────────────────────────────────────────────────
