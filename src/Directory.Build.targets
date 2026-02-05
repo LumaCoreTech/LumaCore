@@ -19,4 +19,10 @@
 		</PropertyGroup>
 	</Target>
 
+	<!-- Global Test Configuration -->
+	<ItemGroup Condition="'$(IsTestProject)' == 'true'">
+		<Content Include="$(MSBuildThisFileDirectory)xunit.runner.json" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+		<Content Include="$(MSBuildThisFileDirectory)coverlet.runsettings" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+	</ItemGroup>
+
 </Project>
