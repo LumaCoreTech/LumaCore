@@ -24,15 +24,32 @@ namespace LumaCore.BackgroundProcessing;
 ///         <item>Offloading work from request/caller threads to avoid blocking</item>
 ///         <item>Sequential or parallel processing of asynchronous operations</item>
 ///         <item>Fire-and-forget operations with completion guarantees (see shutdown behavior below)</item>
+///         <item>Trackable operations where the caller needs to await completion or handle exceptions</item>
 ///         <item>Limiting concurrent execution of resource-intensive operations</item>
 ///     </list>
 ///     </para>
 ///     <para>
+///     <b>Enqueueing modes:</b>
+///     The processor supports two enqueueing modes:
+///     <list type="bullet">
+///         <item>
+///         <b>Fire-and-forget:</b> Use <see cref="QueueWorkItem(Func{CancellationToken,Task})"/> or
+///         <see cref="QueueWorkItem(Action{CancellationToken})"/> when you don't need to track completion.
+///         Returns <see langword="true"/> if successfully queued, <see langword="false"/> if the queue is full.
+///         </item>
+///         <item>
+///         <b>Trackable:</b> Use <see cref="QueueAndTrackWorkItem(Func{CancellationToken,Task})"/> or
+///         <see cref="QueueAndTrackWorkItem(Action{CancellationToken})"/> when you need to await completion
+///         or handle exceptions. Returns a <see cref="Task"/> that completes when the work item finishes,
+///         or <see langword="null"/> if the queue is full.
+///         </item>
+///     </list>
+///     </para>
+///     <para>
 ///     <b>Completion guarantees and shutdown behavior:</b>
-///     Work items for which
-///     <see cref="QueueWorkItem(Func{CancellationToken,Task})"/> or
-///     <see cref="QueueWorkItem(Action{CancellationToken})"/> returned <see langword="true"/> are guaranteed
-///     to be started and awaited during normal operation.
+///     Work items that were successfully enqueued (i.e., <c>QueueWorkItem</c> returned <see langword="true"/>
+///     or <c>QueueAndTrackWorkItem</c> returned a non-<see langword="null"/> task) are guaranteed to be started
+///     and awaited during normal operation.
 ///     When shutdown is initiated, the processor stops accepting new items and attempts to drain the queue.
 ///     If the configured shutdown timeout elapses, remaining queued (not yet started) work items may be discarded.
 ///     Already running work items are still awaited to completion (or cooperative cancellation), and shutdown may
@@ -48,10 +65,11 @@ namespace LumaCore.BackgroundProcessing;
 ///             <item>Graceful shutdown: waits for queued items to complete (with configurable timeout)</item>
 ///             <item>Exception handling: errors in work items don't crash the processor</item>
 ///             <item>Configurable queue capacity and shutdown timeout</item>
+///             <item>Optional completion tracking with exception propagation</item>
 ///         </list>
 ///     </para>
 ///     <para>
-///         <b>Usage Example:</b>
+///         <b>Usage Example (fire-and-forget):</b>
 ///         <code>
 /// // Create and initialize the processor:
 /// var processor = await WorkQueueProcessor.CreateAsync(
@@ -59,7 +77,7 @@ namespace LumaCore.BackgroundProcessing;
 ///     maxQueueSize: 1000,
 ///     shutdownTimeout: TimeSpan.FromSeconds(10));
 /// 
-/// // Enqueue work:
+/// // Enqueue work (fire-and-forget):
 /// processor.QueueWorkItem(async ct =>
 /// {
 ///     await repository.UpdateAsync(..., ct);
@@ -67,7 +85,23 @@ namespace LumaCore.BackgroundProcessing;
 /// 
 /// // Shutdown (or use DisposeAsync):
 /// await processor.DisposeAsync();
-/// </code>
+///         </code>
+///     </para>
+///     <para>
+///         <b>Usage Example (trackable):</b>
+///         <code>
+/// // Enqueue work and track completion:
+/// Task? completionTask = processor.QueueAndTrackWorkItem(async ct =>
+/// {
+///     await repository.UpdateAsync(..., ct);
+/// });
+/// 
+/// if (completionTask != null)
+/// {
+///     // Await completion and handle exceptions:
+///     await completionTask;
+/// }
+///         </code>
 ///     </para>
 /// </remarks>
 public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcessor
