@@ -57,7 +57,7 @@ public partial class LifecycleManagementTests
 	{
 		// Arrange
 		var loggerFactory = NullLoggerFactory.Instance;
-		object sync = new();
+		Lock sync = new();
 
 		// Act
 		var sut = new TestableLifecycleManagement(loggerFactory, sync);
@@ -75,7 +75,7 @@ public partial class LifecycleManagementTests
 	{
 		// Arrange
 		ILoggerFactory loggerFactory = null!;
-		object sync = new();
+		Lock sync = new();
 
 		// Act + Assert
 		var ex = Assert.Throws<ArgumentNullException>(() => new TestableLifecycleManagement(loggerFactory, sync));
@@ -91,7 +91,7 @@ public partial class LifecycleManagementTests
 	{
 		// Arrange
 		var loggerFactory = NullLoggerFactory.Instance;
-		object sync = null!;
+		Lock sync = null!;
 
 		// Act + Assert
 		var ex = Assert.Throws<ArgumentNullException>(() => new TestableLifecycleManagement(loggerFactory, sync));

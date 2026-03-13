@@ -125,13 +125,13 @@ public abstract partial class LifecycleManagement :
 	#region Synchronization
 
 	/// <summary>
-	/// Gets the object that is used to synchronize access to members using the <see cref="Monitor"/> class.
+	/// Gets the <see cref="Lock"/> instance used to synchronize access to members.
 	/// </summary>
 	/// <remarks>
 	/// Derived classes may expose this to external code if composable locking is needed, but should do so deliberately
 	/// by providing their own public property.
 	/// </remarks>
-	protected object Sync { get; }
+	protected Lock Sync { get; }
 
 	#endregion
 
@@ -154,7 +154,7 @@ public abstract partial class LifecycleManagement :
 	protected LifecycleManagement(ILoggerFactory loggerFactory)
 	{
 		ArgumentNullException.ThrowIfNull(loggerFactory);
-		Sync = new object();
+		Sync = new Lock();
 		Log = loggerFactory.CreateLogger(GetType());
 		LifecycleState = new LifecycleState(Sync, GetType());
 	}
@@ -163,10 +163,10 @@ public abstract partial class LifecycleManagement :
 	/// Initializes a new instance of the <see cref="LifecycleManagement"/> class.
 	/// </summary>
 	/// <param name="loggerFactory">The logger factory used to create a logger for this instance.</param>
-	/// <param name="sync">The object that is used to synchronize access to members using the <see cref="Monitor"/> class.</param>
+	/// <param name="sync">The <see cref="Lock"/> instance used to synchronize access to members.</param>
 	/// <exception cref="ArgumentNullException"><paramref name="loggerFactory"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentNullException"><paramref name="sync"/> is <see langword="null"/>.</exception>
-	protected LifecycleManagement(ILoggerFactory loggerFactory, object sync)
+	protected LifecycleManagement(ILoggerFactory loggerFactory, Lock sync)
 	{
 		ArgumentNullException.ThrowIfNull(loggerFactory);
 		Sync = sync ?? throw new ArgumentNullException(nameof(sync));
@@ -215,10 +215,9 @@ public abstract partial class LifecycleManagement :
 	/// The lifecycle context passed to the initialization logic. It is only used for the very first
 	/// call.
 	/// </param>
-	/// <param name="cancellationToken">Cancellation token that can be signaled to abort the operation.</param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
 	/// <exception cref="InvalidOperationException">The object is already initialized.</exception>
 	/// <exception cref="ObjectDisposedException">The object is disposing or already disposed.</exception>
-	/// <exception cref="OperationCanceledException">The operation was canceled.</exception>
 	protected async Task InitializeAsync(ILifecycleContext context, CancellationToken cancellationToken)
 	{
 		AsyncManualResetEvent? waitForShutdownToCompleteEvent = null;
@@ -355,8 +354,7 @@ public abstract partial class LifecycleManagement :
 	/// Runs the actual initialization code of the class. This method is called only once.
 	/// </summary>
 	/// <param name="context">The lifecycle context passed to <see cref="InitializeAsync"/>.</param>
-	/// <param name="cancellationToken">Cancellation token that can be signaled to abort the operation.</param>
-	/// <exception cref="OperationCanceledException">The operation was canceled.</exception>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
 	protected abstract Task OnInitializingAsync(
 		ILifecycleContext context,
 		CancellationToken cancellationToken);

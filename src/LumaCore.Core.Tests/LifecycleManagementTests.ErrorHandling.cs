@@ -197,7 +197,7 @@ public partial class LifecycleManagementTests
 			onDisposingCallback: async _ =>
 			{
 				disposingStarted.Set();
-				await allowDisposingToComplete.WaitAsync().ConfigureAwait(false);
+				await allowDisposingToComplete.WaitAsync();
 			});
 
 		Task disposeTask = sut.DisposeAsync().AsTask();
@@ -249,7 +249,7 @@ public partial class LifecycleManagementTests
 			onShuttingDownCallback: async _ =>
 			{
 				shutdownStarted.Set();
-				await allowShutdownToComplete.WaitAsync().ConfigureAwait(false);
+				await allowShutdownToComplete.WaitAsync();
 			});
 
 		await sut.InitializeAsync();
@@ -283,7 +283,7 @@ public partial class LifecycleManagementTests
 			onInitializingCallback: async (_, _) =>
 			{
 				initializingStarted.Set();
-				await allowInitializationToComplete.WaitAsync().ConfigureAwait(false);
+				await allowInitializationToComplete.WaitAsync();
 			});
 
 		Task initTask = sut.InitializeAsync();

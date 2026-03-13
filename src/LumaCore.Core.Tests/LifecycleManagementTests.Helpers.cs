@@ -127,13 +127,13 @@ public partial class LifecycleManagementTests
 		/// synchronization object.
 		/// </summary>
 		/// <param name="loggerFactory">The logger factory used to create a logger for this instance.</param>
-		/// <param name="sync">The object that is used to synchronize access to members.</param>
+		/// <param name="sync">The <see cref="Lock"/> instance used to synchronize access to members.</param>
 		/// <param name="onInitializingCallback">Optional callback invoked during initialization.</param>
 		/// <param name="onShuttingDownCallback">Optional callback invoked during shutdown.</param>
 		/// <param name="onDisposingCallback">Optional callback invoked during disposal.</param>
 		public TestableLifecycleManagement(
 			ILoggerFactory                                    loggerFactory,
-			object                                            sync,
+			Lock                                              sync,
 			Func<ILifecycleContext, CancellationToken, Task>? onInitializingCallback = null,
 			Func<ILifecycleContext, Task>?                    onShuttingDownCallback = null,
 			Func<ILifecycleContext, Task>?                    onDisposingCallback    = null)
@@ -174,7 +174,7 @@ public partial class LifecycleManagementTests
 		/// <summary>
 		/// Gets the protected <see cref="LifecycleManagement.Sync"/> object for test verification.
 		/// </summary>
-		public new object Sync => base.Sync;
+		public new Lock Sync => base.Sync;
 
 		/// <summary>
 		/// Gets the protected <see cref="LifecycleManagement.Log"/> for test verification.
@@ -184,7 +184,7 @@ public partial class LifecycleManagementTests
 		/// <summary>
 		/// Public wrapper for the protected <see cref="LifecycleManagement.InitializeAsync"/> method.
 		/// </summary>
-		/// <param name="cancellationToken">Cancellation token that can be signaled to abort the operation.</param>
+		/// <param name="cancellationToken">A token to cancel the operation.</param>
 		public Task InitializeAsync(CancellationToken cancellationToken = default)
 		{
 			return InitializeAsync(new LifecycleContext(), cancellationToken);
@@ -253,13 +253,14 @@ public partial class LifecycleManagementTests
 	/// <param name="expectedSync">
 	/// The expected sync object, or <see langword="null"/> to verify that a default sync object was created.
 	/// </param>
-	private static void AssertFreshlyConstructedState(TestableLifecycleManagement sut, object? expectedSync = null)
+	private static void AssertFreshlyConstructedState(TestableLifecycleManagement sut, Lock? expectedSync = null)
 	{
 		Assert.NotNull(sut);
 		Assert.NotNull(sut.Log);
 		Assert.NotNull(sut.LifecycleState);
 
 		// Sync object
+#pragma warning disable CS9216 // Lock-to-object conversion is safe — used in assertions, not locking
 		if (expectedSync != null)
 		{
 			Assert.Same(expectedSync, sut.Sync);
@@ -268,6 +269,7 @@ public partial class LifecycleManagementTests
 		{
 			Assert.NotNull(sut.Sync);
 		}
+#pragma warning restore CS9216
 
 		// Lifecycle state
 		Assert.False(sut.IsInitialized);

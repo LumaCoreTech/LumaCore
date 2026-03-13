@@ -34,7 +34,7 @@ namespace LumaCore.Core;
 ///         </item>
 ///     </list>
 ///     <para>
-///     <b>Thread-Safety:</b> All property accesses and method calls require the caller to hold the monitor lock on
+///     <b>Thread-Safety:</b> All property accesses and method calls require the caller to hold the lock on
 ///     <see cref="Sync"/>.
 ///     </para>
 ///     <para>
@@ -50,9 +50,8 @@ public sealed class LifecycleState : IDisposable
 	/// Initializes a new instance of the <see cref="LifecycleState"/> class with the specified synchronization object.
 	/// </summary>
 	/// <param name="sync">
-	/// The object that will be used as a monitor lock (via <see cref="Monitor.Enter(object)"/> /
-	/// <see cref="Monitor.Exit(object)"/>) to synchronize all state transitions.
-	/// This must be the same object used by the owning <see cref="LifecycleManagement"/> instance.
+	/// The <see cref="Lock"/> instance used to synchronize all state transitions.
+	/// This must be the same instance used by the owning <see cref="LifecycleManagement"/> instance.
 	/// </param>
 	/// <param name="ownerType">
 	/// The type of the object that owns this <see cref="LifecycleState"/>. Used for exception messages
@@ -62,7 +61,7 @@ public sealed class LifecycleState : IDisposable
 	/// The constructor immediately captures a <see cref="CancellationToken"/> from a newly created
 	/// <see cref="CancellationTokenSource"/> and exposes it via <see cref="ShutdownToken"/>.
 	/// </remarks>
-	internal LifecycleState(object sync, Type ownerType)
+	internal LifecycleState(Lock sync, Type ownerType)
 	{
 		Sync = sync;
 		OwnerType = ownerType;
@@ -83,14 +82,14 @@ public sealed class LifecycleState : IDisposable
 	/// Gets the synchronization root used to guard all mutable state in this instance.
 	/// </summary>
 	/// <value>
-	/// An object that must be locked via <c>lock (Sync)</c> or <see cref="Monitor.Enter(object)"/> before
-	/// accessing or modifying any property or calling any method on this instance.
+	/// A <see cref="Lock"/> that must be entered via <c>lock (Sync)</c> before accessing or modifying any
+	/// property or calling any method on this instance.
 	/// </value>
 	/// <remarks>
 	/// Callers are responsible for acquiring and releasing the lock. Debug builds assert that the lock is held
 	/// whenever a guarded member is accessed.
 	/// </remarks>
-	public object Sync { get; }
+	public Lock Sync { get; }
 
 	#endregion
 
@@ -129,7 +128,7 @@ public sealed class LifecycleState : IDisposable
 	/// </remarks>
 	internal void SignalShutdown()
 	{
-		Debug.Assert(Monitor.IsEntered(Sync));
+		Debug.Assert(Sync.IsHeldByCurrentThread);
 		if (!mShutdownCancellationTokenSource.IsCancellationRequested)
 		{
 			mShutdownCancellationTokenSource.Cancel();
@@ -151,7 +150,7 @@ public sealed class LifecycleState : IDisposable
 	/// </remarks>
 	internal void ResetShutdownSignal()
 	{
-		Debug.Assert(Monitor.IsEntered(Sync));
+		Debug.Assert(Sync.IsHeldByCurrentThread);
 		if (mShutdownCancellationTokenSource.IsCancellationRequested)
 		{
 			mShutdownCancellationTokenSource.Dispose();
@@ -201,12 +200,12 @@ public sealed class LifecycleState : IDisposable
 	{
 		get
 		{
-			Debug.Assert(Monitor.IsEntered(Sync));
+			Debug.Assert(Sync.IsHeldByCurrentThread);
 			return mIsInitializing;
 		}
 		internal set
 		{
-			Debug.Assert(Monitor.IsEntered(Sync));
+			Debug.Assert(Sync.IsHeldByCurrentThread);
 			mIsInitializing = value;
 		}
 	}
@@ -230,12 +229,12 @@ public sealed class LifecycleState : IDisposable
 	{
 		get
 		{
-			Debug.Assert(Monitor.IsEntered(Sync));
+			Debug.Assert(Sync.IsHeldByCurrentThread);
 			return mIsInitialized;
 		}
 		internal set
 		{
-			Debug.Assert(Monitor.IsEntered(Sync));
+			Debug.Assert(Sync.IsHeldByCurrentThread);
 			mIsInitialized = value;
 		}
 	}
@@ -260,12 +259,12 @@ public sealed class LifecycleState : IDisposable
 	{
 		get
 		{
-			Debug.Assert(Monitor.IsEntered(Sync));
+			Debug.Assert(Sync.IsHeldByCurrentThread);
 			return mIsShuttingDown;
 		}
 		internal set
 		{
-			Debug.Assert(Monitor.IsEntered(Sync));
+			Debug.Assert(Sync.IsHeldByCurrentThread);
 			mIsShuttingDown = value;
 		}
 	}
@@ -291,12 +290,12 @@ public sealed class LifecycleState : IDisposable
 	{
 		get
 		{
-			Debug.Assert(Monitor.IsEntered(Sync));
+			Debug.Assert(Sync.IsHeldByCurrentThread);
 			return mIsDisposing;
 		}
 		internal set
 		{
-			Debug.Assert(Monitor.IsEntered(Sync));
+			Debug.Assert(Sync.IsHeldByCurrentThread);
 			mIsDisposing = value;
 		}
 	}
@@ -321,12 +320,12 @@ public sealed class LifecycleState : IDisposable
 	{
 		get
 		{
-			Debug.Assert(Monitor.IsEntered(Sync));
+			Debug.Assert(Sync.IsHeldByCurrentThread);
 			return mIsDisposed;
 		}
 		internal set
 		{
-			Debug.Assert(Monitor.IsEntered(Sync));
+			Debug.Assert(Sync.IsHeldByCurrentThread);
 			mIsDisposed = value;
 		}
 	}
@@ -394,7 +393,7 @@ public sealed class LifecycleState : IDisposable
 	{
 		get
 		{
-			Debug.Assert(Monitor.IsEntered(Sync));
+			Debug.Assert(Sync.IsHeldByCurrentThread);
 			return mPendingOperationCount;
 		}
 	}
@@ -421,7 +420,7 @@ public sealed class LifecycleState : IDisposable
 	/// </remarks>
 	public void IncrementPendingOperationsCount()
 	{
-		Debug.Assert(Monitor.IsEntered(Sync));
+		Debug.Assert(Sync.IsHeldByCurrentThread);
 		int oldCount = mPendingOperationCount++;
 		int newCount = mPendingOperationCount;
 
@@ -456,7 +455,7 @@ public sealed class LifecycleState : IDisposable
 	/// </remarks>
 	public void DecrementPendingOperationsCount()
 	{
-		Debug.Assert(Monitor.IsEntered(Sync));
+		Debug.Assert(Sync.IsHeldByCurrentThread);
 		mPendingOperationCount--;
 		Debug.Assert(mPendingOperationCount >= 0);
 
@@ -475,7 +474,7 @@ public sealed class LifecycleState : IDisposable
 	/// Throws an <see cref="ObjectDisposedException"/> if the object is currently disposing or has already been disposed.
 	/// </summary>
 	/// <exception cref="ObjectDisposedException">
-	/// Thrown when <see cref="IsDisposing"/> or <see cref="IsDisposed"/> is <see langword="true"/>.
+	/// <see cref="IsDisposing"/> or <see cref="IsDisposed"/> is <see langword="true"/>.
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -487,7 +486,7 @@ public sealed class LifecycleState : IDisposable
 	/// </remarks>
 	public void EnsureNotDisposingOrDisposed()
 	{
-		Debug.Assert(Monitor.IsEntered(Sync));
+		Debug.Assert(Sync.IsHeldByCurrentThread);
 		if (mIsDisposed || mIsDisposing)
 			throw new ObjectDisposedException(OwnerType.FullName, "The object is disposing or already disposed.");
 	}
@@ -496,10 +495,10 @@ public sealed class LifecycleState : IDisposable
 	/// Throws an exception if the object is disposed, disposing, or not yet initialized.
 	/// </summary>
 	/// <exception cref="ObjectDisposedException">
-	/// Thrown when <see cref="IsDisposing"/> or <see cref="IsDisposed"/> is <see langword="true"/>.
+	/// <see cref="IsDisposing"/> or <see cref="IsDisposed"/> is <see langword="true"/>.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown when <see cref="IsInitialized"/> is <see langword="false"/>.
+	/// <see cref="IsInitialized"/> is <see langword="false"/>.
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -511,7 +510,7 @@ public sealed class LifecycleState : IDisposable
 	/// </remarks>
 	public void EnsureIsInitialized()
 	{
-		Debug.Assert(Monitor.IsEntered(Sync));
+		Debug.Assert(Sync.IsHeldByCurrentThread);
 		if (mIsDisposed || mIsDisposing)
 			throw new ObjectDisposedException(OwnerType.FullName, "The object is disposing or already disposed.");
 		if (!mIsInitialized)
@@ -522,10 +521,10 @@ public sealed class LifecycleState : IDisposable
 	/// Throws an exception if the object's configuration is locked (i.e., it is no longer in the uninitialized state).
 	/// </summary>
 	/// <exception cref="ObjectDisposedException">
-	/// Thrown when <see cref="IsDisposing"/> or <see cref="IsDisposed"/> is <see langword="true"/>.
+	/// <see cref="IsDisposing"/> or <see cref="IsDisposed"/> is <see langword="true"/>.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown when the object is in any of the following states:
+	/// The object is in any of the following states:
 	/// <list type="bullet">
 	///     <item>
 	///         <description><see cref="IsInitializing"/> is <see langword="true"/>.</description>
@@ -548,7 +547,7 @@ public sealed class LifecycleState : IDisposable
 	/// </remarks>
 	public void EnsureCanChangeConfiguration()
 	{
-		Debug.Assert(Monitor.IsEntered(Sync));
+		Debug.Assert(Sync.IsHeldByCurrentThread);
 		if (mIsDisposed || mIsDisposing)
 			throw new ObjectDisposedException(GetType().FullName, "The object is disposing or already disposed.");
 		if (mIsInitializing || mIsInitialized)

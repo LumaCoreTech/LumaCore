@@ -31,7 +31,7 @@ public partial class LifecycleManagementTests
 			onShuttingDownCallback: async _ =>
 			{
 				shutdownStarted.Set();
-				await allowShutdownToComplete.WaitAsync().ConfigureAwait(false);
+				await allowShutdownToComplete.WaitAsync();
 			});
 
 		await sut.InitializeAsync();
@@ -73,7 +73,7 @@ public partial class LifecycleManagementTests
 			onDisposingCallback: async _ =>
 			{
 				disposingStarted.Set();
-				await allowDisposingToComplete.WaitAsync().ConfigureAwait(false);
+				await allowDisposingToComplete.WaitAsync();
 			});
 
 		// Act
@@ -110,7 +110,7 @@ public partial class LifecycleManagementTests
 			onInitializingCallback: async (_, _) =>
 			{
 				initializingStarted.Set();
-				await allowInitializationToComplete.WaitAsync().ConfigureAwait(false);
+				await allowInitializationToComplete.WaitAsync();
 			});
 
 		// Act
@@ -149,7 +149,7 @@ public partial class LifecycleManagementTests
 				if (currentCall == 1)
 				{
 					initializingStarted.Set();
-					await allowFirstInitToFail.WaitAsync().ConfigureAwait(false);
+					await allowFirstInitToFail.WaitAsync();
 					throw new InvalidOperationException("First init failed");
 				}
 			});
@@ -190,7 +190,7 @@ public partial class LifecycleManagementTests
 			onInitializingCallback: async (_, _) =>
 			{
 				initializingStarted.Set();
-				await allowInitializationToComplete.WaitAsync().ConfigureAwait(false);
+				await allowInitializationToComplete.WaitAsync();
 			});
 
 		// Act
@@ -223,7 +223,7 @@ public partial class LifecycleManagementTests
 			onShuttingDownCallback: async _ =>
 			{
 				shutdownStarted.Set();
-				await allowShutdownToComplete.WaitAsync().ConfigureAwait(false);
+				await allowShutdownToComplete.WaitAsync();
 			});
 
 		await sut.InitializeAsync();
@@ -259,7 +259,7 @@ public partial class LifecycleManagementTests
 			onInitializingCallback: async (_, _) =>
 			{
 				initializingStarted.Set();
-				await allowInitializationToComplete.WaitAsync().ConfigureAwait(false);
+				await allowInitializationToComplete.WaitAsync();
 			},
 			onDisposingCallback: _ =>
 			{
