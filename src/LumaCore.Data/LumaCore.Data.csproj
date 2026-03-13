@@ -1,0 +1,24 @@
+<!-- Copyright (c) 2025-2026 LumaCoreTech -->
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Project: https://github.com/LumaCoreTech/LumaCore -->
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Project: LumaCore.Data
+		Purpose: EF Core data access layer (DbContext, entity mappings, migrations, provider integration).
+		Scope: Server-side only. Avoid referencing from client/UI projects.
+	-->
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<AssemblyName>LumaCore.Data</AssemblyName>
+		<RootNamespace>LumaCore.Data</RootNamespace>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="LumaCore.Data.Tests" />
+	</ItemGroup>
+
+</Project>
