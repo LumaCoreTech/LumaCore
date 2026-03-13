@@ -94,7 +94,7 @@ public sealed class OptionsTracker
 	/// <typeparam name="TOptions">The Options type being registered.</typeparam>
 	/// <param name="sectionName">The configuration section name.</param>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown if called after <see cref="Validate"/> has been invoked.
+	/// Called after <see cref="Validate"/> has been invoked.
 	/// </exception>
 	public void Track<TOptions>(string sectionName)
 		where TOptions : class
@@ -119,7 +119,7 @@ public sealed class OptionsTracker
 	/// </summary>
 	/// <param name="services">The service collection to validate.</param>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown if any Options type was registered without using
+	/// Any Options type was registered without using
 	/// <see cref="OptionsRegistrationExtensions.AddFeatureOptions{TOptions}"/>.
 	/// </exception>
 	/// <remarks>

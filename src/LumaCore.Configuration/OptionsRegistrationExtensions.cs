@@ -59,7 +59,7 @@ public static class OptionsRegistrationExtensions
 	/// An <see cref="OptionsBuilder{TOptions}"/> for further configuration (e.g., adding validators).
 	/// </returns>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown if called after <see cref="ValidateOptionsRegistrations"/> has been invoked.
+	/// Called after <see cref="ValidateOptionsRegistrations"/> has been invoked.
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -106,7 +106,7 @@ public static class OptionsRegistrationExtensions
 	/// </summary>
 	/// <param name="services">The service collection to validate.</param>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown if any Options type was registered without using <see cref="AddFeatureOptions{TOptions}"/>.
+	/// Any Options type was registered without using <see cref="AddFeatureOptions{TOptions}"/>.
 	/// </exception>
 	/// <remarks>
 	///     <para>
