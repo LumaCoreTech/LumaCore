@@ -127,7 +127,7 @@ public partial class TaskExtensionsTests
 		// Schedule cancellation
 		Task cancelTask = Task.Run(async () =>
 		{
-			await Task.Delay(50).ConfigureAwait(false);
+			await Task.Delay(50);
 			cts.Cancel();
 		});
 

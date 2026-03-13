@@ -49,7 +49,7 @@ public partial class AsyncManualResetEventTests
 		// Act - wrap synchronous Wait in Task.Run to prevent blocking test runner
 		Task setTask = Task.Run(async () =>
 		{
-			await Task.Delay(50).ConfigureAwait(false);
+			await Task.Delay(50);
 			mre.Set();
 		});
 
@@ -103,7 +103,7 @@ public partial class AsyncManualResetEventTests
 		// Schedule cancellation
 		Task cancelTask = Task.Run(async () =>
 		{
-			await Task.Delay(50).ConfigureAwait(false);
+			await Task.Delay(50);
 			cts.Cancel();
 		});
 
