@@ -1,0 +1,20 @@
+<!-- Copyright (c) 2025-2026 LumaCoreTech -->
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Project: https://github.com/LumaCoreTech/LumaCore -->
+
+<Project Sdk="Microsoft.NET.Sdk">
+	<!--
+		Project: LumaCore.Definitions
+		Purpose: Cross-layer shared definitions (constants/types) for validation and common contracts.
+		Scope: Keep dependencies minimal to allow reuse by both server and client.
+	-->
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<AssemblyName>LumaCore.Definitions</AssemblyName>
+		<RootNamespace>LumaCore.Definitions</RootNamespace>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+</Project>

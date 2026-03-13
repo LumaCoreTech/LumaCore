@@ -36,6 +36,7 @@
 				           class="lc-input"
 				           placeholder="@Localizer["components.login.fields.usernamePlaceholder"]"
 				           autocomplete="username"
+				           maxlength="@UiInputLimits.LoginUsernameMaxLength"
 				           autofocus/>
 				<ValidationMessage For="@(() => mLoginModel.Username)" class="lc-validation-error"/>
 			</div>
@@ -48,7 +49,8 @@
 				           type="password"
 				           class="lc-input"
 				           placeholder="@Localizer["components.login.fields.passwordPlaceholder"]"
-				           autocomplete="current-password"/>
+				           autocomplete="current-password"
+				           maxlength="@UiInputLimits.LoginPasswordMaxLength"/>
 				<ValidationMessage For="@(() => mLoginModel.Password)" class="lc-validation-error"/>
 			</div>
 
@@ -94,13 +96,23 @@
 	/// Model for the login form.
 	/// </summary>
 	/// <remarks>
-	/// Uses standard DataAnnotations with localized error messages. Blazor's validation system
-	/// automatically resolves the ErrorMessage keys via IStringLocalizer.
+	/// Uses standard DataAnnotations with localized error messages. Blazor's validation system automatically resolves the
+	/// ErrorMessage keys via IStringLocalizer.
 	/// 
-	/// Login validation intentionally only checks for empty fields. Password constraints (length,
-	/// complexity) are NOT enforced here because: (1) the backend validates credentials anyway,
-	/// (2) policy changes would lock out users with legacy passwords, (3) it leaks password policy
-	/// to attackers. Constraints belong in registration/password-change forms, not login.
+	/// Login validation intentionally only checks for empty fields. Password constraints (length, complexity) are NOT
+	/// enforced here because:
+	/// <list type="number">
+	///     <item>
+	///         <description>The backend validates credentials anyway.</description>
+	///     </item>
+	///     <item>
+	///         <description>Policy changes would lock out users with legacy passwords.</description>
+	///     </item>
+	///     <item>
+	///         <description>It leaks password policy to attackers.</description>
+	///     </item>
+	/// </list>
+	/// Constraints belong in registration/password-change forms, not login.
 	/// </remarks>
 	private sealed class LoginFormModel
 	{

@@ -1,4 +1,13 @@
+<!-- Copyright (c) 2025-2026 LumaCoreTech -->
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Project: https://github.com/LumaCoreTech/LumaCore -->
+
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+	<!--
+		Project: LumaCore.Ui.Web
+		Purpose: Blazor WebAssembly UI.
+		Scope: UI-only code, including localization.
+	-->
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
@@ -19,6 +28,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LumaCore.Api.Contracts\LumaCore.Api.Contracts.csproj" />
+		<ProjectReference Include="..\LumaCore.Definitions\LumaCore.Definitions.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
