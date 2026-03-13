@@ -571,7 +571,7 @@
         "properties": {
           "username": {
             "type": "string",
-            "description": "The username for authentication. Must be between 1 and 100 characters."
+            "description": "The username for authentication."
           },
           "password": {
             "type": "string",
