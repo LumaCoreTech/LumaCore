@@ -69,7 +69,7 @@ sealed class LumaCoreExceptionHandler : IExceptionHandler
 	/// </summary>
 	/// <param name="httpContext">The <see cref="HttpContext"/> for the current request.</param>
 	/// <param name="exception">The unhandled <see cref="Exception"/> to handle.</param>
-	/// <param name="cancellationToken">A <see cref="CancellationToken"/> to cancel the operation.</param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
 	/// <returns>
 	/// <see langword="true"/> indicating the exception was handled and a response was written;
 	/// the exception middleware should not invoke subsequent handlers.

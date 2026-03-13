@@ -59,12 +59,11 @@ static class MiddlewareIntegration
 		if (!options.Enabled)
 		{
 			logger.LogDebug(
-				"Security headers are disabled. " +
-				"No additional HTTP security headers will be added to responses.");
+				"Security headers are disabled — no additional HTTP security headers will be added to responses");
 			return app;
 		}
 
-		logger.LogDebug("Security headers are enabled.");
+		logger.LogDebug("Security headers are enabled");
 
 		// Add HSTS if enabled.
 		if (options.EnableHsts)
@@ -72,13 +71,13 @@ static class MiddlewareIntegration
 			if (options.HstsMaxAgeSeconds == 0)
 			{
 				logger.LogWarning(
-					"HSTS max-age is 0. This will clear the HSTS entry in browsers. " +
-					"Set HstsMaxAgeSeconds > 0 for production use.");
+					"HSTS max-age is 0 — this will clear the HSTS entry in browsers, " + 
+					"set HstsMaxAgeSeconds > 0 for production use");
 			}
 
 			app.UseHsts();
 			logger.LogDebug(
-				"HSTS enabled with max-age {MaxAge} seconds, includeSubDomains={IncludeSubDomains}.",
+				"HSTS enabled with max-age {MaxAge} seconds, includeSubDomains={IncludeSubDomains}",
 				options.HstsMaxAgeSeconds,
 				options.HstsIncludeSubDomains);
 		}

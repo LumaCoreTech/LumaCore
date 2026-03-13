@@ -5,6 +5,7 @@
 using System.Reflection;
 
 using LumaCore.Api.Features.ApiVersioning;
+using LumaCore.Definitions;
 
 using V1 = LumaCore.Api.Contracts.V1.System;
 
@@ -74,7 +75,7 @@ static class EndpointMapping
 					return Results.Ok(response);
 				})
 			.MapToApiVersion(ApiVersions.V1)
-			.RequireAuthorization(policy => policy.RequireRole("admin"))
+			.RequireAuthorization(policy => policy.RequireRole(RoleDefinitions.Admin.Name))
 			.Produces<V1.SystemInfoResponse>(StatusCodes.Status200OK)
 			.WithSummary("Returns identity information about the LumaCore instance.")
 			.WithDescription(
@@ -98,7 +99,7 @@ static class EndpointMapping
 					return Results.Ok(response);
 				})
 			.MapToApiVersion(ApiVersions.V1)
-			.RequireAuthorization(policy => policy.RequireRole("admin"))
+			.RequireAuthorization(policy => policy.RequireRole(RoleDefinitions.Admin.Name))
 			.Produces<V1.SystemMetricsResponse>(StatusCodes.Status200OK)
 			.WithSummary("Returns runtime metrics for the LumaCore instance.")
 			.WithDescription(
@@ -120,7 +121,7 @@ static class EndpointMapping
 					return Results.Ok(allConfig);
 				})
 			.MapToApiVersion(ApiVersions.V1)
-			.RequireAuthorization(policy => policy.RequireRole("admin"))
+			.RequireAuthorization(policy => policy.RequireRole(RoleDefinitions.Admin.Name))
 			.Produces<IDictionary<string, IDictionary<string, object?>>>(StatusCodes.Status200OK)
 			.WithSummary("Returns all configuration sections with secrets masked.")
 			.WithDescription(
@@ -144,7 +145,7 @@ static class EndpointMapping
 						       : Results.Ok(sectionConfig);
 				})
 			.MapToApiVersion(ApiVersions.V1)
-			.RequireAuthorization(policy => policy.RequireRole("admin"))
+			.RequireAuthorization(policy => policy.RequireRole(RoleDefinitions.Admin.Name))
 			.Produces<IDictionary<string, object?>>(StatusCodes.Status200OK)
 			.Produces(StatusCodes.Status404NotFound)
 			.WithSummary("Returns a specific configuration section with secrets masked.")
@@ -180,7 +181,7 @@ static class EndpointMapping
 					return Results.Ok(sectionConfig[matchingKey]);
 				})
 			.MapToApiVersion(ApiVersions.V1)
-			.RequireAuthorization(policy => policy.RequireRole("admin"))
+			.RequireAuthorization(policy => policy.RequireRole(RoleDefinitions.Admin.Name))
 			.Produces<object>(StatusCodes.Status200OK)
 			.Produces(StatusCodes.Status404NotFound)
 			.WithSummary("Returns a specific configuration value with secrets masked.")

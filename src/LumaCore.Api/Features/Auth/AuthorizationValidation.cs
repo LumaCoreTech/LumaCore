@@ -46,7 +46,7 @@ static class AuthorizationValidation
 	/// <param name="app">The <see cref="WebApplication"/> to validate.</param>
 	/// <returns>The <paramref name="app"/> for method chaining.</returns>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown when one or more versioned endpoints are missing explicit <c>RequireAuthorization()</c> or
+	/// One or more versioned endpoints are missing explicit <c>RequireAuthorization()</c> or
 	/// <c>AllowAnonymous()</c> calls.
 	/// </exception>
 	/// <remarks>

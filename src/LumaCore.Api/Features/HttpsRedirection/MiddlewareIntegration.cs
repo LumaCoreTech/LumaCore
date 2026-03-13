@@ -57,12 +57,11 @@ static class MiddlewareIntegration
 		if (!options.Enabled)
 		{
 			logger.LogDebug(
-				"HTTPS redirection is disabled. " +
-				"HTTP requests will not be redirected to HTTPS.");
+				"HTTPS redirection is disabled — HTTP requests will not be redirected to HTTPS");
 			return app;
 		}
 
-		logger.LogDebug("HTTPS redirection is enabled.");
+		logger.LogDebug("HTTPS redirection is enabled");
 
 		if (options.HttpsPort.HasValue)
 		{
@@ -73,11 +72,11 @@ static class MiddlewareIntegration
 		else
 		{
 			logger.LogDebug(
-				"HTTPS redirection port not specified. " +
-				"Port will be auto-detected from server configuration or default to 443.");
+				"HTTPS redirection port not specified — " + 
+				"port will be auto-detected from server configuration or default to 443");
 		}
 
-		logger.LogDebug("HTTP requests will be redirected with status code 307 (Temporary Redirect).");
+		logger.LogDebug("HTTP requests will be redirected with status code 307 (Temporary Redirect)");
 
 		app.UseHttpsRedirection();
 

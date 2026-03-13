@@ -3,6 +3,11 @@
 <!-- Project: https://github.com/LumaCoreTech/LumaCore -->
 
 <Project Sdk="Microsoft.NET.Sdk">
+	<!--
+		Project: LumaCore.Api.Contracts
+		Purpose: API contract DTOs intended to be shared between server and client.
+		Scope: Keep dependencies minimal. Validation attributes are OK; avoid infrastructure/data-layer dependencies.
+	-->
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -32,6 +37,10 @@
 	-->
 	<ItemGroup>
 		<PackageReference Include="System.ComponentModel.Annotations" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LumaCore.Definitions\LumaCore.Definitions.csproj" />
 	</ItemGroup>
 
 </Project>

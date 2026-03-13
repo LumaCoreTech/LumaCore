@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Security.Claims;
 
 using LumaCore.Api.Features.ApiVersioning;
+using LumaCore.Definitions;
 
 using Microsoft.Extensions.Options;
 
@@ -121,7 +122,7 @@ static class EndpointMapping
 					{
 						// Log failed authentication attempt for diagnostics. Do not log the password.
 						logger.LogWarning(
-							"Authentication failed for administrator login attempt with username '{Username}'.",
+							"Authentication failed for administrator login attempt with username '{Username}'",
 							request.Username);
 
 						// Deliberately return a generic 401 without details to avoid
@@ -134,7 +135,7 @@ static class EndpointMapping
 					{
 						// Rely on 'sub' => NameIdentifier mapping; no need to add it explicitly.
 						new Claim(ClaimTypes.Name, request.Username),
-						new Claim(ClaimTypes.Role, "admin")
+						new Claim(ClaimTypes.Role, RoleDefinitions.Admin.Name)
 					};
 
 					// Issue a signed JWT that the client can present in subsequent API calls.
@@ -142,7 +143,7 @@ static class EndpointMapping
 
 					// Log successful authentication for auditing purposes.
 					logger.LogInformation(
-						"Administrator '{Username}' successfully authenticated and issued a JWT access token.",
+						"Administrator '{Username}' successfully authenticated and issued a JWT access token",
 						request.Username);
 
 					// Return the access token to the caller.
@@ -290,7 +291,7 @@ static class EndpointMapping
 
 					// Log the introspection request for diagnostics.
 					logger.LogDebug(
-						"Introspection requested for subject '{Subject}'.",
+						"Introspection requested for subject '{Subject}'",
 						subject);
 
 					// Return the introspection response.
@@ -313,17 +314,17 @@ static class EndpointMapping
 	/// <summary>
 	/// Performs the current, minimal authentication based on a single hard-coded admin account.
 	/// </summary>
-	/// <remarks>
-	/// This method is intended as a temporary bootstrap mechanism only. It must be replaced
-	/// by a proper authentication flow backed by a persistent user store before the system
-	/// is exposed to untrusted networks.
-	/// </remarks>
 	/// <param name="username">The supplied user name.</param>
 	/// <param name="password">The supplied password.</param>
 	/// <returns>
 	/// <see langword="true"/> if the credentials match the built-in admin account;
 	/// otherwise, <see langword="false"/>.
 	/// </returns>
+	/// <remarks>
+	/// This method is intended as a temporary bootstrap mechanism only. It must be replaced
+	/// by a proper authentication flow backed by a persistent user store before the system
+	/// is exposed to untrusted networks.
+	/// </remarks>
 	private static bool IsValidAdmin(string? username, string? password)
 	{
 		// NOTE:

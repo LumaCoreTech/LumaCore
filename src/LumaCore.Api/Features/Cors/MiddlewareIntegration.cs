@@ -76,7 +76,7 @@ static class MiddlewareIntegration
 		// Apply CORS policy if enabled.
 		if (corsOptions.Enabled)
 		{
-			logger.LogDebug("CORS enabled with policy '{PolicyName}'.", PolicyName);
+			logger.LogDebug("CORS enabled with policy '{PolicyName}'", PolicyName);
 
 			// Build the CORS policy dynamically based on configuration.
 			app.UseCors(builder =>
@@ -85,7 +85,7 @@ static class MiddlewareIntegration
 				if (corsOptions.AllowedOrigins.Contains("*"))
 				{
 					logger.LogWarning(
-						"CORS policy allows all origins (*). This is insecure and should not be used in production.");
+						"CORS policy allows all origins (*) — this is insecure and should not be used in production");
 					builder.AllowAnyOrigin();
 				}
 				else
@@ -100,7 +100,7 @@ static class MiddlewareIntegration
 				if (corsOptions.AllowCredentials)
 				{
 					builder.AllowCredentials();
-					logger.LogDebug("CORS policy allows credentials (cookies, auth headers).");
+					logger.LogDebug("CORS policy allows credentials (cookies, auth headers)");
 				}
 
 				// Configure allowed methods.
@@ -114,7 +114,7 @@ static class MiddlewareIntegration
 				else
 				{
 					builder.AllowAnyMethod();
-					logger.LogDebug("CORS policy allows all HTTP methods.");
+					logger.LogDebug("CORS policy allows all HTTP methods");
 				}
 
 				// Configure allowed headers.
@@ -128,7 +128,7 @@ static class MiddlewareIntegration
 				else
 				{
 					builder.AllowAnyHeader();
-					logger.LogDebug("CORS policy allows all headers.");
+					logger.LogDebug("CORS policy allows all headers");
 				}
 
 				// Configure exposed headers.
@@ -145,14 +145,14 @@ static class MiddlewareIntegration
 				{
 					builder.SetPreflightMaxAge(TimeSpan.FromSeconds(corsOptions.PreflightMaxAge.Value));
 					logger.LogDebug(
-						"CORS preflight responses cached for {Seconds} seconds.",
+						"CORS preflight responses cached for {Seconds} seconds",
 						corsOptions.PreflightMaxAge.Value);
 				}
 			});
 		}
 		else
 		{
-			logger.LogDebug("CORS is disabled. Cross-origin requests will be blocked by browsers.");
+			logger.LogDebug("CORS is disabled — cross-origin requests will be blocked by browsers");
 		}
 
 		return app;

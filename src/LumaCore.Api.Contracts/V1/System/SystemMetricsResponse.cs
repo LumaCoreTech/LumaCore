@@ -10,6 +10,11 @@ namespace LumaCore.Api.Contracts.V1.System;
 /// <summary>
 /// Response containing runtime metrics for the LumaCore instance.
 /// </summary>
+/// <param name="Timestamp">UTC time when this metrics snapshot was captured.</param>
+/// <param name="Gc">Garbage collection metrics including collection counts and configuration.</param>
+/// <param name="Memory">Memory usage metrics including managed heap, process memory, and system memory.</param>
+/// <param name="Process">Process-level metrics including thread count, handle count, and uptime.</param>
+/// <param name="ThreadPool">.NET thread pool metrics including available threads and pending work items.</param>
 /// <remarks>
 ///     <para>
 ///     This response provides a comprehensive snapshot of runtime diagnostics including memory usage, garbage
@@ -30,11 +35,6 @@ namespace LumaCore.Api.Contracts.V1.System;
 ///     details appear in an <c>_errors</c> property (also via <see cref="Extensions"/>).
 ///     </para>
 /// </remarks>
-/// <param name="Timestamp">UTC time when this metrics snapshot was captured.</param>
-/// <param name="Gc">Garbage collection metrics including collection counts and configuration.</param>
-/// <param name="Memory">Memory usage metrics including managed heap, process memory, and system memory.</param>
-/// <param name="Process">Process-level metrics including thread count, handle count, and uptime.</param>
-/// <param name="ThreadPool">.NET thread pool metrics including available threads and pending work items.</param>
 public sealed record SystemMetricsResponse(
 	DateTime          Timestamp,
 	GcMetrics         Gc,

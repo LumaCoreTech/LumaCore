@@ -94,9 +94,8 @@ static class MiddlewareIntegration
 		else
 		{
 			logger.LogDebug(
-				"Proxy header processing is disabled. " +
-				"X-Forwarded-* headers will not be processed. " +
-				"This is correct for direct access without a reverse proxy.");
+				"Proxy header processing is disabled — " + 
+				"X-Forwarded-* headers will not be processed (correct for direct access without a reverse proxy)");
 		}
 
 		return app;
@@ -117,13 +116,13 @@ static class MiddlewareIntegration
 	private static void ConfigureCloudMode(WebApplication app, ProxyHeadersOptions proxyOptions, ILogger logger)
 	{
 		logger.LogDebug(
-			"Proxy header processing enabled in 'Cloud' mode. " +
-			"All X-Forwarded-* headers will be trusted (suitable for Azure, AWS, GCP managed proxies).");
+			"Proxy header processing enabled in 'Cloud' mode — " + 
+			"all X-Forwarded-* headers will be trusted (suitable for Azure, AWS, GCP managed proxies)");
 
 		int forwardLimit = proxyOptions.ForwardLimit is > 0 ? proxyOptions.ForwardLimit.Value : 1;
 
 		logger.LogDebug(
-			"Forward limit set to {ForwardLimit} hop(s).",
+			"Forward limit set to {ForwardLimit} hop(s)",
 			forwardLimit);
 
 		var options = new ForwardedHeadersOptions
@@ -137,7 +136,7 @@ static class MiddlewareIntegration
 		options.KnownProxies.Clear();
 
 		logger.LogDebug(
-			"KnownProxies and KnownIPNetworks restrictions cleared (cloud platform manages proxy infrastructure).");
+			"KnownProxies and KnownIPNetworks restrictions cleared (cloud platform manages proxy infrastructure)");
 
 		app.UseForwardedHeaders(options);
 	}
@@ -161,14 +160,12 @@ static class MiddlewareIntegration
 	private static void ConfigureSelfManagedMode(WebApplication app, ProxyHeadersOptions proxyOptions, ILogger logger)
 	{
 		logger.LogDebug(
-			"Proxy header processing enabled in 'SelfManaged' mode. " +
-			"Only explicitly trusted proxies and networks will be accepted.");
+			"Proxy header processing enabled in 'SelfManaged' mode — " + 
+			"only explicitly trusted proxies and networks will be accepted");
 
 		int forwardLimit = proxyOptions.ForwardLimit is > 0 ? proxyOptions.ForwardLimit.Value : 1;
 
-		logger.LogDebug(
-			"Forward limit set to {ForwardLimit} hop(s).",
-			forwardLimit);
+		logger.LogDebug("Forward limit set to {ForwardLimit} hop(s)", forwardLimit);
 
 		// Configure forwarded headers options.
 		var options = new ForwardedHeadersOptions

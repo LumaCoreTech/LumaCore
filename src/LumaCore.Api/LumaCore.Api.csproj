@@ -1,4 +1,13 @@
+<!-- Copyright (c) 2025-2026 LumaCoreTech -->
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Project: https://github.com/LumaCoreTech/LumaCore -->
+
 <Project Sdk="Microsoft.NET.Sdk.Web">
+	<!--
+		Project: LumaCore.Api
+		Purpose: ASP.NET Core host for the HTTP API (middleware pipeline, DI, OpenAPI, hosting).
+		Scope: Server-side entry point. Optionally includes the UI via `IncludeBlazorUi`.
+	-->
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>

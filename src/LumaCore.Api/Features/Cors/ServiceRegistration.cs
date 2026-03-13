@@ -38,7 +38,7 @@ static class ServiceRegistration
 	/// <remarks>
 	///     <para>
 	///     This registers and validates the <see cref="CorsOptions"/> configuration from the <c>Cors</c> section in
-	///     appsettings.json.
+	///     <c>appsettings.json</c>.
 	///     </para>
 	///     <para>Validation includes:</para>
 	///     <list type="bullet">

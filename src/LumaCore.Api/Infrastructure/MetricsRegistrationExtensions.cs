@@ -32,10 +32,10 @@ public static class MetricsRegistrationExtensions
 	/// </param>
 	/// <returns>The <paramref name="builder"/> for method chaining.</returns>
 	/// <exception cref="ArgumentException">
-	/// Thrown if <paramref name="sectionName"/> is <see langword="null"/>, empty, or whitespace.
+	/// <paramref name="sectionName"/> is <see langword="null"/>, empty, or whitespace.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown if <paramref name="sectionName"/> is already registered by another contributor.
+	/// <paramref name="sectionName"/> is already registered by another contributor.
 	/// </exception>
 	/// <remarks>
 	///     <para>

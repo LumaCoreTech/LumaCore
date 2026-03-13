@@ -25,12 +25,12 @@ static class ServiceRegistration
 	/// Registers JWT authentication, authorization, options binding, and supporting services using the
 	/// <see cref="WebApplicationBuilder"/> facade.
 	/// </summary>
+	/// <param name="builder">The web application builder.</param>
+	/// <returns>The modified application builder.</returns>
 	/// <remarks>
 	/// This is a convenience wrapper that forwards to <see cref="AddAuthFeatureCore"/> using the
 	/// <see cref="IServiceCollection"/> and <see cref="IConfiguration"/> exposed by the builder.
 	/// </remarks>
-	/// <param name="builder">The web application builder.</param>
-	/// <returns>The modified application builder.</returns>
 	public static WebApplicationBuilder AddAuthFeature(this WebApplicationBuilder builder)
 	{
 		builder.Services.AddAuthFeatureCore(builder.Configuration);
@@ -41,6 +41,9 @@ static class ServiceRegistration
 	/// Registers JWT authentication, authorization, options binding, and supporting services using the underlying
 	/// <see cref="IServiceCollection"/>.
 	/// </summary>
+	/// <param name="services">The service collection to register authentication services with.</param>
+	/// <param name="configuration">The application configuration used to bind <see cref="JwtOptions"/>.</param>
+	/// <returns>The original <see cref="IServiceCollection"/> for fluent chaining.</returns>
 	/// <remarks>
 	///     <para>
 	///     This method wires up the complete authentication stack for the LumaCore HTTP API: it binds
@@ -53,9 +56,6 @@ static class ServiceRegistration
 	///     and easily unit-tested.
 	///     </para>
 	/// </remarks>
-	/// <param name="services">The service collection to register authentication services with.</param>
-	/// <param name="configuration">The application configuration used to bind <see cref="JwtOptions"/>.</param>
-	/// <returns>The original <see cref="IServiceCollection"/> for fluent chaining.</returns>
 	public static IServiceCollection AddAuthFeatureCore(
 		this IServiceCollection services,
 		IConfiguration          configuration)
@@ -83,7 +83,7 @@ static class ServiceRegistration
 						// This helps identify which endpoint caused the failure.
 						logger.LogWarning(
 							context.Exception,
-							"JWT authentication failed for request to {Path}.",
+							"JWT authentication failed for request to {Path}",
 							context.HttpContext.Request.Path);
 
 						return Task.CompletedTask;
@@ -107,7 +107,7 @@ static class ServiceRegistration
 						// Log the successful validation with subject and request path.
 						// This helps trace which user authenticated on which endpoint.
 						logger.LogDebug(
-							"JWT token successfully validated for subject '{Subject}' on request to {Path}.",
+							"JWT token successfully validated for subject '{Subject}' on request to {Path}",
 							subject,
 							context.HttpContext.Request.Path);
 
