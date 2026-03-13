@@ -185,6 +185,10 @@ public sealed class AuthService
 			// Network or connection error.
 			return new LoginResult(false, "Could not connect to the backend.");
 		}
+		catch (OperationCanceledException)
+		{
+			throw;
+		}
 		catch (Exception ex)
 		{
 			// General error handling.
