@@ -5,7 +5,7 @@
 namespace LumaCore.Core;
 
 /// <summary>
-/// Thrown when <see cref="FailFast.TerminateApplication(string)"/> is canceled via
+/// Exception that is thrown when <see cref="FailFast.TerminateApplication(string)"/> is canceled via
 /// <see cref="FailFast.BeforeTermination"/>.
 /// </summary>
 /// <remarks>

@@ -102,15 +102,15 @@ public sealed class MetricsContributorRegistry
 	/// <param name="sectionName">The unique section name for this contributor's metrics.</param>
 	/// <param name="implementationType">The type implementing <see cref="IMetricsContributor"/>.</param>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown if <paramref name="implementationType"/> is <see langword="null"/>.
+	/// <paramref name="implementationType"/> is <see langword="null"/>.
 	/// </exception>
 	/// <exception cref="ArgumentException">
-	/// Thrown if <paramref name="sectionName"/> is <see langword="null"/>, empty, whitespace,
+	/// <paramref name="sectionName"/> is <see langword="null"/>, empty, whitespace,
 	/// a reserved name (<c>timestamp</c>, <c>gc</c>, <c>memory</c>, <c>process</c>, <c>threadPool</c>,
 	/// <c>_errors</c>), or starts with <c>_</c>.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown if <paramref name="sectionName"/> is already registered by another contributor.
+	/// <paramref name="sectionName"/> is already registered by another contributor.
 	/// </exception>
 	public void Register(string sectionName, Type implementationType)
 	{
@@ -161,12 +161,12 @@ public sealed class MetricsContributorRegistry
 	/// <typeparam name="TContributor">The type implementing <see cref="IMetricsContributor"/>.</typeparam>
 	/// <param name="sectionName">The unique section name for this contributor's metrics.</param>
 	/// <exception cref="ArgumentException">
-	/// Thrown if <paramref name="sectionName"/> is <see langword="null"/>, empty, whitespace,
+	/// <paramref name="sectionName"/> is <see langword="null"/>, empty, whitespace,
 	/// a reserved name (<c>timestamp</c>, <c>gc</c>, <c>memory</c>, <c>process</c>, <c>threadPool</c>,
 	/// <c>_errors</c>), or starts with <c>_</c>.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown if <paramref name="sectionName"/> is already registered by another contributor.
+	/// <paramref name="sectionName"/> is already registered by another contributor.
 	/// </exception>
 	public void Register<TContributor>(string sectionName)
 		where TContributor : class, IMetricsContributor

@@ -45,7 +45,7 @@ public static class CollectionHelpers
 	///         </item>
 	///     </list>
 	/// </returns>
-	/// <exception cref="ArgumentNullException">Thrown when <paramref name="source"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
 	public static IReadOnlyCollection<T> ReifyCollection<T>(IEnumerable<T> source)
 	{
 		return source switch

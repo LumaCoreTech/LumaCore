@@ -21,7 +21,7 @@ public static class FailFast
 	/// Terminates the application with the specified message. Never returns normally.
 	/// </summary>
 	/// <param name="message">The reason for termination.</param>
-	/// <exception cref="FailFastCanceledException">Thrown if <see cref="BeforeTermination"/> cancels termination.</exception>
+	/// <exception cref="FailFastCanceledException"><see cref="BeforeTermination"/> cancels termination.</exception>
 	/// <remarks>
 	/// >
 	/// Use this method to terminate the application when continuing execution is unsafe.
@@ -48,7 +48,7 @@ public static class FailFast
 	/// </summary>
 	/// <param name="exception">The exception that caused termination.</param>
 	/// <exception cref="ArgumentNullException"><paramref name="exception"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FailFastCanceledException">Thrown if <see cref="BeforeTermination"/> cancels termination.</exception>
+	/// <exception cref="FailFastCanceledException"><see cref="BeforeTermination"/> cancels termination.</exception>
 	/// <remarks>
 	/// >
 	/// Use this method to terminate the application when continuing execution is unsafe.

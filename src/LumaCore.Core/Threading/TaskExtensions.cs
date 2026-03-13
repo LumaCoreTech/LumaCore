@@ -29,7 +29,7 @@ public static class TaskExtensions
 	/// Synchronously waits for the task to complete, unwrapping any exceptions.
 	/// </summary>
 	/// <param name="task">The task to wait for.</param>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="task"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="task"/> is <see langword="null"/>.</exception>
 	/// <remarks>
 	///     <para>
 	///     This method uses <c>GetAwaiter().GetResult()</c> instead of <c>.Result</c> or <c>.Wait()</c> to ensure
@@ -51,9 +51,9 @@ public static class TaskExtensions
 	/// </summary>
 	/// <param name="task">The task to wait for.</param>
 	/// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="task"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="task"/> is <see langword="null"/>.</exception>
 	/// <exception cref="OperationCanceledException">
-	/// Thrown if <paramref name="cancellationToken"/> is canceled before the task completes,
+	/// <paramref name="cancellationToken"/> is canceled before the task completes,
 	/// or if the task itself throws an <see cref="OperationCanceledException"/>.
 	/// </exception>
 	/// <remarks>
@@ -85,7 +85,7 @@ public static class TaskExtensions
 	/// <typeparam name="TResult">The type of the task result.</typeparam>
 	/// <param name="task">The task to wait for.</param>
 	/// <returns>The result of the completed task.</returns>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="task"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="task"/> is <see langword="null"/>.</exception>
 	/// <remarks>
 	///     <inheritdoc cref="WaitAndUnwrapException(Task)"
 	///                 path="/remarks"/>
@@ -103,9 +103,9 @@ public static class TaskExtensions
 	/// <param name="task">The task to wait for.</param>
 	/// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
 	/// <returns>The result of the completed task.</returns>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="task"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="task"/> is <see langword="null"/>.</exception>
 	/// <exception cref="OperationCanceledException">
-	/// Thrown if <paramref name="cancellationToken"/> is canceled before the task completes,
+	/// <paramref name="cancellationToken"/> is canceled before the task completes,
 	/// or if the task itself throws an <see cref="OperationCanceledException"/>.
 	/// </exception>
 	public static TResult WaitAndUnwrapException<TResult>(this Task<TResult> task, CancellationToken cancellationToken)
@@ -130,7 +130,7 @@ public static class TaskExtensions
 	/// Synchronously waits for the task to complete without throwing task exceptions.
 	/// </summary>
 	/// <param name="task">The task to wait for.</param>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="task"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="task"/> is <see langword="null"/>.</exception>
 	/// <remarks>
 	///     <para>
 	///     Any exception thrown by the task is silently swallowed. This is useful in cleanup scenarios where you
@@ -160,9 +160,9 @@ public static class TaskExtensions
 	/// </summary>
 	/// <param name="task">The task to wait for.</param>
 	/// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="task"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="task"/> is <see langword="null"/>.</exception>
 	/// <exception cref="OperationCanceledException">
-	/// Thrown if <paramref name="cancellationToken"/> is canceled before the task completes.
+	/// <paramref name="cancellationToken"/> is canceled before the task completes.
 	/// Note that cancellation of the <em>task itself</em> is <b>not</b> rethrown.
 	/// </exception>
 	/// <remarks>
@@ -193,8 +193,8 @@ public static class TaskExtensions
 	/// <param name="this">The tasks to wait for.</param>
 	/// <param name="cancellationToken">The cancellation token that cancels the wait.</param>
 	/// <returns>The first task that completed.</returns>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
-	/// <exception cref="OperationCanceledException">Thrown if the cancellation token is canceled before any task completes.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="this"/> is <see langword="null"/>.</exception>
+	/// <exception cref="OperationCanceledException">The cancellation token is canceled before any task completes.</exception>
 	public static Task<Task> WhenAny(this IEnumerable<Task> @this, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(@this);
@@ -206,7 +206,7 @@ public static class TaskExtensions
 	/// </summary>
 	/// <param name="this">The tasks to wait for.</param>
 	/// <returns>The first task that completed.</returns>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="this"/> is <see langword="null"/>.</exception>
 	public static Task<Task> WhenAny(this IEnumerable<Task> @this)
 	{
 		ArgumentNullException.ThrowIfNull(@this);
@@ -220,8 +220,8 @@ public static class TaskExtensions
 	/// <param name="this">The tasks to wait for.</param>
 	/// <typeparam name="TResult">The type of the task results.</typeparam>
 	/// <returns>The first task that completed.</returns>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
-	/// <exception cref="OperationCanceledException">Thrown if the cancellation token is canceled before any task completes.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="this"/> is <see langword="null"/>.</exception>
+	/// <exception cref="OperationCanceledException">The cancellation token is canceled before any task completes.</exception>
 	public static Task<Task<TResult>> WhenAny<TResult>(
 		this IEnumerable<Task<TResult>> @this,
 		CancellationToken               cancellationToken)
@@ -236,7 +236,7 @@ public static class TaskExtensions
 	/// <param name="this">The tasks to wait for.</param>
 	/// <typeparam name="TResult">The type of the task results.</typeparam>
 	/// <returns>The first task that completed.</returns>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="this"/> is <see langword="null"/>.</exception>
 	/// <remarks>
 	///     <inheritdoc cref="WhenAny(IEnumerable{Task})"
 	///                 path="/remarks"/>
@@ -252,7 +252,7 @@ public static class TaskExtensions
 	/// </summary>
 	/// <param name="this">The tasks to wait for.</param>
 	/// <returns>A task that completes when all source tasks have completed.</returns>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="this"/> is <see langword="null"/>.</exception>
 	/// <remarks>
 	/// This is a convenience wrapper around <see cref="Task.WhenAll(IEnumerable{Task})"/> that allows
 	/// fluent chaining on <see cref="IEnumerable{T}"/> of tasks.
@@ -269,7 +269,7 @@ public static class TaskExtensions
 	/// <typeparam name="TResult">The type of the task results.</typeparam>
 	/// <param name="this">The tasks to wait for.</param>
 	/// <returns>A task containing an array of all task results.</returns>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="this"/> is <see langword="null"/>.</exception>
 	/// <remarks>
 	///     <inheritdoc cref="WhenAll(IEnumerable{Task})"
 	///                 path="/remarks"/>
@@ -351,7 +351,7 @@ public static class TaskExtensions
 	/// A list of tasks where the first task completes when the first source task (any) completes,
 	/// the second task completes when the second source task completes, and so on.
 	/// </returns>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="this"/> is <see langword="null"/>.</exception>
 	/// <remarks>
 	///     <para>
 	///     This method is useful when you want to process task results in <b>completion order</b> rather than
@@ -466,7 +466,7 @@ public static class TaskExtensions
 	/// A list of tasks where the first task completes when the first source task (any) completes,
 	/// the second task completes when the second source task completes, and so on.
 	/// </returns>
-	/// <exception cref="ArgumentNullException">Thrown if <paramref name="this"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="this"/> is <see langword="null"/>.</exception>
 	/// <remarks>
 	///     <inheritdoc cref="OrderByCompletion{T}(IEnumerable{Task{T}})"
 	///                 path="/remarks"/>

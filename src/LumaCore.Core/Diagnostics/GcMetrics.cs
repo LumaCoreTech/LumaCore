@@ -7,17 +7,6 @@ namespace LumaCore.Core.Diagnostics;
 /// <summary>
 /// Represents a snapshot of garbage collection statistics and configuration.
 /// </summary>
-/// <remarks>
-///     <para>
-///     The .NET GC uses a generational model: Gen0 for short-lived objects, Gen1 as a buffer, and Gen2 for
-///     long-lived objects. Each generation collection also collects all younger generations (a Gen2 collection
-///     includes Gen1 and Gen0).
-///     </para>
-///     <para>
-///     Allocation rate can be calculated from <see cref="TotalAllocatedBytes"/>:
-///     <c>(current - previous) / elapsedSeconds</c> = bytes allocated per second.
-///     </para>
-/// </remarks>
 /// <param name="Gen0Collections">
 /// Number of Gen0 (ephemeral) collections since process start. Gen0 collects short-lived objects and is the
 /// fastest generation to collect.
@@ -38,6 +27,17 @@ namespace LumaCore.Core.Diagnostics;
 /// Cumulative bytes allocated by managed code since process start. This counter only increases — GC does not
 /// decrement it when reclaiming memory.
 /// </param>
+/// <remarks>
+///     <para>
+///     The .NET GC uses a generational model: Gen0 for short-lived objects, Gen1 as a buffer, and Gen2 for
+///     long-lived objects. Each generation collection also collects all younger generations (a Gen2 collection
+///     includes Gen1 and Gen0).
+///     </para>
+///     <para>
+///     Allocation rate can be calculated from <see cref="TotalAllocatedBytes"/>:
+///     <c>(current - previous) / elapsedSeconds</c> = bytes allocated per second.
+///     </para>
+/// </remarks>
 public sealed record GcMetrics(
 	int  Gen0Collections,
 	int  Gen1Collections,

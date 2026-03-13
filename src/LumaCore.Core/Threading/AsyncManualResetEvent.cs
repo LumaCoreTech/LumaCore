@@ -161,7 +161,7 @@ public sealed class AsyncManualResetEvent
 	/// A task that completes when the event is set or when <paramref name="cancellationToken"/> is canceled.
 	/// </returns>
 	/// <exception cref="OperationCanceledException">
-	/// Thrown if <paramref name="cancellationToken"/> is canceled before the event is set.
+	/// <paramref name="cancellationToken"/> is canceled before the event is set.
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -210,7 +210,7 @@ public sealed class AsyncManualResetEvent
 	/// A cancellation token that can be used to cancel the wait operation.
 	/// </param>
 	/// <exception cref="OperationCanceledException">
-	/// Thrown if <paramref name="cancellationToken"/> is canceled before the event is set.
+	/// <paramref name="cancellationToken"/> is canceled before the event is set.
 	/// </exception>
 	/// <remarks>
 	///     <para>

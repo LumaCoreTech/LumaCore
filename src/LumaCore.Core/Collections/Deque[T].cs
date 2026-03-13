@@ -11,6 +11,7 @@ namespace LumaCore.Core.Collections;
 /// <summary>
 /// A double-ended queue (deque) backed by a circular buffer.
 /// </summary>
+/// <typeparam name="T">The type of elements contained in the deque.</typeparam>
 /// <remarks>
 ///     <para>
 ///     This data structure provides the following time complexities:
@@ -36,7 +37,6 @@ namespace LumaCore.Core.Collections;
 ///         </item>
 ///     </list>
 /// </remarks>
-/// <typeparam name="T">The type of elements contained in the deque.</typeparam>
 public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 {
 	/// <summary>
@@ -80,7 +80,7 @@ public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 	/// </summary>
 	/// <param name="capacity">The initial capacity of the internal buffer.</param>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="capacity"/> is less than 0.
+	/// <paramref name="capacity"/> is less than 0.
 	/// </exception>
 	/// <remarks>
 	/// Use this constructor when the approximate number of elements is known in advance to avoid
@@ -97,7 +97,7 @@ public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 	/// </summary>
 	/// <param name="collection">The collection whose elements are copied to the new deque.</param>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="collection"/> is <see langword="null"/>.
+	/// <paramref name="collection"/> is <see langword="null"/>.
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -165,12 +165,12 @@ public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 	/// <summary>
 	/// Gets or sets the capacity for this deque.
 	/// </summary>
+	/// <exception cref="ArgumentOutOfRangeException">
+	/// Attempting to set a value less than <see cref="Count"/>.
+	/// </exception>
 	/// <remarks>
 	/// This value must always be greater than zero and cannot be set to a value less than <see cref="Count"/>.
 	/// </remarks>
-	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when attempting to set a value less than <see cref="Count"/>.
-	/// </exception>
 	public int Capacity
 	{
 		get => mBuffer.Length;
@@ -336,10 +336,10 @@ public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 	/// <param name="index">The zero-based index at which the new elements should be inserted.</param>
 	/// <param name="collection">The collection of elements to insert. Cannot be <see langword="null"/>.</param>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="collection"/> is <see langword="null"/>.
+	/// <paramref name="collection"/> is <see langword="null"/>.
 	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="index"/> is less than 0 or greater than <see cref="Count"/>.
+	/// <paramref name="index"/> is less than 0 or greater than <see cref="Count"/>.
 	/// </exception>
 	public void InsertRange(int index, IEnumerable<T> collection)
 	{
@@ -374,7 +374,7 @@ public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 	/// <param name="index">The zero-based index at which the new elements should be inserted.</param>
 	/// <param name="items">The span of elements to insert.</param>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="index"/> is less than 0 or greater than <see cref="Count"/>.
+	/// <paramref name="index"/> is less than 0 or greater than <see cref="Count"/>.
 	/// </exception>
 	/// <remarks>
 	/// This overload provides a high-performance, allocation-free way to insert elements
@@ -407,10 +407,10 @@ public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 	/// <param name="offset">The zero-based index at which the range begins.</param>
 	/// <param name="count">The number of elements to remove.</param>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="offset"/> or <paramref name="count"/> is less than 0.
+	/// <paramref name="offset"/> or <paramref name="count"/> is less than 0.
 	/// </exception>
 	/// <exception cref="ArgumentException">
-	/// Thrown when the range [<paramref name="offset"/>, <paramref name="offset"/> + <paramref name="count"/>)
+	/// The range [<paramref name="offset"/>, <paramref name="offset"/> + <paramref name="count"/>)
 	/// exceeds the bounds [0, <see cref="Count"/>).
 	/// </exception>
 	public void RemoveRange(int offset, int count)
@@ -591,7 +591,7 @@ public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 	/// </summary>
 	/// <param name="destination">The destination span. Must have a length of at least <see cref="Count"/>.</param>
 	/// <exception cref="ArgumentException">
-	/// Thrown when <paramref name="destination"/> is too small to hold all elements.
+	/// <paramref name="destination"/> is too small to hold all elements.
 	/// </exception>
 	/// <remarks>
 	/// This method provides a high-performance, allocation-free way to copy deque contents.
@@ -635,14 +635,13 @@ public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 	/// <param name="array">The destination array.</param>
 	/// <param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.</param>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="array"/> is <see langword="null"/>.
+	/// <paramref name="array"/> is <see langword="null"/>.
 	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="arrayIndex"/> is less than 0.
+	/// <paramref name="arrayIndex"/> is less than 0.
 	/// </exception>
 	/// <exception cref="ArgumentException">
-	/// Thrown when the available space from <paramref name="arrayIndex"/> to the end of <paramref name="array"/> is
-	/// insufficient.
+	/// The available space from <paramref name="arrayIndex"/> to the end of <paramref name="array"/> is insufficient.
 	/// </exception>
 	public void CopyTo(T[] array, int arrayIndex)
 	{
@@ -832,11 +831,10 @@ public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 	/// <param name="value">The object to add. Must be compatible with type <typeparamref name="T"/>.</param>
 	/// <returns>The index at which the item was added (always <see cref="Count"/> - 1 after insertion).</returns>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="value"/> is <see langword="null"/> and <typeparamref name="T"/> is a non-nullable value
-	/// type.
+	/// <paramref name="value"/> is <see langword="null"/> and <typeparamref name="T"/> is a non-nullable value type.
 	/// </exception>
 	/// <exception cref="ArgumentException">
-	/// Thrown when <paramref name="value"/> is not compatible with type <typeparamref name="T"/>.
+	/// <paramref name="value"/> is not compatible with type <typeparamref name="T"/>.
 	/// </exception>
 	int IList.Add(object? value)
 	{
@@ -883,14 +881,13 @@ public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 	/// <param name="index">The zero-based index at which <paramref name="value"/> should be inserted.</param>
 	/// <param name="value">The object to insert. Must be compatible with type <typeparamref name="T"/>.</param>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="value"/> is <see langword="null"/> and <typeparamref name="T"/> is a non-nullable value
-	/// type.
+	/// <paramref name="value"/> is <see langword="null"/> and <typeparamref name="T"/> is a non-nullable value type.
 	/// </exception>
 	/// <exception cref="ArgumentException">
-	/// Thrown when <paramref name="value"/> is not compatible with type <typeparamref name="T"/>.
+	/// <paramref name="value"/> is not compatible with type <typeparamref name="T"/>.
 	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="index"/> is less than 0 or greater than <see cref="Count"/>.
+	/// <paramref name="index"/> is less than 0 or greater than <see cref="Count"/>.
 	/// </exception>
 	void IList.Insert(int index, object? value)
 	{
@@ -923,14 +920,13 @@ public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 	/// <param name="index">The zero-based index of the element to get or set.</param>
 	/// <returns>The element at the specified index.</returns>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="index"/> is less than 0 or greater than or equal to <see cref="Count"/>.
+	/// <paramref name="index"/> is less than 0 or greater than or equal to <see cref="Count"/>.
 	/// </exception>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when setting and the value is <see langword="null"/> while <typeparamref name="T"/> is a non-nullable value
-	/// type.
+	/// Setting and the value is <see langword="null"/> while <typeparamref name="T"/> is a non-nullable value type.
 	/// </exception>
 	/// <exception cref="ArgumentException">
-	/// Thrown when setting and the value is not compatible with type <typeparamref name="T"/>.
+	/// Setting and the value is not compatible with type <typeparamref name="T"/>.
 	/// </exception>
 	object? IList.this[int index]
 	{
@@ -955,13 +951,13 @@ public sealed partial class Deque<T> : IList<T>, IReadOnlyList<T>, IList
 	/// <param name="array">The one-dimensional destination array. Must have zero-based indexing.</param>
 	/// <param name="index">The zero-based index in <paramref name="array"/> at which copying begins.</param>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="array"/> is <see langword="null"/>.
+	/// <paramref name="array"/> is <see langword="null"/>.
 	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="index"/> is less than 0.
+	/// <paramref name="index"/> is less than 0.
 	/// </exception>
 	/// <exception cref="ArgumentException">
-	/// Thrown when <paramref name="array"/> is of an incompatible type, is multidimensional,
+	/// <paramref name="array"/> is of an incompatible type, is multidimensional,
 	/// or when the available space from <paramref name="index"/> to the end of <paramref name="array"/>
 	/// is insufficient.
 	/// </exception>

@@ -62,7 +62,7 @@ public static class TaskCompletionSourceExtensions
 	/// <see langword="false"/> if it was already completed.
 	/// </returns>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown if <paramref name="this"/> or <paramref name="task"/> is <see langword="null"/>.
+	/// <paramref name="this"/> or <paramref name="task"/> is <see langword="null"/>.
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -133,7 +133,7 @@ public static class TaskCompletionSourceExtensions
 	/// <see langword="false"/> if it was already completed.
 	/// </returns>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown if <paramref name="this"/>, <paramref name="task"/>, or <paramref name="resultFunc"/> is <see langword="null"/>.
+	/// <paramref name="this"/>, <paramref name="task"/>, or <paramref name="resultFunc"/> is <see langword="null"/>.
 	/// </exception>
 	/// <remarks>
 	///     <para>

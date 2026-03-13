@@ -190,7 +190,7 @@ public sealed class AsyncAutoResetEvent
 	/// A task that completes when the event is signaled or when <paramref name="cancellationToken"/> is canceled.
 	/// </returns>
 	/// <exception cref="OperationCanceledException">
-	/// Thrown if <paramref name="cancellationToken"/> is canceled before the event is signaled.
+	/// <paramref name="cancellationToken"/> is canceled before the event is signaled.
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -255,7 +255,7 @@ public sealed class AsyncAutoResetEvent
 	/// A cancellation token that can be used to cancel the wait operation.
 	/// </param>
 	/// <exception cref="OperationCanceledException">
-	/// Thrown if <paramref name="cancellationToken"/> is canceled before the event is signaled.
+	/// <paramref name="cancellationToken"/> is canceled before the event is signaled.
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -316,7 +316,7 @@ public sealed class AsyncAutoResetEvent
 	/// </remarks>
 	private async Task WaitWithCancellationAsync(Task<object> task, CancellationToken cancellationToken)
 	{
-		await using CancellationTokenRegistration registration = cancellationToken.Register(
+		CancellationTokenRegistration registration = cancellationToken.Register(
 			() =>
 			{
 				lock (mLock)
@@ -326,7 +326,14 @@ public sealed class AsyncAutoResetEvent
 			},
 			useSynchronizationContext: false);
 
-		await task.ConfigureAwait(false);
+		try
+		{
+			await task.ConfigureAwait(false);
+		}
+		finally
+		{
+			await registration.DisposeAsync().ConfigureAwait(false);
+		}
 	}
 
 	/// <summary>

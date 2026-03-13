@@ -56,6 +56,7 @@ public sealed partial class Deque<T>
 	/// </summary>
 	/// <param name="array">The destination array. Must have sufficient space starting at <paramref name="arrayIndex"/>.</param>
 	/// <param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="array"/> is <see langword="null"/>.</exception>
 	/// <remarks>
 	///     <para>
 	///     Handles the circular buffer by performing one or two <see cref="Array.Copy(Array, int, Array, int, int)"/>
@@ -63,7 +64,6 @@ public sealed partial class Deque<T>
 	///     depending on whether <see cref="IsSplit"/> is <see langword="true"/>.
 	///     </para>
 	/// </remarks>
-	/// <exception cref="ArgumentNullException">Thrown when <paramref name="array"/> is <see langword="null"/>.</exception>
 	private void CopyToArray(Array array, int arrayIndex = 0)
 	{
 		ArgumentNullException.ThrowIfNull(array);
@@ -573,7 +573,7 @@ public sealed partial class Deque<T>
 	/// <param name="sourceLength">The current length of the source collection.</param>
 	/// <param name="index">The index to validate.</param>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="index"/> is less than 0 or greater than <paramref name="sourceLength"/>.
+	/// <paramref name="index"/> is less than 0 or greater than <paramref name="sourceLength"/>.
 	/// </exception>
 	/// <remarks>
 	/// An insertion index is valid in the range [0, <paramref name="sourceLength"/>], inclusive on both ends.
@@ -594,7 +594,7 @@ public sealed partial class Deque<T>
 	/// <param name="sourceLength">The current length of the source collection.</param>
 	/// <param name="index">The index to validate.</param>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="index"/> is less than 0 or greater than or equal to <paramref name="sourceLength"/>.
+	/// <paramref name="index"/> is less than 0 or greater than or equal to <paramref name="sourceLength"/>.
 	/// </exception>
 	/// <remarks>
 	/// An existing element index is valid in the range [0, <paramref name="sourceLength"/>), exclusive on the upper bound.
@@ -617,10 +617,10 @@ public sealed partial class Deque<T>
 	/// <param name="offset">The starting index of the range.</param>
 	/// <param name="count">The number of elements in the range.</param>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="offset"/> or <paramref name="count"/> is less than 0.
+	/// <paramref name="offset"/> or <paramref name="count"/> is less than 0.
 	/// </exception>
 	/// <exception cref="ArgumentException">
-	/// Thrown when the range [<paramref name="offset"/>, <paramref name="offset"/> + <paramref name="count"/>)
+	/// The range [<paramref name="offset"/>, <paramref name="offset"/> + <paramref name="count"/>)
 	/// exceeds the bounds [0, <paramref name="sourceLength"/>).
 	/// </exception>
 	/// <remarks>

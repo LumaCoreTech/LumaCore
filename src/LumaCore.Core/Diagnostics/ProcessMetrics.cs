@@ -7,12 +7,6 @@ namespace LumaCore.Core.Diagnostics;
 /// <summary>
 /// Represents a snapshot of process-level resource metrics.
 /// </summary>
-/// <remarks>
-///     <para>
-///     Process metrics provide OS-level visibility into resource usage. These complement managed metrics by showing
-///     the "outside view" of the application.
-///     </para>
-/// </remarks>
 /// <param name="ThreadCount">
 /// Number of OS threads currently active in the process. Includes both managed threads (thread pool, explicit
 /// Thread instances) and native threads.
@@ -27,6 +21,12 @@ namespace LumaCore.Core.Diagnostics;
 /// Duration the process has been running since <see cref="StartTimeUtc"/>. Can be used to normalize cumulative
 /// counters into rates: <c>totalAllocatedBytes / uptime.TotalSeconds</c> = average allocation rate.
 /// </param>
+/// <remarks>
+///     <para>
+///     Process metrics provide OS-level visibility into resource usage. These complement managed metrics by showing
+///     the "outside view" of the application.
+///     </para>
+/// </remarks>
 public sealed record ProcessMetrics(
 	int      ThreadCount,
 	int      HandleCount,
