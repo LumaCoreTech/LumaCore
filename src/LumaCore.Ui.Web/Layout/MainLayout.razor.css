@@ -102,13 +102,19 @@
 }
 
 .lc-nav a:hover::after,
-.lc-nav a:focus-visible::after { width: 100%; }
+.lc-nav a:focus-visible::after {
+    width: 100%;
+}
 
 /* Distinct styling for external link to the project site */
 
-.lc-nav a[href^="https://"] { opacity: 0.9; }
+.lc-nav a[href^="https://"] {
+    opacity: 0.9;
+}
 
-.lc-nav a[href^="https://"]:hover { opacity: 1.0; }
+.lc-nav a[href^="https://"]:hover {
+    opacity: 1.0;
+}
 
 /* Main content area; grows to fill remaining space between header and footer */
 
@@ -153,5 +159,7 @@
         gap: 0.25rem;
     }
 
-    .lc-main { padding: 1rem 1.25rem 1.5rem; }
+    .lc-main {
+        padding: 1rem 1.25rem 1.5rem;
+    }
 }

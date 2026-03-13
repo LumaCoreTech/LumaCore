@@ -22,9 +22,13 @@
 }
 
 @keyframes settings-overlay-fadein {
-    from { opacity: 0; }
+    from {
+        opacity: 0;
+    }
 
-    to { opacity: 1; }
+    to {
+        opacity: 1;
+    }
 }
 
 /* Settings panel - the modal card */
@@ -74,7 +78,9 @@
     margin: 0;
 }
 
-.lc-settings-icon { font-size: 1.5rem; }
+.lc-settings-icon {
+    font-size: 1.5rem;
+}
 
 /* Close button */
 
@@ -140,7 +146,9 @@
 
 /* Scrollbar styling for settings content */
 
-.lc-settings-content::-webkit-scrollbar { width: 8px; }
+.lc-settings-content::-webkit-scrollbar {
+    width: 8px;
+}
 
 .lc-settings-content::-webkit-scrollbar-track {
     background: var(--bg-tertiary);
@@ -152,7 +160,9 @@
     border-radius: 4px;
 }
 
-.lc-settings-content::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+.lc-settings-content::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
 
 /* Mobile responsive */
 

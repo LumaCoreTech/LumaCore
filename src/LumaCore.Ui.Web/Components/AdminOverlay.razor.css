@@ -22,9 +22,13 @@
 }
 
 @keyframes admin-overlay-fadein {
-    from { opacity: 0; }
+    from {
+        opacity: 0;
+    }
 
-    to { opacity: 1; }
+    to {
+        opacity: 1;
+    }
 }
 
 /* Admin panel - the modal container */
@@ -126,7 +130,9 @@
     color: var(--accent-primary);
 }
 
-.lc-admin-tab-active:hover { background: var(--bg-tertiary); }
+.lc-admin-tab-active:hover {
+    background: var(--bg-tertiary);
+}
 
 /* Admin content - main content area with scroll */
 
@@ -139,16 +145,22 @@
 
 /* Scrollbar styling for admin content */
 
-.lc-admin-content::-webkit-scrollbar { width: 8px; }
+.lc-admin-content::-webkit-scrollbar {
+    width: 8px;
+}
 
-.lc-admin-content::-webkit-scrollbar-track { background: var(--bg-secondary); }
+.lc-admin-content::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
 
 .lc-admin-content::-webkit-scrollbar-thumb {
     background: var(--border-primary);
     border-radius: 4px;
 }
 
-.lc-admin-content::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+.lc-admin-content::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
 
 /* ============================================
    RESPONSIVE - Mobile (future)

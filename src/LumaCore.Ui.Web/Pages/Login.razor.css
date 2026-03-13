@@ -71,9 +71,13 @@
 /* Responsive adjustments */
 
 @media (max-width: 500px) {
-    .lc-login-card { padding: 2rem 1.5rem; }
+    .lc-login-card {
+        padding: 2rem 1.5rem;
+    }
 
-    .lc-login-title { font-size: 1.75rem; }
+    .lc-login-title {
+        font-size: 1.75rem;
+    }
 
     .lc-login-logo {
         height: 80px;

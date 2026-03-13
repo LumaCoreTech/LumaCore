@@ -4,7 +4,9 @@
    ============================================ */
 
 /* Container */
-.lc-status-content { max-width: 600px; }
+.lc-status-content {
+    max-width: 600px;
+}
 
 /* Title */
 
