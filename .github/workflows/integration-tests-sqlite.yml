@@ -1,0 +1,40 @@
+name: Integration Tests (SQLite)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Runs the data test suite against file-based SQLite.
+# Unlike the build workflows (which use SQLite in-memory for speed), this
+# exercises real file I/O, WAL journaling, and locking behavior.
+# Delegates build/test/reporting to the shared integration-test action.
+# See: .github/actions/integration-test/action.yml
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Integration Tests (SQLite)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v6
+      with:
+        submodules: true
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Run Integration Tests
+      uses: ./.github/actions/integration-test
+      with:
+        provider: sqlite
+        display-name: SQLite
+        connection-string: ""
+        gist-token: ${{ secrets.GIST_TOKEN }}

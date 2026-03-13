@@ -122,6 +122,15 @@ jobs:
         gist_file_name: lumacore-ubuntu-coverage-badge.json
         file_type: text
 
+    - name: Upload Coverage Artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-build-ubuntu
+        path: '**/coverage.cobertura.xml'
+        retention-days: 3
+        if-no-files-found: warn
+
     # ──────────────────────────────────────────────────────────────────────────
     # API Documentation Verification
     # ──────────────────────────────────────────────────────────────────────────

@@ -58,6 +58,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{6080
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{B804D941-DD50-4F4E-9F38-BC33C873A0EC}"
 	ProjectSection(SolutionItems) = preProject
+		.github\workflows\coverage-merge.yml = .github\workflows\coverage-merge.yml
+		.github\workflows\integration-tests-mysql.yml = .github\workflows\integration-tests-mysql.yml
+		.github\workflows\integration-tests-postgres.yml = .github\workflows\integration-tests-postgres.yml
+		.github\workflows\integration-tests-sqlite.yml = .github\workflows\integration-tests-sqlite.yml
+		.github\workflows\integration-tests-sqlserver.yml = .github\workflows\integration-tests-sqlserver.yml
 		.github\workflows\linux-build.yml = .github\workflows\linux-build.yml
 		.github\workflows\README.md = .github\workflows\README.md
 		.github\workflows\release.yml = .github\workflows\release.yml
@@ -75,6 +80,13 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LumaCore.BackgroundProcessing.Tests", "src\LumaCore.BackgroundProcessing.Tests\LumaCore.BackgroundProcessing.Tests.csproj", "{ED0BA598-E796-1693-FA9F-F40EF28D14BB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LumaCore.BackgroundProcessing", "src\LumaCore.BackgroundProcessing\LumaCore.BackgroundProcessing.csproj", "{90F14233-A2AD-19BE-42F6-846DC8304FE7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions", "actions", "{6031B08C-0E11-4467-9AB2-AD9AE06669A9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration-test", "integration-test", "{F57FF4AD-238A-4242-8953-9D19F1C947F6}"
+	ProjectSection(SolutionItems) = preProject
+		.github\actions\integration-test\action.yml = .github\actions\integration-test\action.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -110,10 +122,10 @@ Global
 		{12204F6F-8E4B-76B7-B8A0-5A215D2D8479}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12204F6F-8E4B-76B7-B8A0-5A215D2D8479}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{12204F6F-8E4B-76B7-B8A0-5A215D2D8479}.Release|Any CPU.Build.0 = Release|Any CPU
-		{90F14233-A2AD-19BE-42F6-846DC8304FE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{90F14233-A2AD-19BE-42F6-846DC8304FE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{90F14233-A2AD-19BE-42F6-846DC8304FE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{90F14233-A2AD-19BE-42F6-846DC8304FE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F51FA2F5-68BB-4DFC-BBE2-10576D41BCBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F51FA2F5-68BB-4DFC-BBE2-10576D41BCBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F51FA2F5-68BB-4DFC-BBE2-10576D41BCBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F51FA2F5-68BB-4DFC-BBE2-10576D41BCBD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E12C8426-D98B-9B92-C744-502BFC69C113}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E12C8426-D98B-9B92-C744-502BFC69C113}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E12C8426-D98B-9B92-C744-502BFC69C113}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -122,11 +134,10 @@ Global
 		{ED0BA598-E796-1693-FA9F-F40EF28D14BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ED0BA598-E796-1693-FA9F-F40EF28D14BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ED0BA598-E796-1693-FA9F-F40EF28D14BB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F51FA2F5-68BB-4DFC-BBE2-10576D41BCBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F51FA2F5-68BB-4DFC-BBE2-10576D41BCBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F51FA2F5-68BB-4DFC-BBE2-10576D41BCBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F51FA2F5-68BB-4DFC-BBE2-10576D41BCBD}.Release|Any CPU.Build.0 = Release|Any CPU
-
+		{90F14233-A2AD-19BE-42F6-846DC8304FE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90F14233-A2AD-19BE-42F6-846DC8304FE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90F14233-A2AD-19BE-42F6-846DC8304FE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90F14233-A2AD-19BE-42F6-846DC8304FE7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -135,6 +146,8 @@ Global
 		{1D4B4646-0707-4C47-848B-9BCCB7D1436A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{D3C2C9BE-AF6C-44FB-B2C2-4BE20F179036} = {53DFD2C0-EFE3-45B4-9F51-1CABD34B6174}
 		{B804D941-DD50-4F4E-9F38-BC33C873A0EC} = {60804A8C-8209-4D63-95D2-E56A7F65B4CC}
+		{6031B08C-0E11-4467-9AB2-AD9AE06669A9} = {60804A8C-8209-4D63-95D2-E56A7F65B4CC}
+		{F57FF4AD-238A-4242-8953-9D19F1C947F6} = {6031B08C-0E11-4467-9AB2-AD9AE06669A9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FF91DAF1-41D5-4766-9080-7F9DFFA42F7E}

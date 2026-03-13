@@ -1,0 +1,146 @@
+name: Coverage Merge
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Merges coverage fragments from all CI workflows into a single report.
+#
+# Each workflow uploads its coverage.cobertura.xml as a GitHub Actions artifact.
+# This workflow downloads the latest artifacts, merges them with ReportGenerator,
+# and pushes a combined coverage badge to the shared gist.
+#
+# Triggers whenever any coverage-producing workflow completes on main.
+# Downloads use continue-on-error so partial merges work when some workflows
+# haven't run yet (e.g., MySQL is disabled).
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  workflow_run:
+    workflows:
+      - "LumaCore Windows CI"
+      - "LumaCore Ubuntu CI"
+      - "Integration Tests (SQLite)"
+      - "Integration Tests (PostgreSQL)"
+      - "Integration Tests (SQL Server)"
+    types: [completed]
+    branches: [main]
+
+jobs:
+  merge:
+    name: Merge Coverage
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download coverage — Build (Windows)
+      uses: dawidd6/action-download-artifact@v6
+      with:
+        workflow: windows-build.yml
+        branch: main
+        name: coverage-build-windows
+        path: coverage/build-windows
+      continue-on-error: true
+
+    - name: Download coverage — Build (Ubuntu)
+      uses: dawidd6/action-download-artifact@v6
+      with:
+        workflow: linux-build.yml
+        branch: main
+        name: coverage-build-ubuntu
+        path: coverage/build-ubuntu
+      continue-on-error: true
+
+    - name: Download coverage — Integration (SQLite)
+      uses: dawidd6/action-download-artifact@v6
+      with:
+        workflow: integration-tests-sqlite.yml
+        branch: main
+        name: coverage-integration-sqlite
+        path: coverage/integration-sqlite
+      continue-on-error: true
+
+    - name: Download coverage — Integration (PostgreSQL)
+      uses: dawidd6/action-download-artifact@v6
+      with:
+        workflow: integration-tests-postgres.yml
+        branch: main
+        name: coverage-integration-postgresql
+        path: coverage/integration-postgresql
+      continue-on-error: true
+
+    - name: Download coverage — Integration (SQL Server)
+      uses: dawidd6/action-download-artifact@v6
+      with:
+        workflow: integration-tests-sqlserver.yml
+        branch: main
+        name: coverage-integration-sqlserver
+        path: coverage/integration-sqlserver
+      continue-on-error: true
+
+    - name: Check for coverage files
+      id: check
+      shell: bash
+      run: |
+        count=$(find coverage -name "coverage.cobertura.xml" 2>/dev/null | wc -l)
+        echo "Found $count coverage file(s)"
+        echo "has_coverage=$( [ "$count" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+
+    - name: Setup .NET
+      if: steps.check.outputs.has_coverage == 'true'
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Merge Coverage Reports
+      if: steps.check.outputs.has_coverage == 'true'
+      shell: bash
+      run: |
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        reportgenerator \
+          -reports:"coverage/**/coverage.cobertura.xml" \
+          -targetdir:merged \
+          -reporttypes:TextSummary
+
+    - name: Generate Merged Coverage Badge
+      if: steps.check.outputs.has_coverage == 'true'
+      shell: pwsh
+      run: |
+        $summary = Get-Content "merged/Summary.txt" | Out-String
+
+        $lineCoverage = 0
+        if ($summary -match "Line coverage: (\d+\.?\d*)%") {
+          $lineCoverage = [math]::Round([double]$matches[1])
+        }
+
+        $branchCoverage = 0
+        $hasBranch = $false
+        if ($summary -match "Branch coverage: (\d+\.?\d*)%") {
+          $branchCoverage = [math]::Round([double]$matches[1])
+          $hasBranch = $true
+        }
+
+        $color = if ($lineCoverage -ge 90) { "brightgreen" } elseif ($lineCoverage -ge 75) { "yellow" } else { "red" }
+
+        $message = "$lineCoverage%"
+        if ($hasBranch) {
+          $message = "L: $lineCoverage% | B: $branchCoverage%"
+        }
+
+        $badge = @{
+          schemaVersion = 1
+          label = "Coverage (Merged)"
+          message = $message
+          color = $color
+        } | ConvertTo-Json -Compress
+
+        echo $badge > lumacore-merged-coverage-badge.json
+        echo "BADGE_JSON=$badge" >> $env:GITHUB_ENV
+        echo "Merged Coverage Badge: $message ($color)"
+
+    - name: Update Merged Coverage Badge
+      if: steps.check.outputs.has_coverage == 'true' && env.BADGE_JSON != ''
+      uses: exuanbo/actions-deploy-gist@v1
+      with:
+        token: ${{ secrets.GIST_TOKEN }}
+        gist_id: d3957602a84fcab1aa66ebfef44da7eb
+        file_path: lumacore-merged-coverage-badge.json
+        gist_file_name: lumacore-merged-coverage-badge.json
+        file_type: text

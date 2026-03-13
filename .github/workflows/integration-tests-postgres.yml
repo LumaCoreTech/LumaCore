@@ -1,0 +1,53 @@
+name: Integration Tests (PostgreSQL)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Runs the data test suite against PostgreSQL 17.
+# Delegates build/test/reporting to the shared integration-test action.
+# See: .github/actions/integration-test/action.yml
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Integration Tests (PostgreSQL)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: lumacore_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v6
+      with:
+        submodules: true
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Run Integration Tests
+      uses: ./.github/actions/integration-test
+      with:
+        provider: postgresql
+        display-name: PostgreSQL
+        connection-string: "Host=localhost;Port=5432;Database=lumacore_test;Username=postgres;Password=postgres"
+        gist-token: ${{ secrets.GIST_TOKEN }}

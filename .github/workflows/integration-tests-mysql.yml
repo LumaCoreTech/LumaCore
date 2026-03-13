@@ -1,0 +1,58 @@
+name: Integration Tests (MySQL)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Runs the data test suite against MySQL 8.
+# Delegates build/test/reporting to the shared integration-test action.
+# See: .github/actions/integration-test/action.yml
+#
+# ⚠️  DISABLED — MySQL/MariaDB support requires Pomelo.EntityFrameworkCore.MySql
+# to be compatible with EF Core 10. Once Pomelo ships a compatible version:
+#   1. Remove the NotSupportedException in SqliteInMemoryDbFixture.Create()
+#   2. Implement CreateMySql() in SqliteInMemoryDbFixture
+#   3. Uncomment the push/pull_request triggers below
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  # push:
+  #   branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Integration Tests (MySQL)
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: "LumaCore@Test123"
+          MYSQL_DATABASE: lumacore_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v6
+      with:
+        submodules: true
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Run Integration Tests
+      uses: ./.github/actions/integration-test
+      with:
+        provider: mysql
+        display-name: MySQL
+        connection-string: "Server=localhost;Port=3306;Database=lumacore_test;User=root;Password=LumaCore@Test123"
+        gist-token: ${{ secrets.GIST_TOKEN }}

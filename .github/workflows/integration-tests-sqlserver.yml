@@ -1,0 +1,65 @@
+name: Integration Tests (SQL Server)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Runs the data test suite against SQL Server 2022.
+# Delegates build/test/reporting to the shared integration-test action.
+# See: .github/actions/integration-test/action.yml
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Integration Tests (SQL Server)
+    runs-on: ubuntu-latest
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          SA_PASSWORD: "LumaCore@Test123"
+        ports:
+          - 1433:1433
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v6
+      with:
+        submodules: true
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+
+    # SQL Server takes 15-20s to initialize. Unlike PostgreSQL (which uses a
+    # Docker health check), we poll the TCP port and add a brief settle delay.
+    - name: Wait for SQL Server
+      run: |
+        echo "Waiting for SQL Server to accept connections..."
+        for i in $(seq 1 30); do
+          if bash -c 'echo > /dev/tcp/localhost/1433' 2>/dev/null; then
+            echo "SQL Server port is open, waiting for full initialization..."
+            sleep 5
+            echo "SQL Server is ready!"
+            exit 0
+          fi
+          echo "  Still waiting... ($i/30)"
+          sleep 2
+        done
+        echo "::error::SQL Server did not become ready within 60 seconds"
+        exit 1
+
+    - name: Run Integration Tests
+      uses: ./.github/actions/integration-test
+      with:
+        provider: sqlserver
+        display-name: SQL Server
+        connection-string: "Server=localhost,1433;Database=lumacore_test;User Id=sa;Password=LumaCore@Test123;TrustServerCertificate=True"
+        gist-token: ${{ secrets.GIST_TOKEN }}

@@ -1,0 +1,109 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Shared composite action for database integration tests.
+#
+# Contains the build, test, reporting, and badge generation logic used by all
+# provider-specific caller workflows (integration-tests-*.yml). Each caller
+# defines its own native `services` block for the required database container,
+# then delegates the actual test execution to this action.
+#
+# Only the LumaCore.Data.Tests project is executed here — provider-independent
+# tests (Core, API) are covered by the build workflows and are not repeated
+# per provider. Tests decorated with [IntegrationFact] are automatically
+# skipped in the build workflows (no LUMACORE_INTEGRATION_TESTS env var set)
+# and only execute when called from here.
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: 'Integration Test'
+description: 'Builds and runs the integration test suite against a specific database provider'
+
+inputs:
+  provider:
+    description: 'Database provider identifier (e.g., postgresql, sqlserver)'
+    required: true
+  display-name:
+    description: 'Human-readable provider name for reports and badges'
+    required: true
+  connection-string:
+    description: 'Database connection string'
+    required: true
+  gist-token:
+    description: 'GitHub token for updating badge gists (only needed on main)'
+    required: false
+    default: ''
+  gist-id:
+    description: 'Gist ID for badge storage'
+    required: false
+    default: 'd3957602a84fcab1aa66ebfef44da7eb'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Build
+      shell: bash
+      run: dotnet build LumaCore.sln -c Release
+
+    - name: Run Tests against ${{ inputs.display-name }}
+      shell: bash
+      run: >-
+        dotnet test src/LumaCore.Data.Tests -c Release --no-build --verbosity normal
+        --logger "trx;LogFileName=integration-${{ inputs.provider }}.trx"
+        --collect:"XPlat Code Coverage"
+      env:
+        LUMACORE_INTEGRATION_TESTS: "true"
+        LUMACORE_TESTS__Db__Provider: ${{ inputs.provider }}
+        LUMACORE_TESTS__Db__ConnectionString: ${{ inputs.connection-string }}
+        LUMACORE_TESTS__Db__EnsureDeleted: "true"
+
+    - name: Test Report
+      uses: dorny/test-reporter@v2
+      if: always()
+      with:
+        name: Integration Results (${{ inputs.display-name }})
+        path: '**/integration-${{ inputs.provider }}.trx'
+        reporter: dotnet-trx
+        fail-on-error: true
+
+    - name: Generate Test Badge
+      if: github.ref == 'refs/heads/main' && always()
+      shell: pwsh
+      run: |
+        $trxFile = Get-ChildItem -Path . -Filter "integration-${{ inputs.provider }}.trx" -Recurse | Select-Object -First 1
+        if ($trxFile) {
+          [xml]$trx = Get-Content $trxFile.FullName
+          $total = [int]$trx.TestRun.ResultSummary.Counters.total
+          $passed = [int]$trx.TestRun.ResultSummary.Counters.passed
+          $failed = [int]$trx.TestRun.ResultSummary.Counters.failed
+
+          $color = if ($failed -eq 0) { "brightgreen" } elseif ($failed -lt 3) { "yellow" } else { "red" }
+          $message = "$passed/$total passed"
+
+          $badge = @{
+            schemaVersion = 1
+            label = "${{ inputs.display-name }}"
+            message = $message
+            color = $color
+          } | ConvertTo-Json -Compress
+
+          echo $badge > lumacore-integration-${{ inputs.provider }}-badge.json
+          echo "BADGE_JSON=$badge" >> $env:GITHUB_ENV
+          echo "Badge: ${{ inputs.display-name }} — $message ($color)"
+        }
+
+    - name: Update Test Badge
+      if: github.ref == 'refs/heads/main' && always() && env.BADGE_JSON != ''
+      uses: exuanbo/actions-deploy-gist@v1
+      with:
+        token: ${{ inputs.gist-token }}
+        gist_id: ${{ inputs.gist-id }}
+        file_path: lumacore-integration-${{ inputs.provider }}-badge.json
+        gist_file_name: lumacore-integration-${{ inputs.provider }}-badge.json
+        file_type: text
+
+    - name: Upload Coverage Artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-integration-${{ inputs.provider }}
+        path: '**/coverage.cobertura.xml'
+        retention-days: 3
+        if-no-files-found: warn

@@ -53,6 +53,26 @@
             <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-ubuntu-coverage-badge.json&style=flat-square" alt="Ubuntu Coverage"></a>
           </td>
         </tr>
+        <tr>
+          <td align="center"><b>Integration</b><br/><sub>Linux only</sub></td>
+          <td align="left">
+            &nbsp;&nbsp;
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/integration-tests-sqlite.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-integration-sqlite-badge.json&style=flat-square" alt="SQLite Tests"></a>
+            &nbsp;
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/integration-tests-postgres.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-integration-postgresql-badge.json&style=flat-square" alt="PostgreSQL Tests"></a>
+            &nbsp;
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/integration-tests-sqlserver.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-integration-sqlserver-badge.json&style=flat-square" alt="SQL Server Tests"></a>
+            &nbsp;
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/integration-tests-mysql.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-integration-mysql-badge.json&style=flat-square" alt="MySQL Tests"></a>
+          </td>
+        </tr>
+        <tr>
+          <td align="center"><b>Coverage</b></td>
+          <td align="left">
+            &nbsp;&nbsp;
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/coverage-merge.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-merged-coverage-badge.json&style=flat-square" alt="Merged Coverage"></a>
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
