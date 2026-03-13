@@ -26,7 +26,7 @@ public static class AsyncTestHelpers
 	/// <param name="timeout">
 	/// Optional custom timeout. If not specified, <see cref="DefaultTimeout"/> is used.
 	/// </param>
-	/// <exception cref="Xunit.Sdk.TrueException">Thrown when the task does not complete within the timeout.</exception>
+	/// <exception cref="Xunit.Sdk.TrueException">The task does not complete within the timeout.</exception>
 	public static async Task AwaitWithTimeoutAsync(Task task, string? message = null, TimeSpan? timeout = null)
 	{
 		TimeSpan actualTimeout = timeout ?? DefaultTimeout;
@@ -46,7 +46,7 @@ public static class AsyncTestHelpers
 	/// Optional custom timeout. If not specified, <see cref="DefaultTimeout"/> is used.
 	/// </param>
 	/// <returns>The result of the completed task.</returns>
-	/// <exception cref="Xunit.Sdk.TrueException">Thrown when the task does not complete within the timeout.</exception>
+	/// <exception cref="Xunit.Sdk.TrueException">The task does not complete within the timeout.</exception>
 	public static async Task<T> AwaitWithTimeoutAsync<T>(Task<T> task, string? message = null, TimeSpan? timeout = null)
 	{
 		TimeSpan actualTimeout = timeout ?? DefaultTimeout;

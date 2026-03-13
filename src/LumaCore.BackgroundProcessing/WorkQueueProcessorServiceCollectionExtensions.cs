@@ -50,7 +50,7 @@ public static class WorkQueueProcessorServiceCollectionExtensions
 	/// <param name="configure">A delegate to configure the <see cref="WorkQueueProcessorOptions"/>.</param>
 	/// <returns>The same <see cref="IServiceCollection"/> instance for chaining.</returns>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="configure"/> is <see langword="null"/>.
+	/// <paramref name="configure"/> is <see langword="null"/>.
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -100,7 +100,7 @@ public static class WorkQueueProcessorServiceCollectionExtensions
 	/// </param>
 	/// <returns>The same <see cref="IServiceCollection"/> instance for chaining.</returns>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="configuration"/> is <see langword="null"/>.
+	/// <paramref name="configuration"/> is <see langword="null"/>.
 	/// </exception>
 	/// <remarks>
 	///     <para>

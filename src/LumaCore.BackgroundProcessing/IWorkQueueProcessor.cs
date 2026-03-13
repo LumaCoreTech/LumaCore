@@ -62,9 +62,9 @@ public interface IWorkQueueProcessor
 	/// <returns>
 	/// <see langword="true"/> if the item was successfully queued; <see langword="false"/> if the queue is full.
 	/// </returns>
-	/// <exception cref="ArgumentNullException">Thrown when <paramref name="workItem"/> is <see langword="null"/>.</exception>
-	/// <exception cref="InvalidOperationException">Thrown when the processor is not initialized.</exception>
-	/// <exception cref="ObjectDisposedException">Thrown when the processor is disposed.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="workItem"/> is <see langword="null"/>.</exception>
+	/// <exception cref="InvalidOperationException">The processor is not initialized.</exception>
+	/// <exception cref="ObjectDisposedException">The processor is disposed.</exception>
 	/// <remarks>
 	///     <para>
 	///     This is the preferred method for fire-and-forget scenarios where you don't need to track completion
@@ -90,9 +90,9 @@ public interface IWorkQueueProcessor
 	/// <returns>
 	/// <see langword="true"/> if the item was successfully queued; <see langword="false"/> if the queue is full.
 	/// </returns>
-	/// <exception cref="ArgumentNullException">Thrown when <paramref name="workItem"/> is <see langword="null"/>.</exception>
-	/// <exception cref="InvalidOperationException">Thrown when the processor is not initialized.</exception>
-	/// <exception cref="ObjectDisposedException">Thrown when the processor is disposed.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="workItem"/> is <see langword="null"/>.</exception>
+	/// <exception cref="InvalidOperationException">The processor is not initialized.</exception>
+	/// <exception cref="ObjectDisposedException">The processor is disposed.</exception>
 	/// <remarks>
 	/// The action is wrapped in a task internally. For async operations, prefer the
 	/// <see cref="QueueWorkItem(Func{CancellationToken, Task})"/> overload.
@@ -113,9 +113,9 @@ public interface IWorkQueueProcessor
 	/// A <see cref="Task"/> that completes when the work item finishes execution, or <see langword="null"/> if the
 	/// queue is full. The returned task propagates any exceptions thrown by the work item.
 	/// </returns>
-	/// <exception cref="ArgumentNullException">Thrown when <paramref name="workItem"/> is <see langword="null"/>.</exception>
-	/// <exception cref="InvalidOperationException">Thrown when the processor is not initialized.</exception>
-	/// <exception cref="ObjectDisposedException">Thrown when the processor is disposed.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="workItem"/> is <see langword="null"/>.</exception>
+	/// <exception cref="InvalidOperationException">The processor is not initialized.</exception>
+	/// <exception cref="ObjectDisposedException">The processor is disposed.</exception>
 	/// <remarks>
 	///     <para>
 	///     Use this method when you need to:
@@ -141,9 +141,9 @@ public interface IWorkQueueProcessor
 	/// A <see cref="Task"/> that completes when the work item finishes execution, or <see langword="null"/> if the
 	/// queue is full. The returned task propagates any exceptions thrown by the work item.
 	/// </returns>
-	/// <exception cref="ArgumentNullException">Thrown when <paramref name="workItem"/> is <see langword="null"/>.</exception>
-	/// <exception cref="InvalidOperationException">Thrown when the processor is not initialized.</exception>
-	/// <exception cref="ObjectDisposedException">Thrown when the processor is disposed.</exception>
+	/// <exception cref="ArgumentNullException"><paramref name="workItem"/> is <see langword="null"/>.</exception>
+	/// <exception cref="InvalidOperationException">The processor is not initialized.</exception>
+	/// <exception cref="ObjectDisposedException">The processor is disposed.</exception>
 	/// <remarks>
 	/// The action is wrapped in a task internally. For async operations, prefer the
 	/// <see cref="QueueAndTrackWorkItem(Func{CancellationToken, Task})"/> overload.

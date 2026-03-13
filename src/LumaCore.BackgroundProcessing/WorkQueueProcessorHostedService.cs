@@ -41,7 +41,7 @@ public sealed class WorkQueueProcessorHostedService : IHostedService
 	/// <param name="processor">The <see cref="WorkQueueProcessor"/> instance to manage.</param>
 	/// <param name="logger">The logger for this hosted service.</param>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="processor"/> or <paramref name="logger"/> is <see langword="null"/>.
+	/// <paramref name="processor"/> or <paramref name="logger"/> is <see langword="null"/>.
 	/// </exception>
 	public WorkQueueProcessorHostedService(
 		WorkQueueProcessor                       processor,
@@ -60,7 +60,7 @@ public sealed class WorkQueueProcessorHostedService : IHostedService
 	{
 		mLogger.LogDebug("Starting WorkQueueProcessor...");
 		await mProcessor.InitializeAsync(cancellationToken).ConfigureAwait(false);
-		mLogger.LogInformation("WorkQueueProcessor started.");
+		mLogger.LogInformation("WorkQueueProcessor started");
 	}
 
 	/// <summary>
@@ -75,6 +75,6 @@ public sealed class WorkQueueProcessorHostedService : IHostedService
 	{
 		mLogger.LogDebug("Stopping WorkQueueProcessor...");
 		await mProcessor.ShutdownAsync().ConfigureAwait(false);
-		mLogger.LogInformation("WorkQueueProcessor stopped.");
+		mLogger.LogInformation("WorkQueueProcessor stopped");
 	}
 }

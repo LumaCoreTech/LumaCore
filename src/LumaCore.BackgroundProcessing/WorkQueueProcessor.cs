@@ -147,9 +147,9 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	/// Default is 1 (sequential processing). Set higher for parallel processing.
 	/// </param>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="maxQueueSize"/> is less than or equal to zero,
-	/// when <paramref name="maxConcurrency"/> is less than or equal to zero,
-	/// or when <paramref name="shutdownTimeout"/> is negative or zero.
+	/// <paramref name="maxQueueSize"/> is less than or equal to zero,
+	/// <paramref name="maxConcurrency"/> is less than or equal to zero,
+	/// or <paramref name="shutdownTimeout"/> is negative or zero.
 	/// </exception>
 	/// <remarks>
 	/// After construction, call <see cref="InitializeAsync"/> to start the background processing.
@@ -207,9 +207,9 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	/// <param name="cancellationToken">A cancellation token that can be used to abort the initialization.</param>
 	/// <returns>A fully initialized <see cref="WorkQueueProcessor"/> instance.</returns>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// Thrown when <paramref name="maxQueueSize"/> is less than or equal to zero,
-	/// when <paramref name="maxConcurrency"/> is less than or equal to zero,
-	/// or when <paramref name="shutdownTimeout"/> is negative or zero.
+	/// <paramref name="maxQueueSize"/> is less than or equal to zero,
+	/// <paramref name="maxConcurrency"/> is less than or equal to zero,
+	/// or <paramref name="shutdownTimeout"/> is negative or zero.
 	/// </exception>
 	public static async Task<WorkQueueProcessor> CreateAsync(
 		ILoggerFactory    loggerFactory,
@@ -249,7 +249,6 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	/// <returns>A task that completes when the processor is initialized and ready to accept work items.</returns>
 	/// <exception cref="InvalidOperationException">The processor is already initialized.</exception>
 	/// <exception cref="ObjectDisposedException">The processor is disposing or already disposed.</exception>
-	/// <exception cref="OperationCanceledException">The operation was canceled.</exception>
 	public Task InitializeAsync(CancellationToken cancellationToken = default)
 	{
 		return InitializeAsync(new LifecycleContext(), cancellationToken);
@@ -306,7 +305,7 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 		mBackgroundTask = Task.Run(ProcessQueueAsync, CancellationToken.None);
 
 		// Log initialization complete.
-		Log.LogDebug("Processor started with max concurrency: {MaxConcurrency}.", mMaxConcurrency);
+		Log.LogDebug("Processor started with max concurrency: {MaxConcurrency}", mMaxConcurrency);
 
 		return Task.CompletedTask;
 	}
@@ -331,7 +330,7 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 		bool timeoutReached = false;
 		try
 		{
-			Log.LogDebug("Stopping processor ({QueuedItemCount} items in queue).", mWorkChannel.Reader.Count);
+			Log.LogDebug("Stopping processor ({QueuedItemCount} items in queue)", mWorkChannel.Reader.Count);
 
 			// Mark the channel as complete - no new items will be accepted.
 			mWorkChannel.Writer.TryComplete();
@@ -342,7 +341,7 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 			{
 				// Wait for the background task to process remaining items.
 				await mBackgroundTask.WaitAsync(timeoutCts.Token).ConfigureAwait(false);
-				Log.LogDebug("Processor stopped gracefully. All items processed.");
+				Log.LogDebug("Processor stopped gracefully, all items processed");
 			}
 			catch (OperationCanceledException)
 			{
@@ -365,7 +364,7 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 		{
 			// Invariant: LifecycleManagement requires OnShuttingDownAsync() not to throw.
 			// Any unexpected exceptions are logged and swallowed to keep the instance in a valid state.
-			Log.LogError(ex, "Unexpected error during shutdown.");
+			Log.LogError(ex, "Unexpected error during shutdown");
 
 			// Ensure running work items get a cancellation signal when the shutdown flow fails unexpectedly.
 			// This is best-effort and must not throw.
@@ -390,7 +389,7 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 			{
 				// LifecycleManagement requires OnShuttingDownAsync() not to throw.
 				// Log and swallow unexpected background task failures.
-				Log.LogCritical(ex, "Background processing task failed during shutdown.");
+				Log.LogCritical(ex, "Background processing task failed during shutdown");
 			}
 
 			// Clean up references to allow re-initialization and GC collection.
@@ -401,9 +400,9 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 			mRunningWorkItems.Clear();
 
 			if (timeoutReached)
-				Log.LogWarning("Processor shutdown complete (after timeout escalation).");
+				Log.LogWarning("Processor shutdown complete (after timeout escalation)");
 			else
-				Log.LogDebug("Processor shutdown complete.");
+				Log.LogDebug("Processor shutdown complete");
 		}
 	}
 
@@ -439,13 +438,13 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	/// <see langword="false"/> if the queue is full or if the processor is shutting down.
 	/// </returns>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="workItem"/> is <see langword="null"/>.
+	/// <paramref name="workItem"/> is <see langword="null"/>.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown when the processor is not initialized.
+	/// The processor is not initialized.
 	/// </exception>
 	/// <exception cref="ObjectDisposedException">
-	/// Thrown when the processor is disposing or already disposed.
+	/// The processor is disposing or already disposed.
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -487,13 +486,13 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	/// <see langword="false"/> if the queue is full or if the processor is shutting down.
 	/// </returns>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="workItem"/> is <see langword="null"/>.
+	/// <paramref name="workItem"/> is <see langword="null"/>.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown when the processor is not initialized.
+	/// The processor is not initialized.
 	/// </exception>
 	/// <exception cref="ObjectDisposedException">
-	/// Thrown when the processor is disposing or already disposed.
+	/// The processor is disposing or already disposed.
 	/// </exception>
 	/// <remarks>
 	/// This is a convenience method for synchronous operations.
@@ -528,13 +527,13 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	/// queue is full. The returned task propagates any exceptions thrown by the work item.
 	/// </returns>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="workItem"/> is <see langword="null"/>.
+	/// <paramref name="workItem"/> is <see langword="null"/>.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown when the processor is not initialized.
+	/// The processor is not initialized.
 	/// </exception>
 	/// <exception cref="ObjectDisposedException">
-	/// Thrown when the processor is disposing or already disposed.
+	/// The processor is disposing or already disposed.
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -581,13 +580,13 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	/// queue is full. The returned task propagates any exceptions thrown by the work item.
 	/// </returns>
 	/// <exception cref="ArgumentNullException">
-	/// Thrown when <paramref name="workItem"/> is <see langword="null"/>.
+	/// <paramref name="workItem"/> is <see langword="null"/>.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
-	/// Thrown when the processor is not initialized.
+	/// The processor is not initialized.
 	/// </exception>
 	/// <exception cref="ObjectDisposedException">
-	/// Thrown when the processor is disposing or already disposed.
+	/// The processor is disposing or already disposed.
 	/// </exception>
 	/// <remarks>
 	/// The action is wrapped in a task internally. For async operations, prefer the
@@ -625,7 +624,7 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	/// </remarks>
 	private async Task ProcessQueueAsync()
 	{
-		Log.LogDebug("Background processing task started.");
+		Log.LogDebug("Background processing task started");
 
 		try
 		{
@@ -640,18 +639,18 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 				await ProcessInParallelAsync().ConfigureAwait(false);
 			}
 
-			Log.LogDebug("Background processing task completed normally.");
+			Log.LogDebug("Background processing task completed normally");
 		}
 		catch (OperationCanceledException)
 		{
 			// Shutdown was requested before channel was drained
-			Log.LogDebug("Background processing task cancelled.");
+			Log.LogDebug("Background processing task cancelled");
 		}
 		catch (Exception ex)
 		{
 			// Unexpected error in the background loop - this should not happen as ExecuteWorkItemAsync()
 			// catches all exceptions from work items. This would indicate a bug in the service itself.
-			Log.LogError(ex, "Unexpected error in background processing task.");
+			Log.LogError(ex, "Unexpected error in background processing task");
 		}
 	}
 
@@ -826,7 +825,7 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	{
 		if (shutdownTimeoutReached)
 		{
-			Log.LogWarning("Shutdown timeout elapsed. Waiting indefinitely for running work items to finish...");
+			Log.LogWarning("Shutdown timeout elapsed — waiting indefinitely for running work items to finish...");
 			LogRunningWorkItems(DateTimeOffset.UtcNow);
 		}
 
@@ -855,7 +854,7 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	{
 		if (mRunningWorkItems.IsEmpty)
 		{
-			Log.LogDebug("Shutdown is still waiting, but no running work items are tracked.");
+			Log.LogDebug("Shutdown is still waiting, but no running work items are tracked");
 			return;
 		}
 
@@ -891,7 +890,7 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 		catch (OperationCanceledException ex) when (shutdownToken.IsCancellationRequested)
 		{
 			// Shutdown was requested - this is expected and logged at Debug level
-			Log.LogDebug("Work item cancelled due to shutdown.");
+			Log.LogDebug("Work item cancelled due to shutdown");
 			queuedItem.CompletionSource?.TrySetCanceled(ex.CancellationToken);
 		}
 		catch (OperationCanceledException ex)
@@ -899,14 +898,14 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 			// Work item threw OperationCanceledException for a reason other than shutdown.
 			// This could be a bug in the work item or an intentional cancellation.
 			// Log at Warning level since this is unexpected.
-			Log.LogWarning(ex, "Work item cancelled (not due to shutdown).");
+			Log.LogWarning(ex, "Work item cancelled (not due to shutdown)");
 			queuedItem.CompletionSource?.TrySetCanceled(ex.CancellationToken);
 		}
 		catch (Exception ex)
 		{
 			// Log the error but continue processing other items
 			// We don't want one failing work item to crash the entire service
-			Log.LogError(ex, "Error executing queued work item.");
+			Log.LogError(ex, "Error executing queued work item");
 
 			// Propagate the exception to the caller via the completion source (if tracking is enabled)
 			queuedItem.CompletionSource?.TrySetException(ex);
