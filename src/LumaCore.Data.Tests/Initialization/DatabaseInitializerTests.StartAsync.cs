@@ -268,7 +268,7 @@ public sealed partial class DatabaseInitializerTests
 			(AsyncServiceScope scope, LumaCoreDbContext dbContext) = harness.CreateScopedDbContext();
 			try
 			{
-				DateTime now = harness.TimeProvider.GetUtcNow().DateTime;
+				DateTime now = harness.TimeProvider.GetUtcNow().UtcDateTime;
 				dbContext.Conversations.Add(
 					new ConversationEntity
 					{

@@ -100,13 +100,24 @@ public sealed class LumaCoreDbContext : DbContext
 	public DbSet<UserEntity> Users { get; set; } = null!;
 
 	/// <summary>
-	/// Registers value converters for strongly-typed entity identifiers so that EF Core transparently
-	/// converts between <c>XxxId</c> structs and their underlying <see cref="long"/> database values.
+	/// Registers model-wide value converters: UTC normalization for all <see cref="DateTime"/> properties
+	/// and strongly-typed entity identifier mappings (<c>XxxId</c> ↔ <see cref="long"/>).
 	/// </summary>
 	/// <param name="configurationBuilder">The conventions builder.</param>
+	/// <remarks>
+	/// The <see cref="UtcDateTimeConverter"/> stamps <see cref="DateTimeKind.Utc"/> on every
+	/// <see cref="DateTime"/> value entering or leaving EF Core. This prevents Npgsql from rejecting
+	/// <see cref="DateTimeKind.Unspecified"/> values for <c>timestamp with time zone</c> columns and
+	/// keeps the model provider-agnostic.
+	/// </remarks>
 	protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
 	{
 		base.ConfigureConventions(configurationBuilder);
+
+		// Normalize all DateTime properties to DateTimeKind.Utc (defense-in-depth for multi-provider).
+		configurationBuilder
+			.Properties<DateTime>()
+			.HaveConversion<UtcDateTimeConverter>();
 
 		configurationBuilder
 			.Properties<ConversationId>()

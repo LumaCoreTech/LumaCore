@@ -674,7 +674,7 @@ public sealed partial class DatabaseInitializerTests
 						{
 							PublicId = publicId,
 							DisplayName = $"Volume-{i:D5}",
-							CreatedAtUtc = harness.TimeProvider.GetUtcNow().DateTime
+							CreatedAtUtc = harness.TimeProvider.GetUtcNow().UtcDateTime
 						});
 
 					// Flush every 500 rows to avoid excessive memory/change-tracker pressure.

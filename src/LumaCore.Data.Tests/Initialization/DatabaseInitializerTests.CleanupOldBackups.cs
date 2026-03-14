@@ -79,7 +79,7 @@ public sealed partial class DatabaseInitializerTests
 			// Create an old non-shuttle file (beyond retention) that should not be deleted.
 			string nonShuttleFile = Path.Combine(tempDir.Path, "data.db");
 			await File.WriteAllTextAsync(nonShuttleFile, "important");
-			File.SetLastWriteTimeUtc(nonShuttleFile, harness.TimeProvider.GetUtcNow().DateTime.AddDays(-8));
+			File.SetLastWriteTimeUtc(nonShuttleFile, harness.TimeProvider.GetUtcNow().UtcDateTime.AddDays(-8));
 
 			// Act
 			await harness.Sut.CleanupOldBackupsAsync(harness.Options, CancellationToken.None);
@@ -276,11 +276,11 @@ public sealed partial class DatabaseInitializerTests
 		});
 		try
 		{
-			DateTime now = harness.TimeProvider.GetUtcNow().DateTime;
+			DateTime now = harness.TimeProvider.GetUtcNow().UtcDateTime;
 
-			// Create a corrupt shuttle file (not valid SQLite) with a filesystem timestamp
-			// that is beyond the retention period.
-			string corruptFile = Path.Combine(tempDir.Path, "corrupt.shuttle.sqlite");
+						// Create a corrupt shuttle file (not valid SQLite) with a filesystem timestamp
+						// that is beyond the retention period.
+						string corruptFile = Path.Combine(tempDir.Path, "corrupt.shuttle.sqlite");
 			await File.WriteAllTextAsync(corruptFile, "not-a-sqlite-database");
 			File.SetLastWriteTimeUtc(corruptFile, now.AddDays(-8));
 
@@ -380,9 +380,9 @@ public sealed partial class DatabaseInitializerTests
 		});
 		try
 		{
-			DateTime now = harness.TimeProvider.GetUtcNow().DateTime;
+			DateTime now = harness.TimeProvider.GetUtcNow().UtcDateTime;
 
-			string corruptFile = Path.Combine(tempDir.Path, "corrupt-recent.shuttle.sqlite");
+						string corruptFile = Path.Combine(tempDir.Path, "corrupt-recent.shuttle.sqlite");
 			await File.WriteAllTextAsync(corruptFile, "not-a-sqlite-database");
 			File.SetLastWriteTimeUtc(corruptFile, now.AddDays(-3));
 

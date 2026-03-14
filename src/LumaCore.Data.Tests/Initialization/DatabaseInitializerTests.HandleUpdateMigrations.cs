@@ -1797,7 +1797,7 @@ public sealed partial class DatabaseInitializerTests
 
 			// Insert a user (with linked participant) so the backup has real data.
 			var participantPublicId = Guid.NewGuid();
-			DateTime seedCreatedAtUtc = harness.TimeProvider.GetUtcNow().DateTime;
+			DateTime seedCreatedAtUtc = harness.TimeProvider.GetUtcNow().UtcDateTime;
 			(AsyncServiceScope seedScope, LumaCoreDbContext seedCtx) = harness.CreateScopedDbContext();
 			try
 			{
