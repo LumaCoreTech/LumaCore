@@ -51,8 +51,10 @@ runs:
       env:
         LUMACORE_INTEGRATION_TESTS: "true"
         LUMACORE_TESTS__Db__Provider: ${{ inputs.provider }}
+        # The connection string provides transport/auth only (host, port, credentials) — no database
+        # name. The database name is derived from DatabasePrefix (default: lumacore_test) plus a GUID
+        # suffix per fixture for parallel isolation. See DbFixture / DbTestSettings for details.
         LUMACORE_TESTS__Db__ConnectionString: ${{ inputs.connection-string }}
-        LUMACORE_TESTS__Db__EnsureDeleted: "true"
 
     - name: Test Report
       uses: dorny/test-reporter@v2
@@ -72,9 +74,12 @@ runs:
           [xml]$trx = Get-Content $trxFile.FullName
           $total = [int]$trx.TestRun.ResultSummary.Counters.total
           $passed = [int]$trx.TestRun.ResultSummary.Counters.passed
-          $failed = [int]$trx.TestRun.ResultSummary.Counters.failed
 
-          $color = if ($failed -eq 0) { "brightgreen" } elseif ($failed -lt 3) { "yellow" } else { "red" }
+          # Use total-minus-passed instead of the "failed" counter alone — TRX distinguishes
+          # "failed" (assertion) from "error" (fixture/infrastructure), and ignoring "error"
+          # would keep the badge green when fixtures throw (e.g., database connection issues).
+          $notPassed = $total - $passed
+          $color = if ($notPassed -eq 0) { "brightgreen" } elseif ($notPassed -lt 3) { "yellow" } else { "red" }
           $message = "$passed/$total passed"
 
           $badge = @{

@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+
+using Npgsql;
 
 using Xunit;
 
@@ -13,9 +16,20 @@ namespace LumaCore.Data.Tests.Infrastructure;
 /// Shared database fixture used by data tests.
 /// </summary>
 /// <remarks>
-/// The default mode uses a shared SQLite in-memory connection so multiple <see cref="LumaCoreDbContext"/> instances can
-/// observe the same database state. Depending on <see cref="DbTestSettings"/>, the fixture can also target external
-/// providers.
+///     <para>
+///     The default mode uses a shared SQLite in-memory connection so multiple <see cref="LumaCoreDbContext"/>
+///     instances can observe the same database state. Depending on <see cref="DbTestSettings"/>, the fixture can
+///     also target external providers.
+///     </para>
+///     <para>
+///     <b>Database naming for external providers:</b> Each fixture combines <see cref="DbTestSettings.DatabasePrefix"/>
+///     with a GUID suffix (e.g., <c>lumacore_test_a1b2c3…</c>) so that test classes can run in parallel without
+///     interfering with each other. The connection string provides only transport and authentication — the database
+///     name is derived entirely from the prefix. <see cref="DisposeAsync"/> drops the unique database after the
+///     test class finishes (best-effort). If cleanup fails or the test runner is killed, orphaned databases may
+///     remain — on CI this is irrelevant because the database container is destroyed; locally they can be removed
+///     manually.
+///     </para>
 /// </remarks>
 public sealed class DbFixture : IAsyncLifetime
 {
@@ -37,10 +51,28 @@ public sealed class DbFixture : IAsyncLifetime
 	private DbTestSettings? mSettings;
 
 	/// <summary>
-	/// Disposes the fixture database context and any underlying connection.
+	/// Disposes the fixture database context, drops any unique test database, and releases underlying connections.
 	/// </summary>
+	/// <remarks>
+	/// For external providers (PostgreSQL, SQL Server, MySQL) each fixture creates a unique database with a GUID
+	/// suffix. <c>EnsureDeletedAsync</c> drops that database so test runs don't leave orphaned databases behind.
+	/// The deletion is best-effort — on CI the container is destroyed anyway.
+	/// </remarks>
 	public async Task DisposeAsync()
 	{
+		// External providers: drop the unique per-fixture database before disposing the context.
+		if (mSettings?.Provider is DbProvider.PostgreSql or DbProvider.SqlServer or DbProvider.MySql)
+		{
+			try
+			{
+				await DbContext.Database.EnsureDeletedAsync();
+			}
+			catch
+			{
+				/* best-effort cleanup — CI containers are destroyed anyway */
+			}
+		}
+
 		await DbContext.DisposeAsync();
 		if (mConnection is not null)
 		{
@@ -81,7 +113,9 @@ public sealed class DbFixture : IAsyncLifetime
 			DbProvider.Sqlite         => CreateSqliteFile(settings),
 			DbProvider.PostgreSql     => CreatePostgreSql(settings),
 			DbProvider.SqlServer      => CreateSqlServer(settings),
-			// TODO: Add MySQL/MariaDB support in the future (Pomelo compatibility with EF Core 10 is currently lacking).
+			// TODO: Add MySQL/MariaDB support in the future (Pomelo compatibility with EF Core 10 is currently
+			//       lacking). The factory method should follow the same GUID-based database naming pattern as
+			//       CreatePostgreSql() / CreateSqlServer() for parallel test isolation.
 			DbProvider.MySql => throw new NotSupportedException(
 				                    "MySQL/MariaDB is currently not supported in LumaCore with EF Core 10 (Pomelo compatibility). " +
 				                    "This option exists to prepare wiring; selecting it is expected to fail."),
@@ -149,15 +183,18 @@ public sealed class DbFixture : IAsyncLifetime
 	/// Initializes the database schema for the fixture.
 	/// </summary>
 	/// <remarks>
-	/// When <see cref="DbTestSettings.EnsureDeleted"/> is <see langword="true"/> (typically for external providers
-	/// in CI), the database is dropped and recreated. Otherwise, only <c>EnsureCreatedAsync</c> is called.
+	///     <para>
+	///     Every provider starts with an empty database — SQLite uses fresh in-memory connections or unique temp
+	///     files, external providers (PostgreSQL, SQL Server, MySQL) use a unique database per fixture whose name
+	///     includes a GUID suffix (see <see cref="CreatePostgreSql"/> / <see cref="CreateSqlServer"/>).
+	///     </para>
+	///     <para>
+	///     Because the database is always new, only <c>EnsureCreatedAsync</c> is needed here.
+	///     Cleanup happens in <see cref="DisposeAsync"/> via <c>EnsureDeletedAsync</c>.
+	///     </para>
 	/// </remarks>
 	public async Task InitializeAsync()
 	{
-		if (mSettings?.EnsureDeleted == true)
-		{
-			await DbContext.Database.EnsureDeletedAsync();
-		}
 		await DbContext.Database.EnsureCreatedAsync();
 	}
 
@@ -234,8 +271,15 @@ public sealed class DbFixture : IAsyncLifetime
 		if (string.IsNullOrWhiteSpace(settings.ConnectionString))
 			throw new InvalidOperationException("PostgreSQL selected but no connection string provided.");
 
+		// The connection string carries transport/auth only — the database name comes from DatabasePrefix + GUID
+		// so that each fixture gets an isolated database for parallel execution.
+		var builder = new NpgsqlConnectionStringBuilder(settings.ConnectionString)
+		{
+			Database = $"{settings.DatabasePrefix}_{Guid.NewGuid():N}"
+		};
+
 		DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
-			.UseNpgsql(settings.ConnectionString)
+			.UseNpgsql(builder.ConnectionString)
 			.Options;
 
 		return new DbFixture
@@ -258,8 +302,15 @@ public sealed class DbFixture : IAsyncLifetime
 		if (string.IsNullOrWhiteSpace(settings.ConnectionString))
 			throw new InvalidOperationException("SQL Server selected but no connection string provided.");
 
+		// The connection string carries transport/auth only — the database name comes from DatabasePrefix + GUID
+		// so that each fixture gets an isolated database for parallel execution.
+		var builder = new SqlConnectionStringBuilder(settings.ConnectionString)
+		{
+			InitialCatalog = $"{settings.DatabasePrefix}_{Guid.NewGuid():N}"
+		};
+
 		DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
-			.UseSqlServer(settings.ConnectionString)
+			.UseSqlServer(builder.ConnectionString)
 			.Options;
 
 		return new DbFixture

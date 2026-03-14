@@ -20,6 +20,20 @@ namespace LumaCore.Data.Tests.Infrastructure;
 ///         <item>Environment variables with prefix <c>LUMACORE_TESTS__</c> (e.g., <c>LUMACORE_TESTS__Db__Provider</c>)</item>
 ///     </list>
 ///     <para>
+///     Supported keys under <c>Db:</c>:
+///     </para>
+///     <list type="bullet">
+///         <item>
+///         <c>Provider</c> — provider name (<c>sqlite</c>, <c>sqlitememory</c>, <c>postgresql</c>, <c>sqlserver</c>,
+///         <c>mysql</c>)
+///         </item>
+///         <item>
+///         <c>ConnectionString</c> — transport/auth only (host, port, credentials); must <b>not</b> include a
+///         database name
+///         </item>
+///         <item><c>DatabasePrefix</c> — prefix for the per-fixture database name (default: <c>lumacore_test</c>)</item>
+///     </list>
+///     <para>
 ///     When no configuration is provided (no <c>Db:Provider</c> key), defaults to
 ///     <see cref="DbProvider.SqliteInMemory"/> for fast, hermetic unit tests. Use <c>sqlite</c> to match
 ///     production file-based behavior.
@@ -45,7 +59,7 @@ static class DbTestSettingsLoader
 		// Note: environment vars use prefix LUMACORE_TESTS__ (see AddEnvironmentVariables above).
 		string provider = configuration["Db:Provider"]?.Trim().ToLowerInvariant() ?? "sqlitememory";
 		string? connectionString = configuration["Db:ConnectionString"];
-		bool ensureDeleted = bool.TryParse(configuration["Db:EnsureDeleted"], out bool ed) && ed;
+		string? databasePrefix = configuration["Db:DatabasePrefix"];
 
 		return new DbTestSettings
 		{
@@ -59,7 +73,7 @@ static class DbTestSettingsLoader
 				var _          => DbProvider.SqliteInMemory
 			},
 			ConnectionString = connectionString,
-			EnsureDeleted = ensureDeleted
+			DatabasePrefix = databasePrefix ?? "lumacore_test"
 		};
 	}
 }
