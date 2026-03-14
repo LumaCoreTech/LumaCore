@@ -21,4 +21,38 @@
 		<InternalsVisibleTo Include="LumaCore.Data.Tests" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\LumaCore.Configuration\LumaCore.Configuration.csproj" />
+		<ProjectReference Include="..\LumaCore.Core\LumaCore.Core.csproj" />
+		<ProjectReference Include="..\LumaCore.Definitions\LumaCore.Definitions.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Entity Framework Core -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore" />
+
+		<!-- EF Core Design for Migrations CLI -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<!-- Hosting abstractions for IHostedService -->
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+
+		<!-- Database Providers -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+
+		<!--
+		TODO:
+		MySQL/MariaDB Support (Pomelo) - TEMPORARILY DISABLED
+		Pomelo.EntityFrameworkCore.MySql has not yet released an EF Core 10 compatible version.
+		Track progress: https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues
+		Once available, uncomment the following line and update ServiceRegistration.cs:
+		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="10.x.x" />
+		-->
+	</ItemGroup>
+
 </Project>
