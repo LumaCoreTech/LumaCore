@@ -220,23 +220,26 @@ public sealed class SqlServerImportWriter : IDataImportWriter
 		}
 		else
 		{
-			// Fresh import for this table: truncate existing data.
+			// Fresh import for this table: delete existing data.
+			// SQL Server does not allow TRUNCATE TABLE when any FK constraint references the table,
+			// even if the constraint is disabled via NOCHECK. DELETE FROM works regardless of FK
+			// existence. Identity seed reset is handled in CleanupAfterImportAsync().
 			try
 			{
-				string truncateSql = $"TRUNCATE TABLE {QuoteSqlServer(table.Name)}";
-				var truncateCmd = new SqlCommand(truncateSql, mConnection);
+				string deleteSql = $"DELETE FROM {QuoteSqlServer(table.Name)}";
+				var deleteCmd = new SqlCommand(deleteSql, mConnection);
 				try
 				{
-					await truncateCmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+					await deleteCmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 				}
 				finally
 				{
-					await truncateCmd.DisposeAsync().ConfigureAwait(false);
+					await deleteCmd.DisposeAsync().ConfigureAwait(false);
 				}
 			}
 			catch (Exception ex)
 			{
-				logger?.LogError(ex, "Failed to truncate table {TableName}", table.Name);
+				logger?.LogError(ex, "Failed to delete data from table {TableName}", table.Name);
 				throw;
 			}
 		}
