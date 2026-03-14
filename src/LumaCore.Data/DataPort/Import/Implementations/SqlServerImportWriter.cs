@@ -802,6 +802,8 @@ public sealed class SqlServerImportWriter : IDataImportWriter
 
 		return sqlServerDataType switch
 		{
+			"uniqueidentifier" when value is byte[] b =>
+				new Guid(b),
 			"uniqueidentifier" when value is string s =>
 				Guid.Parse(s),
 			"datetime2" or "datetime" or "smalldatetime" when value is string s =>

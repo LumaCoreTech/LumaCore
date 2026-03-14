@@ -580,6 +580,8 @@ public sealed class PostgresImportWriter : IDataImportWriter
 
 		return pgDataType switch
 		{
+			"uuid" when value is byte[] b =>
+				new Guid(b),
 			"timestamp with time zone" when value is string s =>
 				DateTime.SpecifyKind(DateTime.Parse(s, CultureInfo.InvariantCulture), DateTimeKind.Utc),
 			"timestamp without time zone" when value is string s =>
