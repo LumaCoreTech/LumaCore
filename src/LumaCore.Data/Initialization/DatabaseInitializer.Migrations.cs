@@ -6,6 +6,8 @@ using LumaCore.Core.Diagnostics;
 using LumaCore.Data.Providers;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
 namespace LumaCore.Data.Initialization;
@@ -62,8 +64,19 @@ partial class DatabaseInitializer
 		// The checkpoint table acts as a "restore in progress" marker that survives process crashes.
 		// If found, resume the restore instead of starting a new migration/backup cycle
 		// (which would create a backup of the broken/partially-restored state).
-		RestoreCheckpointData? checkpoint =
-			await TryReadRestoreCheckpointAsync(dbContext, cancellationToken).ConfigureAwait(false);
+		//
+		// On external providers (PostgreSQL, SQL Server) a brand-new database does not exist yet —
+		// MigrateAsync() creates it later. Our custom checkpoint query uses raw ADO.NET which would
+		// fail with a connection error (e.g., PostgreSQL SQLSTATE 3D000 "invalid_catalog_name").
+		// EF Core's own GetAppliedMigrationsAsync() handles non-existent databases internally, but
+		// raw ADO.NET does not. If the database doesn't exist, there can't be a checkpoint — skip.
+		var databaseCreator = dbContext.GetService<IRelationalDatabaseCreator>();
+		bool databaseExists = await databaseCreator.ExistsAsync(cancellationToken).ConfigureAwait(false);
+
+		RestoreCheckpointData? checkpoint = databaseExists
+			                                    ? await TryReadRestoreCheckpointAsync(dbContext, cancellationToken)
+				                                      .ConfigureAwait(false)
+			                                    : null;
 
 		if (checkpoint is not null)
 		{
@@ -296,8 +309,8 @@ partial class DatabaseInitializer
 					// on whether the error is a transient infrastructure issue (connection drop, timeout)
 					// or a persistent local problem (disk full, permissions, invalid path).
 					DatabaseFailureCategory category = mProviderOperations.IsServiceUnavailable(ex)
-														   ? DatabaseFailureCategory.Transient
-														   : DatabaseFailureCategory.ManualInterventionRequired;
+						                                   ? DatabaseFailureCategory.Transient
+						                                   : DatabaseFailureCategory.ManualInterventionRequired;
 
 					mLogger.LogCritical(
 						ex,
