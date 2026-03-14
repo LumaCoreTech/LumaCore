@@ -46,6 +46,12 @@ public sealed class DbFixture : IAsyncLifetime
 	private string? mDatabasePath;
 
 	/// <summary>
+	/// The resolved connection string for external providers (PostgreSQL, SQL Server), including the
+	/// GUID-suffixed database name. <see langword="null"/> for SQLite providers.
+	/// </summary>
+	private string? mConnectionString;
+
+	/// <summary>
 	/// The resolved test settings indicating which provider and connection string to use.
 	/// </summary>
 	private DbTestSettings? mSettings;
@@ -158,20 +164,32 @@ public sealed class DbFixture : IAsyncLifetime
 			return new LumaCoreDbContext(fileOptions);
 		}
 
-		if (mSettings?.Provider is DbProvider.PostgreSql or DbProvider.SqlServer)
+		if (mSettings?.Provider is DbProvider.PostgreSql)
 		{
-			// For non-SQLite providers, the fixture is already configured to use an external DB.
-			// These tests are primarily built around SQLite in-memory; if a different provider is selected,
-			// return a minimal context to keep helpers usable. (Most tests use sqlite by default.)
-			DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
-				.UseSqlite("Data Source=:memory:")
+			if (mConnectionString is null)
+				throw new InvalidOperationException("Fixture connection string not initialized.");
+
+			DbContextOptions<LumaCoreDbContext> npgsqlOptions = new DbContextOptionsBuilder<LumaCoreDbContext>()
+				.UseNpgsql(mConnectionString)
 				.Options;
-			return new LumaCoreDbContext(options);
+			return new LumaCoreDbContext(npgsqlOptions);
+		}
+
+		if (mSettings?.Provider is DbProvider.SqlServer)
+		{
+			if (mConnectionString is null)
+				throw new InvalidOperationException("Fixture connection string not initialized.");
+
+			DbContextOptions<LumaCoreDbContext> sqlServerOptions = new DbContextOptionsBuilder<LumaCoreDbContext>()
+				.UseSqlServer(mConnectionString)
+				.Options;
+			return new LumaCoreDbContext(sqlServerOptions);
 		}
 
 		if (mConnection is null)
 			throw new InvalidOperationException("Fixture connection not initialized.");
 
+		// SQLite in-memory: create a new context using the shared connection to observe the same database state.
 		DbContextOptions<LumaCoreDbContext> sqliteOptions = new DbContextOptionsBuilder<LumaCoreDbContext>()
 			.UseSqlite(mConnection)
 			.Options;
@@ -278,12 +296,15 @@ public sealed class DbFixture : IAsyncLifetime
 			Database = $"{settings.DatabasePrefix}_{Guid.NewGuid():N}"
 		};
 
+		string resolvedConnectionString = builder.ConnectionString;
+
 		DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
-			.UseNpgsql(builder.ConnectionString)
+			.UseNpgsql(resolvedConnectionString)
 			.Options;
 
 		return new DbFixture
 		{
+			mConnectionString = resolvedConnectionString,
 			mSettings = settings,
 			DbContext = new LumaCoreDbContext(options)
 		};
@@ -309,12 +330,15 @@ public sealed class DbFixture : IAsyncLifetime
 			InitialCatalog = $"{settings.DatabasePrefix}_{Guid.NewGuid():N}"
 		};
 
+		string resolvedConnectionString = builder.ConnectionString;
+
 		DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
-			.UseSqlServer(builder.ConnectionString)
+			.UseSqlServer(resolvedConnectionString)
 			.Options;
 
 		return new DbFixture
 		{
+			mConnectionString = resolvedConnectionString,
 			mSettings = settings,
 			DbContext = new LumaCoreDbContext(options)
 		};
