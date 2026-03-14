@@ -3,6 +3,7 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using System.Data;
+using System.Globalization;
 
 using LumaCore.Data.DataPort.Models;
 
@@ -248,6 +249,13 @@ public sealed class SqlServerImportWriter : IDataImportWriter
 		if (hasIdentity)
 			await SetIdentityInsertAsync(table.Name, true, cancellationToken).ConfigureAwait(false);
 
+		// Build per-column type mapping for shuttle → SQL Server type conversion.
+		// The shuttle file stores all values as SQLite native types (string for TEXT, long for
+		// INTEGER, double for REAL, byte[] for BLOB). SqlBulkCopy cannot convert all of these
+		// automatically (e.g., string → uniqueidentifier fails).
+		string?[] sqlServerTypes = await GetTargetColumnTypesAsync(table, cancellationToken)
+			                           .ConfigureAwait(false);
+
 		long totalRowCount = rowsAlreadyImported;
 		long rowsToSkip = rowsAlreadyImported;
 		int currentChunk = chunksCompleted;
@@ -278,7 +286,11 @@ public sealed class SqlServerImportWriter : IDataImportWriter
 				try
 				{
 					// Create a chunked reader that reads at most chunkSize rows from the enumerator.
-					using var chunkReader = new ChunkedTableSnapshotDataReader(table, enumerator, chunkSize);
+					using var chunkReader = new ChunkedTableSnapshotDataReader(
+						table,
+						enumerator,
+						chunkSize,
+						sqlServerTypes);
 
 					using (var bulkCopy = new SqlBulkCopy(mConnection, SqlBulkCopyOptions.Default, chunkTransaction))
 					{
@@ -702,6 +714,118 @@ public sealed class SqlServerImportWriter : IDataImportWriter
 		}
 	}
 
+	// --- Private Shuttle → SQL Server Type Conversion ---
+
+	/// <summary>
+	/// Queries <c>INFORMATION_SCHEMA.COLUMNS</c> for the actual SQL Server data types of the target
+	/// table and returns them as an array aligned with <see cref="TableSnapshot.Columns"/>.
+	/// </summary>
+	/// <param name="table">The table snapshot whose columns define the expected order.</param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns>
+	/// An array of SQL Server <c>DATA_TYPE</c> strings (e.g., <c>"uniqueidentifier"</c>,
+	/// <c>"datetime2"</c>, <c>"bit"</c>), one per column in <paramref name="table"/>.
+	/// Elements are <see langword="null"/> when the column is not found in the target schema.
+	/// </returns>
+	private async Task<string?[]> GetTargetColumnTypesAsync(
+		TableSnapshot     table,
+		CancellationToken cancellationToken)
+	{
+		var sqlTypes = new Dictionary<string, string>(StringComparer.Ordinal);
+
+		var cmd = new SqlCommand(
+			"""
+			SELECT COLUMN_NAME, DATA_TYPE
+			FROM INFORMATION_SCHEMA.COLUMNS
+			WHERE TABLE_NAME = @table
+			""",
+			mConnection);
+		cmd.Parameters.AddWithValue("@table", table.Name);
+		try
+		{
+			SqlDataReader reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+			try
+			{
+				while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+				{
+					sqlTypes[reader.GetString(0)] = reader.GetString(1);
+				}
+			}
+			finally
+			{
+				await reader.DisposeAsync().ConfigureAwait(false);
+			}
+		}
+		finally
+		{
+			await cmd.DisposeAsync().ConfigureAwait(false);
+		}
+
+		// Build an array aligned with the table's column order.
+		string?[] result = new string?[table.Columns.Count];
+		for (int i = 0; i < table.Columns.Count; i++)
+		{
+			sqlTypes.TryGetValue(table.Columns[i].Name, out result[i]);
+		}
+
+		return result;
+	}
+
+	/// <summary>
+	/// Converts a raw value read from the SQLite shuttle file into the CLR type expected by
+	/// <see cref="SqlBulkCopy"/> for the given target column type.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     The shuttle file stores all data using SQLite native types: <see cref="string"/> for
+	///     <c>TEXT</c> columns (timestamps, UUIDs), <see cref="long"/> for <c>INTEGER</c>
+	///     columns (booleans, ints, bigints), <see cref="double"/> for <c>REAL</c>, and
+	///     <c>byte[]</c> for <c>BLOB</c>. <see cref="SqlBulkCopy"/> cannot convert all of
+	///     these automatically (e.g., <see cref="string"/> → <c>uniqueidentifier</c> fails).
+	///     </para>
+	///     <para>
+	///     When the value is already the correct CLR type, or the SQL Server type is unknown,
+	///     the value is returned unchanged (passthrough).
+	///     </para>
+	/// </remarks>
+	/// <param name="value">The raw shuttle value, or <see langword="null"/> for SQL NULL.</param>
+	/// <param name="sqlServerDataType">
+	/// The SQL Server <c>DATA_TYPE</c> from <c>INFORMATION_SCHEMA.COLUMNS</c>
+	/// (e.g., <c>"uniqueidentifier"</c>, <c>"datetime2"</c>, <c>"bit"</c>), or
+	/// <see langword="null"/> when the column type is unknown.
+	/// </param>
+	/// <returns>The converted value suitable for <see cref="SqlBulkCopy"/>.</returns>
+	private static object? ConvertShuttleValue(object? value, string? sqlServerDataType)
+	{
+		if (value is null)
+			return null;
+
+		return sqlServerDataType switch
+		{
+			"uniqueidentifier" when value is string s =>
+				Guid.Parse(s),
+			"datetime2" or "datetime" or "smalldatetime" when value is string s =>
+				DateTime.Parse(s, CultureInfo.InvariantCulture),
+			"datetimeoffset" when value is string s =>
+				DateTimeOffset.Parse(s, CultureInfo.InvariantCulture),
+			"date" when value is string s =>
+				DateTime.Parse(s, CultureInfo.InvariantCulture),
+			"time" when value is string s =>
+				TimeSpan.Parse(s, CultureInfo.InvariantCulture),
+			"bit" when value is long l =>
+				l != 0,
+			"int" when value is long l =>
+				(int)l,
+			"smallint" when value is long l =>
+				(short)l,
+			"tinyint" when value is long l =>
+				(byte)l,
+			"real" when value is double d =>
+				(float)d,
+			var _ => value
+		};
+	}
+
 	// --- Nested Types ---
 
 	/// <summary>
@@ -730,7 +854,8 @@ public sealed class SqlServerImportWriter : IDataImportWriter
 	private sealed class ChunkedTableSnapshotDataReader(
 		TableSnapshot               snapshot,
 		IAsyncEnumerator<object?[]> enumerator,
-		int                         maxRows) : IDataReader
+		int                         maxRows,
+		string?[]?                  sqlServerTypes = null) : IDataReader
 	{
 		private object?[]? mCurrentRow;
 
@@ -774,6 +899,16 @@ public sealed class SqlServerImportWriter : IDataImportWriter
 			if (hasNext)
 			{
 				mCurrentRow = enumerator.Current;
+
+				// Convert shuttle values (SQLite native types) to SQL Server–compatible CLR types.
+				if (sqlServerTypes is not null)
+				{
+					for (int i = 0; i < mCurrentRow.Length; i++)
+					{
+						mCurrentRow[i] = ConvertShuttleValue(mCurrentRow[i], sqlServerTypes[i]);
+					}
+				}
+
 				RowsRead++;
 			}
 			else
