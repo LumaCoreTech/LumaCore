@@ -2,6 +2,8 @@
 
 using Microsoft.EntityFrameworkCore.Migrations;
 
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
 namespace LumaCore.Data.Migrations;
 
 /// <inheritdoc/>
@@ -14,12 +16,14 @@ public partial class InitialCreate : Migration
 			name: "Conversations",
 			columns: table => new
 			{
-				Id = table.Column<long>(type: "INTEGER", nullable: false)
+				Id = table.Column<long>(nullable: false)
+					.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+					.Annotation("SqlServer:Identity", "1, 1")
 					.Annotation("Sqlite:Autoincrement", true),
-				PublicId = table.Column<Guid>(type: "TEXT", nullable: false),
-				Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-				CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
-				UpdatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
+				PublicId = table.Column<Guid>(nullable: false),
+				Title = table.Column<string>(maxLength: 200, nullable: false),
+				CreatedAtUtc = table.Column<DateTime>(nullable: false),
+				UpdatedAtUtc = table.Column<DateTime>(nullable: false)
 			},
 			constraints: table =>
 			{
@@ -30,16 +34,18 @@ public partial class InitialCreate : Migration
 			name: "ModelEndpoints",
 			columns: table => new
 			{
-				Id = table.Column<long>(type: "INTEGER", nullable: false)
+				Id = table.Column<long>(nullable: false)
+					.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+					.Annotation("SqlServer:Identity", "1, 1")
 					.Annotation("Sqlite:Autoincrement", true),
-				PublicId = table.Column<Guid>(type: "TEXT", nullable: false),
-				CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
-				ProviderType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-				BaseUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-				Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-				Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-				IsActive = table.Column<bool>(type: "INTEGER", nullable: false, defaultValue: true),
-				EncryptedCredentials = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true)
+				PublicId = table.Column<Guid>(nullable: false),
+				CreatedAtUtc = table.Column<DateTime>(nullable: false),
+				ProviderType = table.Column<string>(maxLength: 50, nullable: false),
+				BaseUrl = table.Column<string>(maxLength: 500, nullable: false),
+				Name = table.Column<string>(maxLength: 100, nullable: false),
+				Description = table.Column<string>(maxLength: 1000, nullable: true),
+				IsActive = table.Column<bool>(nullable: false, defaultValue: true),
+				EncryptedCredentials = table.Column<string>(maxLength: 4000, nullable: true)
 			},
 			constraints: table =>
 			{
@@ -50,12 +56,14 @@ public partial class InitialCreate : Migration
 			name: "Participants",
 			columns: table => new
 			{
-				Id = table.Column<long>(type: "INTEGER", nullable: false)
+				Id = table.Column<long>(nullable: false)
+					.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+					.Annotation("SqlServer:Identity", "1, 1")
 					.Annotation("Sqlite:Autoincrement", true),
-				PublicId = table.Column<Guid>(type: "TEXT", nullable: false),
-				CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
-				DisplayName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-				AvatarUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true)
+				PublicId = table.Column<Guid>(nullable: false),
+				CreatedAtUtc = table.Column<DateTime>(nullable: false),
+				DisplayName = table.Column<string>(maxLength: 100, nullable: false),
+				AvatarUrl = table.Column<string>(maxLength: 500, nullable: true)
 			},
 			constraints: table =>
 			{
@@ -66,12 +74,14 @@ public partial class InitialCreate : Migration
 			name: "Roles",
 			columns: table => new
 			{
-				Id = table.Column<long>(type: "INTEGER", nullable: false)
+				Id = table.Column<long>(nullable: false)
+					.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+					.Annotation("SqlServer:Identity", "1, 1")
 					.Annotation("Sqlite:Autoincrement", true),
-				PublicId = table.Column<Guid>(type: "TEXT", nullable: false),
-				CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
-				Name = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-				Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true)
+				PublicId = table.Column<Guid>(nullable: false),
+				CreatedAtUtc = table.Column<DateTime>(nullable: false),
+				Name = table.Column<string>(maxLength: 50, nullable: false),
+				Description = table.Column<string>(maxLength: 500, nullable: true)
 			},
 			constraints: table =>
 			{
@@ -82,12 +92,14 @@ public partial class InitialCreate : Migration
 			name: "SeedHistory",
 			columns: table => new
 			{
-				Id = table.Column<int>(type: "INTEGER", nullable: false)
+				Id = table.Column<int>(nullable: false)
+					.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+					.Annotation("SqlServer:Identity", "1, 1")
 					.Annotation("Sqlite:Autoincrement", true),
-				SeedId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-				Version = table.Column<int>(type: "INTEGER", nullable: false),
-				Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-				AppliedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
+				SeedId = table.Column<string>(maxLength: 100, nullable: false),
+				Version = table.Column<int>(nullable: false),
+				Description = table.Column<string>(maxLength: 500, nullable: true),
+				AppliedAtUtc = table.Column<DateTime>(nullable: false)
 			},
 			constraints: table =>
 			{
@@ -98,10 +110,10 @@ public partial class InitialCreate : Migration
 			name: "ConversationParticipants",
 			columns: table => new
 			{
-				ConversationId = table.Column<long>(type: "INTEGER", nullable: false),
-				ParticipantId = table.Column<long>(type: "INTEGER", nullable: false),
-				JoinedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
-				Role = table.Column<int>(type: "INTEGER", nullable: false)
+				ConversationId = table.Column<long>(nullable: false),
+				ParticipantId = table.Column<long>(nullable: false),
+				JoinedAtUtc = table.Column<DateTime>(nullable: false),
+				Role = table.Column<int>(nullable: false)
 			},
 			constraints: table =>
 			{
@@ -124,15 +136,17 @@ public partial class InitialCreate : Migration
 			name: "Messages",
 			columns: table => new
 			{
-				Id = table.Column<long>(type: "INTEGER", nullable: false)
+				Id = table.Column<long>(nullable: false)
+					.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+					.Annotation("SqlServer:Identity", "1, 1")
 					.Annotation("Sqlite:Autoincrement", true),
-				PublicId = table.Column<Guid>(type: "TEXT", nullable: false),
-				ConversationId = table.Column<long>(type: "INTEGER", nullable: false),
-				SenderId = table.Column<long>(type: "INTEGER", nullable: true),
-				CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
-				Content = table.Column<string>(type: "TEXT", nullable: true),
-				RedactedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
-				RedactionReason = table.Column<int>(type: "INTEGER", nullable: true)
+				PublicId = table.Column<Guid>(nullable: false),
+				ConversationId = table.Column<long>(nullable: false),
+				SenderId = table.Column<long>(nullable: true),
+				CreatedAtUtc = table.Column<DateTime>(nullable: false),
+				Content = table.Column<string>(nullable: true),
+				RedactedAtUtc = table.Column<DateTime>(nullable: true),
+				RedactionReason = table.Column<int>(nullable: true)
 			},
 			constraints: table =>
 			{
@@ -155,15 +169,17 @@ public partial class InitialCreate : Migration
 			name: "Users",
 			columns: table => new
 			{
-				Id = table.Column<long>(type: "INTEGER", nullable: false)
+				Id = table.Column<long>(nullable: false)
+					.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+					.Annotation("SqlServer:Identity", "1, 1")
 					.Annotation("Sqlite:Autoincrement", true),
-				ParticipantId = table.Column<long>(type: "INTEGER", nullable: false),
-				LastLoginAtUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
-				LastTokenRefreshAtUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
-				Email = table.Column<string>(type: "TEXT", maxLength: 254, nullable: true),
-				PasswordHash = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-				Username = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-				UsernameNormalized = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false)
+				ParticipantId = table.Column<long>(nullable: false),
+				LastLoginAtUtc = table.Column<DateTime>(nullable: true),
+				LastTokenRefreshAtUtc = table.Column<DateTime>(nullable: true),
+				Email = table.Column<string>(maxLength: 254, nullable: true),
+				PasswordHash = table.Column<string>(maxLength: 255, nullable: false),
+				Username = table.Column<string>(maxLength: 50, nullable: false),
+				UsernameNormalized = table.Column<string>(maxLength: 50, nullable: false)
 			},
 			constraints: table =>
 			{
@@ -180,9 +196,9 @@ public partial class InitialCreate : Migration
 			name: "UserRoles",
 			columns: table => new
 			{
-				UserId = table.Column<long>(type: "INTEGER", nullable: false),
-				RoleId = table.Column<long>(type: "INTEGER", nullable: false),
-				AssignedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false)
+				UserId = table.Column<long>(nullable: false),
+				RoleId = table.Column<long>(nullable: false),
+				AssignedAtUtc = table.Column<DateTime>(nullable: false)
 			},
 			constraints: table =>
 			{

@@ -2,6 +2,8 @@
 
 using Microsoft.EntityFrameworkCore.Migrations;
 
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
 namespace LumaCore.Data.Migrations;
 
 /// <inheritdoc/>
@@ -14,13 +16,15 @@ public partial class AddAiPersonas : Migration
 			name: "Personas",
 			columns: table => new
 			{
-				Id = table.Column<long>(type: "INTEGER", nullable: false)
+				Id = table.Column<long>(nullable: false)
+					.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+					.Annotation("SqlServer:Identity", "1, 1")
 					.Annotation("Sqlite:Autoincrement", true),
-				ParticipantId = table.Column<long>(type: "INTEGER", nullable: false),
-				ActiveSystemPromptId = table.Column<long>(type: "INTEGER", nullable: true),
-				DefaultModel = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-				Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-				IsActive = table.Column<bool>(type: "INTEGER", nullable: false, defaultValue: true)
+				ParticipantId = table.Column<long>(nullable: false),
+				ActiveSystemPromptId = table.Column<long>(nullable: true),
+				DefaultModel = table.Column<string>(maxLength: 100, nullable: true),
+				Description = table.Column<string>(maxLength: 1000, nullable: true),
+				IsActive = table.Column<bool>(nullable: false, defaultValue: true)
 			},
 			constraints: table =>
 			{
@@ -37,13 +41,15 @@ public partial class AddAiPersonas : Migration
 			name: "SystemPrompts",
 			columns: table => new
 			{
-				Id = table.Column<long>(type: "INTEGER", nullable: false)
+				Id = table.Column<long>(nullable: false)
+					.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+					.Annotation("SqlServer:Identity", "1, 1")
 					.Annotation("Sqlite:Autoincrement", true),
-				PublicId = table.Column<Guid>(type: "TEXT", nullable: false),
-				PersonaId = table.Column<long>(type: "INTEGER", nullable: false),
-				CreatedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
-				Content = table.Column<string>(type: "TEXT", nullable: false),
-				Hash = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false)
+				PublicId = table.Column<Guid>(nullable: false),
+				PersonaId = table.Column<long>(nullable: false),
+				CreatedAtUtc = table.Column<DateTime>(nullable: false),
+				Content = table.Column<string>(nullable: false),
+				Hash = table.Column<string>(maxLength: 64, nullable: false)
 			},
 			constraints: table =>
 			{
@@ -60,17 +66,17 @@ public partial class AddAiPersonas : Migration
 			name: "MessageGenerationMetadata",
 			columns: table => new
 			{
-				MessageId = table.Column<long>(type: "INTEGER", nullable: false),
-				ModelEndpointId = table.Column<long>(type: "INTEGER", nullable: false),
-				SystemPromptId = table.Column<long>(type: "INTEGER", nullable: true),
-				Model = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-				FullPrompt = table.Column<string>(type: "TEXT", nullable: true),
-				PromptTokens = table.Column<int>(type: "INTEGER", nullable: false),
-				CompletionTokens = table.Column<int>(type: "INTEGER", nullable: false),
-				ResponseTime = table.Column<TimeSpan>(type: "TEXT", nullable: false),
-				MaxTokens = table.Column<int>(type: "INTEGER", nullable: true),
-				Temperature = table.Column<double>(type: "REAL", nullable: true),
-				TopP = table.Column<double>(type: "REAL", nullable: true)
+				MessageId = table.Column<long>(nullable: false),
+				ModelEndpointId = table.Column<long>(nullable: false),
+				SystemPromptId = table.Column<long>(nullable: true),
+				Model = table.Column<string>(maxLength: 100, nullable: false),
+				FullPrompt = table.Column<string>(nullable: true),
+				PromptTokens = table.Column<int>(nullable: false),
+				CompletionTokens = table.Column<int>(nullable: false),
+				ResponseTime = table.Column<TimeSpan>(nullable: false),
+				MaxTokens = table.Column<int>(nullable: true),
+				Temperature = table.Column<double>(nullable: true),
+				TopP = table.Column<double>(nullable: true)
 			},
 			constraints: table =>
 			{
