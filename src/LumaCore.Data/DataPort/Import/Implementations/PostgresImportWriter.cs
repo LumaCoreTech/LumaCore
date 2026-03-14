@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.Globalization;
 using System.Text;
 
 using LumaCore.Data.DataPort.Models;
@@ -272,6 +273,12 @@ public sealed class PostgresImportWriter : IDataImportWriter
 		                      FROM STDIN (FORMAT BINARY)
 		                      """;
 
+		// Build per-column type mapping for shuttle → PostgreSQL type conversion.
+		// The shuttle file stores all values as SQLite native types (string for TEXT, long for
+		// INTEGER, double for REAL, byte[] for BLOB). Binary COPY requires CLR types that match
+		// the target PG column types (e.g., DateTime for timestamptz, Guid for uuid).
+		string?[] pgColumnTypes = await GetTargetColumnTypesAsync(table, cancellationToken).ConfigureAwait(false);
+
 		long totalRowCount = rowsAlreadyImported;
 		long rowsToSkip = rowsAlreadyImported;
 		int currentChunk = chunksCompleted;
@@ -302,11 +309,12 @@ public sealed class PostgresImportWriter : IDataImportWriter
 						           .ConfigureAwait(false);
 				}
 
-				// Write the row via binary COPY.
+				// Write the row via binary COPY, converting shuttle types to PostgreSQL types.
 				await importer!.StartRowAsync(cancellationToken).ConfigureAwait(false);
-				foreach (object? cellValue in row)
+				for (int col = 0; col < row.Length; col++)
 				{
-					await importer.WriteAsync(cellValue ?? DBNull.Value, cancellationToken).ConfigureAwait(false);
+					object? converted = ConvertShuttleValue(row[col], pgColumnTypes[col]);
+					await importer.WriteAsync(converted ?? DBNull.Value, cancellationToken).ConfigureAwait(false);
 				}
 
 				rowsInCurrentChunk++;
@@ -479,6 +487,121 @@ public sealed class PostgresImportWriter : IDataImportWriter
 
 		// 3. Drop the checkpoint table — import completed successfully.
 		await DropCheckpointTableAsync(cancellationToken).ConfigureAwait(false);
+	}
+
+	// --- Private Shuttle → PostgreSQL Type Conversion ---
+
+	/// <summary>
+	/// Queries <c>information_schema.columns</c> for the actual PostgreSQL data types of the target
+	/// table and returns them as an array aligned with <see cref="TableSnapshot.Columns"/>.
+	/// </summary>
+	/// <param name="table">The table snapshot whose columns define the expected order.</param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns>
+	/// An array of PostgreSQL <c>data_type</c> strings (e.g., <c>"timestamp with time zone"</c>,
+	/// <c>"uuid"</c>, <c>"boolean"</c>), one per column in <paramref name="table"/>.
+	/// Elements are <see langword="null"/> when the column is not found in the target schema.
+	/// </returns>
+	private async Task<string?[]> GetTargetColumnTypesAsync(
+		TableSnapshot     table,
+		CancellationToken cancellationToken)
+	{
+		var pgTypes = new Dictionary<string, string>(StringComparer.Ordinal);
+
+		var cmd = new NpgsqlCommand(
+			"""
+			SELECT column_name, data_type
+			FROM information_schema.columns
+			WHERE table_schema = @schema AND table_name = @table
+			""",
+			mConnection);
+		cmd.Parameters.AddWithValue("schema", mSchema);
+		cmd.Parameters.AddWithValue("table", table.Name);
+		try
+		{
+			NpgsqlDataReader reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+			try
+			{
+				while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+				{
+					pgTypes[reader.GetString(0)] = reader.GetString(1);
+				}
+			}
+			finally
+			{
+				await reader.DisposeAsync().ConfigureAwait(false);
+			}
+		}
+		finally
+		{
+			await cmd.DisposeAsync().ConfigureAwait(false);
+		}
+
+		// Build an array aligned with the table's column order.
+		string?[] result = new string?[table.Columns.Count];
+		for (int i = 0; i < table.Columns.Count; i++)
+		{
+			pgTypes.TryGetValue(table.Columns[i].Name, out result[i]);
+		}
+
+		return result;
+	}
+
+	/// <summary>
+	/// Converts a raw value read from the SQLite shuttle file into the CLR type expected by
+	/// PostgreSQL binary COPY for the given target column type.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     The shuttle file stores all data using SQLite native types: <see cref="string"/> for
+	///     <c>TEXT</c> columns (timestamps, UUIDs, intervals), <see cref="long"/> for <c>INTEGER</c>
+	///     columns (booleans, ints, bigints), <see cref="double"/> for <c>REAL</c>, and
+	///     <c>byte[]</c> for <c>BLOB</c>. PostgreSQL binary COPY requires the CLR type to
+	///     match the target column type exactly.
+	///     </para>
+	///     <para>
+	///     When the value is already the correct CLR type, or the PostgreSQL type is unknown, the
+	///     value is returned unchanged (passthrough).
+	///     </para>
+	/// </remarks>
+	/// <param name="value">The raw shuttle value, or <see langword="null"/> for SQL NULL.</param>
+	/// <param name="pgDataType">
+	/// The PostgreSQL <c>data_type</c> from <c>information_schema.columns</c>
+	/// (e.g., <c>"timestamp with time zone"</c>, <c>"uuid"</c>, <c>"boolean"</c>), or
+	/// <see langword="null"/> when the column type is unknown.
+	/// </param>
+	/// <returns>
+	/// The converted value suitable for <see cref="NpgsqlBinaryImporter"/>.<c>WriteAsync</c>.
+	/// </returns>
+	private static object? ConvertShuttleValue(object? value, string? pgDataType)
+	{
+		if (value is null)
+			return null;
+
+		return pgDataType switch
+		{
+			"timestamp with time zone" when value is string s =>
+				DateTime.SpecifyKind(DateTime.Parse(s, CultureInfo.InvariantCulture), DateTimeKind.Utc),
+			"timestamp without time zone" when value is string s =>
+				DateTime.Parse(s, CultureInfo.InvariantCulture),
+			"date" when value is string s =>
+				DateOnly.Parse(s, CultureInfo.InvariantCulture),
+			"time without time zone" or "time with time zone" when value is string s =>
+				TimeOnly.Parse(s, CultureInfo.InvariantCulture),
+			"interval" when value is string s =>
+				TimeSpan.Parse(s, CultureInfo.InvariantCulture),
+			"uuid" when value is string s =>
+				Guid.Parse(s),
+			"boolean" when value is long l =>
+				l != 0,
+			"smallint" when value is long l =>
+				(short)l,
+			"integer" when value is long l =>
+				(int)l,
+			"real" when value is double d =>
+				(float)d,
+			var _ => value
+		};
 	}
 
 	// --- Private Checkpoint Helpers ---
