@@ -27,10 +27,11 @@ namespace LumaCore.Data.Tests.Queries;
 ///     at first execution.
 ///     </para>
 ///     <para>
-///     These tests always use <b>SQLite in-memory</b> via <see cref="DbFixture.CreateSqliteInMemory()"/>
-///     and are not affected by <see cref="DbTestSettingsLoader"/> configuration. Compiled queries validate
-///     EF model compatibility (expression tree vs. entity shape), which is provider-independent.
-///     Provider-specific SQL behavior is covered by <c>ProviderOperationsIntegrationTests</c>.
+///     These tests use <see cref="DbFixture.Create()"/> and respect the configured provider from
+///     <see cref="DbTestSettingsLoader"/>. Although the LINQ expressions themselves are provider-independent,
+///     EF Core compiled queries cache their plan against a specific model instance. Using a different provider
+///     than the rest of the test suite would "poison" the static query cache and cause
+///     <em>"compiled query was executed with a different model"</em> errors in subsequent tests.
 ///     </para>
 ///     <para>
 ///     Each test instance gets its own isolated in-memory database seeded with a minimal but complete dataset
@@ -46,7 +47,7 @@ public sealed partial class CompiledQueryRegressionTests : IAsyncLifetime
 {
 	private static readonly DateTime sSeedUtc = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-	private readonly DbFixture mFixture = DbFixture.CreateSqliteInMemory();
+	private readonly DbFixture mFixture = DbFixture.Create();
 
 	// --- Seed entity IDs, stored after SaveChangesAsync so tests can reference them. ---
 
@@ -64,7 +65,7 @@ public sealed partial class CompiledQueryRegressionTests : IAsyncLifetime
 	private Guid mMessagePublicId;
 
 	/// <summary>
-	/// Disposes the SQLite in-memory database fixture.
+	/// Disposes the database fixture.
 	/// </summary>
 	public Task DisposeAsync() => mFixture.DisposeAsync();
 
