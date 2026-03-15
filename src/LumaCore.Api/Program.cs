@@ -30,6 +30,10 @@ public static partial class Program
 		if (isDocumentGeneration)
 		{
 			Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+
+			// Override database to in-memory SQLite. The build-time tool bootstraps the full
+			// DI container but never needs a real database file on disk.
+			Environment.SetEnvironmentVariable("Database__ConnectionString", "Data Source=:memory:");
 		}
 
 		// -------------------------------------------------------
