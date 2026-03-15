@@ -60,8 +60,8 @@ public sealed partial class LumaCoreDataServiceTests
 			Assert.True(assigned);
 
 			UserRoleEntity? reloaded = await Fixture.DbContext.UserRoles
-				                               .AsNoTracking()
-				                               .FirstOrDefaultAsync(ur => ur.UserId == user.Id && ur.RoleId == role.Id);
+				                           .AsNoTracking()
+				                           .FirstOrDefaultAsync(ur => ur.UserId == user.Id && ur.RoleId == role.Id);
 
 			Assert.NotNull(reloaded);
 			Assert.Equal(utcNow, reloaded.AssignedAtUtc);
@@ -139,6 +139,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// User id is zero
 			{ "Zero userId", new UserId(0), new RoleId(1), "userId.Value" },
+
 			// Role id is zero
 			{ "Zero roleId", new UserId(1), new RoleId(0), "roleId.Value" }
 		};
@@ -247,6 +248,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// User id is zero
 			{ "Zero userId", new UserId(0), new RoleId(1), "userId.Value" },
+
 			// Role id is zero
 			{ "Zero roleId", new UserId(1), new RoleId(0), "roleId.Value" }
 		};

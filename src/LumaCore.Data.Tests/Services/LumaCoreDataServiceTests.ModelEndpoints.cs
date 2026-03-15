@@ -198,18 +198,30 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Whitespace-only provider type
 			{ "Whitespace providerType", "   ", "https://example.test/api", "Endpoint", null, "providerType" },
+
 			// Provider type exceeds the 50-character maximum
-			{ "Provider type too long", new string('x', 51), "https://example.test/api", "Endpoint", null, "providerType" },
+			{
+				"Provider type too long", new string('x', 51), "https://example.test/api", "Endpoint", null,
+				"providerType"
+			},
+
 			// Whitespace-only base URL
 			{ "Whitespace baseUrl", "ollama", "   ", "Endpoint", null, "baseUrl" },
+
 			// Base URL exceeds the 500-character maximum
 			{ "Base URL too long", "ollama", new string('x', 501), "Endpoint", null, "baseUrl" },
+
 			// Whitespace-only name
 			{ "Whitespace name", "ollama", "https://example.test/api", "   ", null, "name" },
+
 			// Name exceeds the 100-character maximum
 			{ "Name too long", "ollama", "https://example.test/api", new string('x', 101), null, "name" },
+
 			// Description exceeds the 1000-character maximum
-			{ "Description too long", "ollama", "https://example.test/api", "Endpoint", new string('x', 1001), "description" }
+			{
+				"Description too long", "ollama", "https://example.test/api", "Endpoint", new string('x', 1001),
+				"description"
+			}
 		};
 
 		/// <summary>
@@ -778,14 +790,16 @@ public sealed partial class LumaCoreDataServiceTests
 		/// </summary>
 		public static TheoryData<string, string, string?, string> UpdateModelEndpointMetadataAsync_InvalidInput_Data =>
 			new()
-		{
-			// Whitespace-only name
-			{ "Whitespace name", "   ", null, "name" },
-			// Name exceeds the 100-character maximum
-			{ "Name too long", new string('x', 101), null, "name" },
-			// Description exceeds the 1000-character maximum
-			{ "Description too long", "Valid", new string('x', 1001), "description" }
-		};
+			{
+				// Whitespace-only name
+				{ "Whitespace name", "   ", null, "name" },
+
+				// Name exceeds the 100-character maximum
+				{ "Name too long", new string('x', 101), null, "name" },
+
+				// Description exceeds the 1000-character maximum
+				{ "Description too long", "Valid", new string('x', 1001), "description" }
+			};
 
 		/// <summary>
 		/// Verifies that <see cref="IModelEndpointDataService.UpdateModelEndpointMetadataAsync"/> rejects invalid
@@ -1032,8 +1046,10 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Whitespace-only name
 			{ "Whitespace name", "   ", null, "name" },
+
 			// Name exceeds the 100-character maximum
 			{ "Name too long", new string('x', 101), null, "name" },
+
 			// Description exceeds the 1000-character maximum
 			{ "Description too long", "Valid", new string('x', 1001), "description" }
 		};
@@ -1300,8 +1316,7 @@ public sealed partial class LumaCoreDataServiceTests
 		/// endpoint id and throws <see cref="ArgumentOutOfRangeException"/> for non-positive ids.
 		/// </summary>
 		[Fact]
-		public async Task
-			GetModelEndpointCredentialsAsync_WhenEndpointIdInvalid_ThrowsArgumentOutOfRangeException()
+		public async Task GetModelEndpointCredentialsAsync_WhenEndpointIdInvalid_ThrowsArgumentOutOfRangeException()
 		{
 			// Arrange
 			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);

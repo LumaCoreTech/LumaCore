@@ -177,6 +177,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Whitespace-only title
 			{ "Whitespace title", "   " },
+
 			// Title exceeds the 200-character maximum
 			{ "Title too long", new string('x', 201) }
 		};
@@ -356,6 +357,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Conversation id is zero
 			{ "Zero conversationId", new ConversationId(0), new ParticipantId(1), "conversationId.Value" },
+
 			// Participant id is zero
 			{ "Zero participantId", new ConversationId(1), new ParticipantId(0), "participantId.Value" }
 		};
@@ -524,6 +526,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Whitespace-only title
 			{ "Whitespace title", "   " },
+
 			// Title exceeds the 200-character maximum
 			{ "Title too long", new string('x', 201) }
 		};

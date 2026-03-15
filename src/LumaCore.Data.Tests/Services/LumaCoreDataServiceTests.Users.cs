@@ -90,8 +90,10 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Whitespace-only display name
 			{ "Whitespace display name", "   ", null, "displayName" },
+
 			// Display name exceeds the 100-character maximum
 			{ "Display name too long", new string('x', 101), null, "displayName" },
+
 			// Avatar URL exceeds the 500-character maximum
 			{ "Avatar URL too long", "Alice", new string('x', 501), "avatarUrl" }
 		};
@@ -220,12 +222,16 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Whitespace-only username
 			{ "Whitespace username", "   ", null, "hash", "username" },
+
 			// Username exceeds the 50-character maximum
 			{ "Username too long", new string('x', 51), null, "hash", "username" },
+
 			// Whitespace-only password hash
 			{ "Whitespace password hash", "alice", null, "   ", "passwordHash" },
+
 			// Password hash exceeds the 255-character maximum
 			{ "Password hash too long", "alice", null, new string('x', 256), "passwordHash" },
+
 			// Email exceeds the 254-character maximum
 			{ "Email too long", "alice", new string('x', 255), "hash", "email" }
 		};
@@ -485,30 +491,37 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Whitespace-only display name
 			{ "Whitespace display name", "   ", null, "alice", "alice@example.test", "hash", "displayName" },
+
 			// Whitespace-only username
 			{ "Whitespace username", "Alice", null, "   ", "alice@example.test", "hash", "username" },
+
 			// Whitespace-only password hash
 			{ "Whitespace password hash", "Alice", null, "alice", "alice@example.test", "   ", "passwordHash" },
+
 			// Display name exceeds the 100-character maximum
 			{
 				"Display name too long", new string('x', 101), null, "alice", "alice@example.test", "hash",
 				"displayName"
 			},
+
 			// Avatar URL exceeds the 500-character maximum
 			{
 				"Avatar URL too long", "Alice", new string('x', 501), "alice", "alice@example.test", "hash",
 				"avatarUrl"
 			},
+
 			// Username exceeds the 50-character maximum
 			{
 				"Username too long", "Alice", null, new string('x', 51), "alice@example.test", "hash",
 				"username"
 			},
+
 			// Password hash exceeds the 255-character maximum
 			{
 				"Password hash too long", "Alice", null, "alice", "alice@example.test", new string('x', 256),
 				"passwordHash"
 			},
+
 			// Email exceeds the 254-character maximum
 			{ "Email too long", "Alice", null, "alice", new string('x', 255), "hash", "email" }
 		};
@@ -677,6 +690,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Whitespace-only email
 			{ "Whitespace email", "   " },
+
 			// Email exceeds the 254-character maximum
 			{ "Email too long", new string('x', 255) }
 		};
@@ -844,6 +858,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Whitespace-only username
 			{ "Whitespace username", "   " },
+
 			// Username exceeds the 50-character maximum
 			{ "Username too long", new string('x', 51) }
 		};
@@ -985,6 +1000,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Whitespace-only email
 			{ "Whitespace email", "   " },
+
 			// Email exceeds the 254-character maximum
 			{ "Email too long", new string('x', 255) }
 		};
@@ -1148,6 +1164,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Whitespace-only username
 			{ "Whitespace username", "   " },
+
 			// Username exceeds the 50-character maximum
 			{ "Username too long", new string('x', 51) }
 		};
@@ -1190,7 +1207,7 @@ public sealed partial class LumaCoreDataServiceTests
 			// Arrange
 			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-			(ParticipantEntity participant, UserEntity user, _, MessageEntity message) =
+			(ParticipantEntity participant, UserEntity user, ConversationEntity _, MessageEntity message) =
 				await CreateUserWithConversationAndMessageAsync(utcNow);
 
 			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
@@ -1255,7 +1272,7 @@ public sealed partial class LumaCoreDataServiceTests
 			// Arrange
 			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-			(_, UserEntity user, _, MessageEntity message) =
+			(ParticipantEntity _, UserEntity user, ConversationEntity _, MessageEntity message) =
 				await CreateUserWithConversationAndMessageAsync(utcNow);
 
 			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
@@ -1400,7 +1417,8 @@ public sealed partial class LumaCoreDataServiceTests
 		/// <see cref="ConversationEntity"/>, and <see cref="MessageEntity"/>.
 		/// </returns>
 		private async
-			Task<(ParticipantEntity Participant, UserEntity User, ConversationEntity Conversation, MessageEntity Message)>
+			Task<(ParticipantEntity Participant, UserEntity User, ConversationEntity Conversation, MessageEntity Message
+				)>
 			CreateUserWithConversationAndMessageAsync(DateTime utcNow)
 		{
 			var participant = new ParticipantEntity

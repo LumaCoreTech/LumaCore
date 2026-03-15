@@ -362,6 +362,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Zero limit
 			{ "Zero limit", 0 },
+
 			// Negative limit
 			{ "Negative limit", -1 }
 		};

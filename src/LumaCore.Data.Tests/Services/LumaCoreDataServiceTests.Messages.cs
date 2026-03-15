@@ -198,6 +198,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Conversation id is zero
 			{ "Zero conversationId", new ConversationId(0), new ParticipantId(1), "conversationId.Value" },
+
 			// Sender participant id is zero
 			{ "Zero senderParticipantId", new ConversationId(1), new ParticipantId(0), "senderParticipantId.Value" }
 		};
@@ -353,8 +354,7 @@ public sealed partial class LumaCoreDataServiceTests
 				                                  utcNow: utcNow);
 
 			// Act
-			List<MessageEntity> messages =
-				await service.ListMessagesByConversationAsync(conversation.Id);
+			List<MessageEntity> messages = await service.ListMessagesByConversationAsync(conversation.Id);
 
 			// Assert
 			Assert.Empty(messages);
@@ -728,6 +728,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Message id is zero
 			{ "Zero messageId", new MessageId(0), new ParticipantId(1), "messageId.Value" },
+
 			// Author participant id is zero
 			{ "Zero authorParticipantId", new MessageId(1), new ParticipantId(0), "authorParticipantId.Value" }
 		};
@@ -1007,8 +1008,7 @@ public sealed partial class LumaCoreDataServiceTests
 		/// <see cref="DatabaseOptions.StoreFullPrompts"/> is disabled (the default).
 		/// </summary>
 		[Fact]
-		public async Task
-			CreateMessageGenerationMetadataAsync_WhenStoreFullPromptsDisabled_PrunesFullPrompt()
+		public async Task CreateMessageGenerationMetadataAsync_WhenStoreFullPromptsDisabled_PrunesFullPrompt()
 		{
 			// Arrange
 			// Special: StoreFullPrompts defaults to false; CreateMessageGenerationMetadataAsync() prunes FullPrompt.
@@ -1117,6 +1117,7 @@ public sealed partial class LumaCoreDataServiceTests
 		{
 			// Message id is zero
 			{ "Zero messageId", new MessageId(0), new ModelEndpointId(1), "messageId.Value" },
+
 			// Model endpoint id is zero
 			{ "Zero modelEndpointId", new MessageId(1), new ModelEndpointId(0), "metadata.ModelEndpointId.Value" }
 		};
