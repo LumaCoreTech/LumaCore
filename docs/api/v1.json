@@ -311,6 +311,26 @@
           }
         ]
       }
+    },
+    "/api/v1/health/ready": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Returns whether the backend is ready to handle requests.",
+        "description": "Returns a JSON payload that indicates whether the backend is operationally ready. Unlike the /live endpoint (pure connectivity check), this endpoint reflects the actual database initialization status. Returns HTTP 200 when ready, or HTTP 503 with a status string and message when not.",
+        "operationId": "ApiHealthReady",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
