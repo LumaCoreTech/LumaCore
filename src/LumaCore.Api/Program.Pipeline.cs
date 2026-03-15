@@ -7,6 +7,7 @@ using Asp.Versioning.ApiExplorer;
 using LumaCore.Api.Features.ApiVersioning;
 using LumaCore.Api.Features.Auth;
 using LumaCore.Api.Features.Cors;
+using LumaCore.Api.Features.Data;
 using LumaCore.Api.Features.ErrorHandling;
 using LumaCore.Api.Features.Health;
 using LumaCore.Api.Features.HttpsRedirection;
@@ -45,6 +46,11 @@ public static partial class Program
 		// into ProblemDetails responses with LumaCore-specific error type URNs.
 		// Only applies to /api/* paths; Blazor SPA routes are unaffected.
 		app.UseErrorHandlingFeature();
+
+		// Reject API requests if the database initialization failed or is still in progress.
+		// Health endpoints are excluded so monitoring systems can still query application status.
+		// Returns 503 Service Unavailable with ProblemDetails for affected requests.
+		app.UseDatabaseReadinessCheck();
 
 		// Enforce HTTPS by redirecting HTTP requests to their HTTPS counterparts.
 		// Must come AFTER proxy headers so the scheme is correctly detected.

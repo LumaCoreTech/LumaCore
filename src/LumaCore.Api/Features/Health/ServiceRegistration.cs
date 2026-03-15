@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 namespace LumaCore.Api.Features.Health;
 
 /// <summary>
@@ -55,19 +57,30 @@ static class ServiceRegistration
 	///     mapped in the application's request pipeline.
 	///     </para>
 	///     <para>
-	///     At this stage, only the health check infrastructure itself is registered. Component-specific checks
-	///     (database, storage, vector database, LLM backend, and similar subsystems) can be attached here in the
-	///     future by extending the returned <see cref="IHealthChecksBuilder"/> instance.
+	///     The following health checks are registered:
+	///     </para>
+	///     <list type="bullet">
+	///         <item>
+	///             <description>
+	///             <b>database-initialization</b> — Reports whether database migrations and seeding completed
+	///             successfully. Returns <see cref="HealthStatus.Unhealthy"/> if initialization failed.
+	///             </description>
+	///         </item>
+	///     </list>
+	///     <para>
+	///     Additional checks (storage, vector database, LLM backend) can be added here in the future.
 	///     </para>
 	/// </remarks>
 	public static IServiceCollection AddHealthFeatureCore(
 		this IServiceCollection services,
 		IConfiguration          configuration)
 	{
-		// Register the standard Microsoft health-check infrastructure.
-		// This makes /health usable as an aggregated readiness endpoint once mapped
-		// in the application pipeline.
-		services.AddHealthChecks();
+		// Register the standard Microsoft health-check infrastructure with component-specific checks.
+		services
+			.AddHealthChecks()
+			.AddCheck<DatabaseInitializationHealthCheck>(
+				"database-initialization",
+				tags: ["database", "startup"]);
 
 		return services;
 	}

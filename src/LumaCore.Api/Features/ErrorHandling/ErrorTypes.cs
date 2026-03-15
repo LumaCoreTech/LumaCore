@@ -57,6 +57,15 @@ namespace LumaCore.Api.Features.ErrorHandling;
 static class ErrorTypes
 {
 	/// <summary>
+	/// The base URN prefix for all LumaCore error types.
+	/// </summary>
+	/// <remarks>
+	/// All error type URNs are constructed by appending a specific error identifier
+	/// to this base prefix.
+	/// </remarks>
+	private const string Base = "urn:lumacore:error";
+
+	/// <summary>
 	/// Indicates that the request is malformed or contains invalid data.
 	/// </summary>
 	/// <remarks>
@@ -91,6 +100,60 @@ static class ErrorTypes
 	///     <c>urn:lumacore:error:conflict</c>
 	/// </value>
 	public const string Conflict = $"{Base}:conflict";
+
+	/// <summary>
+	/// Indicates that the database requires a configuration change before it can become operational.
+	/// </summary>
+	/// <remarks>
+	///     <para>This error type is returned when:</para>
+	///     <list type="bullet">
+	///         <item>
+	///             <description>
+	///             <c>Database:AutoCreate</c> is disabled and the database does not exist
+	///             </description>
+	///         </item>
+	///         <item>
+	///             <description>
+	///             <c>Database:AutoMigration:Enabled</c> is disabled and migrations are pending
+	///             </description>
+	///         </item>
+	///     </list>
+	///     <para>
+	///     Unlike <see cref="ServiceUnavailable"/>, this error will <b>not</b> resolve on its own — the response
+	///     does not include a <c>Retry-After</c> header. An operator must update the configuration or apply
+	///     migrations manually.
+	///     </para>
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:database-configuration-required</c>
+	/// </value>
+	public const string DatabaseConfigurationRequired = $"{Base}:database-configuration-required";
+
+	/// <summary>
+	/// Indicates that the database is in an unrecoverable error state requiring manual intervention.
+	/// </summary>
+	/// <remarks>
+	///     <para>This error type is returned when:</para>
+	///     <list type="bullet">
+	///         <item>
+	///             <description>A migration failed and automatic restore also failed or no backup was available</description>
+	///         </item>
+	///         <item>
+	///             <description>
+	///             Multiple consecutive initialization failures occurred (likely a code or infrastructure bug)
+	///             </description>
+	///         </item>
+	///     </list>
+	///     <para>
+	///     Unlike <see cref="ServiceUnavailable"/>, this error will <b>not</b> resolve on its own — the response
+	///     does not include a <c>Retry-After</c> header. Manual intervention (e.g., restore from backup, fix schema)
+	///     is required.
+	///     </para>
+	/// </remarks>
+	/// <value>
+	///     <c>urn:lumacore:error:database-failed</c>
+	/// </value>
+	public const string DatabaseFailed = $"{Base}:database-failed";
 
 	/// <summary>
 	/// Indicates that the authenticated user lacks permission to access the resource.
@@ -333,13 +396,4 @@ static class ErrorTypes
 	///     <c>urn:lumacore:error:validation</c>
 	/// </value>
 	public const string Validation = $"{Base}:validation";
-
-	/// <summary>
-	/// The base URN prefix for all LumaCore error types.
-	/// </summary>
-	/// <remarks>
-	/// All error type URNs are constructed by appending a specific error identifier
-	/// to this base prefix.
-	/// </remarks>
-	private const string Base = "urn:lumacore:error";
 }

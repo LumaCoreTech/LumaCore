@@ -55,6 +55,7 @@
 		<ProjectReference Include="..\LumaCore.BackgroundProcessing\LumaCore.BackgroundProcessing.csproj" />
 		<ProjectReference Include="..\LumaCore.Configuration\LumaCore.Configuration.csproj" />
 		<ProjectReference Include="..\LumaCore.Core\LumaCore.Core.csproj" />
+		<ProjectReference Include="..\LumaCore.Data\LumaCore.Data.csproj" />
 		<ProjectReference Include="..\LumaCore.Ui.Web\LumaCore.Ui.Web.csproj" Condition="'$(IncludeBlazorUi)' == 'true'" />
 	</ItemGroup>
 

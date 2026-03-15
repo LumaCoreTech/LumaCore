@@ -5,6 +5,7 @@
 using LumaCore.Api.Features.ApiVersioning;
 using LumaCore.Api.Features.Auth;
 using LumaCore.Api.Features.Cors;
+using LumaCore.Api.Features.Data;
 using LumaCore.Api.Features.ErrorHandling;
 using LumaCore.Api.Features.Health;
 using LumaCore.Api.Features.HttpsRedirection;
@@ -64,6 +65,10 @@ public static partial class Program
 
 		// Register and configure the Security Headers feature for HTTP security.
 		builder.AddSecurityHeadersFeature();
+
+		// Register database services with Entity Framework Core.
+		// Provider and connection string are configured via appsettings.json "Database" section.
+		builder.AddDataFeature();
 
 		// Register authentication and authorization services and configure JWT bearer.
 		builder.AddAuthFeature();
