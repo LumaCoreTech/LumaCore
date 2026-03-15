@@ -292,7 +292,12 @@ public sealed class SqlServerImportWriter : IDataImportWriter
 						chunkSize,
 						sqlServerTypes);
 
-					using (var bulkCopy = new SqlBulkCopy(mConnection, SqlBulkCopyOptions.Default, chunkTransaction))
+					// KeepIdentity is critical: without it, SqlBulkCopy auto-generates identity
+					// values instead of preserving the source values from the shuttle. After
+					// MigrateAsync() seeds data (advancing the identity counter) and DELETE FROM
+					// clears the rows (without resetting the seed), auto-generated IDs would start
+					// past the original values, breaking FK references in dependent tables.
+					using (var bulkCopy = new SqlBulkCopy(mConnection, SqlBulkCopyOptions.KeepIdentity, chunkTransaction))
 					{
 						bulkCopy.DestinationTableName = table.Name;
 						bulkCopy.BatchSize = chunkSize;
