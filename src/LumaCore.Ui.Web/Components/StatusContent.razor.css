@@ -39,3 +39,58 @@
     padding-top: 1.5rem;
     border-top: 1px solid var(--border-secondary);
 }
+
+/* ============================================
+   COMPONENT LIST - Per-subsystem health detail
+   ============================================ */
+
+.lc-status-components {
+    margin-top: 1rem;
+}
+
+.lc-status-components-title {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 0.75rem 0;
+}
+
+.lc-status-component {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid var(--border-secondary);
+    background: var(--bg-secondary);
+}
+
+.lc-status-component-ok {
+    border-left-color: var(--status-ok);
+}
+
+.lc-status-component-degraded {
+    border-left-color: var(--status-not-ready);
+}
+
+.lc-status-component-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: capitalize;
+}
+
+.lc-status-component-status {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.lc-status-component-message {
+    grid-column: 1/-1;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-top: 0.125rem;
+}

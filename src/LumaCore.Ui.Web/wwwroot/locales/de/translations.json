@@ -73,6 +73,9 @@
         "title": "Instanz-Status",
         "checking": "Prüfe Backend-Verbindung…",
         "reachable": "Backend erreichbar",
+        "notReady": "Backend erreichbar, aber nicht bereit",
+        "notReadyDefault": "Backend ist noch nicht bereit, Anfragen zu verarbeiten.",
+        "componentsTitle": "Subsystem-Status",
         "unreachable": "Backend nicht erreichbar",
         "reportedLabel": "Gemeldeter Status:",
         "unknown": "Backend-Verbindung unbekannt",
@@ -86,6 +89,7 @@
     "healthIndicator": {
       "tooltips": {
         "reachable": "Backend erreichbar. Klicke zum erneuten Prüfen.",
+        "notReady": "Backend erreichbar, aber nicht bereit. Klicke zum erneuten Prüfen.",
         "unreachable": "Backend nicht erreichbar",
         "checking": "Prüfe Backend-Verbindung…",
         "unknown": "Backend-Verbindung unbekannt. Klicke zum Prüfen."

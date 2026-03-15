@@ -37,6 +37,13 @@
     box-shadow: 0 0 6px rgba(46, 204, 113, 0.5); /* Subtle green glow */
 }
 
+/* Not-ready state: static orange dot — backend reachable but not operationally ready */
+
+.lc-logo-health-dot-not-ready {
+    background-color: var(--status-not-ready); /* Orange for "reachable but not ready" */
+    box-shadow: 0 0 6px rgba(230, 126, 34, 0.5); /* Subtle orange glow */
+}
+
 /* Error state: red dot with a slower, stronger pulse to indicate a problem */
 
 .lc-logo-health-dot-error {

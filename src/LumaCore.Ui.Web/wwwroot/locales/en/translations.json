@@ -73,6 +73,9 @@
         "title": "Instance Status",
         "checking": "Checking backend connection…",
         "reachable": "Backend reachable",
+        "notReady": "Backend reachable but not ready",
+        "notReadyDefault": "Backend is not yet ready to handle requests.",
+        "componentsTitle": "Subsystem Status",
         "unreachable": "Backend unreachable",
         "reportedLabel": "Reported status:",
         "unknown": "Backend connection unknown",
@@ -86,6 +89,7 @@
     "healthIndicator": {
       "tooltips": {
         "reachable": "Backend reachable. Click to recheck.",
+        "notReady": "Backend reachable but not ready. Click to recheck.",
         "unreachable": "Backend unreachable",
         "checking": "Checking backend connection…",
         "unknown": "Backend connection unknown. Click to check."

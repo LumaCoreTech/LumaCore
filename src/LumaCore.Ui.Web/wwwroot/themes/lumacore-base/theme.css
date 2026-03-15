@@ -19,6 +19,7 @@
     --status-ok: #22c55e; /* Green - healthy/success */
     --status-error: #ef4444; /* Red - error/failed */
     --status-warning: #eab308; /* Yellow - checking/warning */
+    --status-not-ready: #e67e22; /* Orange - reachable but not operationally ready */
     --status-info: #3b82f6; /* Blue - information */
     --status-unknown: #64748b; /* Gray - unknown/disabled */
 }
@@ -540,6 +541,11 @@ a:hover {
 .lc-status-badge-ok {
     background: rgba(34, 197, 94, 0.18);
     border: 1px solid var(--status-ok);
+}
+
+.lc-status-badge-not-ready {
+    background: rgba(230, 126, 34, 0.18);
+    border: 1px solid var(--status-not-ready);
 }
 
 .lc-status-badge-error {

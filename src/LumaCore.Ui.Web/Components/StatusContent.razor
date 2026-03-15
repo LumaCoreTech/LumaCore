@@ -28,6 +28,32 @@
 		<p class="lc-status-badge lc-status-badge-error">@Localizer["components.admin.status.unreachable"]</p>
 		<p class="lc-status-detail">@mError</p>
 	}
+	else if (mReadinessResponse is not null)
+	{
+		@* Not-ready state: backend reachable but not operationally ready *@
+		<p class="lc-status-badge lc-status-badge-not-ready">
+			@Localizer["components.admin.status.notReady"]
+		</p>
+		<div class="lc-status-components">
+			<h3 class="lc-status-components-title">
+				@Localizer["components.admin.status.componentsTitle"]
+			</h3>
+			@foreach ((string name, ApiHealthComponentStatus component) in mReadinessResponse.Components)
+			{
+				<div class="lc-status-component @(
+				                                component.Status == "ready"
+					                                ? "lc-status-component-ok"
+					                                : "lc-status-component-degraded")">
+					<span class="lc-status-component-name">@name</span>
+					<span class="lc-status-component-status">@component.Status</span>
+					@if (component.Message is not null)
+					{
+						<span class="lc-status-component-message">@component.Message</span>
+					}
+				</div>
+			}
+		</div>
+	}
 	else if (mStatus is not null)
 	{
 		@* Healthy state with the reported status text from the backend *@
@@ -70,6 +96,12 @@
 	private string? mError;
 
 	/// <summary>
+	/// Holds the readiness response when the backend is reachable but not operationally ready.
+	/// <see langword="null"/> when the backend is fully ready or unreachable.
+	/// </summary>
+	private ApiHealthReadyResponse? mReadinessResponse;
+
+	/// <summary>
 	/// Holds the textual status reported by the backend, if available.
 	/// </summary>
 	private string? mStatus;
@@ -94,15 +126,16 @@
 	/// <summary>
 	/// Timeout for health check requests. Short timeout to avoid UI hanging on unresponsive backends.
 	/// </summary>
-	private static readonly TimeSpan HealthCheckTimeout = TimeSpan.FromSeconds(5);
+	private static readonly TimeSpan sHealthCheckTimeout = TimeSpan.FromSeconds(5);
 
 	/// <summary>
-	/// Calls the backend live health endpoint and updates the local status fields.
+	/// Calls the backend liveness and readiness endpoints and updates the local status fields.
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Sends an HTTP GET request to the <c>api/v1/health/live</c> endpoint and distinguishes between:
-	///     HTTP status failures, payload format issues, and a valid JSON response.
+	///     Performs a two-step probe: first <c>api/v1/health/live</c> to verify connectivity, then
+	///     <c>api/v1/health/ready</c> to check operational readiness. This produces three possible outcomes:
+	///     healthy (live + ready), not-ready (live but not ready), or error (not reachable).
 	///     </para>
 	/// </remarks>
 	private async Task LoadStatusAsync()
@@ -110,43 +143,22 @@
 		// Reset state for a fresh health check.
 		mIsLoading = true;
 		mError = null;
+		mReadinessResponse = null;
 		mStatus = null;
 
 		try
 		{
 			// Use a short timeout to avoid hanging on unresponsive backends.
-			using var cts = new CancellationTokenSource(HealthCheckTimeout);
+			using var cts = new CancellationTokenSource(sHealthCheckTimeout);
 
-			// Perform a lightweight GET request and inspect the status code explicitly.
-			using HttpResponseMessage response =
-				await Http
-					.GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead, cts.Token)
-					.ConfigureAwait(true);
+			// Step 1: Liveness — is the backend process reachable at all?
+			string? liveStatus = await CheckLiveAsync(cts.Token).ConfigureAwait(true);
 
-			if (!response.IsSuccessStatusCode)
-			{
-				mError = MapHttpError(response.StatusCode);
-				return;
-			}
+			if (liveStatus is null)
+				return; // mError was set by CheckLiveAsync().
 
-			try
-			{
-				// Attempt to deserialize the JSON payload into the shared API contract.
-				ApiHealthLiveResponse? dto = await response.Content
-					                             .ReadFromJsonAsync<ApiHealthLiveResponse>(cts.Token)
-					                             .ConfigureAwait(true);
-
-				if (dto is null)
-					mError = "Backend health endpoint returned an empty response.";
-				else if (string.IsNullOrWhiteSpace(dto.Status))
-					mError = "Backend health endpoint returned an empty status value.";
-				else
-					mStatus = dto.Status;
-			}
-			catch (JsonException)
-			{
-				mError = "Backend health endpoint returned data in an unexpected format.";
-			}
+			// Step 2: Readiness — is the backend ready to handle requests?
+			await CheckReadyAsync(liveStatus, cts.Token).ConfigureAwait(true);
 		}
 		catch (HttpRequestException ex)
 		{
@@ -160,14 +172,121 @@
 		{
 			// Update shared health state based on the result.
 			// This syncs the BackendHealthIndicator with our findings.
-			if (mError is not null)
-				BackendHealth.MarkUnhealthy();
-			else if (mStatus is not null)
+			if (mStatus is not null)
 				BackendHealth.MarkHealthy();
+			else if (mReadinessResponse is not null)
+				BackendHealth.MarkNotReady();
+			else
+				BackendHealth.MarkUnhealthy();
 
 			// Ensure the loading flag is reset so the UI can leave the "Checking…" state.
 			mIsLoading = false;
 			StateHasChanged();
+		}
+	}
+
+	/// <summary>
+	/// Checks the liveness endpoint and returns the reported status string on success.
+	/// </summary>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns>
+	/// The status string from the liveness response, or <see langword="null"/> if the check failed
+	/// (in which case <see cref="mError"/> is set).
+	/// </returns>
+	private async Task<string?> CheckLiveAsync(CancellationToken cancellationToken)
+	{
+		using HttpResponseMessage response =
+			await Http
+				.GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+				.ConfigureAwait(true);
+
+		if (!response.IsSuccessStatusCode)
+		{
+			mError = MapHttpError(response.StatusCode);
+			return null;
+		}
+
+		try
+		{
+			ApiHealthLiveResponse? dto = await response.Content
+				                             .ReadFromJsonAsync<ApiHealthLiveResponse>(cancellationToken)
+				                             .ConfigureAwait(true);
+
+			if (dto is null)
+			{
+				mError = "Backend health endpoint returned an empty response.";
+				return null;
+			}
+
+			if (string.IsNullOrWhiteSpace(dto.Status))
+			{
+				mError = "Backend health endpoint returned an empty status value.";
+				return null;
+			}
+
+			return dto.Status;
+		}
+		catch (JsonException)
+		{
+			mError = "Backend health endpoint returned data in an unexpected format.";
+			return null;
+		}
+	}
+
+	/// <summary>
+	/// Checks the readiness endpoint and sets either <see cref="mStatus"/> (ready) or
+	/// <see cref="mReadinessResponse"/> (not ready) based on the result.
+	/// </summary>
+	/// <param name="liveStatus">The status string from the liveness check, used as fallback display value.</param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	private async Task CheckReadyAsync(string liveStatus, CancellationToken cancellationToken)
+	{
+		using HttpResponseMessage response =
+			await Http
+				.GetAsync("api/v1/health/ready", HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+				.ConfigureAwait(true);
+
+		if (response.IsSuccessStatusCode)
+		{
+			// Backend is live and ready — show the liveness status as the reported value.
+			mStatus = liveStatus;
+			return;
+		}
+
+		// Backend is live but not ready — try to extract component details from the readiness response.
+		try
+		{
+			ApiHealthReadyResponse? dto = await response.Content
+				                              .ReadFromJsonAsync<ApiHealthReadyResponse>(cancellationToken)
+				                              .ConfigureAwait(true);
+
+			if (dto?.Components is { Count: > 0 })
+			{
+				mReadinessResponse = dto;
+			}
+			else
+			{
+				// Fallback: response was empty or had no components — create a synthetic entry.
+				mReadinessResponse = new ApiHealthReadyResponse(
+					"degraded",
+					new Dictionary<string, ApiHealthComponentStatus>
+					{
+						["unknown"] = new(
+							"degraded",
+							Localizer["components.admin.status.notReadyDefault"])
+					});
+			}
+		}
+		catch (JsonException)
+		{
+			mReadinessResponse = new ApiHealthReadyResponse(
+				"degraded",
+				new Dictionary<string, ApiHealthComponentStatus>
+				{
+					["unknown"] = new(
+						"degraded",
+						Localizer["components.admin.status.notReadyDefault"])
+				});
 		}
 	}
 

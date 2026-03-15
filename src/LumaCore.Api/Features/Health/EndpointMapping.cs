@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.Diagnostics;
+
 using LumaCore.Api.Features.ApiVersioning;
+using LumaCore.Data.Initialization;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +18,8 @@ namespace LumaCore.Api.Features.Health;
 /// </summary>
 /// <remarks>
 ///     <para>
-///     Exposes endpoints for liveness probes and health monitoring by orchestration systems and the Web UI.
+///     Exposes endpoints for liveness probes, readiness checks, and health monitoring by orchestration systems
+///     and the Web UI.
 ///     </para>
 ///     <para>The Health feature is split into two mapping methods to accommodate different routing requirements:</para>
 ///     <list type="bullet">
@@ -28,9 +32,9 @@ namespace LumaCore.Api.Features.Health;
 ///         </item>
 ///         <item>
 ///             <description>
-///             <see cref="MapHealthApiFeature"/> — Maps the JSON-based liveness endpoint at
-///             <c>/api/v{version}/health/live</c>. This is part of the versioned API surface and follows the same
-///             versioning scheme as other business features.
+///             <see cref="MapHealthApiFeature"/> — Maps the JSON-based liveness and readiness endpoints at
+///             <c>/api/v{version}/health/live</c> and <c>/api/v{version}/health/ready</c>. These are part of the
+///             versioned API surface and follow the same versioning scheme as other business features.
 ///             </description>
 ///         </item>
 ///     </list>
@@ -52,9 +56,16 @@ static class EndpointMapping
 	//        and is intentionally kept anonymous so that the UI can display whether
 	//        the backend is reachable even before authentication is configured.
 	//
+	//      - GET /api/v1/health/ready
+	//        A readiness probe that checks DatabaseInitializationStatus and returns
+	//        an ApiHealthReadyResponse. Returns HTTP 200 when the database is fully
+	//        initialized, or HTTP 503 with a status string and message otherwise.
+	//        The UI uses this to distinguish "reachable but not ready" (orange dot)
+	//        from "fully operational" (green dot).
+	//
 	//   2. INFRASTRUCTURE (MapHealthProbesFeature)
 	//      - GET /health
-	//        The standard ASP.NET Core health check endpoint for readiness probes.
+	//        The standard ASP.NET Core health check endpoint for orchestrator probes.
 	//        Aggregates all registered health checks and returns Healthy/Degraded/Unhealthy.
 	//        This endpoint is unversioned and mapped directly to the application root
 	//        for compatibility with Kubernetes, Docker, and other orchestrators.
@@ -62,7 +73,6 @@ static class EndpointMapping
 	// NOT YET IMPLEMENTED:
 	//
 	//   - component-level health detail endpoints (e.g. /api/v1/health/details)
-	//   - severity / status breakdown (degraded vs. failed)
 	//   - per-subsystem diagnostics (database, vector store, LLM backend, storage)
 	//
 	// These additional capabilities can be added to the versioned API in the future.
@@ -83,6 +93,10 @@ static class EndpointMapping
 	///     </para>
 	///     <list type="bullet">
 	///         <item><c>GET /api/v1/health/live</c> — Lightweight JSON-based liveness probe</item>
+	///         <item>
+	///         <c>GET /api/v1/health/ready</c> — Readiness probe reporting
+	///         <see cref="DatabaseInitializationStatus"/> (HTTP 200 when ready, 503 otherwise)
+	///         </item>
 	///     </list>
 	///     <para>
 	///     Unlike the infrastructure probe (<see cref="MapHealthProbesFeature"/>), these
@@ -97,7 +111,7 @@ static class EndpointMapping
 	///     
 	///     api.MapAuthFeature();
 	///     api.MapAdminFeature();
-	///     api.MapHealthApiFeature();  // /api/v1/health/live
+	///     api.MapHealthApiFeature();  // /api/v1/health/live, /api/v1/health/ready
 	///     
 	///     // Infrastructure (unversioned)
 	///     app.MapHealthProbesFeature();  // /health
@@ -135,6 +149,83 @@ static class EndpointMapping
 				"currently reachable. This endpoint is primarily intended for use by the " +
 				"LumaCore Web UI and by external monitoring systems as a lightweight " +
 				"liveness probe.")
+			.WithMetadata(
+				new ResponseCacheAttribute
+				{
+					NoStore = true,
+					Location = ResponseCacheLocation.None
+				})
+			.AllowAnonymous();
+
+		// -------------------------------------------------------------------------
+		// GET /api/v{version}/health/ready
+		// -------------------------------------------------------------------------
+		// Returns a JSON payload that indicates whether the backend is ready to
+		// handle requests. Unlike /live (pure connectivity check), this endpoint
+		// queries DatabaseInitializationStatus to report actual operational
+		// readiness.
+		//
+		// The UI uses this to show an orange "not ready" indicator when the
+		// backend is reachable but the database is still initializing or failed.
+		//
+		// This endpoint is:
+		//   - Versioned (follows the /api/v{version} scheme)
+		//   - Anonymous (no authentication required)
+		//   - Non-cacheable (always returns fresh status)
+		// -------------------------------------------------------------------------
+		group.MapGet(
+				"/ready",
+				(DatabaseInitializationStatus initStatus) =>
+				{
+					(string componentStatus, string? message, int statusCode) = initStatus.State switch
+					{
+						DatabaseInitializationState.Completed =>
+							("ready", null, StatusCodes.Status200OK),
+
+						DatabaseInitializationState.InProgress =>
+							("initializing",
+							 "Database initialization is in progress.",
+							 StatusCodes.Status503ServiceUnavailable),
+
+						DatabaseInitializationState.NotStarted =>
+							("initializing",
+							 "Database initialization has not started yet.",
+							 StatusCodes.Status503ServiceUnavailable),
+
+						DatabaseInitializationState.Failed =>
+							("failed",
+							 initStatus.FailureMessage ?? "Database initialization failed.",
+							 StatusCodes.Status503ServiceUnavailable),
+
+						DatabaseInitializationState.Disconnected =>
+							("disconnected",
+							 initStatus.FailureMessage ?? "Database connection lost.",
+							 StatusCodes.Status503ServiceUnavailable),
+
+						// All enum values handled above.
+						var _ => throw new UnreachableException()
+					};
+
+					var components = new Dictionary<string, V1.ApiHealthComponentStatus>
+					{
+						["database"] = new(componentStatus, message)
+					};
+
+					string aggregateStatus = components.Values.All(c => c.Status == "ready")
+						                         ? "ready"
+						                         : "degraded";
+
+					var response = new V1.ApiHealthReadyResponse(aggregateStatus, components);
+					return Results.Json(response, statusCode: statusCode);
+				})
+			.MapToApiVersion(ApiVersions.V1)
+			.WithName("ApiHealthReady")
+			.WithSummary("Returns whether the backend is ready to handle requests.")
+			.WithDescription(
+				"Returns a JSON payload that indicates whether the backend is operationally " +
+				"ready. Unlike the /live endpoint (pure connectivity check), this endpoint " +
+				"reflects the actual database initialization status. Returns HTTP 200 when " +
+				"ready, or HTTP 503 with a status string and message when not.")
 			.WithMetadata(
 				new ResponseCacheAttribute
 				{

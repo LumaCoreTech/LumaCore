@@ -20,6 +20,7 @@
 		Unknown,
 		Checking,
 		Ok,
+		NotReady,
 		Error
 	}
 
@@ -43,7 +44,9 @@
 		BackendHealth.OnHealthChanged += OnHealthStateChanged;
 
 		// Sync initial state from shared state (may already be set from previous requests).
-		mState = BackendHealth.IsHealthy ? HealthState.Ok : HealthState.Error;
+		mState = BackendHealth.IsHealthy    ? HealthState.Ok
+		         : BackendHealth.IsNotReady ? HealthState.NotReady
+		                                      : HealthState.Error;
 
 		// Perform an active health check to verify the backend is reachable.
 		return CheckHealthAsync();
@@ -63,7 +66,9 @@
 		if (mIsDisposed)
 			return;
 
-		mState = BackendHealth.IsHealthy ? HealthState.Ok : HealthState.Error;
+		mState = BackendHealth.IsHealthy    ? HealthState.Ok
+		         : BackendHealth.IsNotReady ? HealthState.NotReady
+		                                      : HealthState.Error;
 		InvokeAsync(StateHasChanged);
 	}
 
@@ -82,6 +87,7 @@
 	private string GetTooltip() => mState switch
 	{
 		HealthState.Ok       => Localizer["components.healthIndicator.tooltips.reachable"],
+		HealthState.NotReady => Localizer["components.healthIndicator.tooltips.notReady"],
 		HealthState.Error    => Localizer["components.healthIndicator.tooltips.unreachable"],
 		HealthState.Checking => Localizer["components.healthIndicator.tooltips.checking"],
 		var _                => Localizer["components.healthIndicator.tooltips.unknown"]
@@ -90,11 +96,17 @@
 	/// <summary>
 	/// Timeout for health check requests. Short timeout to avoid UI hanging on unresponsive backends.
 	/// </summary>
-	private static readonly TimeSpan HealthCheckTimeout = TimeSpan.FromSeconds(5);
+	private static readonly TimeSpan sHealthCheckTimeout = TimeSpan.FromSeconds(5);
 
 	/// <summary>
-	/// Checks the current health of the backend by calling the live health endpoint.
+	/// Checks the current health of the backend by calling the liveness and readiness endpoints.
 	/// </summary>
+	/// <remarks>
+	/// Performs a two-step probe: first <c>/api/v1/health/live</c> to verify connectivity, then
+	/// <c>/api/v1/health/ready</c> to check operational readiness. This produces three possible
+	/// outcomes: <see cref="HealthState.Ok"/> (live + ready), <see cref="HealthState.NotReady"/>
+	/// (live but not ready), or <see cref="HealthState.Error"/> (not reachable).
+	/// </remarks>
 	private async Task CheckHealthAsync()
 	{
 		// Prevent overlapping checks (e.g., rapid clicks).
@@ -110,35 +122,19 @@
 		try
 		{
 			// Use a short timeout to avoid hanging on unresponsive backends.
-			using var cts = new CancellationTokenSource(HealthCheckTimeout);
+			using var cts = new CancellationTokenSource(sHealthCheckTimeout);
 
-			// Perform a lightweight GET request and inspect the status code explicitly.
-			using HttpResponseMessage response = await Http
-				                                     .GetAsync("api/v1/health/live", HttpCompletionOption.ResponseHeadersRead, cts.Token)
-				                                     .ConfigureAwait(true);
-
-			if (!response.IsSuccessStatusCode)
+			// Step 1: Liveness — is the backend process reachable at all?
+			if (!await IsLiveAsync(cts.Token).ConfigureAwait(true))
 			{
 				mState = HealthState.Error;
 				return;
 			}
 
-			try
-			{
-				// Attempt to deserialize the JSON payload into the shared API contract.
-				ApiHealthLiveResponse? dto = await response.Content
-					                             .ReadFromJsonAsync<ApiHealthLiveResponse>(cts.Token)
-					                             .ConfigureAwait(true);
-
-				mState = dto is null || string.IsNullOrWhiteSpace(dto.Status)
-					         ? HealthState.Error
-					         : HealthState.Ok;
-			}
-			catch (JsonException)
-			{
-				// Response body was not valid JSON or didn't match expected structure
-				mState = HealthState.Error;
-			}
+			// Step 2: Readiness — is the backend ready to handle requests?
+			mState = await IsReadyAsync(cts.Token).ConfigureAwait(true)
+				         ? HealthState.Ok
+				         : HealthState.NotReady;
 		}
 		catch (HttpRequestException)
 		{
@@ -147,20 +143,80 @@
 		}
 		catch
 		{
-			// Unexpected error — timeout, cancellation, or other unforeseen issue
+			// Unexpected error — timeout, cancellation, or other unforeseen issue.
 			mState = HealthState.Error;
 		}
 		finally
 		{
 			// Sync shared health state with our findings.
-			if (mState == HealthState.Ok)
-				BackendHealth.MarkHealthy();
-			else if (mState == HealthState.Error)
-				BackendHealth.MarkUnhealthy();
+			switch (mState)
+			{
+				case HealthState.Ok:
+					BackendHealth.MarkHealthy();
+					break;
+
+				case HealthState.NotReady:
+					BackendHealth.MarkNotReady();
+					break;
+
+				default:
+					BackendHealth.MarkUnhealthy();
+					break;
+			}
 
 			mIsChecking = false;
 			StateHasChanged();
 		}
+	}
+
+	/// <summary>
+	/// Checks whether the backend process is reachable by calling the liveness endpoint.
+	/// </summary>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns><see langword="true"/> if the backend returned a valid liveness response.</returns>
+	private async Task<bool> IsLiveAsync(CancellationToken cancellationToken)
+	{
+		using HttpResponseMessage response = await Http
+			                                     .GetAsync(
+				                                     "api/v1/health/live",
+				                                     HttpCompletionOption.ResponseHeadersRead,
+				                                     cancellationToken)
+			                                     .ConfigureAwait(true);
+
+		if (!response.IsSuccessStatusCode)
+			return false;
+
+		try
+		{
+			ApiHealthLiveResponse? dto = await response.Content
+				                             .ReadFromJsonAsync<ApiHealthLiveResponse>(cancellationToken)
+				                             .ConfigureAwait(true);
+
+			return dto is not null && !string.IsNullOrWhiteSpace(dto.Status);
+		}
+		catch (JsonException)
+		{
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Checks whether the backend is operationally ready by calling the readiness endpoint.
+	/// </summary>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns><see langword="true"/> if the backend reported a <c>"ready"</c> status.</returns>
+	private async Task<bool> IsReadyAsync(CancellationToken cancellationToken)
+	{
+		using HttpResponseMessage response = await Http
+			                                     .GetAsync(
+				                                     "api/v1/health/ready",
+				                                     HttpCompletionOption.ResponseHeadersRead,
+				                                     cancellationToken)
+			                                     .ConfigureAwait(true);
+
+		// A 503 with valid JSON means "live but not ready" — any other non-2xx is an error,
+		// but the caller already confirmed liveness, so we treat all non-success as "not ready".
+		return response.IsSuccessStatusCode;
 	}
 
 	/// <summary>
@@ -170,6 +226,7 @@
 	private string GetDotClass() => mState switch
 	{
 		HealthState.Ok       => "lc-logo-health-dot-ok",
+		HealthState.NotReady => "lc-logo-health-dot-not-ready",
 		HealthState.Error    => "lc-logo-health-dot-error",
 		HealthState.Checking => "lc-logo-health-dot-checking",
 		var _                => "lc-logo-health-dot-unknown"
