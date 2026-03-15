@@ -34,15 +34,14 @@ namespace LumaCore.Data.Tests.Initialization;
 public sealed partial class DatabaseInitializerTests
 {
 	/// <summary>
-	/// The full migration ID for the first migration (<c>InitialCreate</c>).
+	/// The full migration ID for the initial migration (base schema: 9 tables).
 	/// </summary>
-	private const string FirstMigrationId = "20260126214435_InitialCreate";
+	private const string FirstMigrationId = "20260315135847_InitialCreate";
 
 	/// <summary>
-	/// The full migration ID for the second migration (<c>AddAiPersonas</c>).
-	/// Update when migrations change.
+	/// The full migration ID for the second migration (AI persona tables).
 	/// </summary>
-	private const string SecondMigrationId = "20260127000000_AddAiPersonas";
+	private const string SecondMigrationId = "20260315135857_AddAiPersonas";
 
 	/// <summary>
 	/// All migration IDs in chronological order.

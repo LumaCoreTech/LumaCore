@@ -98,7 +98,7 @@ public partial class InitialCreate : Migration
 					.Annotation("Sqlite:Autoincrement", true),
 				SeedId = table.Column<string>(maxLength: 100, nullable: false),
 				Version = table.Column<int>(nullable: false),
-				Description = table.Column<string>(maxLength: 500, nullable: true),
+				Description = table.Column<string>(maxLength: 500, nullable: false),
 				AppliedAtUtc = table.Column<DateTime>(nullable: false)
 			},
 			constraints: table =>
@@ -289,6 +289,17 @@ public partial class InitialCreate : Migration
 			unique: true);
 
 		migrationBuilder.CreateIndex(
+			name: "IX_SeedHistory_AppliedAtUtc",
+			table: "SeedHistory",
+			column: "AppliedAtUtc");
+
+		migrationBuilder.CreateIndex(
+			name: "IX_SeedHistory_SeedId",
+			table: "SeedHistory",
+			column: "SeedId",
+			unique: true);
+
+		migrationBuilder.CreateIndex(
 			name: "IX_UserRoles_RoleId",
 			table: "UserRoles",
 			column: "RoleId");
@@ -315,17 +326,6 @@ public partial class InitialCreate : Migration
 			table: "Users",
 			column: "UsernameNormalized",
 			unique: true);
-
-		migrationBuilder.CreateIndex(
-			name: "IX_SeedHistory_SeedId",
-			table: "SeedHistory",
-			column: "SeedId",
-			unique: true);
-
-		migrationBuilder.CreateIndex(
-			name: "IX_SeedHistory_AppliedAtUtc",
-			table: "SeedHistory",
-			column: "AppliedAtUtc");
 	}
 
 	/// <inheritdoc/>
@@ -333,17 +333,17 @@ public partial class InitialCreate : Migration
 	{
 		migrationBuilder.DropTable(name: "ConversationParticipants");
 
+		migrationBuilder.DropTable(name: "SeedHistory");
+
 		migrationBuilder.DropTable(name: "UserRoles");
 
 		migrationBuilder.DropTable(name: "Messages");
-
-		migrationBuilder.DropTable(name: "Users");
 
 		migrationBuilder.DropTable(name: "ModelEndpoints");
 
 		migrationBuilder.DropTable(name: "Roles");
 
-		migrationBuilder.DropTable(name: "SeedHistory");
+		migrationBuilder.DropTable(name: "Users");
 
 		migrationBuilder.DropTable(name: "Conversations");
 

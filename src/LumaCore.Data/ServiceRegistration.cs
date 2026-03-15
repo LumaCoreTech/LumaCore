@@ -11,6 +11,7 @@ using LumaCore.Data.Security;
 using LumaCore.Data.Services;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -78,6 +79,12 @@ public static class ServiceRegistration
 		{
 			DatabaseOptions options = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
 			ConfigureProvider(dbContextOptions, options, serviceProvider);
+
+			// Strongly-typed ID converters registered via ConfigureConventions() change how the SQLite provider
+			// finalizes value generation metadata (Sqlite:Autoincrement is not implied for converter-backed
+			// columns). This creates an unavoidable mismatch between the snapshot model (no converters during
+			// finalization) and the runtime model (converters active). Downgrade from exception to logged warning.
+			dbContextOptions.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning));
 
 			// Add the connection interceptor to detect runtime disconnections
 			dbContextOptions.AddInterceptors(serviceProvider.GetRequiredService<DatabaseConnectionInterceptor>());

@@ -6,12 +6,12 @@ using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
 
 using LumaCore.Core.Diagnostics;
+using LumaCore.Core.IO;
 using LumaCore.Data.DataPort.Shuttle;
 using LumaCore.Data.Entities;
 using LumaCore.Data.Initialization;
 using LumaCore.Data.Providers;
 using LumaCore.Data.Services;
-using LumaCore.Core.IO;
 
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -1172,7 +1172,9 @@ public sealed partial class DatabaseInitializerTests
 
 			string shuttleId = await ReadShuttleIdAsync(backupPath);
 
-			// Write a checkpoint at the schema_cleanup phase so all phases execute.
+			// Write a checkpoint at the schema_cleanup phase so all phases execute. BaselineMigrationId
+			// must match the backup's migration level (full schema) because Phase 4 rebuilds the schema
+			// via MigrateAsync(baseline) and the import verifies that migration histories match exactly.
 			(AsyncServiceScope scope, LumaCoreDbContext dbContext) = harness.CreateScopedDbContext();
 			try
 			{
@@ -1250,7 +1252,7 @@ public sealed partial class DatabaseInitializerTests
 				await harness.Sut.WriteRestoreCheckpointAsync(
 					dbContext,
 					"00000000-0000-0000-0000-000000000000",
-					FirstMigrationId,
+					FirstMigrationId, // Not consumed — the test fails before Phase 4 (migration) runs.
 					CancellationToken.None);
 			}
 			finally
@@ -1348,7 +1350,7 @@ public sealed partial class DatabaseInitializerTests
 				await harness.Sut.WriteRestoreCheckpointAsync(
 					dbContext,
 					shuttleId,
-					FirstMigrationId,
+					FirstMigrationId, // Not consumed — the test fails before Phase 4 (migration) runs.
 					CancellationToken.None);
 				await harness.Sut.UpdateRestoreCheckpointPhaseAsync(dbContext, "invalid_phase", CancellationToken.None);
 			}
@@ -1440,7 +1442,7 @@ public sealed partial class DatabaseInitializerTests
 				await harness.Sut.WriteRestoreCheckpointAsync(
 					dbContext,
 					shuttleId,
-					SecondMigrationId,
+					FirstMigrationId, // Not consumed — the test fails before Phase 4 (migration) runs.
 					CancellationToken.None);
 			}
 			finally
@@ -1641,7 +1643,7 @@ public sealed partial class DatabaseInitializerTests
 				await harness.Sut.WriteRestoreCheckpointAsync(
 					dbContext,
 					shuttleId,
-					SecondMigrationId,
+					FirstMigrationId, // Not consumed — the test throws before Phase 4 (migration) runs.
 					CancellationToken.None);
 			}
 			finally

@@ -124,7 +124,7 @@ public partial class AddAiPersonas : Migration
 		migrationBuilder.CreateIndex(
 			name: "IX_SystemPrompts_PersonaId_Hash",
 			table: "SystemPrompts",
-			columns: new[] { "PersonaId", "Hash" },
+			columns: ["PersonaId", "Hash"],
 			unique: true);
 
 		migrationBuilder.CreateIndex(
@@ -154,12 +154,16 @@ public partial class AddAiPersonas : Migration
 	protected override void Down(MigrationBuilder migrationBuilder)
 	{
 		migrationBuilder.DropForeignKey(
+			name: "FK_MessageGenerationMetadata_SystemPrompts_SystemPromptId",
+			table: "MessageGenerationMetadata");
+
+		migrationBuilder.DropForeignKey(
 			name: "FK_Personas_SystemPrompts_ActiveSystemPromptId",
 			table: "Personas");
 
-		migrationBuilder.DropTable(name: "MessageGenerationMetadata");
-
 		migrationBuilder.DropTable(name: "SystemPrompts");
+
+		migrationBuilder.DropTable(name: "MessageGenerationMetadata");
 
 		migrationBuilder.DropTable(name: "Personas");
 	}

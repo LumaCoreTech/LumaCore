@@ -3,11 +3,11 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using LumaCore.Core.Diagnostics;
+using LumaCore.Core.IO;
 using LumaCore.Data.DataPort;
 using LumaCore.Data.DataPort.Import.Implementations;
 using LumaCore.Data.Entities;
 using LumaCore.Data.Initialization;
-using LumaCore.Core.IO;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -348,7 +348,7 @@ public sealed partial class DatabaseInitializerTests
 				await harness.Sut.WriteRestoreCheckpointAsync(
 					writeCtx,
 					shuttleId,
-					SecondMigrationId,
+					FirstMigrationId, // Not consumed — Phase 4 (migration) is skipped for PhaseImport.
 					CancellationToken.None);
 			}
 			finally
@@ -360,7 +360,7 @@ public sealed partial class DatabaseInitializerTests
 			// Phases 3–4 completed (and updated the DB row to "import") before interruption.
 			var checkpoint = new RestoreCheckpointData(
 				ShuttleId: shuttleId,
-				BaselineMigrationId: SecondMigrationId,
+				BaselineMigrationId: FirstMigrationId, // Not consumed — Phase 4 (migration) is skipped for PhaseImport.
 				Phase: RestoreCheckpointData.PhaseImport,
 				StartedUtc: "2026-01-01T00:00:00.0000000Z");
 
@@ -432,7 +432,7 @@ public sealed partial class DatabaseInitializerTests
 
 			var checkpoint = new RestoreCheckpointData(
 				ShuttleId: "00000000-0000-0000-0000-000000000000",
-				BaselineMigrationId: FirstMigrationId,
+				BaselineMigrationId: FirstMigrationId, // Not consumed — the test fails before Phase 4 (migration) runs.
 				Phase: RestoreCheckpointData.PhaseSchemaCleanup,
 				StartedUtc: "2026-01-01T00:00:00.0000000Z");
 
@@ -491,11 +491,9 @@ public sealed partial class DatabaseInitializerTests
 
 			var checkpoint = new RestoreCheckpointData(
 				ShuttleId: "00000000-0000-0000-0000-000000000000",
-				BaselineMigrationId: FirstMigrationId,
+				BaselineMigrationId: FirstMigrationId, // Not consumed — the test fails before Phase 4 (migration) runs.
 				Phase: RestoreCheckpointData.PhaseSchemaCleanup,
 				StartedUtc: "2026-01-01T00:00:00.0000000Z");
-
-			// Ensure the directory truly does not exist (TemporaryFolder creates it; this path was never created).
 			Assert.False(Directory.Exists(nonExistentDir));
 
 			// Act + Assert
@@ -565,7 +563,7 @@ public sealed partial class DatabaseInitializerTests
 
 			var checkpoint = new RestoreCheckpointData(
 				ShuttleId: shuttleId,
-				BaselineMigrationId: FirstMigrationId,
+				BaselineMigrationId: FirstMigrationId, // Not consumed — the test fails before Phase 4 (migration) runs.
 				Phase: "invalid_phase",
 				StartedUtc: "2026-01-01T00:00:00.0000000Z");
 
