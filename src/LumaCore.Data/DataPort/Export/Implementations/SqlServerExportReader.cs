@@ -308,23 +308,11 @@ public sealed class SqlServerExportReader : IDataExportReader
 	{
 		var columns = new List<ColumnDefinition>();
 
-		// Query column info from INFORMATION_SCHEMA, including primary key info.
+		// Query column definitions from INFORMATION_SCHEMA.
 		var cmd = new SqlCommand(
 			"""
-			SELECT
-				c.COLUMN_NAME,
-				c.DATA_TYPE,
-				c.IS_NULLABLE,
-				CAST(CASE WHEN pk.COLUMN_NAME IS NOT NULL THEN 1 ELSE 0 END AS bit) as IS_PRIMARY_KEY
+			SELECT c.COLUMN_NAME, c.DATA_TYPE
 			FROM INFORMATION_SCHEMA.COLUMNS c
-			LEFT JOIN (
-				SELECT ku.COLUMN_NAME
-				FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
-				JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku
-					ON tc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
-				WHERE tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
-				  AND tc.TABLE_NAME = @tableName
-			) pk ON c.COLUMN_NAME = pk.COLUMN_NAME
 			WHERE c.TABLE_NAME = @tableName
 			ORDER BY c.ORDINAL_POSITION
 			""",
@@ -344,9 +332,7 @@ public sealed class SqlServerExportReader : IDataExportReader
 						{
 							Name = reader.GetString(0),
 							DbType = dbType,
-							ShuttleStorageType = mShuttleTypeMapper?.Invoke(dbType),
-							IsNullable = reader.GetString(2).Equals("YES", StringComparison.OrdinalIgnoreCase),
-							IsPrimaryKey = reader.GetBoolean(3)
+							ShuttleStorageType = mShuttleTypeMapper?.Invoke(dbType)
 						});
 				}
 			}

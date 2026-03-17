@@ -278,25 +278,11 @@ public sealed class PostgresExportReader : IDataExportReader
 	{
 		var columns = new List<ColumnDefinition>();
 
-		// Get column info along with primary key status.
+		// Get column definitions from the information schema.
 		var cmd = new NpgsqlCommand(
 			"""
-			SELECT
-				c.column_name,
-				c.data_type,
-				c.is_nullable,
-				CASE WHEN pk.column_name IS NOT NULL THEN true ELSE false END as is_primary_key
+			SELECT c.column_name, c.data_type
 			FROM information_schema.columns c
-			LEFT JOIN (
-				SELECT ku.column_name
-				FROM information_schema.table_constraints tc
-				JOIN information_schema.key_column_usage ku
-					ON tc.constraint_name = ku.constraint_name
-					AND tc.table_schema = ku.table_schema
-				WHERE tc.constraint_type = 'PRIMARY KEY'
-				  AND tc.table_schema = @schema
-				  AND tc.table_name = @tableName
-			) pk ON c.column_name = pk.column_name
 			WHERE c.table_schema = @schema
 			  AND c.table_name = @tableName
 			ORDER BY c.ordinal_position
@@ -318,9 +304,7 @@ public sealed class PostgresExportReader : IDataExportReader
 						{
 							Name = reader.GetString(0),
 							DbType = dbType,
-							ShuttleStorageType = mShuttleTypeMapper?.Invoke(dbType),
-							IsNullable = reader.GetString(2).Equals("YES", StringComparison.OrdinalIgnoreCase),
-							IsPrimaryKey = reader.GetBoolean(3)
+							ShuttleStorageType = mShuttleTypeMapper?.Invoke(dbType)
 						});
 				}
 			}

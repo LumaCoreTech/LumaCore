@@ -179,7 +179,7 @@ public sealed class SqliteShuttleReader : SqliteReaderBase, IShuttleReader
 			if (errors.Count > 10)
 				summary += $"; ... and {errors.Count - 10} more error(s)";
 
-			throw new InvalidOperationException(
+			throw new InvalidDataException(
 				$"Shuttle file integrity check failed with {errors.Count} error(s): {summary}");
 		}
 

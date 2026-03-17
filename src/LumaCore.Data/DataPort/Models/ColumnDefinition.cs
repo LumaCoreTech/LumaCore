@@ -40,25 +40,4 @@ public sealed class ColumnDefinition
 	///     </para>
 	/// </remarks>
 	public string? ShuttleStorageType { get; init; }
-
-	/// <summary>
-	/// Gets a value indicating whether the column allows <see langword="null"/> values.
-	/// </summary>
-	public bool IsNullable { get; init; }
-
-	/// <summary>
-	/// Gets a value indicating whether this column is part of the primary key in the source data model.
-	/// </summary>
-	/// <remarks>
-	///     <para>
-	///     This flag describes the logical primary key semantics of the originating data source. It is used by
-	///     components that need to reason about keys (for example, merge or validation logic).
-	///     </para>
-	///     <para>
-	///     The LumaCore Shuttle format (SQLite-based) is intentionally data-centric and does not create primary key
-	///     constraints based on this flag. Schema constraints are owned by the EF Core model and its migrations, not
-	///     by the shuttle container.
-	///     </para>
-	/// </remarks>
-	public bool IsPrimaryKey { get; init; }
 }

@@ -87,6 +87,16 @@ public abstract class SqliteReaderBase : IAsyncDisposable
 	}
 
 	/// <summary>
+	/// Gets a value indicating whether the reader has been successfully initialized via
+	/// <see cref="InitializeCoreAsync"/> and has not yet been disposed.
+	/// </summary>
+	/// <remarks>
+	/// Returns <see langword="false"/> both before initialization and after disposal, because
+	/// <see cref="DisposeAsync"/> releases the underlying connection.
+	/// </remarks>
+	public bool IsInitialized => Connection is not null;
+
+	/// <summary>
 	/// Gets the underlying SQLite connection, or <see langword="null"/> if not yet initialized or already disposed.
 	/// </summary>
 	protected SqliteConnection? Connection { get; private set; }
@@ -221,9 +231,7 @@ public abstract class SqliteReaderBase : IAsyncDisposable
 						{
 							Name = reader.GetString(reader.GetOrdinal("name")),
 							DbType = dbType,
-							ShuttleStorageType = mShuttleTypeMapper?.Invoke(dbType),
-							IsNullable = !reader.GetBoolean(reader.GetOrdinal("notnull")),
-							IsPrimaryKey = reader.GetInt32(reader.GetOrdinal("pk")) > 0
+							ShuttleStorageType = mShuttleTypeMapper?.Invoke(dbType)
 						});
 				}
 			}
@@ -304,10 +312,9 @@ public abstract class SqliteReaderBase : IAsyncDisposable
 	/// <paramref name="tableName"/> is empty or consists only of white-space characters.
 	/// </exception>
 	/// <exception cref="ObjectDisposedException">The reader has been disposed.</exception>
-	/// <exception cref="InvalidOperationException">
-	///     <para>The reader is not initialized.</para>
-	///     <para>- or -</para>
-	///     <para>The specified table does not exist.</para>
+	/// <exception cref="InvalidOperationException">The reader is not initialized.</exception>
+	/// <exception cref="KeyNotFoundException">
+	/// The table specified by <paramref name="tableName"/> does not exist in the underlying database.
 	/// </exception>
 	protected async Task<TableSnapshot> ReadTableSnapshotAsync(
 		string            tableName,
@@ -319,7 +326,7 @@ public abstract class SqliteReaderBase : IAsyncDisposable
 
 		List<ColumnDefinition> columns = await GetColumnsAsync(tableName, cancellationToken).ConfigureAwait(false);
 		if (columns.Count == 0)
-			throw new InvalidOperationException($"Table '{tableName}' does not exist.");
+			throw new KeyNotFoundException($"Table '{tableName}' does not exist.");
 
 		long rowCount = -1;
 		try

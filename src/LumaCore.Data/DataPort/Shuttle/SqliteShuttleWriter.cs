@@ -477,8 +477,9 @@ public sealed class SqliteShuttleWriter : IShuttleWriter
 	///     <para>Writer is not initialized.</para>
 	///     <para>- or -</para>
 	///     <para><see cref="FinalizeAsync(CancellationToken)"/> has already been called.</para>
-	///     <para>- or -</para>
-	///     <para>The shuttle file integrity check failed (the file may be corrupted).</para>
+	/// </exception>
+	/// <exception cref="InvalidDataException">
+	/// The shuttle file integrity check failed (the file may be corrupted).
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -554,7 +555,7 @@ public sealed class SqliteShuttleWriter : IShuttleWriter
 			// Any other result indicates corruption.
 			if (result != "ok")
 			{
-				throw new InvalidOperationException(
+				throw new InvalidDataException(
 					$"Shuttle file integrity check failed: {result}. " +
 					"The file may be corrupted. Please retry the export.");
 			}
@@ -675,22 +676,17 @@ public sealed class SqliteShuttleWriter : IShuttleWriter
 	/// <param name="cancellationToken">A token to cancel the operation.</param>
 	/// <remarks>
 	/// The LumaCore Shuttle format is intentionally data-centric. It mirrors column names and basic
-	/// SQLite-compatible types for readability, but it does not recreate primary keys, foreign keys,
-	/// indexes or other relational constraints from the source database. Those aspects are owned by
-	/// the EF Core model and its migrations, not by the shuttle container.
+	/// SQLite-compatible types but does not recreate any schema constraints (nullability, primary keys,
+	/// foreign keys, indexes). Those aspects are owned by the EF Core model and its migrations, not by
+	/// the shuttle container.
 	/// </remarks>
 	private async Task CreateTableAsync(TableSnapshot table, CancellationToken cancellationToken)
 	{
 		// Create the table with the specified name and columns.
-		// Note: No indexes or relational constraints are created for shuttle storage.
+		// No schema constraints (NOT NULL, PK, FK, indexes) are created for shuttle storage.
 		string columns = string.Join(
 			", ",
-			table.Columns.Select(c =>
-			{
-				string sqliteType = c.ShuttleStorageType ?? c.DbType;
-				string nullable = c.IsNullable ? "" : " NOT NULL";
-				return $"{QuoteSqlite(c.Name)} {sqliteType}{nullable}";
-			}));
+			table.Columns.Select(c => $"{QuoteSqlite(c.Name)} {c.ShuttleStorageType ?? c.DbType}"));
 
 		string sql = $"CREATE TABLE IF NOT EXISTS {QuoteSqlite(table.Name)} ({columns})";
 

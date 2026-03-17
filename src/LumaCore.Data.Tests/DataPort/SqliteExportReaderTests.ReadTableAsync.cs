@@ -39,9 +39,6 @@ public sealed partial class SqliteExportReaderTests
 				Assert.Equal("Id", snapshot.Columns[0].Name);
 				Assert.Equal("Name", snapshot.Columns[1].Name);
 				Assert.Equal("Email", snapshot.Columns[2].Name);
-				Assert.True(snapshot.Columns[0].IsPrimaryKey);
-				Assert.False(snapshot.Columns[1].IsNullable);
-				Assert.True(snapshot.Columns[2].IsNullable);
 
 				// Assert — row count
 				Assert.Equal(2, snapshot.EstimatedRowCount);
@@ -212,10 +209,10 @@ public sealed partial class SqliteExportReaderTests
 
 	/// <summary>
 	/// Verifies that <see cref="SqliteExportReader.ReadTableAsync"/> throws
-	/// <see cref="InvalidOperationException"/> for a table that does not exist.
+	/// <see cref="KeyNotFoundException"/> for a table that does not exist.
 	/// </summary>
 	[Fact]
-	public async Task ReadTableAsync_WhenTableDoesNotExist_ThrowsInvalidOperationException()
+	public async Task ReadTableAsync_WhenTableDoesNotExist_ThrowsKeyNotFoundException()
 	{
 		// Arrange
 		string cs = SharedMemoryConnectionString(UniqueDbName());
@@ -226,7 +223,7 @@ public sealed partial class SqliteExportReaderTests
 			try
 			{
 				// Act + Assert
-				var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => sut.ReadTableAsync("NonExistent"));
+				var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() => sut.ReadTableAsync("NonExistent"));
 				Assert.Equal("Table 'NonExistent' does not exist.", ex.Message);
 			}
 			finally

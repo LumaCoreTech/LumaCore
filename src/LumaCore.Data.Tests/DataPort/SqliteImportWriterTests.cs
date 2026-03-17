@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Core.IO;
 using LumaCore.Data.DataPort;
 using LumaCore.Data.DataPort.Import.Implementations;
 using LumaCore.Data.DataPort.Models;
-using LumaCore.Core.IO;
 
 using Microsoft.Data.Sqlite;
 
@@ -218,7 +218,7 @@ public sealed partial class SqliteImportWriterTests
 			Name = "Items",
 			Columns =
 			[
-				new ColumnDefinition { Name = "Id", DbType = "INTEGER", IsPrimaryKey = true },
+				new ColumnDefinition { Name = "Id", DbType = "INTEGER" },
 				new ColumnDefinition { Name = "CategoryId", DbType = "INTEGER" }
 			],
 			EstimatedRowCount = 1,

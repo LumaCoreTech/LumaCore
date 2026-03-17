@@ -119,7 +119,7 @@ public sealed partial class SqliteImportWriterTests
 		Name = tableName,
 		Columns =
 		[
-			new ColumnDefinition { Name = "Id", DbType = "INTEGER", IsPrimaryKey = true },
+			new ColumnDefinition { Name = "Id", DbType = "INTEGER" },
 			new ColumnDefinition { Name = "Name", DbType = "TEXT" }
 		],
 		EstimatedRowCount = rows.Length,

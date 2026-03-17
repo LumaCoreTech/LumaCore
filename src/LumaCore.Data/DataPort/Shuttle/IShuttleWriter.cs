@@ -205,6 +205,9 @@ public interface IShuttleWriter : IAsyncDisposable
 	///     <para>- or -</para>
 	///     <para><see cref="FinalizeAsync"/> has already been called.</para>
 	/// </exception>
+	/// <exception cref="InvalidDataException">
+	/// The integrity check failed after flushing (the shuttle file may be corrupted).
+	/// </exception>
 	/// <remarks>
 	///     <para>
 	///     This method should ensure that all buffered data has been flushed to durable storage, run

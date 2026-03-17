@@ -112,8 +112,8 @@ public sealed partial class SqliteImportWriterTests
 			Name = "Memberships",
 			Columns =
 			[
-				new ColumnDefinition { Name = "ConversationId", DbType = "INTEGER", IsPrimaryKey = true },
-				new ColumnDefinition { Name = "ParticipantId", DbType = "INTEGER", IsPrimaryKey = true },
+				new ColumnDefinition { Name = "ConversationId", DbType = "INTEGER" },
+				new ColumnDefinition { Name = "ParticipantId", DbType = "INTEGER" },
 				new ColumnDefinition { Name = "JoinedAtUtc", DbType = "TEXT" }
 			],
 			EstimatedRowCount = 3,
@@ -193,7 +193,7 @@ public sealed partial class SqliteImportWriterTests
 			Name = "Parents",
 			Columns =
 			[
-				new ColumnDefinition { Name = "Id", DbType = "INTEGER", IsPrimaryKey = true },
+				new ColumnDefinition { Name = "Id", DbType = "INTEGER" },
 				new ColumnDefinition { Name = "Name", DbType = "TEXT" }
 			],
 			EstimatedRowCount = 2,
@@ -209,7 +209,7 @@ public sealed partial class SqliteImportWriterTests
 			Name = "Children",
 			Columns =
 			[
-				new ColumnDefinition { Name = "Id", DbType = "INTEGER", IsPrimaryKey = true },
+				new ColumnDefinition { Name = "Id", DbType = "INTEGER" },
 				new ColumnDefinition { Name = "ParentId", DbType = "INTEGER" },
 				new ColumnDefinition { Name = "Label", DbType = "TEXT" }
 			],
@@ -284,7 +284,7 @@ public sealed partial class SqliteImportWriterTests
 			Name = "Children",
 			Columns =
 			[
-				new ColumnDefinition { Name = "Id", DbType = "INTEGER", IsPrimaryKey = true },
+				new ColumnDefinition { Name = "Id", DbType = "INTEGER" },
 				new ColumnDefinition { Name = "ParentId", DbType = "INTEGER" },
 				new ColumnDefinition { Name = "Label", DbType = "TEXT" }
 			],

@@ -235,14 +235,10 @@ public sealed class MySqlExportReader : IDataExportReader
 		//// Get column definitions from information_schema.
 		//await using var cmd = new MySqlCommand(
 		//	"""
-		//	SELECT
-		//	    c.column_name,
-		//	    c.data_type,
-		//	    c.is_nullable,
-		//	    c.column_key
+		//	SELECT c.column_name, c.data_type
 		//	FROM information_schema.columns c
-		//	    WHERE c.table_schema = @database
-		//	      AND c.table_name = @tableName
+		//	WHERE c.table_schema = @database
+		//	  AND c.table_name = @tableName
 		//	ORDER BY c.ordinal_position
 		//	""",
 		//	mConnection,
@@ -256,9 +252,7 @@ public sealed class MySqlExportReader : IDataExportReader
 		//		new ColumnDefinition
 		//		{
 		//			Name = reader.GetString(0),
-		//			DbType = reader.GetString(1),
-		//			IsNullable = reader.GetString(2).Equals("YES", StringComparison.OrdinalIgnoreCase),
-		//			IsPrimaryKey = reader.GetString(3).Equals("PRI", StringComparison.OrdinalIgnoreCase)
+		//			DbType = reader.GetString(1)
 		//		});
 		//}
 

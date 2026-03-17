@@ -49,6 +49,9 @@ public interface IDataExportReader : IAsyncDisposable
 	/// </exception>
 	/// <exception cref="ObjectDisposedException">The reader has been disposed.</exception>
 	/// <exception cref="InvalidOperationException">Reader is not initialized.</exception>
+	/// <exception cref="KeyNotFoundException">
+	/// The table specified by <paramref name="tableName"/> does not exist in the data source.
+	/// </exception>
 	Task<TableSnapshot> ReadTableAsync(string tableName, CancellationToken cancellationToken = default);
 
 	/// <summary>

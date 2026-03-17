@@ -59,9 +59,10 @@ public interface IShuttleReader : IAsyncDisposable
 	/// <param name="cancellationToken">A token to cancel the operation.</param>
 	/// <exception cref="ObjectDisposedException">The reader has been disposed.</exception>
 	/// <exception cref="InvalidOperationException">
-	///     <para>Reader is not initialized. Call <see cref="InitializeAsync"/> first.</para>
-	///     <para>- or -</para>
-	///     <para>The integrity check detected corruption in the shuttle file.</para>
+	/// Reader is not initialized. Call <see cref="InitializeAsync"/> first.
+	/// </exception>
+	/// <exception cref="InvalidDataException">
+	/// The integrity check detected corruption in the shuttle file.
 	/// </exception>
 	/// <remarks>
 	///     <para>
@@ -101,10 +102,9 @@ public interface IShuttleReader : IAsyncDisposable
 	/// <exception cref="ArgumentNullException"><paramref name="tableName"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentException"><paramref name="tableName"/> is empty or consists only of white-space characters.</exception>
 	/// <exception cref="ObjectDisposedException">The reader has been disposed.</exception>
-	/// <exception cref="InvalidOperationException">
-	///     <para>Reader is not initialized. Call <see cref="InitializeAsync"/> first.</para>
-	///     <para>- or -</para>
-	///     <para>The specified table does not exist in the shuttle file.</para>
+	/// <exception cref="InvalidOperationException">Reader is not initialized. Call <see cref="InitializeAsync"/> first.</exception>
+	/// <exception cref="KeyNotFoundException">
+	/// The table specified by <paramref name="tableName"/> does not exist in the shuttle file.
 	/// </exception>
 	/// <returns>
 	/// A <see cref="TableSnapshot"/> that exposes the table schema, an estimated row count, and a lazily
