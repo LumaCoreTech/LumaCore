@@ -14,6 +14,14 @@ namespace LumaCore.Data.Tests.DataPort;
 /// <summary>
 /// Unit tests for <see cref="SqliteShuttleReaderFactory"/>.
 /// </summary>
+/// <remarks>
+/// The valid-path happy-path coverage is intentionally minimal (single representative path) because
+/// <see cref="SqliteShuttleReaderFactory.Create"/> delegates all file path validation to
+/// <see cref="FilePathValidator.Validate"/>. Comprehensive path-format testing — absolute, relative, boundary
+/// segment lengths, OS-specific characters — lives in <c>FilePathValidatorTests</c>. The error-path tests
+/// here verify that the delegation is wired up correctly; adding more valid-path variants would only re-test
+/// <see cref="FilePathValidator"/>.
+/// </remarks>
 [Trait("Category", "DataPort")]
 public sealed class SqliteShuttleReaderFactoryTests
 {
