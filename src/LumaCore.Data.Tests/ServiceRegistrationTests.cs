@@ -2,10 +2,16 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Data.DataPort.Shuttle;
+using LumaCore.Data.Initialization;
+using LumaCore.Data.Providers;
+using LumaCore.Data.Security;
 using LumaCore.Data.Services;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 using Xunit;
 
@@ -100,6 +106,162 @@ public sealed class ServiceRegistrationTests
 		Assert.NotNull(sp.GetRequiredService<ILumaCoreDataService>());
 	}
 
+	/// <summary>
+	/// Verifies that the interface-segregation factory lambdas all resolve to the same scoped
+	/// <see cref="ILumaCoreDataService"/> instance. Each focused interface (<see cref="IUserDataService"/>,
+	/// <see cref="IRoleDataService"/>, etc.) is a forwarding registration.
+	/// </summary>
+	[Fact]
+	public void AddLumaCoreData_WhenResolved_ProvidesInterfaceSegregatedServices()
+	{
+		// Arrange
+		ServiceCollection services = CreateServiceCollection();
+
+		IConfiguration configuration = new ConfigurationBuilder()
+			.AddInMemoryCollection(
+				new Dictionary<string, string?>
+				{
+					["Database:Provider"] = "sqlite",
+					["Database:ConnectionString"] = "Data Source=:memory:",
+					["Database:EncryptionKey"] = TestEncryptionKey
+				})
+			.Build();
+
+		services.AddLumaCoreData(configuration);
+		using ServiceProvider sp = services.BuildServiceProvider();
+
+		// Act — resolve all interface-segregated services within the same scope
+		using IServiceScope scope = sp.CreateScope();
+		IServiceProvider scoped = scope.ServiceProvider;
+
+		var dataService = scoped.GetRequiredService<ILumaCoreDataService>();
+		var userDataService = scoped.GetRequiredService<IUserDataService>();
+		var roleDataService = scoped.GetRequiredService<IRoleDataService>();
+		var conversationDataService = scoped.GetRequiredService<IConversationDataService>();
+		var messageDataService = scoped.GetRequiredService<IMessageDataService>();
+		var modelEndpointDataService = scoped.GetRequiredService<IModelEndpointDataService>();
+		var dataIntegrityService = scoped.GetRequiredService<IDataIntegrityService>();
+
+		// Assert — all forwarding registrations resolve to the same scoped instance
+		Assert.Same(dataService, userDataService);
+		Assert.Same(dataService, roleDataService);
+		Assert.Same(dataService, conversationDataService);
+		Assert.Same(dataService, messageDataService);
+		Assert.Same(dataService, modelEndpointDataService);
+		Assert.Same(dataService, dataIntegrityService);
+	}
+
+	/// <summary>
+	/// Verifies that <see cref="IDatabaseProviderOperations"/> and <see cref="IShuttleReaderFactory"/> are
+	/// resolvable after calling <see cref="ServiceRegistration.AddLumaCoreData"/>. Exercises the singleton
+	/// factory lambda that delegates to <see cref="DatabaseProviderFactory.GetProvider"/>.
+	/// </summary>
+	[Fact]
+	public void AddLumaCoreData_WhenResolved_ProvidesSingletonInfrastructureServices()
+	{
+		// Arrange
+		ServiceCollection services = CreateServiceCollection();
+
+		IConfiguration configuration = new ConfigurationBuilder()
+			.AddInMemoryCollection(
+				new Dictionary<string, string?>
+				{
+					["Database:Provider"] = "sqlite",
+					["Database:ConnectionString"] = "Data Source=:memory:",
+					["Database:EncryptionKey"] = TestEncryptionKey
+				})
+			.Build();
+
+		services.AddLumaCoreData(configuration);
+		using ServiceProvider sp = services.BuildServiceProvider();
+
+		// Act
+		var providerOps = sp.GetRequiredService<IDatabaseProviderOperations>();
+		var shuttleReaderFactory = sp.GetRequiredService<IShuttleReaderFactory>();
+
+		// Assert
+		Assert.NotNull(providerOps);
+		Assert.Equal(DatabaseProviders.Sqlite, providerOps.ProviderName);
+		Assert.NotNull(shuttleReaderFactory);
+	}
+
+	/// <summary>
+	/// Verifies that keyed <see cref="ISecretProtector"/> registrations are resolvable and that domain
+	/// separation produces distinct instances, while the <see cref="SecretProtectorDomains.Default"/> key
+	/// forwards to the non-keyed singleton.
+	/// </summary>
+	[Fact]
+	public void AddLumaCoreData_WhenResolved_ProvidesKeyedSecretProtectors()
+	{
+		// Arrange
+		ServiceCollection services = CreateServiceCollection();
+
+		IConfiguration configuration = new ConfigurationBuilder()
+			.AddInMemoryCollection(
+				new Dictionary<string, string?>
+				{
+					["Database:Provider"] = "sqlite",
+					["Database:ConnectionString"] = "Data Source=:memory:",
+					["Database:EncryptionKey"] = TestEncryptionKey
+				})
+			.Build();
+
+		services.AddLumaCoreData(configuration);
+		using ServiceProvider sp = services.BuildServiceProvider();
+
+		// Act
+		var nonKeyed = sp.GetRequiredService<ISecretProtector>();
+		var defaultKeyed = sp.GetRequiredKeyedService<ISecretProtector>(SecretProtectorDomains.Default);
+		var endpointKeyed =
+			sp.GetRequiredKeyedService<ISecretProtector>(SecretProtectorDomains.ModelEndpointCredentials);
+		var apiTokenKeyed =
+			sp.GetRequiredKeyedService<ISecretProtector>(SecretProtectorDomains.UserApiTokens);
+
+		// Assert — Default keyed entry forwards to the non-keyed singleton
+		Assert.Same(nonKeyed, defaultKeyed);
+
+		// Assert — domain-specific protectors are distinct from the default and from each other
+		Assert.NotSame(nonKeyed, endpointKeyed);
+		Assert.NotSame(nonKeyed, apiTokenKeyed);
+		Assert.NotSame(endpointKeyed, apiTokenKeyed);
+	}
+
+	/// <summary>
+	/// Verifies that <see cref="ServiceRegistration.AddLumaCoreData"/> configures the EF Core provider
+	/// correctly even when no <see cref="ILoggerFactory"/> is registered — exercises the
+	/// <c>loggerFactory is null</c> branch inside <c>ConfigureProvider()</c>.
+	/// </summary>
+	/// <remarks>
+	/// <see cref="ILoggerFactory"/> is intentionally not registered, but <c>ILogger&lt;T&gt;</c> is
+	/// satisfied via <see cref="NullLogger{T}"/> so that other singletons (e.g.,
+	/// <see cref="DatabaseConnectionInterceptor"/>) can still be activated by the DI container.
+	/// </remarks>
+	[Fact]
+	public void AddLumaCoreData_WhenNoLoggerFactory_ConfiguresProviderWithoutLogging()
+	{
+		// Arrange — register ILogger<T> via NullLogger<T> but do NOT register ILoggerFactory,
+		// so GetService<ILoggerFactory>() inside ConfigureProvider() returns null.
+		var services = new ServiceCollection();
+		services.AddSingleton(TimeProvider.System);
+		services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
+
+		IConfiguration configuration = new ConfigurationBuilder()
+			.AddInMemoryCollection(
+				new Dictionary<string, string?>
+				{
+					["Database:Provider"] = "sqlite",
+					["Database:ConnectionString"] = "Data Source=:memory:",
+					["Database:EncryptionKey"] = TestEncryptionKey
+				})
+			.Build();
+
+		services.AddLumaCoreData(configuration);
+		using ServiceProvider sp = services.BuildServiceProvider();
+
+		// Act + Assert — resolving the DbContext must not throw when logging is absent
+		Assert.NotNull(sp.GetRequiredService<LumaCoreDbContext>());
+	}
+
 	// TODO: When Pomelo.EntityFrameworkCore.MySql ships an EF Core 10 compatible version:
 	//       1. Add MySQL row to ValidProvider_TestData
 	//       2. Delete this Fact entirely
@@ -175,6 +337,7 @@ public sealed class ServiceRegistrationTests
 		using ServiceProvider sp = services.BuildServiceProvider();
 
 		// Act + Assert
-		Assert.Throws<InvalidOperationException>(() => sp.GetRequiredService<LumaCoreDbContext>());
+		var ex = Assert.Throws<InvalidOperationException>(() => sp.GetRequiredService<LumaCoreDbContext>());
+		Assert.StartsWith($"Unsupported database provider: '{provider}'.", ex.Message);
 	}
 }
