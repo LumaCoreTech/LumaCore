@@ -24,13 +24,13 @@ public sealed partial class SqliteShuttleReaderTests
 	/// <c>PRAGMA integrity_check</c> to detect the page being referenced by two B-trees while leaving
 	/// <c>__Shuttle_BackupInfo</c> readable for <see cref="SqliteShuttleReader.InitializeAsync"/>.
 	/// </summary>
+	/// <param name="filePath">The file path for the shuttle file.</param>
 	/// <remarks>
 	/// The corruption is introduced at the schema level (via <c>PRAGMA writable_schema</c>) rather than
 	/// through binary file manipulation. This is more reliable because <c>PRAGMA integrity_check</c>
 	/// reports shared-page errors as text rows, whereas aggressive binary corruption can cause
 	/// <see cref="SqliteException"/> to be thrown before the error rows are returned.
 	/// </remarks>
-	/// <param name="filePath">The file path for the shuttle file.</param>
 	private static async Task CreateCorruptedShuttleFileAsync(string filePath)
 	{
 		await CreateValidShuttleFileAsync(filePath).ConfigureAwait(false);
@@ -104,9 +104,9 @@ public sealed partial class SqliteShuttleReaderTests
 
 	/// <summary>
 	/// Creates an initialized <see cref="SqliteShuttleReader"/> for a previously created shuttle file.
-	/// The caller must dispose the returned reader.
 	/// </summary>
 	/// <param name="filePath">The path to the shuttle file.</param>
+	/// <returns>An initialized reader ready for read operations. The caller must dispose the returned instance.</returns>
 	private static async Task<SqliteShuttleReader> CreateInitializedReaderAsync(string filePath)
 	{
 		var reader = new SqliteShuttleReader(filePath, NullLogger.Instance);
@@ -262,13 +262,13 @@ public sealed partial class SqliteShuttleReaderTests
 	/// Creates a shuttle file where the <see cref="SqliteShuttleSchema.ShuttleFormatVersionKey"/> marker
 	/// has an unsupported version number.
 	/// </summary>
+	/// <param name="filePath">The file path for the shuttle file.</param>
 	/// <remarks>
 	/// Raw SQL is required because <see cref="SqliteShuttleWriter.FinalizeAsync(CancellationToken)"/> always
 	/// writes <see cref="SqliteShuttleSchema.CurrentShuttleFormatVersion"/>. There is no writer API to
 	/// produce a file with an arbitrary version number. This also keeps the test decoupled from the
 	/// writer's internal execution order.
 	/// </remarks>
-	/// <param name="filePath">The file path for the shuttle file.</param>
 	private static async Task CreateShuttleFileWithWrongFormatVersionAsync(string filePath)
 	{
 		string connectionString = new SqliteConnectionStringBuilder
@@ -305,9 +305,11 @@ public sealed partial class SqliteShuttleReaderTests
 
 	/// <summary>
 	/// Creates a temporary directory and returns a shuttle file path inside it.
-	/// The caller owns the <see cref="TemporaryFolder"/> and must dispose it after the test.
 	/// </summary>
 	/// <param name="prefix">A human-readable prefix for the temporary directory name.</param>
+	/// <returns>
+	/// A tuple of the <see cref="TemporaryFolder"/> (caller must dispose after the test) and the shuttle file path within it.
+	/// </returns>
 	private static (TemporaryFolder Folder, string FilePath) CreateTempShuttleFilePath(string prefix = "reader-test")
 	{
 		var folder = new TemporaryFolder(prefix);
@@ -315,8 +317,8 @@ public sealed partial class SqliteShuttleReaderTests
 	}
 
 	/// <summary>
-	/// Creates a fully valid, finalized shuttle file using <see cref="SqliteShuttleWriter"/> and returns
-	/// the path. The file contains a <c>Users</c> table with two rows and migration history.
+	/// Creates a fully valid, finalized shuttle file at the specified path using <see cref="SqliteShuttleWriter"/>.
+	/// The file contains a <c>Users</c> table with two rows, migration history, and custom metadata.
 	/// </summary>
 	/// <param name="filePath">The file path for the shuttle file.</param>
 	private static async Task CreateValidShuttleFileAsync(string filePath)
@@ -412,9 +414,10 @@ public sealed partial class SqliteShuttleReaderTests
 	/// <summary>
 	/// Generates two test rows for the <c>Users</c> table: Alice (with email) and Bob (without email).
 	/// </summary>
+	/// <returns>An async sequence of two rows: Alice (with email) and Bob (without email).</returns>
 	private static async IAsyncEnumerable<object?[]> GenerateUserRows()
 	{
-		await Task.CompletedTask;
+		await Task.CompletedTask.ConfigureAwait(false);
 		yield return [1L, "Alice", "alice@test.com"];
 		yield return [2L, "Bob", null];
 	}
