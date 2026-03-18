@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Core;
 using LumaCore.Data.DataPort.Models;
 
 using Microsoft.Data.Sqlite;
@@ -60,26 +61,30 @@ public sealed class SqliteShuttleWriter : IShuttleWriter
 	/// <see langword="null"/>.
 	/// </exception>
 	/// <exception cref="ArgumentException">
-	/// <paramref name="filePath"/> is empty or consists only of white-space characters.
+	/// <paramref name="filePath"/> is empty, consists only of white-space characters, contains characters that are
+	/// invalid on the current operating system, or contains a path segment that exceeds 255 characters.
 	/// </exception>
 	public SqliteShuttleWriter(string filePath, ILogger logger, TimeProvider timeProvider)
 	{
-		// Validate parameters.
-		ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+		// Validate parameters and build connection string.
+		mConnectionString = BuildConnectionString(filePath);
 		ArgumentNullException.ThrowIfNull(logger);
 		ArgumentNullException.ThrowIfNull(timeProvider);
-
-		// Build connection string.
-		mConnectionString = new SqliteConnectionStringBuilder
-		{
-			DataSource = filePath,
-			Pooling = false // Ensure file handle is released immediately on dispose
-		}.ConnectionString;
 
 		// Store dependencies.
 		mLogger = logger;
 		mTimeProvider = timeProvider;
 	}
+
+	/// <summary>
+	/// Gets a value indicating whether <see cref="InitializeAsync"/> has been called successfully and the
+	/// writer has not yet been disposed.
+	/// </summary>
+	/// <remarks>
+	/// This property returns <see langword="false"/> both before initialization and after disposal. It reflects
+	/// the writer's current operational readiness, not whether initialization was ever attempted.
+	/// </remarks>
+	public bool IsInitialized => mConnection is not null;
 
 	/// <inheritdoc/>
 	/// <remarks>
@@ -647,6 +652,29 @@ public sealed class SqliteShuttleWriter : IShuttleWriter
 
 		// Mark as finalized to prevent re-entry.
 		mIsFinalized = true;
+	}
+
+	/// <summary>
+	/// Validates the file path and builds a SQLite connection string for write access without pooling.
+	/// </summary>
+	/// <param name="filePath">The file path where the shuttle file will be created.</param>
+	/// <returns>A SQLite connection string targeting <paramref name="filePath"/>.</returns>
+	/// <exception cref="ArgumentNullException">
+	/// <paramref name="filePath"/> is <see langword="null"/>.
+	/// </exception>
+	/// <exception cref="ArgumentException">
+	/// <paramref name="filePath"/> is empty, consists only of white-space characters, contains characters that are
+	/// invalid on the current operating system, or contains a path segment that exceeds 255 characters.
+	/// </exception>
+	private static string BuildConnectionString(string filePath)
+	{
+		FilePathValidator.Validate(filePath);
+
+		return new SqliteConnectionStringBuilder
+		{
+			DataSource = filePath,
+			Pooling = false // Ensure file handle is released immediately on dispose
+		}.ConnectionString;
 	}
 
 	/// <summary>
