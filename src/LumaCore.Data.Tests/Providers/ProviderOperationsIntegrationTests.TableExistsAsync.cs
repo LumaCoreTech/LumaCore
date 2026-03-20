@@ -5,6 +5,7 @@
 using System.Data.Common;
 
 using LumaCore.Data.Providers;
+using LumaCore.Data.Tests.Infrastructure;
 
 using Xunit;
 
@@ -20,13 +21,13 @@ public sealed partial class ProviderOperationsIntegrationTests
 	public async Task TableExistsAsync_WhenTableDoesNotExist_ReturnsFalse()
 	{
 		// Arrange
-		TestHarness harness = await CreateHarnessAsync();
+		IntegrationTestHarness harness = await CreateHarnessAsync();
 		try
 		{
 			DbConnection connection = await harness.GetOpenConnectionAsync();
 
 			// Act
-			bool result = await harness.Sut.TableExistsAsync(
+			bool result = await harness.ProviderOperations.TableExistsAsync(
 				              connection,
 				              "NonExistentTable_12345",
 				              CancellationToken.None);
@@ -48,13 +49,16 @@ public sealed partial class ProviderOperationsIntegrationTests
 	public async Task TableExistsAsync_WhenTableExists_ReturnsTrue()
 	{
 		// Arrange
-		TestHarness harness = await CreateHarnessAsync();
+		IntegrationTestHarness harness = await CreateHarnessAsync();
 		try
 		{
 			DbConnection connection = await harness.GetOpenConnectionAsync();
 
 			// Act — "Users" is an entity table created by EnsureCreatedAsync().
-			bool result = await harness.Sut.TableExistsAsync(connection, "Users", CancellationToken.None);
+			bool result = await harness.ProviderOperations.TableExistsAsync(
+				              connection,
+				              "Users",
+				              CancellationToken.None);
 
 			// Assert
 			Assert.True(result);

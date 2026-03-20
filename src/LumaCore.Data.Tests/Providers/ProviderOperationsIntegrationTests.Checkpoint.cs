@@ -6,6 +6,7 @@ using System.Data.Common;
 
 using LumaCore.Data.Initialization;
 using LumaCore.Data.Providers;
+using LumaCore.Data.Tests.Infrastructure;
 
 using Xunit;
 
@@ -38,13 +39,13 @@ public sealed partial class ProviderOperationsIntegrationTests
 	public async Task ReadCheckpointAsync_WhenTableDoesNotExist_ReturnsNull()
 	{
 		// Arrange
-		TestHarness harness = await CreateHarnessAsync();
+		IntegrationTestHarness harness = await CreateHarnessAsync();
 		try
 		{
 			DbConnection connection = await harness.GetOpenConnectionAsync();
 
 			// Act
-			RestoreCheckpointData? result = await harness.Sut.ReadCheckpointAsync(
+			RestoreCheckpointData? result = await harness.ProviderOperations.ReadCheckpointAsync(
 				                                connection,
 				                                "__TestCheckpoint",
 				                                CancellationToken.None);
@@ -73,11 +74,11 @@ public sealed partial class ProviderOperationsIntegrationTests
 	public async Task WriteCheckpointAsync_WhenCalled_CreatesTableAndWritesCheckpoint()
 	{
 		// Arrange
-		TestHarness harness = await CreateHarnessAsync();
+		IntegrationTestHarness harness = await CreateHarnessAsync();
 		try
 		{
 			// Act
-			await harness.Sut.WriteCheckpointAsync(
+			await harness.ProviderOperations.WriteCheckpointAsync(
 				harness.DbContext,
 				"__TestCheckpoint",
 				shuttleId: "shuttle-001",
@@ -87,7 +88,7 @@ public sealed partial class ProviderOperationsIntegrationTests
 
 			// Assert — table was created and data can be read back
 			DbConnection connection = await harness.GetOpenConnectionAsync();
-			RestoreCheckpointData? result = await harness.Sut.ReadCheckpointAsync(
+			RestoreCheckpointData? result = await harness.ProviderOperations.ReadCheckpointAsync(
 				                                connection,
 				                                "__TestCheckpoint",
 				                                CancellationToken.None);
@@ -114,10 +115,10 @@ public sealed partial class ProviderOperationsIntegrationTests
 	public async Task WriteCheckpointAsync_WhenCalledTwice_OverwritesPreviousCheckpoint()
 	{
 		// Arrange
-		TestHarness harness = await CreateHarnessAsync();
+		IntegrationTestHarness harness = await CreateHarnessAsync();
 		try
 		{
-			await harness.Sut.WriteCheckpointAsync(
+			await harness.ProviderOperations.WriteCheckpointAsync(
 				harness.DbContext,
 				"__TestCheckpoint",
 				shuttleId: "shuttle-001",
@@ -126,7 +127,7 @@ public sealed partial class ProviderOperationsIntegrationTests
 				CancellationToken.None);
 
 			// Act — write again with different data
-			await harness.Sut.WriteCheckpointAsync(
+			await harness.ProviderOperations.WriteCheckpointAsync(
 				harness.DbContext,
 				"__TestCheckpoint",
 				shuttleId: "shuttle-002",
@@ -136,7 +137,7 @@ public sealed partial class ProviderOperationsIntegrationTests
 
 			// Assert — only the second checkpoint data is present
 			DbConnection connection = await harness.GetOpenConnectionAsync();
-			RestoreCheckpointData? result = await harness.Sut.ReadCheckpointAsync(
+			RestoreCheckpointData? result = await harness.ProviderOperations.ReadCheckpointAsync(
 				                                connection,
 				                                "__TestCheckpoint",
 				                                CancellationToken.None);
@@ -170,10 +171,10 @@ public sealed partial class ProviderOperationsIntegrationTests
 	public async Task UpdateCheckpointPhaseAsync_WhenCalled_UpdatesPhaseAndTimestamp()
 	{
 		// Arrange — same setup as the roundtrip test, but this time we update the phase.
-		TestHarness harness = await CreateHarnessAsync();
+		IntegrationTestHarness harness = await CreateHarnessAsync();
 		try
 		{
-			await harness.Sut.WriteCheckpointAsync(
+			await harness.ProviderOperations.WriteCheckpointAsync(
 				harness.DbContext,
 				"__TestCheckpoint",
 				shuttleId: "shuttle-001",
@@ -182,7 +183,7 @@ public sealed partial class ProviderOperationsIntegrationTests
 				CancellationToken.None);
 
 			// Act — update phase from schema_cleanup to import
-			await harness.Sut.UpdateCheckpointPhaseAsync(
+			await harness.ProviderOperations.UpdateCheckpointPhaseAsync(
 				harness.DbContext,
 				"__TestCheckpoint",
 				phase: RestoreCheckpointData.PhaseImport,
@@ -191,7 +192,7 @@ public sealed partial class ProviderOperationsIntegrationTests
 
 			// Assert — phase is updated, other fields unchanged
 			DbConnection connection = await harness.GetOpenConnectionAsync();
-			RestoreCheckpointData? result = await harness.Sut.ReadCheckpointAsync(
+			RestoreCheckpointData? result = await harness.ProviderOperations.ReadCheckpointAsync(
 				                                connection,
 				                                "__TestCheckpoint",
 				                                CancellationToken.None);
@@ -222,10 +223,10 @@ public sealed partial class ProviderOperationsIntegrationTests
 	public async Task DropCheckpointTableAsync_WhenTableExists_DropsTable()
 	{
 		// Arrange
-		TestHarness harness = await CreateHarnessAsync();
+		IntegrationTestHarness harness = await CreateHarnessAsync();
 		try
 		{
-			await harness.Sut.WriteCheckpointAsync(
+			await harness.ProviderOperations.WriteCheckpointAsync(
 				harness.DbContext,
 				"__TestCheckpoint",
 				shuttleId: "shuttle-001",
@@ -234,13 +235,24 @@ public sealed partial class ProviderOperationsIntegrationTests
 				CancellationToken.None);
 
 			DbConnection connection = await harness.GetOpenConnectionAsync();
-			Assert.True(await harness.Sut.TableExistsAsync(connection, "__TestCheckpoint", CancellationToken.None));
+			Assert.True(
+				await harness.ProviderOperations.TableExistsAsync(
+					connection,
+					"__TestCheckpoint",
+					CancellationToken.None));
 
 			// Act
-			await harness.Sut.DropCheckpointTableAsync(harness.DbContext, "__TestCheckpoint", CancellationToken.None);
+			await harness.ProviderOperations.DropCheckpointTableAsync(
+				harness.DbContext,
+				"__TestCheckpoint",
+				CancellationToken.None);
 
 			// Assert — table no longer exists
-			Assert.False(await harness.Sut.TableExistsAsync(connection, "__TestCheckpoint", CancellationToken.None));
+			Assert.False(
+				await harness.ProviderOperations.TableExistsAsync(
+					connection,
+					"__TestCheckpoint",
+					CancellationToken.None));
 		}
 		finally
 		{
@@ -256,16 +268,23 @@ public sealed partial class ProviderOperationsIntegrationTests
 	public async Task DropCheckpointTableAsync_WhenTableDoesNotExist_DoesNotThrow()
 	{
 		// Arrange
-		TestHarness harness = await CreateHarnessAsync();
+		IntegrationTestHarness harness = await CreateHarnessAsync();
 		try
 		{
 			DbConnection connection = await harness.GetOpenConnectionAsync();
 
 			// Act — should not throw even though the table doesn't exist
-			await harness.Sut.DropCheckpointTableAsync(harness.DbContext, "__TestCheckpoint", CancellationToken.None);
+			await harness.ProviderOperations.DropCheckpointTableAsync(
+				harness.DbContext,
+				"__TestCheckpoint",
+				CancellationToken.None);
 
 			// Assert — table still doesn't exist (no side effects)
-			Assert.False(await harness.Sut.TableExistsAsync(connection, "__TestCheckpoint", CancellationToken.None));
+			Assert.False(
+				await harness.ProviderOperations.TableExistsAsync(
+					connection,
+					"__TestCheckpoint",
+					CancellationToken.None));
 		}
 		finally
 		{

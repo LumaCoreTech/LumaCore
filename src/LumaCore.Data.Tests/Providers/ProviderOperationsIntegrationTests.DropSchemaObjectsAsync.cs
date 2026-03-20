@@ -6,6 +6,7 @@ using System.Data.Common;
 
 using LumaCore.Data.Initialization;
 using LumaCore.Data.Providers;
+using LumaCore.Data.Tests.Infrastructure;
 
 using Xunit;
 
@@ -21,24 +22,27 @@ public sealed partial class ProviderOperationsIntegrationTests
 	public async Task DropSchemaObjectsAsync_WhenCalled_DropsAllUserTables()
 	{
 		// Arrange
-		TestHarness harness = await CreateHarnessAsync();
+		IntegrationTestHarness harness = await CreateHarnessAsync();
 		try
 		{
 			DbConnection connection = await harness.GetOpenConnectionAsync();
 
 			// Verify entity tables exist before the drop (created by EnsureCreatedAsync).
-			Assert.True(await harness.Sut.TableExistsAsync(connection, "Users", CancellationToken.None));
-			Assert.True(await harness.Sut.TableExistsAsync(connection, "Conversations", CancellationToken.None));
+			Assert.True(await harness.ProviderOperations.TableExistsAsync(connection, "Users", CancellationToken.None));
+			Assert.True(
+				await harness.ProviderOperations.TableExistsAsync(connection, "Conversations", CancellationToken.None));
 
 			// Act
-			await harness.Sut.DropSchemaObjectsAsync(
+			await harness.ProviderOperations.DropSchemaObjectsAsync(
 				harness.DbContext,
 				new HashSet<string>(),
 				CancellationToken.None);
 
 			// Assert — all user tables should be gone
-			Assert.False(await harness.Sut.TableExistsAsync(connection, "Users", CancellationToken.None));
-			Assert.False(await harness.Sut.TableExistsAsync(connection, "Conversations", CancellationToken.None));
+			Assert.False(
+				await harness.ProviderOperations.TableExistsAsync(connection, "Users", CancellationToken.None));
+			Assert.False(
+				await harness.ProviderOperations.TableExistsAsync(connection, "Conversations", CancellationToken.None));
 		}
 		finally
 		{
@@ -56,13 +60,13 @@ public sealed partial class ProviderOperationsIntegrationTests
 	public async Task DropSchemaObjectsAsync_WhenPreserveSpecified_PreservesListedTables()
 	{
 		// Arrange
-		TestHarness harness = await CreateHarnessAsync();
+		IntegrationTestHarness harness = await CreateHarnessAsync();
 		try
 		{
 			DbConnection connection = await harness.GetOpenConnectionAsync();
 
 			// Create a checkpoint table — the production use case for tablesToPreserve.
-			await harness.Sut.WriteCheckpointAsync(
+			await harness.ProviderOperations.WriteCheckpointAsync(
 				harness.DbContext,
 				"__TestCheckpoint",
 				shuttleId: "shuttle-001",
@@ -70,19 +74,27 @@ public sealed partial class ProviderOperationsIntegrationTests
 				startedUtc: "2026-01-15T10:00:00Z",
 				CancellationToken.None);
 
-			Assert.True(await harness.Sut.TableExistsAsync(connection, "__TestCheckpoint", CancellationToken.None));
-			Assert.True(await harness.Sut.TableExistsAsync(connection, "Users", CancellationToken.None));
+			Assert.True(
+				await harness.ProviderOperations.TableExistsAsync(
+					connection,
+					"__TestCheckpoint",
+					CancellationToken.None));
+			Assert.True(await harness.ProviderOperations.TableExistsAsync(connection, "Users", CancellationToken.None));
 
 			// Act — preserve only the checkpoint table
-			await harness.Sut.DropSchemaObjectsAsync(
+			await harness.ProviderOperations.DropSchemaObjectsAsync(
 				harness.DbContext,
 				new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "__TestCheckpoint" },
 				CancellationToken.None);
 
 			// Assert — preserved table still exists with data intact
-			Assert.True(await harness.Sut.TableExistsAsync(connection, "__TestCheckpoint", CancellationToken.None));
+			Assert.True(
+				await harness.ProviderOperations.TableExistsAsync(
+					connection,
+					"__TestCheckpoint",
+					CancellationToken.None));
 
-			RestoreCheckpointData? checkpoint = await harness.Sut.ReadCheckpointAsync(
+			RestoreCheckpointData? checkpoint = await harness.ProviderOperations.ReadCheckpointAsync(
 				                                    connection,
 				                                    "__TestCheckpoint",
 				                                    CancellationToken.None);
@@ -90,8 +102,10 @@ public sealed partial class ProviderOperationsIntegrationTests
 			Assert.Equal("shuttle-001", checkpoint.ShuttleId);
 
 			// Assert — other tables are gone
-			Assert.False(await harness.Sut.TableExistsAsync(connection, "Users", CancellationToken.None));
-			Assert.False(await harness.Sut.TableExistsAsync(connection, "Conversations", CancellationToken.None));
+			Assert.False(
+				await harness.ProviderOperations.TableExistsAsync(connection, "Users", CancellationToken.None));
+			Assert.False(
+				await harness.ProviderOperations.TableExistsAsync(connection, "Conversations", CancellationToken.None));
 		}
 		finally
 		{

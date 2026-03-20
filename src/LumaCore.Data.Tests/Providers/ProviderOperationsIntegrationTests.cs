@@ -3,6 +3,7 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using LumaCore.Data.Providers;
+using LumaCore.Data.Tests.Infrastructure;
 
 using Xunit;
 
@@ -13,11 +14,10 @@ namespace LumaCore.Data.Tests.Providers;
 /// </summary>
 /// <remarks>
 ///     <para>
-///     Tests run against the database configured via <c>DbTestSettingsLoader</c>: SQLite in-memory (default)
-///     or file-based locally, PostgreSQL or SQL Server in CI (via <c>LUMACORE_TESTS__Db__Provider</c> and
-///     <c>LUMACORE_TESTS__Db__ConnectionString</c>). This validates that provider-specific SQL dialects
-///     (identifier quoting, schema qualification, <c>information_schema</c> queries) work correctly against
-///     real database engines.
+///     Tests run against the database configured via <c>DbTestSettingsLoader</c> (<c>appsettings.json</c>,
+///     environment variable overrides): SQLite in-memory by default, switchable to file-based SQLite,
+///     PostgreSQL, or SQL Server. This validates that provider-specific SQL dialects (identifier quoting,
+///     schema qualification, <c>information_schema</c> queries) work correctly against real database engines.
 ///     </para>
 ///     <para>
 ///     The test class is split across multiple files:
@@ -33,7 +33,7 @@ namespace LumaCore.Data.Tests.Providers;
 ///         <b>DropSchemaObjectsAsync</b> — Schema cleanup with and without preserved tables.
 ///         </item>
 ///         <item>
-///         <b>Helpers</b> — Shared <c>TestHarness</c> and factory method.
+///         <b>Helpers</b> — Shared <see cref="IntegrationTestHarness"/> factory method.
 ///         </item>
 ///     </list>
 /// </remarks>
