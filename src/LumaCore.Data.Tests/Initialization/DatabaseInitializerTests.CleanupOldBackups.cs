@@ -3,9 +3,9 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using LumaCore.Core.Diagnostics;
+using LumaCore.Core.IO;
 using LumaCore.Data.DataPort.Shuttle;
 using LumaCore.Data.Initialization;
-using LumaCore.Core.IO;
 
 using Microsoft.Data.Sqlite;
 
@@ -278,9 +278,9 @@ public sealed partial class DatabaseInitializerTests
 		{
 			DateTime now = harness.TimeProvider.GetUtcNow().UtcDateTime;
 
-						// Create a corrupt shuttle file (not valid SQLite) with a filesystem timestamp
-						// that is beyond the retention period.
-						string corruptFile = Path.Combine(tempDir.Path, "corrupt.shuttle.sqlite");
+			// Create a corrupt shuttle file (not valid SQLite) with a filesystem timestamp
+			// that is beyond the retention period.
+			string corruptFile = Path.Combine(tempDir.Path, "corrupt.shuttle.sqlite");
 			await File.WriteAllTextAsync(corruptFile, "not-a-sqlite-database");
 			File.SetLastWriteTimeUtc(corruptFile, now.AddDays(-8));
 
@@ -382,7 +382,7 @@ public sealed partial class DatabaseInitializerTests
 		{
 			DateTime now = harness.TimeProvider.GetUtcNow().UtcDateTime;
 
-						string corruptFile = Path.Combine(tempDir.Path, "corrupt-recent.shuttle.sqlite");
+			string corruptFile = Path.Combine(tempDir.Path, "corrupt-recent.shuttle.sqlite");
 			await File.WriteAllTextAsync(corruptFile, "not-a-sqlite-database");
 			File.SetLastWriteTimeUtc(corruptFile, now.AddDays(-3));
 

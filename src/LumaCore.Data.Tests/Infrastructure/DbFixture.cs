@@ -64,7 +64,7 @@ public sealed class DbFixture : IAsyncLifetime
 	/// suffix. <c>EnsureDeletedAsync</c> drops that database so test runs don't leave orphaned databases behind.
 	/// The deletion is best-effort — on CI the container is destroyed anyway.
 	/// </remarks>
-	public async Task DisposeAsync()
+	public async ValueTask DisposeAsync()
 	{
 		// External providers: drop the unique per-fixture database before disposing the context.
 		if (mSettings?.Provider is DbProvider.PostgreSql or DbProvider.SqlServer or DbProvider.MySql)
@@ -211,7 +211,7 @@ public sealed class DbFixture : IAsyncLifetime
 	///     Cleanup happens in <see cref="DisposeAsync"/> via <c>EnsureDeletedAsync</c>.
 	///     </para>
 	/// </remarks>
-	public async Task InitializeAsync()
+	public async ValueTask InitializeAsync()
 	{
 		await DbContext.Database.EnsureCreatedAsync();
 	}

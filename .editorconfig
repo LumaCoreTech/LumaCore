@@ -51,3 +51,19 @@ indent_style = space
 indent_size = 4
 tab_width = 4
 insert_final_newline = true
+
+# ===================================================
+# Test projects: xUnit v3 analyzer adjustments
+# ===================================================
+[{src/*.Tests/*.cs,src/*.Tests/**/*.cs}]
+# xUnit1051: "Use TestContext.Current.CancellationToken for responsive test cancellation."
+# Downgraded to suggestion because many tests intentionally control their CancellationToken
+# (e.g., cancellation-behavior tests, timeout tests). The global safety net in
+# xunit.runner.json (longRunningTestSeconds: 10) already catches runaway tests.
+dotnet_diagnostic.xUnit1051.severity = suggestion
+
+# xUnit2013: "Do not use equality check to check for collection size."
+# Downgraded to suggestion because Assert.Equal(expectedCount, collection.Count) is
+# preferred when tests verify a specific count alongside full element assertions —
+# Assert.Single() only covers count == 1 and loses the explicit count context.
+dotnet_diagnostic.xUnit2013.severity = suggestion

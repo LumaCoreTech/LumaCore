@@ -37,13 +37,13 @@ public sealed partial class LumaCoreDataServiceTests
 		/// Disposes the underlying database resources for the test instance.
 		/// </summary>
 		/// <returns>A task that represents the asynchronous dispose operation.</returns>
-		public Task DisposeAsync() => Fixture.DisposeAsync();
+		public ValueTask DisposeAsync() => Fixture.DisposeAsync();
 
 		/// <summary>
 		/// Initializes the database schema for the test instance.
 		/// </summary>
 		/// <returns>A task that represents the asynchronous initialization operation.</returns>
-		public Task InitializeAsync() => Fixture.InitializeAsync();
+		public ValueTask InitializeAsync() => Fixture.InitializeAsync();
 
 		/// <summary>
 		/// Helper: Creates a user participant (Participant + User row) for tests that require a valid user creator.

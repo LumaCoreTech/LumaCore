@@ -74,6 +74,12 @@ public partial class WorkQueueProcessorTests
 			              "Work item execution timed out",
 			              TimeSpan.FromSeconds(5));
 		Assert.True(result);
+
+		// The tracked task must be awaited separately before checking IsCompletedSuccessfully.
+		// SetResult() fires inside the callback *before* Task.CompletedTask is returned to the
+		// processor wrapper, so executed.Task resolves while the tracked task still has wrapper
+		// bookkeeping in flight. Without this await, IsCompletedSuccessfully can be false.
+		await AwaitWithTimeoutAsync(task, "Tracked task did not complete", TimeSpan.FromSeconds(5));
 		Assert.True(task.IsCompletedSuccessfully);
 	}
 

@@ -67,12 +67,12 @@ public sealed partial class CompiledQueryRegressionTests : IAsyncLifetime
 	/// <summary>
 	/// Disposes the database fixture.
 	/// </summary>
-	public Task DisposeAsync() => mFixture.DisposeAsync();
+	public ValueTask DisposeAsync() => mFixture.DisposeAsync();
 
 	/// <summary>
 	/// Creates the database schema and seeds a minimal but complete dataset that satisfies all compiled queries.
 	/// </summary>
-	public async Task InitializeAsync()
+	public async ValueTask InitializeAsync()
 	{
 		await mFixture.InitializeAsync();
 
