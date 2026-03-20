@@ -54,4 +54,30 @@ interface IDatabaseTestOperations
 	/// failure and recovery scenarios.
 	/// </remarks>
 	Task CreateMinimalTableAsync(DbConnection connection, string tableName, CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Returns the names of all user-defined tables, excluding EF Core infrastructure tables
+	/// (<c>__EFMigrationsHistory</c>, <c>__EFMigrationsLock</c>) and provider-internal tables.
+	/// </summary>
+	/// <param name="connection">An open database connection.</param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns>An alphabetically sorted array of user table names.</returns>
+	/// <remarks>
+	/// This is a discovery-based operation — it returns whatever tables exist, making it suitable for
+	/// asserting exact schema state after migrations.
+	/// </remarks>
+	Task<string[]> GetUserTableNamesAsync(DbConnection connection, CancellationToken cancellationToken);
+
+	/// <summary>
+	/// Returns the names of all explicitly-created indexes, excluding auto-generated indexes for
+	/// PRIMARY KEY and UNIQUE constraints as well as indexes on EF Core infrastructure tables.
+	/// </summary>
+	/// <param name="connection">An open database connection.</param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns>An alphabetically sorted array of explicit index names.</returns>
+	/// <remarks>
+	/// This is a discovery-based operation — it returns whatever explicit indexes exist. Each provider
+	/// determines "auto-generated" differently; see the implementation for provider-specific filtering.
+	/// </remarks>
+	Task<string[]> GetExplicitIndexNamesAsync(DbConnection connection, CancellationToken cancellationToken);
 }

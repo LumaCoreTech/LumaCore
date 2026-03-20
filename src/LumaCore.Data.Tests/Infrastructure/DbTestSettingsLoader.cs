@@ -15,23 +15,31 @@ namespace LumaCore.Data.Tests.Infrastructure;
 ///     Configuration is resolved in the following priority order (last wins):
 ///     </para>
 ///     <list type="number">
-///         <item><c>appsettings.json</c> (optional, in test output directory)</item>
+///         <item>
+///         <c>appsettings.json</c> — Committed to the repository with <c>sqlitememory</c> as default and all
+///         other providers as commented-out templates. Developers switch providers by uncommenting.
+///         </item>
 ///         <item><c>appsettings.Development.json</c> (optional, in test output directory)</item>
-///         <item>Environment variables with prefix <c>LUMACORE_TESTS__</c> (e.g., <c>LUMACORE_TESTS__Db__Provider</c>)</item>
+///         <item>
+///         Environment variables with prefix <c>LUMACORE_TESTS__</c>
+///         (e.g., <c>LUMACORE_TESTS__Db__Provider</c>) — used in CI to select the target provider.
+///         </item>
 ///     </list>
 ///     <para>
 ///     Supported keys under <c>Db:</c>:
 ///     </para>
 ///     <list type="bullet">
 ///         <item>
-///         <c>Provider</c> — provider name (<c>sqlite</c>, <c>sqlitememory</c>, <c>postgresql</c>, <c>sqlserver</c>,
-///         <c>mysql</c>)
+///         <c>Provider</c> — provider name (<c>sqlite</c>, <c>sqlitememory</c>, <c>postgresql</c>,
+///         <c>sqlserver</c>, <c>mysql</c>)
 ///         </item>
 ///         <item>
 ///         <c>ConnectionString</c> — transport/auth only (host, port, credentials); must <b>not</b> include a
 ///         database name
 ///         </item>
-///         <item><c>DatabasePrefix</c> — prefix for the per-fixture database name (default: <c>lumacore_test</c>)</item>
+///         <item>
+///         <c>DatabasePrefix</c> — prefix for the per-fixture database name (default: <c>lumacore_test</c>)
+///         </item>
 ///     </list>
 ///     <para>
 ///     When no configuration is provided (no <c>Db:Provider</c> key), defaults to

@@ -13,8 +13,8 @@ namespace LumaCore.Data.Tests.Providers;
 /// </summary>
 /// <remarks>
 ///     <para>
-///     Tests run against the database configured via <c>DbTestSettingsLoader</c>: SQLite file-based locally,
-///     PostgreSQL or SQL Server in CI (via <c>LUMACORE_TESTS__Db__Provider</c> and
+///     Tests run against the database configured via <c>DbTestSettingsLoader</c>: SQLite in-memory (default)
+///     or file-based locally, PostgreSQL or SQL Server in CI (via <c>LUMACORE_TESTS__Db__Provider</c> and
 ///     <c>LUMACORE_TESTS__Db__ConnectionString</c>). This validates that provider-specific SQL dialects
 ///     (identifier quoting, schema qualification, <c>information_schema</c> queries) work correctly against
 ///     real database engines.

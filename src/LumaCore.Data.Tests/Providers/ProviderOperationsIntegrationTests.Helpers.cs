@@ -32,9 +32,11 @@ public sealed partial class ProviderOperationsIntegrationTests
 	///     is sufficient for testing provider-specific SQL operations.
 	///     </para>
 	///     <para>
-	///     SQLite uses a temporary file (not in-memory) to exercise real file I/O, locking, and journaling
-	///     behavior. Disposing the harness deletes the file. For external providers (PostgreSQL, SQL Server),
-	///     the test database is dropped via <see cref="DatabaseFacade.EnsureDeletedAsync"/>.
+	///     For <see cref="DbProvider.SqliteInMemory"/>, a dedicated <see cref="SqliteConnection"/> with
+	///     <c>Data Source=:memory:</c> is kept open for the lifetime of the harness — the in-memory database
+	///     is destroyed when the connection is disposed. For <see cref="DbProvider.Sqlite"/>, a temporary file
+	///     is used to exercise real file I/O. For external providers (PostgreSQL, SQL Server), the test
+	///     database is dropped via <see cref="DatabaseFacade.EnsureDeletedAsync"/>.
 	///     </para>
 	/// </remarks>
 	private sealed class TestHarness : IAsyncDisposable
@@ -51,8 +53,8 @@ public sealed partial class ProviderOperationsIntegrationTests
 
 		/// <summary>
 		/// Absolute path to the temporary SQLite database file.
-		/// <see langword="null"/> for external providers (PostgreSQL, SQL Server) where cleanup is handled
-		/// via <see cref="DatabaseFacade.EnsureDeletedAsync"/>.
+		/// <see langword="null"/> for in-memory SQLite and external providers (PostgreSQL, SQL Server)
+		/// where cleanup is handled via <see cref="DatabaseFacade.EnsureDeletedAsync"/>.
 		/// </summary>
 		private readonly string? mDatabasePath;
 
@@ -68,27 +70,40 @@ public sealed partial class ProviderOperationsIntegrationTests
 		private readonly IDatabaseTestOperations mTestOperations;
 
 		/// <summary>
+		/// The owned SQLite in-memory connection. Kept open for the harness lifetime so the in-memory
+		/// database persists. <see langword="null"/> for file-based SQLite and external providers.
+		/// </summary>
+		private readonly SqliteConnection? mConnection;
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="TestHarness"/> class.
 		/// </summary>
 		/// <param name="sut">The provider operations under test.</param>
 		/// <param name="dbContext">The database context connected to the test database.</param>
 		/// <param name="databasePath">
-		/// The path to the temporary SQLite database file, or <see langword="null"/> for external providers.
+		/// The path to the temporary SQLite database file, or <see langword="null"/> for in-memory SQLite
+		/// and external providers.
 		/// </param>
 		/// <param name="providerName">
 		/// The provider name (e.g., <see cref="DatabaseProviders.Sqlite"/>), used for cleanup decisions.
+		/// </param>
+		/// <param name="connection">
+		/// The owned SQLite in-memory connection, or <see langword="null"/> for file-based SQLite and
+		/// external providers.
 		/// </param>
 		public TestHarness(
 			IDatabaseProviderOperations sut,
 			LumaCoreDbContext           dbContext,
 			string?                     databasePath,
-			string                      providerName)
+			string                      providerName,
+			SqliteConnection?           connection)
 		{
 			Sut = sut;
 			DbContext = dbContext;
 			mDatabasePath = databasePath;
 			mProviderName = providerName;
-			mTestOperations = new RelationalDatabaseTestOperations(sut);
+			mConnection = connection;
+			mTestOperations = RelationalDatabaseTestOperations.Create(sut);
 		}
 
 		/// <summary>
@@ -117,8 +132,9 @@ public sealed partial class ProviderOperationsIntegrationTests
 		}
 
 		/// <summary>
-		/// Disposes the harness: drops the test database for external providers, then disposes the
-		/// <see cref="DbContext"/>. For SQLite, the temporary database file is deleted.
+		/// Disposes the harness: drops the test database for external providers, disposes the
+		/// <see cref="DbContext"/>, and cleans up SQLite resources (closes the in-memory connection or
+		/// deletes the temporary file).
 		/// </summary>
 		public async ValueTask DisposeAsync()
 		{
@@ -137,6 +153,12 @@ public sealed partial class ProviderOperationsIntegrationTests
 
 			await DbContext.DisposeAsync().ConfigureAwait(false);
 
+			// For SQLite in-memory, dispose the owned connection (destroys the database).
+			if (mConnection is not null)
+			{
+				await mConnection.DisposeAsync().ConfigureAwait(false);
+			}
+
 			// For SQLite file-based, clear the connection pool to release file locks held by
 			// pooled connections, then delete the temporary database file.
 			if (mDatabasePath is not null)
@@ -153,7 +175,7 @@ public sealed partial class ProviderOperationsIntegrationTests
 
 	/// <summary>
 	/// Builds a <see cref="TestHarness"/> with a fresh database determined by the test configuration
-	/// (defaults to SQLite file-based; CI may use PostgreSQL or SQL Server).
+	/// (defaults to SQLite in-memory; CI may use PostgreSQL or SQL Server).
 	/// </summary>
 	/// <returns>A disposable harness containing the provider operations under test and all infrastructure.</returns>
 	/// <exception cref="InvalidOperationException">
@@ -163,13 +185,9 @@ public sealed partial class ProviderOperationsIntegrationTests
 	/// <remarks>
 	///     <para>
 	///     The database provider is determined by <see cref="DbTestSettingsLoader"/>. Locally, this defaults to
-	///     SQLite file-based (temporary file in the system temp directory). In CI, PostgreSQL or SQL Server can
-	///     be selected via environment variables.
-	///     </para>
-	///     <para>
-	///     SQLite always uses a temporary file (not in-memory), even when the settings resolve to
-	///     <see cref="DbProvider.SqliteInMemory"/>. Integration tests should exercise real file I/O, locking,
-	///     and journaling behavior to stay close to production.
+	///     SQLite in-memory. In CI, PostgreSQL or SQL Server can be selected via environment variables.
+	///     When <see cref="DbProvider.Sqlite"/> is selected, a temporary file in the system temp directory
+	///     is used instead.
 	///     </para>
 	/// </remarks>
 	private static async Task<TestHarness> CreateHarnessAsync()
@@ -177,15 +195,30 @@ public sealed partial class ProviderOperationsIntegrationTests
 		DbTestSettings settings = DbTestSettingsLoader.Load();
 
 		string? databasePath = null;
+		SqliteConnection? sqliteConnection = null;
 		string providerName;
 		LumaCoreDbContext dbContext;
 
 		switch (settings.Provider)
 		{
 			case DbProvider.SqliteInMemory:
+			{
+				// Use a dedicated in-memory connection. The database exists as long as the connection
+				// stays open — disposing the harness closes it, which destroys the database.
+				providerName = DatabaseProviders.Sqlite;
+				sqliteConnection = new SqliteConnection("Data Source=:memory:");
+				await sqliteConnection.OpenAsync().ConfigureAwait(false);
+
+				DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
+					.UseSqlite(sqliteConnection)
+					.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning))
+					.Options;
+				dbContext = new LumaCoreDbContext(options);
+				break;
+			}
+
 			case DbProvider.Sqlite:
 			{
-				// Always use file-based SQLite — integration tests should exercise real file I/O.
 				providerName = DatabaseProviders.Sqlite;
 				databasePath = Path.Combine(Path.GetTempPath(), $"provops-test-{Guid.NewGuid():N}.db");
 
@@ -260,8 +293,11 @@ public sealed partial class ProviderOperationsIntegrationTests
 		// Server) and provides real tables for TableExistsAsync tests.
 		await dbContext.Database.EnsureCreatedAsync().ConfigureAwait(false);
 
+		// Get the provider operations for the target provider, which will be used by tests to execute
+		// provider-specific SQL.
 		IDatabaseProviderOperations sut = DatabaseProviderFactory.GetProvider(providerName);
 
-		return new TestHarness(sut, dbContext, databasePath, providerName);
+		// Return the harness containing the provider operations, DbContext, and cleanup info.
+		return new TestHarness(sut, dbContext, databasePath, providerName, sqliteConnection);
 	}
 }

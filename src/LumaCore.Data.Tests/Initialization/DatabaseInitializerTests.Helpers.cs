@@ -146,7 +146,7 @@ public sealed partial class DatabaseInitializerTests
 			TimeProvider = timeProvider;
 			mServiceProvider = serviceProvider;
 			mDatabasePath = databasePath;
-			mTestOperations = new RelationalDatabaseTestOperations(ProviderOperations);
+			mTestOperations = RelationalDatabaseTestOperations.Create(ProviderOperations);
 		}
 
 		/// <summary>
