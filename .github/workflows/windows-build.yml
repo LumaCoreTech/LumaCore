@@ -39,27 +39,30 @@ jobs:
     - name: Generate Test Badge
       if: github.ref == 'refs/heads/main' && always()
       run: |
-        # Parse test results from TRX file
-        $trxFile = Get-ChildItem -Path . -Filter "test-results.trx" -Recurse | Select-Object -First 1
-        if ($trxFile) {
-          [xml]$trx = Get-Content $trxFile.FullName
-          $total = [int]$trx.TestRun.ResultSummary.Counters.total
-          $passed = [int]$trx.TestRun.ResultSummary.Counters.passed
-
+        # Aggregate test results from all TRX files (one per test project)
+        $trxFiles = Get-ChildItem -Path . -Filter "test-results.trx" -Recurse
+        $total = 0
+        $passed = 0
+        foreach ($f in $trxFiles) {
+          [xml]$trx = Get-Content $f.FullName
+          $total += [int]$trx.TestRun.ResultSummary.Counters.total
+          $passed += [int]$trx.TestRun.ResultSummary.Counters.passed
+        }
+        if ($total -gt 0) {
           # Use total-minus-passed instead of the "failed" counter alone — TRX distinguishes
           # "failed" (assertion) from "error" (fixture/infrastructure), and ignoring "error"
           # would keep the badge green when fixtures throw (e.g., database connection issues).
           $notPassed = $total - $passed
           $color = if ($notPassed -eq 0) { "brightgreen" } elseif ($notPassed -lt 3) { "yellow" } else { "red" }
           $message = "$passed/$total passed"
-          
+
           $badge = @{
             schemaVersion = 1
             label = "Tests"
             message = $message
             color = $color
           } | ConvertTo-Json -Compress
-          
+
           echo $badge > lumacore-windows-test-badge.json
           echo "TEST_BADGE=$badge" >> $env:GITHUB_ENV
           echo "Test Badge: $message ($color)"

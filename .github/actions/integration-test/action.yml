@@ -8,9 +8,9 @@
 #
 # Only the LumaCore.Data.Tests project is executed here — provider-independent
 # tests (Core, API) are covered by the build workflows and are not repeated
-# per provider. Tests decorated with [IntegrationFact] are automatically
-# skipped in the build workflows (no LUMACORE_INTEGRATION_TESTS env var set)
-# and only execute when called from here.
+# per provider. The build workflows run the same Data.Tests with the default
+# provider (SQLite in-memory); these integration workflows re-run them against
+# real database engines via Docker containers.
 # ──────────────────────────────────────────────────────────────────────────────
 
 name: 'Integration Test'
@@ -49,7 +49,6 @@ runs:
         --logger "trx;LogFileName=integration-${{ inputs.provider }}.trx"
         --collect:"XPlat Code Coverage"
       env:
-        LUMACORE_INTEGRATION_TESTS: "true"
         LUMACORE_TESTS__Db__Provider: ${{ inputs.provider }}
         # The connection string provides transport/auth only (host, port, credentials) — no database
         # name. The database name is derived from DatabasePrefix (default: lumacore_test) plus a GUID
