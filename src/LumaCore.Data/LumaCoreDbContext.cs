@@ -75,6 +75,11 @@ public sealed class LumaCoreDbContext : DbContext
 	public DbSet<PersonaEntity> Personas { get; set; } = null!;
 
 	/// <summary>
+	/// Gets or sets the <see cref="DbSet{TEntity}"/> for revoked JWT access tokens (token blacklist).
+	/// </summary>
+	public DbSet<RevokedJwtEntity> RevokedJwts { get; set; } = null!;
+
+	/// <summary>
 	/// Gets or sets the <see cref="DbSet{TEntity}"/> for roles.
 	/// </summary>
 	public DbSet<RoleEntity> Roles { get; set; } = null!;
@@ -171,6 +176,7 @@ public sealed class LumaCoreDbContext : DbContext
 		ConfigureSystemPrompt(modelBuilder);
 		ConfigureModelEndpoint(modelBuilder);
 		ConfigureMessageGenerationMetadata(modelBuilder);
+		ConfigureRevokedJwt(modelBuilder);
 		ConfigureSeedHistory(modelBuilder);
 	}
 
@@ -524,6 +530,41 @@ public sealed class LumaCoreDbContext : DbContext
 			entity.HasIndex(e => e.Name)
 				.IsUnique()
 				.HasDatabaseName("IX_Roles_Name");
+		});
+	}
+
+	/// <summary>
+	/// Configures table mapping, property constraints, and indexes for <see cref="RevokedJwtEntity"/>.
+	/// </summary>
+	/// <param name="modelBuilder">The builder used to construct the model.</param>
+	private static void ConfigureRevokedJwt(ModelBuilder modelBuilder)
+	{
+		modelBuilder.Entity<RevokedJwtEntity>(entity =>
+		{
+			entity.ToTable("RevokedJwts");
+			entity.HasKey(e => e.Jti);
+
+			entity.Property(e => e.Jti)
+				.HasMaxLength(36)
+				.IsRequired();
+
+			entity.Property(e => e.ExpiresAtUtc)
+				.IsRequired();
+
+			entity.Property(e => e.RevokedAtUtc)
+				.IsRequired();
+
+			entity.Property(e => e.Subject)
+				.HasMaxLength(EntityLimits.UsernameMaxLength)
+				.IsRequired();
+
+			entity.Property(e => e.Reason)
+				.HasMaxLength(100)
+				.IsRequired();
+
+			// For cleanup queries that remove expired revocation entries.
+			entity.HasIndex(e => e.ExpiresAtUtc)
+				.HasDatabaseName("IX_RevokedJwts_ExpiresAtUtc");
 		});
 	}
 

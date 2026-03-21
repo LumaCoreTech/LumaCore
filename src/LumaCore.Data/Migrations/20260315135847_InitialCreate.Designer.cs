@@ -244,6 +244,31 @@ namespace LumaCore.Data.Migrations
                     b.ToTable("Personas", (string)null);
                 });
 
+            modelBuilder.Entity("LumaCore.Data.Entities.RevokedJwtEntity", b =>
+                {
+                    b.Property<string>("Jti")
+                        .HasMaxLength(36);
+
+                    b.Property<DateTime>("ExpiresAtUtc");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(100);
+
+                    b.Property<DateTime>("RevokedAtUtc");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(50);
+
+                    b.HasKey("Jti");
+
+                    b.HasIndex("ExpiresAtUtc")
+                        .HasDatabaseName("IX_RevokedJwts_ExpiresAtUtc");
+
+                    b.ToTable("RevokedJwts", (string)null);
+                });
+
             modelBuilder.Entity("LumaCore.Data.Entities.RoleEntity", b =>
                 {
                     b.Property<long>("Id")

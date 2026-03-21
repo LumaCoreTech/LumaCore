@@ -12,6 +12,8 @@ public partial class InitialCreate : Migration
 	/// <inheritdoc/>
 	protected override void Up(MigrationBuilder migrationBuilder)
 	{
+		// --- Independent tables (no foreign keys, alphabetical) ---
+
 		migrationBuilder.CreateTable(
 			name: "Conversations",
 			columns: table => new
@@ -71,6 +73,21 @@ public partial class InitialCreate : Migration
 			});
 
 		migrationBuilder.CreateTable(
+			name: "RevokedJwts",
+			columns: table => new
+			{
+				Jti = table.Column<string>(maxLength: 36, nullable: false),
+				ExpiresAtUtc = table.Column<DateTime>(nullable: false),
+				RevokedAtUtc = table.Column<DateTime>(nullable: false),
+				Subject = table.Column<string>(maxLength: 50, nullable: false),
+				Reason = table.Column<string>(maxLength: 100, nullable: false)
+			},
+			constraints: table =>
+			{
+				table.PrimaryKey("PK_RevokedJwts", x => x.Jti);
+			});
+
+		migrationBuilder.CreateTable(
 			name: "Roles",
 			columns: table => new
 			{
@@ -105,6 +122,8 @@ public partial class InitialCreate : Migration
 			{
 				table.PrimaryKey("PK_SeedHistory", x => x.Id);
 			});
+
+		// --- Dependent tables (have foreign keys, alphabetical) ---
 
 		migrationBuilder.CreateTable(
 			name: "ConversationParticipants",
@@ -217,6 +236,8 @@ public partial class InitialCreate : Migration
 					onDelete: ReferentialAction.Cascade);
 			});
 
+		// --- Indexes (alphabetical by index name) ---
+
 		migrationBuilder.CreateIndex(
 			name: "IX_ConversationParticipants_ParticipantId",
 			table: "ConversationParticipants",
@@ -277,6 +298,11 @@ public partial class InitialCreate : Migration
 			unique: true);
 
 		migrationBuilder.CreateIndex(
+			name: "IX_RevokedJwts_ExpiresAtUtc",
+			table: "RevokedJwts",
+			column: "ExpiresAtUtc");
+
+		migrationBuilder.CreateIndex(
 			name: "IX_Roles_Name",
 			table: "Roles",
 			column: "Name",
@@ -331,22 +357,22 @@ public partial class InitialCreate : Migration
 	/// <inheritdoc/>
 	protected override void Down(MigrationBuilder migrationBuilder)
 	{
+		// --- Dependent tables first (reverse dependency order, alphabetical within tier) ---
+
 		migrationBuilder.DropTable(name: "ConversationParticipants");
-
-		migrationBuilder.DropTable(name: "SeedHistory");
-
+		migrationBuilder.DropTable(name: "Messages");
 		migrationBuilder.DropTable(name: "UserRoles");
 
-		migrationBuilder.DropTable(name: "Messages");
-
-		migrationBuilder.DropTable(name: "ModelEndpoints");
-
-		migrationBuilder.DropTable(name: "Roles");
-
+		// Users must be dropped after UserRoles (FK dependency).
 		migrationBuilder.DropTable(name: "Users");
 
-		migrationBuilder.DropTable(name: "Conversations");
+		// --- Independent tables (alphabetical) ---
 
+		migrationBuilder.DropTable(name: "Conversations");
+		migrationBuilder.DropTable(name: "ModelEndpoints");
 		migrationBuilder.DropTable(name: "Participants");
+		migrationBuilder.DropTable(name: "RevokedJwts");
+		migrationBuilder.DropTable(name: "Roles");
+		migrationBuilder.DropTable(name: "SeedHistory");
 	}
 }

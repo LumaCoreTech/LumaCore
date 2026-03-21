@@ -11,8 +11,8 @@ namespace LumaCore.Data.Tests.Migrations;
 
 // InitialCreate migration: verify that Up() creates the expected schema and Down() removes it cleanly.
 //
-//   1. Up — tables: applies the migration and asserts all 9 domain tables exist (discovery-based).
-//   2. Up — indexes: asserts all 20 explicitly-defined indexes exist (discovery-based).
+//   1. Up — tables: applies the migration and asserts all 10 domain tables exist (discovery-based).
+//   2. Up — indexes: asserts all 21 explicitly-defined indexes exist (discovery-based).
 //   3. Down — reverts the migration and asserts all domain tables are gone.
 //
 // All three tests use discovery-based assertions (querying the provider's system catalog for the
@@ -37,6 +37,7 @@ public sealed partial class MigrationIntegrationTests
 		"Messages",
 		"ModelEndpoints",
 		"Participants",
+		"RevokedJwts",
 		"Roles",
 		"SeedHistory",
 		"UserRoles",
@@ -60,6 +61,7 @@ public sealed partial class MigrationIntegrationTests
 		"IX_ModelEndpoints_IsActive",
 		"IX_ModelEndpoints_PublicId",
 		"IX_Participants_PublicId",
+		"IX_RevokedJwts_ExpiresAtUtc",
 		"IX_Roles_Name",
 		"IX_Roles_PublicId",
 		"IX_SeedHistory_AppliedAtUtc",
@@ -74,7 +76,7 @@ public sealed partial class MigrationIntegrationTests
 	// --- 1. Up — apply InitialCreate and verify tables ---
 
 	/// <summary>
-	/// Verifies that <see cref="InitialCreate.Up"/> creates all 9 expected domain tables against the
+	/// Verifies that <see cref="InitialCreate.Up"/> creates all 10 expected domain tables against the
 	/// configured database provider. Uses discovery-based assertion (full table list from the system catalog).
 	/// </summary>
 	[Fact]
@@ -100,7 +102,7 @@ public sealed partial class MigrationIntegrationTests
 	// --- 2. Up — apply InitialCreate and verify indexes ---
 
 	/// <summary>
-	/// Verifies that <see cref="InitialCreate.Up"/> creates all 20 explicitly-defined indexes against the
+	/// Verifies that <see cref="InitialCreate.Up"/> creates all 21 explicitly-defined indexes against the
 	/// configured database provider. Uses discovery-based assertion (full index list from the system catalog).
 	/// </summary>
 	[Fact]

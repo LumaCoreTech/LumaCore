@@ -694,7 +694,7 @@ Do **not** hide reachable logic behind `ExcludeFromCodeCoverage` just to satisfy
 
 ### Migrations
 
-Since nothing is released yet, **fold all changes into the existing initial migration/snapshot**.
+Create a **new migration** for each schema change using `dotnet ef migrations add <Name>`. Do **not** fold changes into existing migrations — the schema has matured past the initial bootstrap phase.
 
 ### Data Layer Guidelines
 
@@ -766,7 +766,6 @@ void ICollection<T>.Add(T item) { }
 public struct Enumerator { }
 #endregion
 ```
-
 > [!NOTE]
 > Use `#region` **only** for **explicit** interface implementations (`void IFoo.Bar()`).
 > Implicit implementations (`public void Bar()`) and base class overrides are core API — they belong at the top without a region.
@@ -857,3 +856,7 @@ exception unwrapping from AggregateException.
   - Public methods
   - Protected/Internal methods
   - Private methods
+
+### Magic Strings
+
+- Avoid magic strings in code. Use framework-provided constants (e.g., `HeaderNames.Authorization` instead of `"Authorization"`).

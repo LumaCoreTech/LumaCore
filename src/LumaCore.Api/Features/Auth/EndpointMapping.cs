@@ -1,4 +1,4 @@
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2025-2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
@@ -18,7 +18,8 @@ namespace LumaCore.Api.Features.Auth;
 /// Provides extension methods for mapping authentication endpoints to the application's routing pipeline.
 /// </summary>
 /// <remarks>
-/// This class exposes endpoints for login, identity introspection, and token diagnostics.
+/// This class exposes endpoints for login, logout (with token revocation), identity introspection, and token
+/// diagnostics.
 /// </remarks>
 static class EndpointMapping
 {
@@ -42,8 +43,9 @@ static class EndpointMapping
 	///         </item>
 	///         <item>
 	///             <description>
-	///             <c>POST /api/v1/auth/logout</c> – clears the <c>HttpOnly</c> authentication cookie for browser
-	///             clients. API clients using <c>Authorization: Bearer</c> do not need to call this endpoint.
+	///             <c>POST /api/v1/auth/logout</c> – revokes the current access token and clears the <c>HttpOnly</c>
+	///             authentication cookie. Both browser and API clients should call this endpoint to invalidate their
+	///             token immediately.
 	///             </description>
 	///         </item>
 	///         <item>
@@ -93,8 +95,10 @@ static class EndpointMapping
 		//     addition to returning the token in the JSON response body.
 		//
 		//   - POST /api/v1/auth/logout
-		//     Clears the HttpOnly authentication cookie for browser clients.
-		//     API clients using Bearer tokens do not need to call this endpoint.
+		//     Revokes the current access token by recording its jti in the
+		//     RevokedJwts blacklist table, then clears the HttpOnly authentication
+		//     cookie. Both browser and API clients should call this endpoint to
+		//     invalidate their token immediately.
 		//
 		//   - GET /api/v1/auth/whoami
 		//     Returns basic information about the currently authenticated principal,
@@ -203,18 +207,63 @@ static class EndpointMapping
 				"authentication flow once persistent user management is available.")
 			.WithName("Login");
 
-		// Logout endpoint: clears the authentication cookie for browser clients.
-		// API clients using Bearer tokens do not need to call this endpoint — they simply
-		// stop sending the token. This endpoint exists so browser clients can reliably
-		// clear the HttpOnly cookie (which JavaScript cannot access).
+		// Logout endpoint: revokes the current access token and clears the authentication cookie.
+		// Token revocation ensures the JWT is immediately rejected even before its natural expiry.
+		// API clients using Bearer tokens should also call this endpoint to invalidate their token.
 		group.MapPost(
 				"/logout",
-				(
+				async (
+					ITokenRevocationService     revocationService,
 					IOptions<AuthCookieOptions> cookieOptionsAccessor,
+					IOptions<JwtOptions>        jwtOptionsAccessor,
+					TimeProvider                timeProvider,
 					HttpContext                 httpContext,
-					ILoggerFactory              loggerFactory) =>
+					ILoggerFactory              loggerFactory,
+					CancellationToken           cancellationToken) =>
 				{
 					ILogger logger = loggerFactory.CreateLogger("LumaCore.Auth");
+
+					string subject = httpContext.User.FindFirst("sub")?.Value
+					                 ?? httpContext.User.Identity?.Name
+					                 ?? "(unknown)";
+
+					// Revoke the current access token so it is rejected on subsequent requests.
+					string? jti = httpContext.User.FindFirst("jti")?.Value;
+
+					if (jti is not null)
+					{
+						// Extract the token's natural expiry from the exp claim.
+						// If the claim is missing or unparseable, fall back to the configured lifetime
+						// from now — this ensures the revocation entry has a reasonable cleanup boundary.
+						DateTime expiresAtUtc;
+						string? expClaim = httpContext.User.FindFirst("exp")?.Value;
+
+						if (expClaim is not null && long.TryParse(expClaim, out long expUnix))
+						{
+							expiresAtUtc = DateTimeOffset.FromUnixTimeSeconds(expUnix).UtcDateTime;
+						}
+						else
+						{
+							// A missing or unparseable exp claim indicates a bug in the token factory —
+							// all JWTs issued by LumaCore must have an expiry. Log a warning so the
+							// issue is visible, then fall back to the configured lifetime from now.
+							logger.LogWarning(
+								"JWT for subject '{Subject}' (jti: {Jti}) has no parseable exp claim; " +
+								"using configured lifetime as revocation expiry fallback",
+								subject,
+								jti);
+
+							JwtOptions jwtOptions = jwtOptionsAccessor.Value;
+							expiresAtUtc = timeProvider
+								.GetUtcNow()
+								.UtcDateTime
+								.AddMinutes(jwtOptions.AccessTokenLifetimeMinutes);
+						}
+
+						await revocationService
+							.RevokeAsync(jti, expiresAtUtc, subject, "Logout", cancellationToken)
+							.ConfigureAwait(false);
+					}
 
 					AuthCookieOptions cookieOptions = cookieOptionsAccessor.Value;
 					if (cookieOptions.Enabled)
@@ -231,10 +280,6 @@ static class EndpointMapping
 							});
 					}
 
-					string subject = httpContext.User.FindFirst("sub")?.Value
-					                 ?? httpContext.User.Identity?.Name
-					                 ?? "(unknown)";
-
 					logger.LogInformation("User '{Subject}' logged out", subject);
 
 					return Results.NoContent();
@@ -243,10 +288,11 @@ static class EndpointMapping
 			.RequireAuthorization()
 			.Produces(StatusCodes.Status204NoContent)
 			.Produces(StatusCodes.Status401Unauthorized)
-			.WithSummary("Logs the user out by clearing the authentication cookie.")
+			.WithSummary("Logs the user out by revoking the access token and clearing the authentication cookie.")
 			.WithDescription(
-				"Clears the HttpOnly authentication cookie for browser clients. API clients using " +
-				"Bearer tokens do not need to call this endpoint. Returns 204 No Content on success.")
+				"Revokes the current JWT access token so it is immediately rejected on subsequent requests, " +
+				"and clears the HttpOnly authentication cookie for browser clients. API clients using Bearer " +
+				"tokens should also call this endpoint to invalidate their token. Returns 204 No Content on success.")
 			.WithName("Logout");
 
 		// Exposes basic information about the current authenticated principal.

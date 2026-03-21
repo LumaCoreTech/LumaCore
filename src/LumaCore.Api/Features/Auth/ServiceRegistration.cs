@@ -1,4 +1,4 @@
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2025-2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
@@ -67,6 +67,12 @@ static class ServiceRegistration
 		// Bind cookie transport options (Jwt:Cookie section).
 		services.AddFeatureOptions<AuthCookieOptions>(configuration, AuthCookieOptions.SectionName);
 
+		// Bind token revocation options (Jwt:TokenRevocation section).
+		services.AddFeatureOptions<TokenRevocationOptions>(configuration, TokenRevocationOptions.SectionName);
+
+		// Memory cache for caching negative revocation lookups ("not revoked").
+		services.AddMemoryCache();
+
 		// Configure JWT bearer authentication for incoming requests.
 		services
 			.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -117,11 +123,29 @@ static class ServiceRegistration
 						return Task.CompletedTask;
 					},
 
-					// Log successful token validation to help trace security flows.
-					// This can help track authentication flows without polluting normal logs.
-					// The log level is set to Debug to keep it low-verbosity.
-					OnTokenValidated = context =>
+					// Check the token revocation blacklist and log successful validation.
+					// Revoked tokens are rejected immediately; valid tokens are logged at Debug level.
+					OnTokenValidated = async context =>
 					{
+						// Check the token revocation blacklist before accepting the token.
+						string? jti = context.Principal?.FindFirst("jti")?.Value;
+
+						if (jti is not null)
+						{
+							var revocationService = context
+								.HttpContext
+								.RequestServices
+								.GetRequiredService<ITokenRevocationService>();
+
+							if (await revocationService
+								    .IsRevokedAsync(jti, context.HttpContext.RequestAborted)
+								    .ConfigureAwait(false))
+							{
+								context.Fail("Token has been revoked.");
+								return;
+							}
+						}
+
 						// Create a logger scoped to JWT bearer authentication.
 						ILogger logger = context.HttpContext.RequestServices
 							.GetRequiredService<ILoggerFactory>()
@@ -138,8 +162,6 @@ static class ServiceRegistration
 							"JWT token successfully validated for subject '{Subject}' on request to {Path}",
 							subject,
 							context.HttpContext.Request.Path);
-
-						return Task.CompletedTask;
 					}
 				};
 			});
@@ -177,9 +199,11 @@ static class ServiceRegistration
 				};
 			});
 
-		// Register authorization and the token factory used by the login endpoint.
+		// Register authorization, the token factory used by the login endpoint,
+		// and the token revocation service for blacklist checks.
 		services.AddAuthorization();
 		services.AddSingleton<IJwtTokenFactory, JwtTokenFactory>();
+		services.AddScoped<ITokenRevocationService, TokenRevocationService>();
 
 		return services;
 	}
