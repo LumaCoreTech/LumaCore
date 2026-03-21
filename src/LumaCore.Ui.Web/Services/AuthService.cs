@@ -143,7 +143,7 @@ public sealed class AuthService
 	{
 		try
 		{
-			var request = new LoginRequest(username, password);
+			var request = new LoginRequest(username, password, rememberMe);
 
 			using HttpResponseMessage response = await mHttpClient
 				                                     .PostAsJsonAsync("api/v1/auth/login", request)

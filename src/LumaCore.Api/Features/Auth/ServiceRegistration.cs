@@ -9,6 +9,7 @@ using LumaCore.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 
 namespace LumaCore.Api.Features.Auth;
 
@@ -63,6 +64,9 @@ static class ServiceRegistration
 		// Bind and validate JWT options at startup so misconfiguration fails fast.
 		services.AddFeatureOptions<JwtOptions>(configuration, JwtOptions.SectionName);
 
+		// Bind cookie transport options (Jwt:Cookie section).
+		services.AddFeatureOptions<AuthCookieOptions>(configuration, AuthCookieOptions.SectionName);
+
 		// Configure JWT bearer authentication for incoming requests.
 		services
 			.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -70,6 +74,30 @@ static class ServiceRegistration
 			{
 				options.Events = new JwtBearerEvents
 				{
+					// Extract the JWT from an HttpOnly cookie when no Authorization header is present.
+					// This enables dual-auth: Bearer header (API clients) takes priority; cookie
+					// (browser clients) is the fallback. Both paths feed into the same JWT validation.
+					OnMessageReceived = context =>
+					{
+						// If an Authorization header is present, let the default handler extract the token.
+						if (context.Request.Headers.ContainsKey(HeaderNames.Authorization))
+							return Task.CompletedTask;
+
+						AuthCookieOptions cookieOptions = context
+							.HttpContext
+							.RequestServices
+							.GetRequiredService<IOptions<AuthCookieOptions>>()
+							.Value;
+
+						if (cookieOptions.Enabled &&
+						    context.Request.Cookies.TryGetValue(cookieOptions.Name, out string? cookieToken) &&
+						    !string.IsNullOrEmpty(cookieToken))
+						{
+							context.Token = cookieToken;
+						}
+
+						return Task.CompletedTask;
+					},
 					// Log authentication failures to help diagnose issues.
 					// This includes expired tokens, invalid signatures, malformed JWTs, etc.
 					OnAuthenticationFailed = context =>

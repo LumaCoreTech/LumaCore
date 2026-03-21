@@ -23,23 +23,26 @@ namespace LumaCore.Api.Features.Auth;
 /// </remarks>
 sealed class JwtTokenFactory : IJwtTokenFactory
 {
-	private readonly JwtOptions mOptions;
-	private readonly byte[]     mSigningKeyBytes;
+	private readonly JwtOptions   mOptions;
+	private readonly TimeProvider mTimeProvider;
+	private readonly byte[]       mSigningKeyBytes;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="JwtTokenFactory"/> class.
 	/// </summary>
 	/// <param name="options">The configured JWT options.</param>
-	public JwtTokenFactory(IOptions<JwtOptions> options)
+	/// <param name="timeProvider">The time provider for obtaining the current UTC time.</param>
+	public JwtTokenFactory(IOptions<JwtOptions> options, TimeProvider timeProvider)
 	{
 		mOptions = options.Value;
+		mTimeProvider = timeProvider;
 		mSigningKeyBytes = Encoding.UTF8.GetBytes(mOptions.SigningKey);
 	}
 
 	/// <inheritdoc/>
 	public string CreateToken(string subject, IEnumerable<Claim> claims)
 	{
-		DateTime utcNow = DateTime.UtcNow;
+		DateTime utcNow = mTimeProvider.GetUtcNow().UtcDateTime;
 
 		// Base claims required for most JWT consumers (subject + unique token ID).
 		var allClaims = new List<Claim>

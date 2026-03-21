@@ -36,7 +36,14 @@ static class EndpointMapping
 	///         <item>
 	///             <description>
 	///             <c>POST /api/v1/auth/login</c> – accepts a <see cref="V1.LoginRequest"/> and returns a
-	///             <see cref="V1.LoginResponse"/> containing a short-lived access token.
+	///             <see cref="V1.LoginResponse"/> containing a short-lived access token. When cookie transport is
+	///             enabled, an <c>HttpOnly</c> cookie is set in addition to the JSON response body.
+	///             </description>
+	///         </item>
+	///         <item>
+	///             <description>
+	///             <c>POST /api/v1/auth/logout</c> – clears the <c>HttpOnly</c> authentication cookie for browser
+	///             clients. API clients using <c>Authorization: Bearer</c> do not need to call this endpoint.
 	///             </description>
 	///         </item>
 	///         <item>
@@ -82,6 +89,12 @@ static class EndpointMapping
 		//     account. This is a temporary bootstrap mechanism until LumaCore has a
 		//     persistent user store (for example a database-backed authentication
 		//     system with proper password hashing and user management).
+		//     When cookie transport is enabled, an HttpOnly cookie is set in
+		//     addition to returning the token in the JSON response body.
+		//
+		//   - POST /api/v1/auth/logout
+		//     Clears the HttpOnly authentication cookie for browser clients.
+		//     API clients using Bearer tokens do not need to call this endpoint.
 		//
 		//   - GET /api/v1/auth/whoami
 		//     Returns basic information about the currently authenticated principal,
@@ -110,9 +123,13 @@ static class EndpointMapping
 		group.MapPost(
 				"/login",
 				(
-					V1.LoginRequest  request,
-					IJwtTokenFactory tokenFactory,
-					ILoggerFactory   loggerFactory) =>
+					V1.LoginRequest             request,
+					IJwtTokenFactory            tokenFactory,
+					TimeProvider                timeProvider,
+					IOptions<JwtOptions>        jwtOptionsAccessor,
+					IOptions<AuthCookieOptions> cookieOptionsAccessor,
+					HttpContext                 httpContext,
+					ILoggerFactory              loggerFactory) =>
 				{
 					// Create a logger for this feature.
 					ILogger logger = loggerFactory.CreateLogger("LumaCore.Auth");
@@ -141,12 +158,39 @@ static class EndpointMapping
 					// Issue a signed JWT that the client can present in subsequent API calls.
 					string token = tokenFactory.CreateToken(request.Username, claims);
 
+					// Set an HttpOnly cookie for browser clients so the token is not accessible
+					// to JavaScript (XSS mitigation). API clients ignore the cookie and use the
+					// token from the JSON response body with the Authorization: Bearer header.
+					AuthCookieOptions cookieOptions = cookieOptionsAccessor.Value;
+					if (cookieOptions.Enabled)
+					{
+						JwtOptions jwtOptions = jwtOptionsAccessor.Value;
+						httpContext.Response.Cookies.Append(
+							cookieOptions.Name,
+							token,
+							new CookieOptions
+							{
+								HttpOnly = true,
+								Secure = cookieOptions.SecureOnly,
+								SameSite = SameSiteMode.Strict, // Hardcoded — CSRF protection for SPA
+								Path = cookieOptions.Path,
+								Domain = cookieOptions.Domain,
+								// RememberMe: persistent cookie with explicit expiry vs session cookie
+								// that the browser clears when closed.
+								Expires = request.RememberMe
+									          ? timeProvider.GetUtcNow()
+										          .AddMinutes(jwtOptions.AccessTokenLifetimeMinutes)
+									          : null
+							});
+					}
+
 					// Log successful authentication for auditing purposes.
 					logger.LogInformation(
 						"Administrator '{Username}' successfully authenticated and issued a JWT access token",
 						request.Username);
 
 					// Return the access token to the caller.
+					// API clients use this value; browser clients can ignore it (cookie is set above).
 					return Results.Ok(new V1.LoginResponse(token));
 				})
 			.MapToApiVersion(ApiVersions.V1)
@@ -159,7 +203,53 @@ static class EndpointMapping
 				"authentication flow once persistent user management is available.")
 			.WithName("Login");
 
-		// Exposes basic information about the current authenticated principal. This is
+		// Logout endpoint: clears the authentication cookie for browser clients.
+		// API clients using Bearer tokens do not need to call this endpoint — they simply
+		// stop sending the token. This endpoint exists so browser clients can reliably
+		// clear the HttpOnly cookie (which JavaScript cannot access).
+		group.MapPost(
+				"/logout",
+				(
+					IOptions<AuthCookieOptions> cookieOptionsAccessor,
+					HttpContext                 httpContext,
+					ILoggerFactory              loggerFactory) =>
+				{
+					ILogger logger = loggerFactory.CreateLogger("LumaCore.Auth");
+
+					AuthCookieOptions cookieOptions = cookieOptionsAccessor.Value;
+					if (cookieOptions.Enabled)
+					{
+						// Delete the cookie by setting matching Path and Domain.
+						// The browser removes the cookie when it receives a Set-Cookie
+						// with a past expiry date and matching attributes.
+						httpContext.Response.Cookies.Delete(
+							cookieOptions.Name,
+							new CookieOptions
+							{
+								Path = cookieOptions.Path,
+								Domain = cookieOptions.Domain
+							});
+					}
+
+					string subject = httpContext.User.FindFirst("sub")?.Value
+					                 ?? httpContext.User.Identity?.Name
+					                 ?? "(unknown)";
+
+					logger.LogInformation("User '{Subject}' logged out", subject);
+
+					return Results.NoContent();
+				})
+			.MapToApiVersion(ApiVersions.V1)
+			.RequireAuthorization()
+			.Produces(StatusCodes.Status204NoContent)
+			.Produces(StatusCodes.Status401Unauthorized)
+			.WithSummary("Logs the user out by clearing the authentication cookie.")
+			.WithDescription(
+				"Clears the HttpOnly authentication cookie for browser clients. API clients using " +
+				"Bearer tokens do not need to call this endpoint. Returns 204 No Content on success.")
+			.WithName("Logout");
+
+		// Exposes basic information about the current authenticated principal.
 		// useful as a simple "who am I according to the API?" endpoint and is available
 		// to any authenticated user, not only administrators.
 		group.MapGet(
@@ -212,6 +302,7 @@ static class EndpointMapping
 				"/introspect",
 				(
 					ClaimsPrincipal      user,
+					TimeProvider         timeProvider,
 					IOptions<JwtOptions> jwtOptionsAccessor,
 					ILoggerFactory       loggerFactory) =>
 				{
@@ -219,7 +310,7 @@ static class EndpointMapping
 					ILogger logger = loggerFactory.CreateLogger("LumaCore.Auth");
 
 					// Capture the current time in UTC for lifetime calculations.
-					DateTime utcNow = DateTime.UtcNow;
+					DateTime utcNow = timeProvider.GetUtcNow().UtcDateTime;
 
 					// Retrieve JWT configuration options.
 					JwtOptions jwtOptions = jwtOptionsAccessor.Value;
