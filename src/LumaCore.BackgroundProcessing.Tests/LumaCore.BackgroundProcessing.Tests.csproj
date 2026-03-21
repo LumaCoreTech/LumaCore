@@ -18,7 +18,7 @@
 		<ProjectReference Include="..\LumaCore.BackgroundProcessing\LumaCore.BackgroundProcessing.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="coverlet.collector">
+		<PackageReference Include="coverlet.msbuild">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>

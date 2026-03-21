@@ -46,8 +46,8 @@ runs:
       shell: bash
       run: >-
         dotnet test src/LumaCore.Data.Tests -c Release --no-build --verbosity normal
-        --logger "trx;LogFileName=integration-${{ inputs.provider }}.trx"
-        --collect:"XPlat Code Coverage"
+        /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+        -- --report-xunit-trx --report-xunit-trx-filename integration-${{ inputs.provider }}.trx
       env:
         LUMACORE_TESTS__Db__Provider: ${{ inputs.provider }}
         # The connection string provides transport/auth only (host, port, credentials) — no database
