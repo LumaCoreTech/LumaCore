@@ -100,18 +100,13 @@ public partial class AsyncManualResetEventTests
 		var mre = new AsyncManualResetEvent(false);
 		using var cts = new CancellationTokenSource();
 
-		// Schedule cancellation
-		Task cancelTask = Task.Run(async () =>
-		{
-			await Task.Delay(50);
-			cts.Cancel();
-		});
+		// Schedule cancellation via timer — avoids thread pool dependency that causes flakiness on CI runners.
+		cts.CancelAfter(TimeSpan.FromMilliseconds(100));
 
 		// Act + Assert - wrap synchronous Wait in Task.Run to prevent blocking test runner
 		Task waitTask = Task.Run(() => mre.Wait(cts.Token));
 		Task assertion = Assert.ThrowsAsync<OperationCanceledException>(() => waitTask);
 		await AwaitWithTimeoutAsync(assertion, "Cancellation did not throw OperationCanceledException");
-		await AwaitWithTimeoutAsync(cancelTask, "Cancellation task timed out");
 	}
 
 	#endregion
