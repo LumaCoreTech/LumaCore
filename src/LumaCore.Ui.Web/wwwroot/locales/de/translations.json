@@ -105,7 +105,8 @@
       "settings": "Einstellungen",
       "admin": "Administration",
       "toasts": {
-        "logoutSuccess": "Erfolgreich abgemeldet"
+        "logoutSuccess": "Erfolgreich abgemeldet",
+        "logoutFailed": "Abmelden fehlgeschlagen — der Server ist derzeit nicht erreichbar. Bitte versuche es später erneut."
       }
     },
 

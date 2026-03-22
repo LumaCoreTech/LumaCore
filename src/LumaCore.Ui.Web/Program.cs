@@ -1,4 +1,4 @@
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2025-2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
@@ -48,17 +48,17 @@ public class Program
 		Console.WriteLine($"[LumaCore UI] Effective backend base URL: {effectiveBaseUrl}");
 
 		// Register the HTTP message handlers as transient (created per HttpClient instance).
-		builder.Services.AddTransient<JwtAuthorizationHandler>();
+		builder.Services.AddTransient<CookieCredentialHandler>();
 		builder.Services.AddTransient<HealthTrackingHandler>();
 
-		// Named HttpClient for API requests with automatic JWT authorization and health tracking.
+		// Named HttpClient for API requests with automatic cookie credential inclusion and health tracking.
 		// This client targets the backend API and automatically:
-		// - Attaches JWT tokens via JwtAuthorizationHandler
+		// - Includes the HttpOnly authentication cookie via CookieCredentialHandler
 		// - Tracks backend health via HealthTrackingHandler
 		builder.Services.AddHttpClient(
 				"ApiHttpClient",
 				client => client.BaseAddress = new Uri(effectiveBaseUrl))
-			.AddHttpMessageHandler<JwtAuthorizationHandler>()
+			.AddHttpMessageHandler<CookieCredentialHandler>()
 			.AddHttpMessageHandler<HealthTrackingHandler>();
 
 		// Register a default HttpClient that resolves to the API client.
@@ -74,7 +74,7 @@ public class Program
 		// - Configuration files (data/*.json)
 		// - Static assets (images, fonts, etc.)
 		//
-		// This client does NOT use JwtAuthorizationHandler since static files don't require auth.
+		// This client does NOT use CookieCredentialHandler since static files don't require auth.
 		builder.Services.AddHttpClient(
 			"StaticFilesHttpClient",
 			client =>
@@ -86,9 +86,9 @@ public class Program
 
 		// Register authentication services.
 		builder.Services.AddScoped<AuthService>();
-		builder.Services.AddScoped<JwtAuthenticationStateProvider>();
+		builder.Services.AddScoped<CookieAuthenticationStateProvider>();
 		builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
-			sp.GetRequiredService<JwtAuthenticationStateProvider>());
+			sp.GetRequiredService<CookieAuthenticationStateProvider>());
 
 		// Register backend health state for passive health monitoring.
 		// Updated by HealthTrackingHandler, observed by BackendHealthIndicator.

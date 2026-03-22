@@ -33,6 +33,12 @@ Dynamic theming system with CSS Custom Properties:
 - Runtime theme switching
 - Color system and design tokens
 
+### [Auth Integration](auth-integration.md)
+Cookie-based authentication flow between Blazor WASM and the LumaCore API:
+- Client-side auth services (`AuthService`, `CookieCredentialHandler`, `CookieAuthenticationStateProvider`)
+- Authentication flow and DI registration
+- Design decisions (no token storage, server-first logout, cross-origin support)
+
 ### [Cheatsheet](cheatsheet.md)
 Quick reference for common Blazor patterns and LumaCore conventions.
 

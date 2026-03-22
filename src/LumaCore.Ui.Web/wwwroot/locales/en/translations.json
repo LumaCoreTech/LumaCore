@@ -105,7 +105,8 @@
       "settings": "Settings",
       "admin": "Admin",
       "toasts": {
-        "logoutSuccess": "Logged out successfully"
+        "logoutSuccess": "Logged out successfully",
+        "logoutFailed": "Logout failed — the server is currently unreachable. Please try again later."
       }
     },
 

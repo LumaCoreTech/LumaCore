@@ -9,7 +9,7 @@ namespace LumaCore.Ui.Web.Services;
 /// </summary>
 /// <remarks>
 ///     <para>
-///     This service acts as a shared state container that is updated by <see cref="JwtAuthorizationHandler"/>
+///     This service acts as a shared state container that is updated by <see cref="HealthTrackingHandler"/>
 ///     based on HTTP request success/failure, and observed by UI components like <c>BackendHealthIndicator</c>.
 ///     </para>
 ///     <para>
@@ -21,7 +21,7 @@ namespace LumaCore.Ui.Web.Services;
 ///         <item><b>Unhealthy</b> — The backend is not reachable.</item>
 ///     </list>
 ///     <para>
-///     The state is updated passively based on actual API traffic (via <see cref="JwtAuthorizationHandler"/>)
+///     The state is updated passively based on actual API traffic (via <see cref="HealthTrackingHandler"/>)
 ///     and actively by health probe components. Subscribers can react to state changes via
 ///     <see cref="OnHealthChanged"/>.
 ///     </para>

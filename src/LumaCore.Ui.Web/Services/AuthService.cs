@@ -1,4 +1,4 @@
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2025-2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
@@ -7,124 +7,35 @@ using System.Net.Http.Json;
 
 using LumaCore.Api.Contracts.V1.Auth;
 
-using Microsoft.JSInterop;
-
 namespace LumaCore.Ui.Web.Services;
 
 /// <summary>
-/// Provides authentication services for the LumaCore Web UI, including login, logout, and token management.
+/// Provides authentication operations (login and logout) for the LumaCore Blazor WASM UI.
 /// </summary>
 /// <remarks>
 ///     <para>
-///     This service handles JWT token storage using browser storage APIs. The storage location depends on the
-///     user's "Remember Me" preference: <c>localStorage</c> for persistent sessions that survive browser restarts,
-///     or <c>sessionStorage</c> for sessions that end when the browser is closed.
+///     This service delegates credential exchange and session management to the backend API. The server sets an
+///     <c>HttpOnly</c> cookie on successful login and clears it on logout — the browser handles cookie storage
+///     and transmission transparently. No tokens are stored in JavaScript-accessible storage, eliminating
+///     XSS-based token theft.
 ///     </para>
 ///     <para>
-///     The service also provides methods to retrieve the current token for use in authenticated API requests
-///     and to check if the user is currently authenticated.
+///     The <c>rememberMe</c> flag controls cookie persistence on the server side: when <see langword="true"/>,
+///     the server issues a persistent cookie that survives browser restarts; when <see langword="false"/>, a
+///     session cookie is issued that is cleared when the browser closes.
 ///     </para>
 /// </remarks>
 public sealed class AuthService
 {
-	/// <summary>
-	/// The key used to store the storage type preference in localStorage.
-	/// </summary>
-	private const string StorageTypeKey = "lumacore_storage_type";
-
-	/// <summary>
-	/// The storage type identifier for localStorage.
-	/// </summary>
-	private const string StorageTypeLocal = "local";
-
-	/// <summary>
-	/// The storage type identifier for sessionStorage.
-	/// </summary>
-	private const string StorageTypeSession = "session";
-
-	/// <summary>
-	/// The key used to store the JWT token in browser storage.
-	/// </summary>
-	private const string TokenStorageKey = "lumacore_token";
-
 	private readonly HttpClient mHttpClient;
-	private readonly IJSRuntime mJsRuntime;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="AuthService"/> class.
 	/// </summary>
 	/// <param name="httpClient">The HTTP client used to communicate with the backend API.</param>
-	/// <param name="jsRuntime">The JavaScript runtime for accessing browser storage APIs.</param>
-	public AuthService(HttpClient httpClient, IJSRuntime jsRuntime)
+	public AuthService(HttpClient httpClient)
 	{
 		mHttpClient = httpClient;
-		mJsRuntime = jsRuntime;
-	}
-
-	/// <summary>
-	/// Retrieves the currently stored JWT token, if any.
-	/// </summary>
-	/// <returns>The JWT token if one is stored; otherwise, <see langword="null"/>.</returns>
-	/// <remarks>
-	/// Returns <see langword="null"/> if browser storage is unavailable (e.g., during SSR/prerendering).
-	/// </remarks>
-	public async Task<string?> GetTokenAsync()
-	{
-		try
-		{
-			// First, check which storage type was used (if any).
-			string? storageType = await mJsRuntime
-				                      .InvokeAsync<string?>("localStorage.getItem", StorageTypeKey)
-				                      .ConfigureAwait(false);
-
-			if (string.IsNullOrEmpty(storageType))
-			{
-				// No storage type recorded, check both (fallback for edge cases).
-				string? token = await mJsRuntime
-					                .InvokeAsync<string?>("localStorage.getItem", TokenStorageKey)
-					                .ConfigureAwait(false);
-
-				// If found in localStorage, return it.
-				if (!string.IsNullOrEmpty(token))
-					return token;
-
-				// Otherwise, check sessionStorage.
-				return await mJsRuntime
-					       .InvokeAsync<string?>("sessionStorage.getItem", TokenStorageKey)
-					       .ConfigureAwait(false);
-			}
-
-			// Use the recorded storage type.
-			string storageMethod = storageType == StorageTypeLocal ? "localStorage" : "sessionStorage";
-			return await mJsRuntime
-				       .InvokeAsync<string?>(storageMethod + ".getItem", TokenStorageKey)
-				       .ConfigureAwait(false);
-		}
-		catch (JSException)
-		{
-			// JS runtime not available (SSR, prerendering) - treat as not authenticated.
-			return null;
-		}
-		catch (InvalidOperationException)
-		{
-			// JSInterop not ready - treat as not authenticated.
-			return null;
-		}
-	}
-
-	/// <summary>
-	/// Checks whether the user is currently authenticated (has a valid token stored).
-	/// </summary>
-	/// <returns>
-	/// <see langword="true"/> if a token is stored; otherwise, <see langword="false"/>.
-	/// </returns>
-	/// <remarks>
-	/// This method only checks for token presence, not token validity. The token may have expired.
-	/// </remarks>
-	public async Task<bool> IsAuthenticatedAsync()
-	{
-		string? token = await GetTokenAsync().ConfigureAwait(false);
-		return !string.IsNullOrEmpty(token);
 	}
 
 	/// <summary>
@@ -133,8 +44,8 @@ public sealed class AuthService
 	/// <param name="username">The username to authenticate with.</param>
 	/// <param name="password">The password to authenticate with.</param>
 	/// <param name="rememberMe">
-	/// If <see langword="true"/>, the token is stored in <c>localStorage</c> (persistent across browser restarts).<br/>
-	/// If <see langword="false"/>, the token is stored in <c>sessionStorage</c> (cleared when browser closes).
+	/// If <see langword="true"/>, the server sets a persistent <c>HttpOnly</c> cookie that survives browser
+	/// restarts. If <see langword="false"/>, a session cookie is set that is cleared when the browser closes.
 	/// </param>
 	/// <returns>
 	/// A <see cref="LoginResult"/> indicating whether the login was successful and containing any error message.
@@ -159,30 +70,11 @@ public sealed class AuthService
 				};
 			}
 
-			// Parse the response to extract the token.
-			LoginResponse? loginResponse = await response.Content
-				                               .ReadFromJsonAsync<LoginResponse>()
-				                               .ConfigureAwait(false);
-
-			// Validate the response.
-			if (loginResponse is null || string.IsNullOrEmpty(loginResponse.AccessToken))
-			{
-				return new LoginResult(false, "Invalid response from server.");
-			}
-
-			// Store the token in the appropriate storage based on "Remember Me" preference.
-			bool stored = await StoreTokenAsync(loginResponse.AccessToken, rememberMe).ConfigureAwait(false);
-			if (!stored)
-			{
-				return new LoginResult(false, "Could not store authentication token.");
-			}
-
-			// Login successful.
+			// The server sets an HttpOnly cookie automatically — no client-side token storage needed.
 			return new LoginResult(true, null);
 		}
 		catch (HttpRequestException)
 		{
-			// Network or connection error.
 			return new LoginResult(false, "Could not connect to the backend.");
 		}
 		catch (OperationCanceledException)
@@ -191,72 +83,46 @@ public sealed class AuthService
 		}
 		catch (Exception ex)
 		{
-			// General error handling.
 			return new LoginResult(false, $"An unexpected error occurred: {ex.Message}");
 		}
 	}
 
 	/// <summary>
-	/// Logs the user out by removing the stored token from browser storage.
+	/// Logs the user out by calling the server-side logout endpoint.
 	/// </summary>
+	/// <returns>
+	/// <see langword="true"/> if the server confirmed the logout (token revoked and cookie cleared);
+	/// <see langword="false"/> if the server was unreachable or returned an error.
+	/// </returns>
 	/// <remarks>
-	/// This method performs best-effort cleanup. If browser storage is unavailable, the operation silently succeeds.
+	///     <para>
+	///     On success, the server revokes the current access token (recording its <c>jti</c> in the revocation
+	///     blacklist) and clears the <c>HttpOnly</c> authentication cookie. Subsequent requests from this browser
+	///     session are unauthenticated.
+	///     </para>
+	///     <para>
+	///     On failure, the caller should inform the user that logout could not be completed. The <c>HttpOnly</c>
+	///     cookie cannot be cleared client-side, so the session remains active until the token expires naturally.
+	///     </para>
 	/// </remarks>
-	public async Task LogoutAsync()
+	public async Task<bool> LogoutAsync()
 	{
 		try
 		{
-			// Try to remove from both storage types to ensure complete cleanup.
-			await mJsRuntime.InvokeVoidAsync("localStorage.removeItem", TokenStorageKey).ConfigureAwait(false);
-			await mJsRuntime.InvokeVoidAsync("sessionStorage.removeItem", TokenStorageKey).ConfigureAwait(false);
-			await mJsRuntime.InvokeVoidAsync("localStorage.removeItem", StorageTypeKey).ConfigureAwait(false);
+			using HttpResponseMessage response = await mHttpClient
+				                                     .PostAsync("api/v1/auth/logout", content: null)
+				                                     .ConfigureAwait(false);
+
+			// The server handles token revocation and cookie clearing. We consider logout successful if the server
+			// confirms the request with a success status code. The client cannot directly clear the HttpOnly
+			// cookie, so we rely on the server's response to determine if the logout process was completed.
+			return response.IsSuccessStatusCode;
 		}
 		catch
 		{
-			// Best effort cleanup - if storage is unavailable, there's nothing to clean up anyway.
-		}
-	}
-
-	/// <summary>
-	/// Stores the JWT token in the appropriate browser storage.
-	/// </summary>
-	/// <param name="token">The JWT token to store.</param>
-	/// <param name="rememberMe">
-	/// If <see langword="true"/>, stores in <c>localStorage</c>; otherwise, stores in <c>sessionStorage</c>.
-	/// </param>
-	/// <returns>
-	/// <see langword="true"/> if the token was stored successfully; otherwise, <see langword="false"/>.
-	/// </returns>
-	private async Task<bool> StoreTokenAsync(string token, bool rememberMe)
-	{
-		try
-		{
-			if (rememberMe)
-			{
-				// Persistent storage - survives browser restart.
-				await mJsRuntime.InvokeVoidAsync("localStorage.setItem", TokenStorageKey, token).ConfigureAwait(false);
-				await mJsRuntime.InvokeVoidAsync("localStorage.setItem", StorageTypeKey, StorageTypeLocal)
-					.ConfigureAwait(false);
-			}
-			else
-			{
-				// Session storage - cleared when browser closes.
-				await mJsRuntime.InvokeVoidAsync("sessionStorage.setItem", TokenStorageKey, token)
-					.ConfigureAwait(false);
-				await mJsRuntime.InvokeVoidAsync("localStorage.setItem", StorageTypeKey, StorageTypeSession)
-					.ConfigureAwait(false);
-			}
-
-			return true;
-		}
-		catch (JSException)
-		{
-			// JS runtime not available.
-			return false;
-		}
-		catch (InvalidOperationException)
-		{
-			// JSInterop not ready.
+			// On any exception (network failure, server error, etc.), we treat logout as unsuccessful.
+			// The client cannot clear the HttpOnly cookie directly, so we cannot guarantee the session
+			// is terminated without a successful server response.
 			return false;
 		}
 	}

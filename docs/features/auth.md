@@ -177,6 +177,8 @@ LumaCore supports two token transport mechanisms — browser clients use `HttpOn
 4. Client can use `GET /api/v1/auth/whoami` to display the current user in the UI.
 5. To log out, client calls `POST /api/v1/auth/logout` — the token is revoked and the cookie is cleared.
 
+> For details on how the Blazor WASM client implements this flow, see the [Auth Integration Guide](../development/blazor-ui/auth-integration.md).
+
 ### API Clients (Companion AIs, CLI Tools)
 
 1. Client sends credentials to `POST /api/v1/auth/login`.
@@ -196,6 +198,7 @@ Once a proper user store and role management are implemented, the bootstrap admi
 ## Related Features
 
 - [*System*](system.md) — Exposes JWT configuration (sanitized) via configuration endpoint
+- [Auth Integration Guide](../development/blazor-ui/auth-integration.md) — How the Blazor WASM client implements cookie-based authentication
 
 ---
 

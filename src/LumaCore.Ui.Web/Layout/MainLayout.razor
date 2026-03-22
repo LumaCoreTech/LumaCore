@@ -116,7 +116,7 @@ else
 	private AuthService? AuthService { get; set; }
 
 	[Inject]
-	private JwtAuthenticationStateProvider? AuthStateProvider { get; set; }
+	private CookieAuthenticationStateProvider? AuthStateProvider { get; set; }
 
 	[Inject]
 	private NavigationManager? Navigation { get; set; }
@@ -141,8 +141,9 @@ else
 	/// Handles the logout action when the user clicks the logout button.
 	/// </summary>
 	/// <remarks>
-	/// Clears the stored authentication token, notifies the authentication system of the state change,
-	/// resets the theme to default, and redirects the user to the home page.
+	/// Calls the server-side logout endpoint (which revokes the token and clears the <c>HttpOnly</c> cookie),
+	/// resets the theme to default, notifies the authentication state provider, and redirects to the home page.
+	/// If the server is unreachable, the user stays authenticated and an error message is displayed.
 	/// </remarks>
 	private async Task HandleLogoutAsync()
 	{
@@ -150,7 +151,27 @@ else
 		if (AuthService is null || AuthStateProvider is null || Navigation is null || JsRuntime is null)
 			return;
 
-		// Reset theme to default before logout.
+		// Attempt server-side logout (revokes token + clears HttpOnly cookie).
+		bool loggedOut = await AuthService.LogoutAsync().ConfigureAwait(true);
+
+		if (!loggedOut)
+		{
+			// Server unreachable — the HttpOnly cookie cannot be cleared client-side,
+			// so the user remains authenticated. Show a toast instead of faking logout.
+			try
+			{
+				string message = Localizer["components.navbar.toasts.logoutFailed"];
+				await JsRuntime.InvokeVoidAsync("showToast", message, "error", 5000).ConfigureAwait(true);
+			}
+			catch
+			{
+				// Silently handle JS interop failures
+			}
+
+			return;
+		}
+
+		// Reset theme to default after successful logout.
 		// TODO: Once admin-configurable default theme exists (database), reset to that instead of hardcoded default.
 		try
 		{
@@ -161,8 +182,7 @@ else
 			// Silently handle JS interop failures
 		}
 
-		// Perform logout via AuthService and notify the authentication state provider.
-		await AuthService.LogoutAsync().ConfigureAwait(true);
+		// Notify the auth state provider and redirect to home.
 		AuthStateProvider.NotifyStateChanged();
 		Navigation.NavigateTo("/");
 	}

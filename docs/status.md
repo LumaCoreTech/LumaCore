@@ -200,7 +200,7 @@ The web interface is where users **experience** LumaCore — chat with personas,
 | Capability      | Stage       | Functional Target (Phase) | Hardened Target (Phase) |
 |-----------------|-------------|---------------------------|-----------------|
 | **UI Shell (Layout)**<br/>_Blazor app shell with main layout, navigation, and three-state health indicator (green/orange/red) with two-step live → ready probing._ | 🟢 Functional | ✔ (P0) | P1 |
-| **Login UI**<br/>_Login form with credentials input, token storage, and error handling. Theme-aware styling supports all 5 themes._ | 🟢 Functional | ✔ (P1) | P2 |
+| **Login UI**<br/>_Login form with credentials input, cookie-based authentication, and error handling. Honest logout with error toast on server failure. Theme-aware styling supports all 5 themes._ | 🟢 Functional | ✔ (P1) | P2 |
 | **Chat Interface**<br/>_Chat page with message input, history display, and persona integration._ | ❌ None | P1 | P2 |
 | **Message Display**<br/>_Render messages with Markdown support, syntax highlighting, and copy-to-clipboard._ | ❌ None | P1 | P2 |
 | **Streaming Display**<br/>_Show AI responses as they stream in real-time._ | ❌ None | P1 | P2 |
@@ -282,7 +282,7 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 
 **Phase 1 (Active):** Make it **useful**
 - ✅ System metrics API (memory, GC, process, thread pool with extensible contributor pattern)
-- ✅ Login UI (theme-aware, auth integration, token management)
+- ✅ Login UI (theme-aware, cookie-based auth, honest logout error handling)
 - ✅ Theming System (5 themes: lumacore-dark/light, missi-pink, ocean-blue, forest-green)
 - ✅ Refined Sparkle Effects (subtle animations with admin-mode toggle)
 - ✅ Database support (EF Core + multi-DB: SQLite, PostgreSQL, MSSQL; MySQL pending Pomelo EF10)
@@ -308,6 +308,7 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - ✅ Shared entity limits (cross-layer validation constraints for UI and API)
 - ✅ Cookie-based token transport (HttpOnly, SameSite=Strict, RememberMe, dual-auth Cookie + Bearer)
 - ✅ Token revocation (DB-backed blacklist with negative-only memory cache, immediate logout)
+- ✅ Blazor WASM cookie auth (server-side identity via /whoami, cross-origin support, server-first logout)
 - 🎯 User management API
 - 🎯 Ollama integration (REST API client, health checks, inference runtime)
 - 🎯 Chat session API & SSE streaming
