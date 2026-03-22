@@ -110,6 +110,8 @@ Security establishes a foundation where mistakes are not fatal. It limits damage
 | Capability | Stage | Functional Target (Phase) | Hardened Target (Phase) |
 |---|---|---|---|
 | **Login (JWT)**<br/>_Authenticates users securely using token-based identity._ | 🟢 Functional | ✔ (P0) | P1 |
+| **Cookie-based Token Transport**<br/>_HttpOnly cookies for browser clients (Blazor WASM) with SameSite=Strict, RememberMe, and dual-auth (Cookie + Bearer). API clients are unaffected._ | 🟢 Functional | ✔ (P1) | P2 |
+| **Logout & Token Revocation**<br/>_Immediate JWT invalidation via database-backed blacklist (RevokedJwts table) with negative-only memory cache. Logout clears the authentication cookie and revokes the token's jti._ | 🟢 Functional | ✔ (P1) | P2 |
 | **Token Refresh & Lifetime**<br/>_Issue refresh tokens to extend sessions with policy control._ | ❌ None | P2 | P2+ |
 | **Role Claims**<br/>_Assign role-based permissions (admin, user, moderator) via JWT claims._ | 🟠 Developing | P1 | P2 |
 | **User Store (Database)**<br/>_Database-backed user storage with password hashing (replaces hardcoded admin/changeme). Requires Database Support._ | 🟠 Developing | P1 | P2 |
@@ -304,7 +306,9 @@ Ops ensures the system can be deployed, configured, monitored, and maintained.
 - ✅ Background work queue (hosted service with configurable options, tests)
 - ✅ Localization (JSON-based i18n, language selector/switcher, localized form validation)
 - ✅ Shared entity limits (cross-layer validation constraints for UI and API)
-- 🎯 User management API (replaces hardcoded admin/changeme — data layer ready, API endpoints pending)
+- ✅ Cookie-based token transport (HttpOnly, SameSite=Strict, RememberMe, dual-auth Cookie + Bearer)
+- ✅ Token revocation (DB-backed blacklist with negative-only memory cache, immediate logout)
+- 🎯 User management API
 - 🎯 Ollama integration (REST API client, health checks, inference runtime)
 - 🎯 Chat session API & SSE streaming
 - 🎯 Multi-turn conversations with context window management
