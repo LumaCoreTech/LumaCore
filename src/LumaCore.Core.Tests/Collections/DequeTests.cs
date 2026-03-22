@@ -61,5 +61,5 @@ namespace LumaCore.Core.Tests.Collections;
 ///     </list>
 ///     </para>
 /// </remarks>
-[Trait("Category", "Unit")]
+[Trait("Category", "Collections")]
 public partial class DequeTests { }

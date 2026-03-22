@@ -26,5 +26,5 @@ namespace LumaCore.Core.Tests;
 ///     </list>
 ///     </para>
 /// </remarks>
-[Trait("Category", "Unit")]
+[Trait("Category", "Core")]
 public partial class LifecycleManagementTests;

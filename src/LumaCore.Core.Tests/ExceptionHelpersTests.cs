@@ -9,5 +9,5 @@ namespace LumaCore.Core.Tests;
 /// <summary>
 /// Unit tests for <see cref="ExceptionHelpers"/>.
 /// </summary>
-[Trait("Category", "Unit")]
+[Trait("Category", "Core")]
 public partial class ExceptionHelpersTests { }

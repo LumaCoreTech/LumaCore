@@ -15,7 +15,7 @@ namespace LumaCore.Core.Tests.Collections;
 /// <summary>
 /// Unit tests for <see cref="CollectionHelpers"/>.
 /// </summary>
-[Trait("Category", "Unit")]
+[Trait("Category", "Collections")]
 public class CollectionHelpersTests
 {
 	/// <summary>
