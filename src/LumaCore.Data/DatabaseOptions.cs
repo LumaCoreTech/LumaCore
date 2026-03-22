@@ -66,6 +66,16 @@ public sealed class DatabaseOptions : IValidatableObject
 	public const string SectionName = "Database";
 
 	/// <summary>
+	/// Provides the error message indicating that the database connection string configuration is required.
+	/// </summary>
+	/// <remarks>
+	/// This constant is used when the application detects that the <c>Database:ConnectionString</c> setting is missing.
+	/// The message guides users to set the configuration key or the corresponding environment variable.
+	/// </remarks>
+	private const string ConnectionStringRequiredError =
+		"Database:ConnectionString must be configured. Set configuration key 'Database:ConnectionString' or environment variable 'Database__ConnectionString'.";
+
+	/// <summary>
 	/// Represents the error message displayed when the database encryption key does not meet the minimum required length
 	/// of 32 characters.
 	/// </summary>
@@ -80,12 +90,22 @@ public sealed class DatabaseOptions : IValidatableObject
 	/// Provides the error message indicating that the database encryption key configuration is required.
 	/// </summary>
 	/// <remarks>
-	/// This constant is used when the application detects that the 'Database:EncryptionKey' setting is missing.
+	/// This constant is used when the application detects that the <c>Database:EncryptionKey</c> setting is missing.
 	/// The message guides users to set the configuration key or the corresponding environment variable to enable encryption
 	/// features.
 	/// </remarks>
 	private const string EncryptionKeyRequiredError =
 		"Database:EncryptionKey must be configured. Set configuration key 'Database:EncryptionKey' or environment variable 'Database__EncryptionKey'.";
+
+	/// <summary>
+	/// Provides the error message indicating that the database provider configuration is required.
+	/// </summary>
+	/// <remarks>
+	/// This constant is used when the application detects that the <c>Database:Provider</c> setting is missing.
+	/// The message guides users to set the configuration key or the corresponding environment variable.
+	/// </remarks>
+	private const string ProviderRequiredError =
+		"Database:Provider must be configured. Set configuration key 'Database:Provider' or environment variable 'Database__Provider'.";
 
 	/// <summary>
 	/// Gets or sets auto-migration settings (apply migrations, backups, restore-on-failure).
@@ -153,7 +173,7 @@ public sealed class DatabaseOptions : IValidatableObject
 	///     </para>
 	///     <para>MySQL: <c>Server=localhost;Database=lumacore;User=app;Password=secret</c></para>
 	/// </example>
-	[Required]
+	[Required(ErrorMessage = ConnectionStringRequiredError)]
 	public string ConnectionString { get; set; } = "Data Source=lumacore.db";
 
 	/// <summary>
@@ -206,7 +226,7 @@ public sealed class DatabaseOptions : IValidatableObject
 	///         <item><c>mysql</c> — MySQL / MariaDB (via Pomelo)</item>
 	///     </list>
 	/// </remarks>
-	[Required]
+	[Required(ErrorMessage = ProviderRequiredError)]
 	public string Provider { get; set; } = "sqlite";
 
 	/// <summary>
