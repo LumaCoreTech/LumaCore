@@ -41,6 +41,18 @@ sealed class AuthCookieOptions
 	public const string SectionName = "Jwt:Cookie";
 
 	/// <summary>
+	/// Provides the error message used when <see cref="Name"/> is not configured.
+	/// </summary>
+	private const string NameRequiredError =
+		"Jwt:Cookie:Name must be configured. Set configuration key 'Jwt:Cookie:Name' or environment variable 'Jwt__Cookie__Name'.";
+
+	/// <summary>
+	/// Provides the error message used when <see cref="Path"/> is not configured.
+	/// </summary>
+	private const string PathRequiredError =
+		"Jwt:Cookie:Path must be configured. Set configuration key 'Jwt:Cookie:Path' or environment variable 'Jwt__Cookie__Path'.";
+
+	/// <summary>
 	/// Gets or sets whether cookie-based token transport is enabled.
 	/// </summary>
 	/// <remarks>
@@ -66,7 +78,7 @@ sealed class AuthCookieOptions
 	///     <c>token</c> or <c>session</c>.
 	///     </para>
 	/// </remarks>
-	[Required]
+	[Required(ErrorMessage = NameRequiredError)]
 	public string Name { get; set; } = "lumacore_access";
 
 	/// <summary>
@@ -111,6 +123,6 @@ sealed class AuthCookieOptions
 	///     sees, not the internal route.
 	///     </para>
 	/// </remarks>
-	[Required]
+	[Required(ErrorMessage = PathRequiredError)]
 	public string Path { get; set; } = "/api";
 }

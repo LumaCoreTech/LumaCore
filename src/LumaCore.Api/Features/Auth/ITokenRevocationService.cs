@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using Microsoft.EntityFrameworkCore;
+
 namespace LumaCore.Api.Features.Auth;
 
 /// <summary>
@@ -21,7 +23,13 @@ interface ITokenRevocationService
 {
 	/// <summary>
 	/// Records a token as revoked in the persistent blacklist and evicts any cached "not revoked" entry.
+	/// If the token is already revoked, the existing entry is preserved unchanged (idempotent, first-write-wins).
 	/// </summary>
+	/// <remarks>
+	/// This method is safe against concurrent revocation of the same <c>jti</c>. If two callers race past the
+	/// duplicate check simultaneously, the first insert wins and the second is resolved gracefully via the
+	/// database's primary-key constraint — no <see cref="DbUpdateException"/> propagates to the caller.
+	/// </remarks>
 	/// <param name="jti">The JWT ID (<c>jti</c> claim) of the token to revoke.</param>
 	/// <param name="expiresAtUtc">
 	/// The token's natural expiry timestamp. Used to determine when the revocation entry can be safely cleaned up.
@@ -29,8 +37,11 @@ interface ITokenRevocationService
 	/// <param name="subject">The subject (<c>sub</c> claim) of the revoked token, stored for auditing.</param>
 	/// <param name="reason">A short description of why the token was revoked (e.g., <c>"Logout"</c>).</param>
 	/// <param name="cancellationToken">A token to cancel the operation.</param>
-	/// <returns>A task that completes when the revocation has been persisted.</returns>
-	Task RevokeAsync(
+	/// <returns>
+	/// <see langword="true"/> if a new revocation entry was created; <see langword="false"/> if the token was
+	/// already revoked and the existing entry was left unchanged.
+	/// </returns>
+	Task<bool> RevokeAsync(
 		string            jti,
 		DateTime          expiresAtUtc,
 		string            subject,

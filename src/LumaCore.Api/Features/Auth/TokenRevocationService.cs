@@ -53,8 +53,8 @@ sealed class TokenRevocationService : ITokenRevocationService
 	/// <param name="timeProvider">The time provider for obtaining the current UTC time.</param>
 	/// <param name="options">The token revocation configuration options.</param>
 	/// <exception cref="ArgumentNullException">
-	/// <paramref name="dbContext"/>, <paramref name="cache"/>, or <paramref name="options"/> is
-	/// <see langword="null"/>.
+	/// <paramref name="dbContext"/>, <paramref name="cache"/>, <paramref name="timeProvider"/>, or
+	/// <paramref name="options"/> is <see langword="null"/>.
 	/// </exception>
 	public TokenRevocationService(
 		LumaCoreDbContext                dbContext,
@@ -64,6 +64,7 @@ sealed class TokenRevocationService : ITokenRevocationService
 	{
 		ArgumentNullException.ThrowIfNull(dbContext);
 		ArgumentNullException.ThrowIfNull(cache);
+		ArgumentNullException.ThrowIfNull(timeProvider);
 		ArgumentNullException.ThrowIfNull(options);
 		mDbContext = dbContext;
 		mCache = cache;
@@ -72,7 +73,7 @@ sealed class TokenRevocationService : ITokenRevocationService
 	}
 
 	/// <inheritdoc/>
-	public async Task RevokeAsync(
+	public async Task<bool> RevokeAsync(
 		string            jti,
 		DateTime          expiresAtUtc,
 		string            subject,
@@ -84,12 +85,13 @@ sealed class TokenRevocationService : ITokenRevocationService
 		// Evict any cached "not revoked" entry so subsequent checks on this instance hit the database.
 		mCache.Remove(CacheKeyPrefix + jti);
 
+		// Check if the token is already revoked to ensure idempotency and preserve the original entry's properties.
 		bool alreadyRevoked = await mDbContext.RevokedJwts
 			                      .AnyAsync(r => r.Jti == jti, cancellationToken)
 			                      .ConfigureAwait(false);
 
 		if (alreadyRevoked)
-			return;
+			return false;
 
 		mDbContext.RevokedJwts.Add(
 			new RevokedJwtEntity
@@ -101,7 +103,29 @@ sealed class TokenRevocationService : ITokenRevocationService
 				Reason = reason
 			});
 
-		await mDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+		try
+		{
+			await mDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+		}
+		catch (DbUpdateException)
+		{
+			// Race condition: another thread/instance inserted the same Jti between our AnyAsync() check and
+			// SaveChangesAsync(). Verify that the conflict is indeed a duplicate revocation (not an unrelated
+			// database error) by re-checking the table. If confirmed, treat it as idempotent success.
+			// Detach the failed entity to leave the DbContext in a clean state for the re-query.
+			mDbContext.ChangeTracker.Clear();
+
+			bool confirmedDuplicate = await mDbContext.RevokedJwts
+				                          .AnyAsync(r => r.Jti == jti, cancellationToken)
+				                          .ConfigureAwait(false);
+
+			if (!confirmedDuplicate)
+				throw;
+
+			return false;
+		}
+
+		return true;
 	}
 
 	/// <inheritdoc/>

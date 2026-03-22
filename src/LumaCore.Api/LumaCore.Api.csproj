@@ -99,6 +99,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="LumaCore.Api.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Folder Include="logs\" />
 	</ItemGroup>
 

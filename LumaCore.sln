@@ -94,6 +94,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration-test", "integra
 		.github\actions\integration-test\action.yml = .github\actions\integration-test\action.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LumaCore.Api.Tests", "src\LumaCore.Api.Tests\LumaCore.Api.Tests.csproj", "{570343E7-315C-4162-AB22-7CE1C1FEFE68}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -152,6 +154,10 @@ Global
 		{90F14233-A2AD-19BE-42F6-846DC8304FE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90F14233-A2AD-19BE-42F6-846DC8304FE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90F14233-A2AD-19BE-42F6-846DC8304FE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{570343E7-315C-4162-AB22-7CE1C1FEFE68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{570343E7-315C-4162-AB22-7CE1C1FEFE68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{570343E7-315C-4162-AB22-7CE1C1FEFE68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{570343E7-315C-4162-AB22-7CE1C1FEFE68}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

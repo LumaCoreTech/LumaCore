@@ -40,6 +40,13 @@ sealed class TokenRevocationOptions
 	public const string SectionName = "Jwt:TokenRevocation";
 
 	/// <summary>
+	/// Provides the error message used when <see cref="CacheDurationSeconds"/> is outside the allowed
+	/// <c>[0, 60]</c> range.
+	/// </summary>
+	private const string CacheDurationRangeError =
+		"Jwt:TokenRevocation:CacheDurationSeconds must be between 0 and 60 seconds.";
+
+	/// <summary>
 	/// Gets or sets the duration (in seconds) for which a "not revoked" lookup result is cached in memory.
 	/// </summary>
 	/// <remarks>
@@ -57,6 +64,6 @@ sealed class TokenRevocationOptions
 	///     a token is revoked on instance A but the next request hits instance B.
 	///     </para>
 	/// </remarks>
-	[Range(0, 60)]
+	[Range(0, 60, ErrorMessage = CacheDurationRangeError)]
 	public int CacheDurationSeconds { get; set; } = 5;
 }
