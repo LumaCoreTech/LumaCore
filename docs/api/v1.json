@@ -47,6 +47,29 @@
         ]
       }
     },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Logs the user out by revoking the access token and clearing the authentication cookie.",
+        "description": "Revokes the current JWT access token so it is immediately rejected on subsequent requests, and clears the HttpOnly authentication cookie for browser clients. API clients using Bearer tokens should also call this endpoint to invalidate their token. Returns 204 No Content on success.",
+        "operationId": "Logout",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Authentication is required to access this endpoint."
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/auth/whoami": {
       "get": {
         "tags": [
@@ -596,6 +619,11 @@
           "password": {
             "type": "string",
             "description": "The password for authentication. Must be at least 8 characters."
+          },
+          "rememberMe": {
+            "type": "boolean",
+            "description": "Controls cookie persistence for browser clients. When `true`, the server sets a persistent\ncookie that survives browser restarts (expires when the token expires). When `false`, a session\ncookie is set that is cleared when the browser closes. API clients using `Authorization: Bearer` can\nignore this field.",
+            "default": false
           }
         },
         "description": "Login credentials submitted by a client to obtain a JWT."
