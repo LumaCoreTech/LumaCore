@@ -31,7 +31,6 @@ public sealed partial class LumaCoreDataService
 		try
 		{
 			await mDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-			return true;
 		}
 		catch (DbUpdateException)
 		{
@@ -52,6 +51,8 @@ public sealed partial class LumaCoreDataService
 
 			throw;
 		}
+
+		return true;
 	}
 
 	/// <inheritdoc/>
