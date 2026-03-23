@@ -31,7 +31,7 @@ jobs:
 
     steps:
     - name: Download coverage — Build (Windows)
-      uses: dawidd6/action-download-artifact@v18
+      uses: dawidd6/action-download-artifact@v19
       with:
         workflow: windows-build.yml
         branch: main
@@ -40,7 +40,7 @@ jobs:
       continue-on-error: true
 
     - name: Download coverage — Build (Ubuntu)
-      uses: dawidd6/action-download-artifact@v18
+      uses: dawidd6/action-download-artifact@v19
       with:
         workflow: linux-build.yml
         branch: main
@@ -49,7 +49,7 @@ jobs:
       continue-on-error: true
 
     - name: Download coverage — Integration (SQLite)
-      uses: dawidd6/action-download-artifact@v18
+      uses: dawidd6/action-download-artifact@v19
       with:
         workflow: integration-tests-sqlite.yml
         branch: main
@@ -58,7 +58,7 @@ jobs:
       continue-on-error: true
 
     - name: Download coverage — Integration (PostgreSQL)
-      uses: dawidd6/action-download-artifact@v18
+      uses: dawidd6/action-download-artifact@v19
       with:
         workflow: integration-tests-postgres.yml
         branch: main
@@ -67,7 +67,7 @@ jobs:
       continue-on-error: true
 
     - name: Download coverage — Integration (SQL Server)
-      uses: dawidd6/action-download-artifact@v18
+      uses: dawidd6/action-download-artifact@v19
       with:
         workflow: integration-tests-sqlserver.yml
         branch: main
