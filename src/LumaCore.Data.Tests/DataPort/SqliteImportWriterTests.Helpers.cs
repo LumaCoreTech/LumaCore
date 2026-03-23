@@ -382,4 +382,16 @@ public sealed partial class SqliteImportWriterTests
 		                  """;
 		await cmd.ExecuteNonQueryAsync();
 	}
+
+	/// <summary>
+	/// A synchronous <see cref="IProgress{T}"/> implementation that invokes the callback inline
+	/// on the calling thread, avoiding the asynchronous dispatch of <see cref="Progress{T}"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of the progress value.</typeparam>
+	/// <param name="handler">The action to invoke for each progress report.</param>
+	private sealed class SynchronousProgress<T>(Action<T> handler) : IProgress<T>
+	{
+		/// <inheritdoc/>
+		public void Report(T value) => handler(value);
+	}
 }

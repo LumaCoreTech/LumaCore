@@ -361,7 +361,7 @@ public sealed partial class SqliteImportWriterTests
 		(int Id, string Name)[] rows = GenerateRows(totalRows);
 		TableSnapshot snapshot = CreateSnapshot("Items", rows);
 		var reports = new List<DataPortProgressReport>();
-		var progress = new Progress<DataPortProgressReport>(r => reports.Add(r));
+		var progress = new SynchronousProgress<DataPortProgressReport>(reports.Add);
 
 		SqliteImportWriter writer = CreateWriter(dbPath);
 		try
@@ -376,9 +376,6 @@ public sealed partial class SqliteImportWriterTests
 		{
 			await writer.DisposeAsync();
 		}
-
-		// Allow Progress<T> callbacks to drain (they use SynchronizationContext).
-		await Task.Delay(50);
 
 		// Assert — at least 2 progress reports (one per chunk + final).
 		Assert.True(reports.Count >= 2, $"Expected at least 2 progress reports but got {reports.Count}.");
