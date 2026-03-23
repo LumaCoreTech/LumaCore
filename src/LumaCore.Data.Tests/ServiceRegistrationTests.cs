@@ -10,6 +10,7 @@ using LumaCore.Data.Services;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -186,7 +187,40 @@ public sealed class ServiceRegistrationTests
 	}
 
 	/// <summary>
-	/// Verifies that keyed <see cref="ISecretProtector"/> registrations are resolvable and that domain
+	/// Verifies that the <see cref="DatabaseInitializer"/> singleton and the <see cref="IHostedService"/>
+	/// registration resolve to the same instance. This exercises the forwarding factory lambda
+	/// <c>sp =&gt; sp.GetRequiredService&lt;DatabaseInitializer&gt;()</c> and ensures
+	/// <see cref="DatabaseConnectionMonitorService"/> can reach the initializer through DI.
+	/// </summary>
+	[Fact]
+	public void AddLumaCoreData_WhenResolved_ForwardsDatabaseInitializerToHostedService()
+	{
+		// Arrange
+		ServiceCollection services = CreateServiceCollection();
+
+		IConfiguration configuration = new ConfigurationBuilder()
+			.AddInMemoryCollection(
+				new Dictionary<string, string?>
+				{
+					["Database:Provider"] = "sqlite",
+					["Database:ConnectionString"] = "Data Source=:memory:",
+					["Database:EncryptionKey"] = TestEncryptionKey
+				})
+			.Build();
+
+		services.AddLumaCoreData(configuration);
+		using ServiceProvider sp = services.BuildServiceProvider();
+
+		// Act
+		var singleton = sp.GetRequiredService<DatabaseInitializer>();
+		DatabaseInitializer hostedInitializer = sp.GetServices<IHostedService>().OfType<DatabaseInitializer>().Single();
+
+		// Assert — AddHostedService() forwards to the singleton registration.
+		Assert.Same(singleton, hostedInitializer);
+	}
+
+	/// <summary>
+	/// Verifies that keyed <see cref="ISecretProtector"/> registrations are resolvable
 	/// separation produces distinct instances, while the <see cref="SecretProtectorDomains.Default"/> key
 	/// forwards to the non-keyed singleton.
 	/// </summary>
