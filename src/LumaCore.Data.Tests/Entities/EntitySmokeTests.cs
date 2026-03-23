@@ -393,6 +393,38 @@ public sealed class EntitySmokeTests
 
 	#endregion
 
+	#region RevokedJwtEntity
+
+	/// <summary>
+	/// Verifies that <see cref="RevokedJwtEntity"/> can be constructed and all properties assigned.
+	/// </summary>
+	[Fact]
+	public void RevokedJwtEntity_CanSetAllProperties()
+	{
+		// Arrange
+		var expires = new DateTime(2026, 1, 1, 1, 0, 0, DateTimeKind.Utc);
+		var revoked = new DateTime(2026, 1, 1, 0, 30, 0, DateTimeKind.Utc);
+
+		// Act
+		var sut = new RevokedJwtEntity
+		{
+			Jti = "test-jti-001",
+			ExpiresAtUtc = expires,
+			RevokedAtUtc = revoked,
+			Subject = "alice",
+			Reason = "Logout"
+		};
+
+		// Assert
+		Assert.Equal("test-jti-001", sut.Jti);
+		Assert.Equal(expires, sut.ExpiresAtUtc);
+		Assert.Equal(revoked, sut.RevokedAtUtc);
+		Assert.Equal("alice", sut.Subject);
+		Assert.Equal("Logout", sut.Reason);
+	}
+
+	#endregion
+
 	#region SeedHistoryEntity
 
 	/// <summary>
