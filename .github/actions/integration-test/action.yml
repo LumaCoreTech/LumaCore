@@ -56,7 +56,7 @@ runs:
         LUMACORE_TESTS__Db__ConnectionString: ${{ inputs.connection-string }}
 
     - name: Test Report
-      uses: dorny/test-reporter@v2
+      uses: dorny/test-reporter@v3
       if: always()
       with:
         name: Integration Results (${{ inputs.display-name }})
