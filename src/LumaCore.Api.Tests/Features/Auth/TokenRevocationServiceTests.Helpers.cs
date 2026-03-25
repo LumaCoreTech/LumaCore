@@ -47,8 +47,7 @@ public sealed partial class TokenRevocationServiceTests
 			: this(
 				$"Data Source=Test_{Guid.NewGuid():N};Mode=Memory;Cache=Shared",
 				cacheDurationSeconds,
-				ensureCreated: true)
-		{ }
+				ensureCreated: true) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TestHarness"/> class that connects to an existing
@@ -62,8 +61,7 @@ public sealed partial class TokenRevocationServiceTests
 		/// The cache duration in seconds for negative lookup results. Defaults to <c>5</c>.
 		/// </param>
 		public TestHarness(string connectionString, int cacheDurationSeconds = 5)
-			: this(connectionString, cacheDurationSeconds, ensureCreated: false)
-		{ }
+			: this(connectionString, cacheDurationSeconds, ensureCreated: false) { }
 
 		/// <summary>
 		/// Shared initialization logic for both public constructors.

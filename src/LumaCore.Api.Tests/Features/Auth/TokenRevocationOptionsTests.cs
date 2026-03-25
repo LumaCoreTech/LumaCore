@@ -14,7 +14,7 @@ namespace LumaCore.Api.Tests.Features.Auth;
 /// Unit tests for <see cref="TokenRevocationOptions"/>.
 /// </summary>
 /// <remarks>
-/// These tests verify the default values, property setters, and data-annotation validation
+/// These tests verify the default values, constants, and data-annotation validation
 /// of <see cref="TokenRevocationOptions"/>.
 /// </remarks>
 [Trait("Category", "Auth")]
@@ -52,26 +52,6 @@ public sealed class TokenRevocationOptionsTests
 
 	#endregion
 
-	#region CacheDurationSeconds
-
-	/// <summary>
-	/// Verifies that <see cref="TokenRevocationOptions.CacheDurationSeconds"/> can be set to a custom value.
-	/// </summary>
-	[Fact]
-	public void CacheDurationSeconds_WhenSet_StoresValue()
-	{
-		// Arrange
-		var sut = new TokenRevocationOptions();
-
-		// Act
-		sut.CacheDurationSeconds = 30;
-
-		// Assert
-		Assert.Equal(30, sut.CacheDurationSeconds);
-	}
-
-	#endregion
-
 	#region Validation
 
 	/// <summary>
@@ -96,12 +76,12 @@ public sealed class TokenRevocationOptionsTests
 	/// <summary>
 	/// Verifies that validation passes at both boundaries of the allowed <c>[0, 60]</c> range.
 	/// </summary>
-	/// <param name="value">The boundary value to test.</param>
 	/// <param name="caseName">A descriptive name for the test case.</param>
+	/// <param name="value">The boundary value to test.</param>
 	[Theory]
-	[InlineData(0, "minimum (cache disabled)")]
-	[InlineData(60, "maximum")]
-	public void Validate_WithBoundaryValues_Succeeds(int value, string caseName)
+	[InlineData("minimum (cache disabled)", 0)]
+	[InlineData("maximum", 60)]
+	public void Validate_WithBoundaryValues_Succeeds(string caseName, int value)
 	{
 		_ = caseName; // Used for test output readability.
 
@@ -122,12 +102,12 @@ public sealed class TokenRevocationOptionsTests
 	/// Verifies that validation fails when <see cref="TokenRevocationOptions.CacheDurationSeconds"/>
 	/// is outside the allowed <c>[0, 60]</c> range.
 	/// </summary>
-	/// <param name="value">The invalid value to test.</param>
 	/// <param name="caseName">A descriptive name for the test case.</param>
+	/// <param name="value">The invalid value to test.</param>
 	[Theory]
-	[InlineData(-1, "below minimum")]
-	[InlineData(61, "above maximum")]
-	public void Validate_WhenCacheDurationSecondsIsOutOfRange_Fails(int value, string caseName)
+	[InlineData("below minimum", -1)]
+	[InlineData("above maximum", 61)]
+	public void Validate_WhenCacheDurationSecondsIsOutOfRange_Fails(string caseName, int value)
 	{
 		_ = caseName; // Used for test output readability.
 
