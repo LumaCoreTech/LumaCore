@@ -4,6 +4,8 @@
 
 using System.Text;
 
+using LumaCore.Api.Features.ApiVersioning;
+
 using Microsoft.AspNetCore.Authorization;
 
 namespace LumaCore.Api.Features.Auth;
@@ -31,15 +33,6 @@ namespace LumaCore.Api.Features.Auth;
 /// </remarks>
 static class AuthorizationValidation
 {
-	/// <summary>
-	/// The route prefix that identifies versioned API endpoints.
-	/// </summary>
-	/// <remarks>
-	/// Only endpoints whose route pattern starts with this prefix are validated.
-	/// Infrastructure endpoints (e.g., <c>/health</c>) are intentionally excluded.
-	/// </remarks>
-	private const string VersionedApiPrefix = "/api/v";
-
 	/// <summary>
 	/// Validates that all versioned API endpoints have explicit authorization declarations.
 	/// </summary>
@@ -90,10 +83,25 @@ static class AuthorizationValidation
 	{
 		List<string> endpointsMissingAuthorization = [];
 
-		// Iterate over all registered endpoints in the application.
-		foreach (Endpoint endpoint in app.Services
-			         .GetRequiredService<EndpointDataSource>()
-			         .Endpoints)
+		// ASP.NET Core registers endpoints through two disconnected paths:
+		//   1. IEndpointRouteBuilder.DataSources — Minimal API endpoints (MapGet/MapPost etc.)
+		//   2. DI-registered EndpointDataSource  — Controller/Razor Pages endpoints
+		// The routing middleware sees both at runtime, but neither source includes the other.
+		// We merge both and deduplicate so the validator catches misconfigured endpoints
+		// regardless of the registration model used.
+		IEnumerable<Endpoint> minimalApiEndpoints = ((IEndpointRouteBuilder)app)
+			.DataSources
+			.SelectMany(ds => ds.Endpoints);
+
+		IEnumerable<Endpoint> controllerEndpoints = app.Services
+			.GetRequiredService<EndpointDataSource>()
+			.Endpoints;
+
+		IEnumerable<Endpoint> allEndpoints = minimalApiEndpoints
+			.Concat(controllerEndpoints)
+			.Distinct();
+
+		foreach (Endpoint endpoint in allEndpoints)
 		{
 			// Only validate RouteEndpoints (endpoints with a route pattern).
 			if (endpoint is not RouteEndpoint routeEndpoint)
@@ -106,7 +114,7 @@ static class AuthorizationValidation
 			// Skip endpoints that are not part of the versioned API surface.
 			// This excludes infrastructure endpoints like /health, /swagger, etc.
 			if (routePattern is null ||
-			    !routePattern.StartsWith(VersionedApiPrefix, StringComparison.OrdinalIgnoreCase))
+			    !routePattern.StartsWith(VersionedApiGroup.VersionedRoutePrefix, StringComparison.OrdinalIgnoreCase))
 			{
 				continue;
 			}

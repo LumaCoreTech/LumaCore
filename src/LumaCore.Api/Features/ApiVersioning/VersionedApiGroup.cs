@@ -33,17 +33,27 @@ namespace LumaCore.Api.Features.ApiVersioning;
 static class VersionedApiGroup
 {
 	/// <summary>
-	/// The route prefix for all versioned API endpoints.
+	/// The static route prefix that identifies all versioned API endpoints.
 	/// </summary>
 	/// <remarks>
-	/// The <c>{version:apiVersion}</c> segment is a route constraint that extracts the API version from the URL.
-	/// For example:
+	/// Used by startup validators (e.g., <see cref="ApiVersionValidation"/>) to determine which endpoints
+	/// are part of the versioned API surface. Only endpoints whose route pattern starts with this prefix are
+	/// subject to version-mapping and authorization validation.
+	/// </remarks>
+	internal const string VersionedRoutePrefix = "/api/v";
+
+	/// <summary>
+	/// The full route template for all versioned API endpoints.
+	/// </summary>
+	/// <remarks>
+	/// Built from <see cref="VersionedRoutePrefix"/> plus the <c>{version:apiVersion}</c> route constraint
+	/// that extracts the API version from the URL. For example:
 	/// <list type="bullet">
 	///     <item><c>/api/v1/auth/login</c> → Version 1</item>
 	///     <item><c>/api/v2/auth/login</c> → Version 2</item>
 	/// </list>
 	/// </remarks>
-	private const string RoutePrefix = "/api/v{version:apiVersion}";
+	private const string RoutePrefix = VersionedRoutePrefix + "{version:apiVersion}";
 
 	/// <summary>
 	/// Creates the versioned API route group that business features mount their endpoints on.
