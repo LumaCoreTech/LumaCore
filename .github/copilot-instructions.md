@@ -100,6 +100,7 @@
 - Prefer the **shortest possible** type names (use `using` directives to enable short names).
 - Ensure proper list and paragraph structure in XMLDocs.
 - When updating XML documentation, prioritize improved readability.
+- **Keep public XMLDoc consumer-focused.** Public `<summary>`, `<remarks>`, and `<example>` must describe *what* the type/member does for its consumers — not *why* it is implemented a certain way. Implementation rationale (e.g., "attributes must be on properties because the validation filter reads them") belongs in **code comments**, not in XMLDoc visible to API consumers.
 
 #### `<see cref="..."/>` Brevity
 
@@ -388,6 +389,22 @@ Coverage review comes **before** structure/XMLDocs to avoid rework — once all 
 - Test both:
   - the *positive expectation* (what must happen)
   - and a *negative expectation* (what must **not** happen), to rule out side effects.
+
+#### Strongest Assertion Principle
+
+> [!WARNING]
+> **Always use the strongest assertion the scenario allows.** Weak assertions that merely confirm existence or non-emptiness when the exact expected state is known are considered defects in the test — they give false confidence without catching regressions.
+
+| ❌ Weak (avoid) | ✅ Strong (prefer) | When |
+|---|---|---|
+| `Assert.NotEmpty(collection)` | `Assert.Single` + `Assert.Equal` | Exactly 1 element expected |
+| `Assert.Contains(item, collection)` | `Assert.Single` / `Assert.Equal` | Collection size is known |
+| `Assert.NotNull(x)` alone | `Assert.NotNull` + property assertions | Object has observable state |
+| `Assert.True(x > 0)` | `Assert.Equal(expected, x)` | Exact value is known |
+| `Assert.Contains("substring", text)` | `Assert.Equal(exactExpected, text)` | Full string is deterministic |
+| `Assert.True(x)` / `Assert.False(x)` | Typed assertion (`Assert.Equal`, `Assert.Single`, etc.) | A more specific overload exists |
+
+The guiding question: *"Do I know the exact expected value?"* If yes, assert it exactly. If the test only checks *part* of a known value, future regressions in the unchecked part go undetected.
 
 #### State Verification Helpers
 
