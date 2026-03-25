@@ -41,11 +41,17 @@ namespace LumaCore.Api.Features.Validation;
 ///     </para>
 /// </remarks>
 /// <example>
-/// Define a request record with validation attributes:
+/// Define a request record with validation attributes on <b>properties</b> (not constructor parameters) so that
+/// <see cref="Validator.TryValidateObject"/> can inspect them:
 /// <code>
-/// public sealed record CreateItemRequest(
-///     [Required, StringLength(100)] string Name,
-///     [Range(0, 10000)] decimal Price);
+/// public sealed record CreateItemRequest
+/// {
+///     [Required, StringLength(100)]
+///     public required string Name { get; init; }
+/// 
+///     [Range(0, 10000)]
+///     public required decimal Price { get; init; }
+/// }
 /// </code>
 /// Then apply the filter to the endpoint:
 /// <code>
