@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 using System.Security.Claims;
 
 using LumaCore.Api.Features.ApiVersioning;
-using LumaCore.Definitions;
+using LumaCore.Api.Features.UserManagement;
 
 using Microsoft.Extensions.Options;
 
@@ -62,8 +62,9 @@ static class EndpointMapping
 	///         </item>
 	///     </list>
 	///     <para>
-	///     The current implementation of <c>/auth/login</c> uses a single built-in administrator account. This is
-	///     intended purely as a bootstrap mechanism until a persistent user store is available.
+	///     The <c>/auth/login</c> endpoint delegates credential validation to <see cref="IUserAuthenticationService"/>.
+	///     The current default implementation uses a single built-in bootstrap account; this will be replaced by a
+	///     database-backed user store once persistent user management is available.
 	///     </para>
 	///     <para>
 	///     This feature is designed to be mounted on a route group (typically <c>/api/v{version}</c>) and maps its
@@ -87,10 +88,11 @@ static class EndpointMapping
 		// API. At the current stage of development the feature provides:
 		//
 		//   - POST /api/v1/auth/login
-		//     Issues a short-lived JWT access token for the built-in administrator
-		//     account. This is a temporary bootstrap mechanism until LumaCore has a
-		//     persistent user store (for example a database-backed authentication
-		//     system with proper password hashing and user management).
+		//     Issues a short-lived JWT access token after validating credentials
+		//     against the registered IUserAuthenticationService. The current
+		//     default implementation uses a built-in bootstrap account; this
+		//     will be replaced by a database-backed user store once persistent
+		//     user management is available.
 		//     When cookie transport is enabled, an HttpOnly cookie is set in
 		//     addition to returning the token in the JSON response body.
 		//
@@ -115,7 +117,7 @@ static class EndpointMapping
 		// The /auth feature currently does NOT provide:
 		//
 		//   - real user accounts or registration flows
-		//   - password hashing or credential storage beyond the built-in admin account
+		//   - password hashing or persistent credential storage
 		//   - refresh tokens or long-lived sessions
 		//   - multi-tenant or fine-grained permission modelling
 		//   - integration with external identity providers (OIDC/OAuth2)
@@ -126,8 +128,9 @@ static class EndpointMapping
 
 		group.MapPost(
 				"/login",
-				(
+				async (
 					V1.LoginRequest             request,
+					IUserAuthenticationService  userAuthService,
 					IJwtTokenFactory            tokenFactory,
 					TimeProvider                timeProvider,
 					IOptions<JwtOptions>        jwtOptionsAccessor,
@@ -138,12 +141,19 @@ static class EndpointMapping
 					// Create a logger for this feature.
 					ILogger logger = loggerFactory.CreateLogger("LumaCore.Auth");
 
-					// Temporary bootstrap authentication: single hard-coded administrator account.
-					if (!IsValidAdmin(request.Username, request.Password))
+					// Delegate credential validation to the registered user authentication service.
+					AuthenticatedUser? user = await userAuthService
+						                          .AuthenticateAsync(
+							                          request.Username,
+							                          request.Password,
+							                          httpContext.RequestAborted)
+						                          .ConfigureAwait(false);
+
+					if (user is null)
 					{
 						// Log failed authentication attempt for diagnostics. Do not log the password.
 						logger.LogWarning(
-							"Authentication failed for administrator login attempt with username '{Username}'",
+							"Authentication failed for login attempt with username '{Username}'",
 							request.Username);
 
 						// Deliberately return a generic 401 without details to avoid
@@ -151,16 +161,16 @@ static class EndpointMapping
 						return Results.Unauthorized();
 					}
 
-					// Build identity claims for the authenticated administrator.
-					var claims = new[]
+					// Build identity claims from the authenticated user's properties.
+					List<Claim> claims = [new(ClaimTypes.Name, user.Username)];
+
+					foreach (string role in user.Roles)
 					{
-						// Rely on 'sub' => NameIdentifier mapping; no need to add it explicitly.
-						new Claim(ClaimTypes.Name, request.Username),
-						new Claim(ClaimTypes.Role, RoleDefinitions.Admin.Name)
-					};
+						claims.Add(new Claim(ClaimTypes.Role, role));
+					}
 
 					// Issue a signed JWT that the client can present in subsequent API calls.
-					string token = tokenFactory.CreateToken(request.Username, claims);
+					string token = tokenFactory.CreateToken(user.Username, claims);
 
 					// Set an HttpOnly cookie for browser clients so the token is not accessible
 					// to JavaScript (XSS mitigation). API clients ignore the cookie and use the
@@ -190,8 +200,8 @@ static class EndpointMapping
 
 					// Log successful authentication for auditing purposes.
 					logger.LogInformation(
-						"Administrator '{Username}' successfully authenticated and issued a JWT access token",
-						request.Username);
+						"User '{Username}' successfully authenticated and issued a JWT access token",
+						user.Username);
 
 					// Return the access token to the caller.
 					// API clients use this value; browser clients can ignore it (cookie is set above).
@@ -199,12 +209,12 @@ static class EndpointMapping
 				})
 			.MapToApiVersion(ApiVersions.V1)
 			.AllowAnonymous()
-			.WithSummary("Authenticates the built-in admin and issues a JWT access token.")
+			.WithSummary("Authenticates user credentials and issues a JWT access token.")
 			.WithDescription(
-				"Authenticates the temporary, built-in administrator account and returns a " +
-				"short-lived JWT access token. This endpoint is intended for development and " +
-				"bootstrap scenarios only and will be replaced by a proper, database-backed " +
-				"authentication flow once persistent user management is available.")
+				"Validates the supplied credentials against the user authentication service " +
+				"and, on success, returns a short-lived JWT access token. The current default " +
+				"implementation uses a built-in bootstrap account; this will be replaced by a " +
+				"database-backed authentication flow once persistent user management is available.")
 			.WithName("Login");
 
 		// Logout endpoint: revokes the current access token and clears the authentication cookie.
@@ -446,35 +456,6 @@ static class EndpointMapping
 			.WithName("Introspect");
 
 		return endpoints;
-	}
-
-	/// <summary>
-	/// Performs the current, minimal authentication based on a single hard-coded admin account.
-	/// </summary>
-	/// <param name="username">The supplied user name.</param>
-	/// <param name="password">The supplied password.</param>
-	/// <returns>
-	/// <see langword="true"/> if the credentials match the built-in admin account;
-	/// otherwise, <see langword="false"/>.
-	/// </returns>
-	/// <remarks>
-	/// This method is intended as a temporary bootstrap mechanism only. It must be replaced
-	/// by a proper authentication flow backed by a persistent user store before the system
-	/// is exposed to untrusted networks.
-	/// </remarks>
-	private static bool IsValidAdmin(string? username, string? password)
-	{
-		// NOTE:
-		// This is intentionally simple bootstrap logic. It is not meant for production
-		// and should be replaced with a proper user store (e.g. database, external IdP)
-		// once LumaCore has persistent storage.
-		const string AdminUserName = "admin";
-		const string AdminPassword = "changeme";
-
-		username = username?.Trim() ?? string.Empty;
-
-		return string.Equals(username, AdminUserName, StringComparison.OrdinalIgnoreCase) &&
-		       string.Equals(password, AdminPassword, StringComparison.Ordinal);
 	}
 
 	/// <summary>

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2025-2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
@@ -13,6 +13,7 @@ using LumaCore.Api.Features.OpenApi;
 using LumaCore.Api.Features.ProxyHeaders;
 using LumaCore.Api.Features.SecurityHeaders;
 using LumaCore.Api.Features.System;
+using LumaCore.Api.Features.UserManagement;
 using LumaCore.BackgroundProcessing;
 using LumaCore.Configuration;
 
@@ -69,6 +70,11 @@ public static partial class Program
 		// Register database services with Entity Framework Core.
 		// Provider and connection string are configured via appsettings.json "Database" section.
 		builder.AddDataFeature();
+
+		// Register user management services (credential validation, user identity).
+		// This must be registered before the Auth feature because the login endpoint
+		// depends on IUserAuthenticationService for credential validation.
+		builder.AddUserManagementFeature();
 
 		// Register authentication and authorization services and configure JWT bearer.
 		builder.AddAuthFeature();
