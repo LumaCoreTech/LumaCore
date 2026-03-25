@@ -50,4 +50,3 @@ jobs:
         provider: postgresql
         display-name: PostgreSQL
         connection-string: "Host=localhost;Port=5432;Username=postgres;Password=postgres"
-        gist-token: ${{ secrets.GIST_TOKEN }}

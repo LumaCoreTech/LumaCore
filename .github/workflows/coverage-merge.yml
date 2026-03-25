@@ -135,12 +135,11 @@ jobs:
         echo "BADGE_JSON=$badge" >> $env:GITHUB_ENV
         echo "Merged Coverage Badge: $message ($color)"
 
-    - name: Update Merged Coverage Badge
-      if: steps.check.outputs.has_coverage == 'true' && env.BADGE_JSON != ''
-      uses: exuanbo/actions-deploy-gist@v1
+    - name: Upload Badge Data
+      if: steps.check.outputs.has_coverage == 'true'
+      uses: actions/upload-artifact@v7
       with:
-        token: ${{ secrets.GIST_TOKEN }}
-        gist_id: d3957602a84fcab1aa66ebfef44da7eb
-        file_path: lumacore-merged-coverage-badge.json
-        gist_file_name: lumacore-merged-coverage-badge.json
-        file_type: text
+        name: badge-data
+        path: lumacore-merged-coverage-badge.json
+        retention-days: 1
+        if-no-files-found: ignore

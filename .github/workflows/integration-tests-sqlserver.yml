@@ -62,4 +62,3 @@ jobs:
         provider: sqlserver
         display-name: SQL Server
         connection-string: "Server=localhost,1433;User Id=sa;Password=LumaCore@Test123;TrustServerCertificate=True"
-        gist-token: ${{ secrets.GIST_TOKEN }}

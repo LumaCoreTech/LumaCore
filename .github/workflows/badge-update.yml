@@ -1,0 +1,59 @@
+name: Update Badges
+
+on:
+  workflow_run:
+    workflows:
+      - "LumaCore Windows CI"
+      - "LumaCore Ubuntu CI"
+      - "Integration Tests (PostgreSQL)"
+      - "Integration Tests (SQLite)"
+      - "Integration Tests (SQL Server)"
+      - "Integration Tests (MySQL)"
+      - "Coverage Merge"
+    types: [completed]
+    branches: [main]
+
+# One badge update per source workflow — rapid re-runs of the same workflow
+# cancel stale badge updates, but different workflows don't interfere.
+concurrency:
+  group: badge-update-${{ github.event.workflow_run.name }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download Badge Data
+      uses: actions/download-artifact@v4
+      with:
+        name: badge-data
+        run-id: ${{ github.event.workflow_run.id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+      continue-on-error: true
+
+    - name: Update Gist
+      env:
+        GH_TOKEN: ${{ secrets.GIST_TOKEN }}
+      run: |
+        payload='{}'
+
+        for badge_file in lumacore-*-badge.json; do
+          if [ -f "$badge_file" ]; then
+            content=$(cat "$badge_file")
+            payload=$(echo "$payload" | jq --arg c "$content" --arg f "$badge_file" \
+              '.files[$f].content = $c')
+            echo "📊 $badge_file: $content"
+          fi
+        done
+
+        if [ "$payload" != '{}' ]; then
+          gh api --method PATCH /gists/d3957602a84fcab1aa66ebfef44da7eb \
+            --input - <<< "$payload"
+          echo "✅ Gist updated successfully"
+        else
+          echo "⚠️ No badge data found — skipping gist update"
+        fi

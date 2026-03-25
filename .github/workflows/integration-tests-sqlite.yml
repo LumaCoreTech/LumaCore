@@ -37,4 +37,3 @@ jobs:
         provider: sqlite
         display-name: SQLite
         connection-string: ""
-        gist-token: ${{ secrets.GIST_TOKEN }}

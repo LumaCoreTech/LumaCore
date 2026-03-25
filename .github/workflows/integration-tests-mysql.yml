@@ -55,4 +55,3 @@ jobs:
         provider: mysql
         display-name: MySQL
         connection-string: "Server=localhost;Port=3306;Database=lumacore_test;User=root;Password=LumaCore@Test123"
-        gist-token: ${{ secrets.GIST_TOKEN }}

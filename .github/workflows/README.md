@@ -12,15 +12,25 @@ Build Workflows (Win + Linux)     Integration Workflows (Linux only)
 │ ALL tests               │       │ LumaCore.Data.Tests only     │
 │ SQLite in-memory        │       │ Real database providers      │
 │ Coverage collection     │       │ Coverage collection          │
+│ Badge data → artifact   │       │ Badge data → artifact        │
 └────────────┬────────────┘       └──────────────┬───────────────┘
              │                                   │
-             └────────────────┬──────────────────┘
-                              ▼
-                   Coverage Merge Workflow
-                   ┌─────────────────────┐
-                   │ ReportGenerator     │
-                   │ Merged badge → Gist │
-                   └─────────────────────┘
+             ├────────────────┬──────────────────┤
+             │                │                  │
+             ▼                ▼                  ▼
+   Coverage Merge       Badge Update        Badge Update
+   ┌──────────────┐     (per source)        (per source)
+   │ Merge reports │
+   │ Badge → artifact
+   └──────┬───────┘
+          │
+          ▼
+     Badge Update
+     ┌─────────────────────────────────┐
+     │ workflow_run trigger            │
+     │ concurrency per source workflow │
+     │ Single gh api PATCH → Gist      │
+     └─────────────────────────────────┘
 ```
 
 **Key design decisions:**
@@ -28,6 +38,7 @@ Build Workflows (Win + Linux)     Integration Workflows (Linux only)
 - Integration workflows run **only `LumaCore.Data.Tests`** — no redundant unit test execution per provider.
 - Integration workflows run on **Linux only** (GitHub Actions `services` require Linux runners).
 - Coverage fragments are uploaded as artifacts and merged by a dedicated workflow.
+- **Badge publishing is centralized** in `badge-update.yml` — all workflows upload badge JSON as artifacts, and a single `workflow_run`-triggered workflow pushes them to the Gist via `gh api`. Per-source concurrency groups deduplicate rapid re-runs without interfering across workflows.
 
 ---
 
@@ -83,8 +94,16 @@ They run **only `LumaCore.Data.Tests`** against the configured provider.
 
 #### `coverage-merge.yml`
 - **Triggers:** `workflow_run` — fires when any coverage-producing workflow completes on main
-- **Purpose:** Downloads coverage artifacts from all workflows, merges them with ReportGenerator, and pushes a combined badge to the shared gist
+- **Purpose:** Downloads coverage artifacts from all workflows, merges them with ReportGenerator, and uploads a combined badge as artifact for `badge-update.yml`
 - Uses `dawidd6/action-download-artifact` with `continue-on-error` so partial merges work when some workflows haven't run yet
+
+### Badge Update Workflow
+
+#### `badge-update.yml`
+- **Triggers:** `workflow_run` — fires when any badge-producing workflow completes on main
+- **Purpose:** Downloads badge JSON artifacts and pushes them to the shared Gist in a single `gh api` PATCH call
+- **Concurrency:** Per-source workflow groups (`badge-update-<workflow name>`) — rapid re-runs of the same workflow cancel stale badge updates, but different workflows don't interfere
+- **Why separate?** Build workflows complete too fast for `cancel-in-progress` to help. By decoupling badge publishing into an async `workflow_run` trigger, the concurrency mechanism has time to deduplicate
 
 ### Release Workflow
 
@@ -100,7 +119,7 @@ They run **only `LumaCore.Data.Tests`** against the configured provider.
 
 ## Badges
 
-All badges use the [shields.io endpoint API](https://shields.io/endpoint) backed by JSON files in a shared GitHub Gist (`d3957602a84fcab1aa66ebfef44da7eb`). Each workflow generates its own badge JSON and pushes it to the gist via `exuanbo/actions-deploy-gist`.
+All badges use the [shields.io endpoint API](https://shields.io/endpoint) backed by JSON files in a shared GitHub Gist (`d3957602a84fcab1aa66ebfef44da7eb`). Each workflow generates its own badge JSON, uploads it as a `badge-data` artifact, and a centralized `badge-update.yml` workflow pushes it to the Gist via `gh api`.
 
 ### Badge Overview
 
@@ -136,7 +155,7 @@ Configure in **Settings → Secrets and variables → Actions:**
 | Secret | Purpose | Required |
 |--------|---------|----------|
 | `GITHUB_TOKEN` | Create releases, workflow access | ✅ Auto-provided |
-| `GIST_TOKEN` | Update badge gists (test counts, coverage) | ✅ Required |
+| `GIST_TOKEN` | Update badge gists (used only by `badge-update.yml`) | ✅ Required |
 | `NUGET_API_KEY` | Publish to NuGet.org | ⚠️ Optional |
 | `DOCKER_USERNAME` | Docker Hub login | ⚠️ Optional |
 | `DOCKER_PASSWORD` | Docker Hub password | ⚠️ Optional |

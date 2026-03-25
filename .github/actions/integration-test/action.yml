@@ -26,14 +26,6 @@ inputs:
   connection-string:
     description: 'Database connection string'
     required: true
-  gist-token:
-    description: 'GitHub token for updating badge gists (only needed on main)'
-    required: false
-    default: ''
-  gist-id:
-    description: 'Gist ID for badge storage'
-    required: false
-    default: 'd3957602a84fcab1aa66ebfef44da7eb'
 
 runs:
   using: 'composite'
@@ -93,15 +85,14 @@ runs:
           echo "Badge: ${{ inputs.display-name }} — $message ($color)"
         }
 
-    - name: Update Test Badge
-      if: github.ref == 'refs/heads/main' && always() && env.BADGE_JSON != ''
-      uses: exuanbo/actions-deploy-gist@v1
+    - name: Upload Badge Data
+      if: github.ref == 'refs/heads/main' && always()
+      uses: actions/upload-artifact@v4
       with:
-        token: ${{ inputs.gist-token }}
-        gist_id: ${{ inputs.gist-id }}
-        file_path: lumacore-integration-${{ inputs.provider }}-badge.json
-        gist_file_name: lumacore-integration-${{ inputs.provider }}-badge.json
-        file_type: text
+        name: badge-data
+        path: lumacore-integration-${{ inputs.provider }}-badge.json
+        retention-days: 1
+        if-no-files-found: ignore
 
     - name: Upload Coverage Artifact
       if: always()
