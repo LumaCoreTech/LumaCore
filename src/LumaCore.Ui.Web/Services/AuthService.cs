@@ -54,7 +54,12 @@ public sealed class AuthService
 	{
 		try
 		{
-			var request = new LoginRequest(username, password, rememberMe);
+			var request = new LoginRequest
+			{
+				Username = username,
+				Password = password,
+				RememberMe = rememberMe
+			};
 
 			using HttpResponseMessage response = await mHttpClient
 				                                     .PostAsJsonAsync("api/v1/auth/login", request)
