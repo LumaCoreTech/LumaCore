@@ -201,7 +201,13 @@ Classes must never silently rely on external context (e.g., "this only runs duri
 
 #### Disposal
 
-- **Never use `await using`** in this codebase. Always use `try/finally` with explicit `DisposeAsync().ConfigureAwait(false)` to ensure `ConfigureAwait(false)` is applied consistently on disposal in library code.
+Disposal follows a **three-tier model** to balance `ConfigureAwait(false)` consistency with test ergonomics:
+
+| Context | Pattern | Rationale |
+|---|---|---|
+| **Library / production code** | `try/finally` + `DisposeAsync().ConfigureAwait(false)` | Ensures `ConfigureAwait(false)` on the disposal `await`. |
+| **Test infrastructure** (harnesses, helpers) | `try/finally` + `DisposeAsync().ConfigureAwait(false)` | Infrastructure is library-like code — same rule. |
+| **Test methods** (`[Fact]` / `[Theory]`) | `await using` allowed | `ConfigureAwait(false)` is forbidden in test methods (xUnit1030), so `try/finally` adds no value — it becomes pure boilerplate. `await using` is concise and safe here. |
 
 ### Verification & Review
 
@@ -688,7 +694,7 @@ Do **not** hide reachable logic behind `ExcludeFromCodeCoverage` just to satisfy
 
 #### Unit Tests
 
-- Do **not** use `await using` for the SUT in unit tests — if the implementation is buggy, `DisposeAsync()` may hang, causing the test to hang instead of failing with a clear error message.
+- Do **not** use `await using` for the **SUT** in unit tests — if the implementation is buggy, `DisposeAsync()` may hang, causing the test to hang instead of failing with a clear error message.
 - When asserting exception messages in tests, prefer exact checks (`Assert.Equal`) over substring checks (`Assert.Contains`). When the message contains dynamic parts (e.g., file paths), use `Assert.Matches` with a regex that validates the full message structure while tolerating the dynamic segments.
 
 ---
