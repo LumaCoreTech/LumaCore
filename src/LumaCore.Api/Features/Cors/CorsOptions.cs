@@ -26,6 +26,17 @@ sealed class CorsOptions : IValidatableObject
 		"PreflightMaxAge must be greater than or equal to 0 when specified.";
 
 	/// <summary>
+	/// The set of known HTTP methods accepted in <see cref="AllowedMethods"/>.
+	/// </summary>
+	/// <remarks>
+	/// Comparison is case-insensitive to match ASP.NET Core's CORS middleware behavior.
+	/// </remarks>
+	private static readonly HashSet<string> KnownHttpMethods = new(StringComparer.OrdinalIgnoreCase)
+	{
+		"DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"
+	};
+
+	/// <summary>
 	/// Gets or sets a value indicating whether credentials (cookies, authorization headers) should be allowed in
 	/// cross-origin requests.
 	/// </summary>
@@ -136,6 +147,27 @@ sealed class CorsOptions : IValidatableObject
 				[nameof(AllowedOrigins)]);
 		}
 
+		// Validate: Non-wildcard origins must be valid absolute URIs with an http or https scheme
+		// and no path, query, or fragment. This catches typos like "htps://example.com" or
+		// misconfigured origins with paths like "https://example.com/api" at startup.
+		foreach (string origin in AllowedOrigins)
+		{
+			if (origin == "*")
+				continue;
+
+			if (!Uri.TryCreate(origin, UriKind.Absolute, out Uri? uri)
+			    || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+			    || uri.PathAndQuery != "/"
+			    || uri.Fragment.Length > 0)
+			{
+				yield return new ValidationResult(
+					$"Cors:AllowedOrigins contains invalid origin '{origin}'. " +
+					"Each origin must use the format scheme://host[:port] with an http or https scheme " +
+					"(e.g. 'https://example.com' or 'http://localhost:3000').",
+					[nameof(AllowedOrigins)]);
+			}
+		}
+
 		// Validate: AllowCredentials cannot be true when AllowedOrigins contains "*".
 		// This is a security violation as it would allow any origin to send credentials.
 		// We must ensure that exact origins are specified when credentials are allowed.
@@ -146,6 +178,20 @@ sealed class CorsOptions : IValidatableObject
 				"Cors:AllowCredentials cannot be true when Cors:AllowedOrigins contains '*' (wildcard). " +
 				"Specify exact origins instead for security.",
 				[nameof(AllowCredentials), nameof(AllowedOrigins)]);
+		}
+
+		// Validate: AllowedMethods must contain only recognized HTTP methods.
+		// This catches typos like "DELET" or "POSTT" at startup rather than silently
+		// accepting methods that the middleware may ignore.
+		foreach (string method in AllowedMethods)
+		{
+			if (!KnownHttpMethods.Contains(method))
+			{
+				yield return new ValidationResult(
+					$"Cors:AllowedMethods contains unknown HTTP method '{method}'. " +
+					$"Allowed values: {string.Join(", ", KnownHttpMethods.Order())}.",
+					[nameof(AllowedMethods)]);
+			}
 		}
 	}
 }
