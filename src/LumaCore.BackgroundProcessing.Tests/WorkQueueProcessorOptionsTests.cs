@@ -6,14 +6,12 @@ using System.ComponentModel.DataAnnotations;
 
 using Xunit;
 
-// ReSharper disable UseObjectOrCollectionInitializer
-
 namespace LumaCore.BackgroundProcessing.Tests;
 
 /// <summary>
 /// Unit tests for <see cref="WorkQueueProcessorOptions"/>.
 /// </summary>
-public class WorkQueueProcessorOptionsTests
+public sealed class WorkQueueProcessorOptionsTests
 {
 	#region Default Values
 
@@ -59,69 +57,22 @@ public class WorkQueueProcessorOptionsTests
 
 	#endregion
 
-	#region Property Setters
+	#region Constructor
 
 	/// <summary>
-	/// Verifies that a new <see cref="WorkQueueProcessorOptions"/> instance has correct default property values.
+	/// Verifies that a default-constructed <see cref="WorkQueueProcessorOptions"/> instance has the expected
+	/// property defaults.
 	/// </summary>
 	[Fact]
-	public void Constructor_CreatesInstanceWithDefaultValues()
+	public void Constructor_Initially_HasExpectedDefaults()
 	{
-		// Act
+		// Arrange + Act
 		var options = new WorkQueueProcessorOptions();
 
 		// Assert
 		Assert.Equal(WorkQueueProcessorOptions.DefaultMaxQueueSize, options.MaxQueueSize);
 		Assert.Equal(WorkQueueProcessorOptions.DefaultMaxConcurrency, options.MaxConcurrency);
 		Assert.Equal(WorkQueueProcessorOptions.DefaultShutdownTimeout, options.ShutdownTimeout);
-	}
-
-	/// <summary>
-	/// Verifies that <see cref="WorkQueueProcessorOptions.MaxQueueSize"/> can be set.
-	/// </summary>
-	[Fact]
-	public void MaxQueueSize_CanBeSet()
-	{
-		// Arrange
-		var options = new WorkQueueProcessorOptions();
-
-		// Act
-		options.MaxQueueSize = 5000;
-
-		// Assert
-		Assert.Equal(5000, options.MaxQueueSize);
-	}
-
-	/// <summary>
-	/// Verifies that <see cref="WorkQueueProcessorOptions.MaxConcurrency"/> can be set.
-	/// </summary>
-	[Fact]
-	public void MaxConcurrency_CanBeSet()
-	{
-		// Arrange
-		var options = new WorkQueueProcessorOptions();
-
-		// Act
-		options.MaxConcurrency = 8;
-
-		// Assert
-		Assert.Equal(8, options.MaxConcurrency);
-	}
-
-	/// <summary>
-	/// Verifies that <see cref="WorkQueueProcessorOptions.ShutdownTimeout"/> can be set.
-	/// </summary>
-	[Fact]
-	public void ShutdownTimeout_CanBeSet()
-	{
-		// Arrange
-		var options = new WorkQueueProcessorOptions();
-
-		// Act
-		options.ShutdownTimeout = TimeSpan.FromMinutes(2);
-
-		// Assert
-		Assert.Equal(TimeSpan.FromMinutes(2), options.ShutdownTimeout);
 	}
 
 	#endregion
@@ -148,92 +99,6 @@ public class WorkQueueProcessorOptionsTests
 	}
 
 	/// <summary>
-	/// Verifies that validation fails when <see cref="WorkQueueProcessorOptions.MaxQueueSize"/> is invalid.
-	/// </summary>
-	/// <param name="value">The invalid value to test.</param>
-	/// <param name="caseName">A descriptive name for the test case.</param>
-	[Theory]
-	[InlineData(0, "zero")]
-	[InlineData(-1, "negative")]
-	public void Validate_WhenMaxQueueSizeIsInvalid_Fails(int value, string caseName)
-	{
-		_ = caseName; // Used for test output
-
-		// Arrange
-		var options = new WorkQueueProcessorOptions { MaxQueueSize = value };
-		var context = new ValidationContext(options);
-		var results = new List<ValidationResult>();
-
-		// Act
-		bool isValid = Validator.TryValidateObject(options, context, results, validateAllProperties: true);
-
-		// Assert
-		Assert.False(isValid);
-		Assert.Single(results);
-		Assert.Contains("MaxQueueSize", results[0].MemberNames);
-	}
-
-	/// <summary>
-	/// Verifies that validation fails when <see cref="WorkQueueProcessorOptions.MaxConcurrency"/> is invalid.
-	/// </summary>
-	/// <param name="value">The invalid value to test.</param>
-	/// <param name="caseName">A descriptive name for the test case.</param>
-	[Theory]
-	[InlineData(0, "zero")]
-	[InlineData(-5, "negative")]
-	public void Validate_WhenMaxConcurrencyIsInvalid_Fails(int value, string caseName)
-	{
-		_ = caseName; // Used for test output
-
-		// Arrange
-		var options = new WorkQueueProcessorOptions { MaxConcurrency = value };
-		var context = new ValidationContext(options);
-		var results = new List<ValidationResult>();
-
-		// Act
-		bool isValid = Validator.TryValidateObject(options, context, results, validateAllProperties: true);
-
-		// Assert
-		Assert.False(isValid);
-		Assert.Single(results);
-		Assert.Contains("MaxConcurrency", results[0].MemberNames);
-	}
-
-	/// <summary>
-	/// Test data for <see cref="Validate_WhenShutdownTimeoutIsInvalid_Fails"/>.
-	/// </summary>
-	public static TheoryData<TimeSpan, string> InvalidShutdownTimeoutTestData => new()
-	{
-		{ TimeSpan.Zero, "zero" },
-		{ TimeSpan.FromSeconds(-5), "negative" }
-	};
-
-	/// <summary>
-	/// Verifies that validation fails when <see cref="WorkQueueProcessorOptions.ShutdownTimeout"/> is invalid.
-	/// </summary>
-	/// <param name="value">The invalid value to test.</param>
-	/// <param name="caseName">A descriptive name for the test case.</param>
-	[Theory]
-	[MemberData(nameof(InvalidShutdownTimeoutTestData))]
-	public void Validate_WhenShutdownTimeoutIsInvalid_Fails(TimeSpan value, string caseName)
-	{
-		_ = caseName; // Used for test output
-
-		// Arrange
-		var options = new WorkQueueProcessorOptions { ShutdownTimeout = value };
-		var context = new ValidationContext(options);
-		var results = new List<ValidationResult>();
-
-		// Act
-		bool isValid = Validator.TryValidateObject(options, context, results, validateAllProperties: true);
-
-		// Assert
-		Assert.False(isValid);
-		Assert.Single(results);
-		Assert.Contains("ShutdownTimeout", results[0].MemberNames);
-	}
-
-	/// <summary>
 	/// Verifies that validation passes with edge case values (minimum valid values).
 	/// </summary>
 	[Fact]
@@ -255,6 +120,98 @@ public class WorkQueueProcessorOptionsTests
 		// Assert
 		Assert.True(isValid);
 		Assert.Empty(results);
+	}
+
+	/// <summary>
+	/// Verifies that validation fails when <see cref="WorkQueueProcessorOptions.MaxQueueSize"/> is invalid.
+	/// </summary>
+	/// <param name="caseName">A descriptive name for the test case.</param>
+	/// <param name="value">The invalid value to test.</param>
+	[Theory]
+	[InlineData("zero", 0)]
+	[InlineData("negative", -1)]
+	public void Validate_MaxQueueSize_WhenInvalid_Fails(string caseName, int value)
+	{
+		_ = caseName; // Used for test output readability.
+
+		// Arrange
+		var options = new WorkQueueProcessorOptions { MaxQueueSize = value };
+		var context = new ValidationContext(options);
+		var results = new List<ValidationResult>();
+
+		// Act
+		bool isValid = Validator.TryValidateObject(options, context, results, validateAllProperties: true);
+
+		// Assert
+		Assert.False(isValid);
+		ValidationResult error = Assert.Single(results);
+		string memberName = Assert.Single(error.MemberNames);
+		Assert.Equal("MaxQueueSize", memberName);
+		Assert.Equal("Queue size must be at least 1.", error.ErrorMessage);
+	}
+
+	/// <summary>
+	/// Verifies that validation fails when <see cref="WorkQueueProcessorOptions.MaxConcurrency"/> is invalid.
+	/// </summary>
+	/// <param name="caseName">A descriptive name for the test case.</param>
+	/// <param name="value">The invalid value to test.</param>
+	[Theory]
+	[InlineData("zero", 0)]
+	[InlineData("negative", -5)]
+	public void Validate_MaxConcurrency_WhenInvalid_Fails(string caseName, int value)
+	{
+		_ = caseName; // Used for test output readability.
+
+		// Arrange
+		var options = new WorkQueueProcessorOptions { MaxConcurrency = value };
+		var context = new ValidationContext(options);
+		var results = new List<ValidationResult>();
+
+		// Act
+		bool isValid = Validator.TryValidateObject(options, context, results, validateAllProperties: true);
+
+		// Assert
+		Assert.False(isValid);
+		ValidationResult error = Assert.Single(results);
+		string memberName = Assert.Single(error.MemberNames);
+		Assert.Equal("MaxConcurrency", memberName);
+		Assert.Equal("Concurrency must be at least 1.", error.ErrorMessage);
+	}
+
+	/// <summary>
+	/// Test data for <see cref="Validate_ShutdownTimeout_WhenInvalid_Fails"/>.
+	/// </summary>
+	public static TheoryData<string, TimeSpan> InvalidShutdownTimeoutTestData => new()
+	{
+		{ "zero", TimeSpan.Zero },
+		{ "negative", TimeSpan.FromSeconds(-5) }
+	};
+
+	/// <summary>
+	/// Verifies that validation fails when <see cref="WorkQueueProcessorOptions.ShutdownTimeout"/> is invalid.
+	/// </summary>
+	/// <param name="caseName">A descriptive name for the test case.</param>
+	/// <param name="value">The invalid value to test.</param>
+	[Theory]
+	[MemberData(nameof(InvalidShutdownTimeoutTestData))]
+	public void Validate_ShutdownTimeout_WhenInvalid_Fails(string caseName, TimeSpan value)
+	{
+		_ = caseName; // Used for test output readability.
+
+		// Arrange
+		var options = new WorkQueueProcessorOptions { ShutdownTimeout = value };
+		var context = new ValidationContext(options);
+		var results = new List<ValidationResult>();
+
+		// Act
+		bool isValid = Validator.TryValidateObject(options, context, results, validateAllProperties: true);
+
+		// Assert
+		Assert.False(isValid);
+		ValidationResult error = Assert.Single(results);
+		string memberName = Assert.Single(error.MemberNames);
+		Assert.Equal("ShutdownTimeout", memberName);
+		Assert.Equal("Shutdown timeout must be greater than zero.", error.ErrorMessage);
 	}
 
 	#endregion
