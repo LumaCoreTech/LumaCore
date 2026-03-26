@@ -1,11 +1,13 @@
-// Copyright (c) 2025 LumaCoreTech
+// Copyright (c) 2025-2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using Asp.Versioning;
 
 using LumaCore.Api.Features.ApiVersioning;
+using LumaCore.Api.Features.Auth;
 
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 
 namespace LumaCore.Api.Features.OpenApi;
@@ -26,8 +28,8 @@ namespace LumaCore.Api.Features.OpenApi;
 ///     <para>Each document includes:</para>
 ///     <list type="bullet">
 ///         <item>Document metadata (title, version, contact, license)</item>
-///         <item>JWT Bearer security scheme definition</item>
-///         <item>Global security requirement for all operations</item>
+///         <item>JWT Bearer and Cookie authentication security scheme definitions</item>
+///         <item>Global security requirement (Bearer or Cookie) for all operations</item>
 ///         <item>Automatic error response documentation (400/401/403)</item>
 ///     </list>
 /// </remarks>
@@ -87,8 +89,8 @@ static class ServiceRegistration
 	///     <para>This method configures the OpenAPI document with:</para>
 	///     <list type="bullet">
 	///         <item>Document metadata (title, version, contact, license)</item>
-	///         <item>JWT Bearer security scheme</item>
-	///         <item>Global security requirement for all operations</item>
+	///         <item>JWT Bearer and Cookie authentication security schemes</item>
+	///         <item>Global security requirement (Bearer or Cookie) for all operations</item>
 	///         <item>Automatic error response documentation via <see cref="SecurityResponsesTransformer"/></item>
 	///     </list>
 	/// </remarks>
@@ -134,8 +136,10 @@ static class ServiceRegistration
 					return Task.CompletedTask;
 				});
 
-				// Add JWT Bearer security scheme to the OpenAPI document.
-				options.AddDocumentTransformer((document, _, _) =>
+				// Add security schemes to the OpenAPI document.
+				// Bearer: for API clients using the Authorization header.
+				// CookieAuth: for browser clients using the HttpOnly access token cookie.
+				options.AddDocumentTransformer((document, context, _) =>
 				{
 					document.Components ??= new OpenApiComponents();
 					document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
@@ -148,17 +152,45 @@ static class ServiceRegistration
 						Description = "Enter your JWT token"
 					};
 
+					// Cookie-based authentication for browser clients (Blazor WASM).
+					// The cookie name is read from AuthCookieOptions to stay consistent
+					// with the runtime configuration.
+					AuthCookieOptions cookieOptions = context.ApplicationServices
+						.GetRequiredService<IOptions<AuthCookieOptions>>()
+						.Value;
+
+					document.Components.SecuritySchemes["CookieAuth"] = new OpenApiSecurityScheme
+					{
+						Type = SecuritySchemeType.ApiKey,
+						In = ParameterLocation.Cookie,
+						Name = cookieOptions.Name,
+						Description =
+							"HttpOnly cookie containing the JWT access token. " +
+							"Set automatically by the login endpoint for browser clients. " +
+							"API clients should use the Bearer scheme instead."
+					};
+
 					return Task.CompletedTask;
 				});
 
-				// Apply global security requirement so all operations require Bearer authentication.
+				// Apply global security requirement: Bearer OR Cookie authentication.
+				// Separate entries in the OpenAPI security array represent OR alternatives.
 				options.AddOperationTransformer((operation, context, _) =>
 				{
 					operation.Security ??= [];
+
+					// Bearer token authentication (API clients).
 					operation.Security.Add(
 						new OpenApiSecurityRequirement
 						{
 							[new OpenApiSecuritySchemeReference("Bearer", context.Document)] = []
+						});
+
+					// Cookie authentication (browser clients).
+					operation.Security.Add(
+						new OpenApiSecurityRequirement
+						{
+							[new OpenApiSecuritySchemeReference("CookieAuth", context.Document)] = []
 						});
 
 					return Task.CompletedTask;

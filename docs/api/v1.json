@@ -19,8 +19,8 @@
         "tags": [
           "Auth"
         ],
-        "summary": "Authenticates the built-in admin and issues a JWT access token.",
-        "description": "Authenticates the temporary, built-in administrator account and returns a short-lived JWT access token. This endpoint is intended for development and bootstrap scenarios only and will be replaced by a proper, database-backed authentication flow once persistent user management is available.",
+        "summary": "Authenticates user credentials and issues a JWT access token.",
+        "description": "Validates the supplied credentials against the user authentication service and, on success, returns a short-lived JWT access token. The current default implementation uses a built-in bootstrap account; this will be replaced by a database-backed authentication flow once persistent user management is available.",
         "operationId": "Login",
         "requestBody": {
           "content": {
@@ -43,6 +43,9 @@
         "security": [
           {
             "Bearer": []
+          },
+          {
+            "CookieAuth": []
           }
         ]
       }
@@ -66,6 +69,9 @@
         "security": [
           {
             "Bearer": []
+          },
+          {
+            "CookieAuth": []
           }
         ]
       }
@@ -96,6 +102,9 @@
         "security": [
           {
             "Bearer": []
+          },
+          {
+            "CookieAuth": []
           }
         ]
       }
@@ -126,6 +135,9 @@
         "security": [
           {
             "Bearer": []
+          },
+          {
+            "CookieAuth": []
           }
         ]
       }
@@ -156,6 +168,9 @@
         "security": [
           {
             "Bearer": []
+          },
+          {
+            "CookieAuth": []
           }
         ]
       }
@@ -186,6 +201,9 @@
         "security": [
           {
             "Bearer": []
+          },
+          {
+            "CookieAuth": []
           }
         ]
       }
@@ -219,6 +237,9 @@
         "security": [
           {
             "Bearer": []
+          },
+          {
+            "CookieAuth": []
           }
         ]
       }
@@ -262,6 +283,9 @@
         "security": [
           {
             "Bearer": []
+          },
+          {
+            "CookieAuth": []
           }
         ]
       }
@@ -311,6 +335,9 @@
         "security": [
           {
             "Bearer": []
+          },
+          {
+            "CookieAuth": []
           }
         ]
       }
@@ -331,6 +358,9 @@
         "security": [
           {
             "Bearer": []
+          },
+          {
+            "CookieAuth": []
           }
         ]
       }
@@ -351,6 +381,9 @@
         "security": [
           {
             "Bearer": []
+          },
+          {
+            "CookieAuth": []
           }
         ]
       }
@@ -613,17 +646,19 @@
         "type": "object",
         "properties": {
           "username": {
+            "maxLength": 50,
+            "minLength": 0,
             "type": "string",
             "description": "The username for authentication."
           },
           "password": {
+            "minLength": 8,
             "type": "string",
             "description": "The password for authentication. Must be at least 8 characters."
           },
           "rememberMe": {
             "type": "boolean",
-            "description": "Controls cookie persistence for browser clients. When `true`, the server sets a persistent\ncookie that survives browser restarts (expires when the token expires). When `false`, a session\ncookie is set that is cleared when the browser closes. API clients using `Authorization: Bearer` can\nignore this field.",
-            "default": false
+            "description": "Controls cookie persistence for browser clients. When `true`, the server sets a persistent\ncookie that survives browser restarts (expires when the token expires). When `false`, a\nsession cookie is set that is cleared when the browser closes. API clients using\n`Authorization: Bearer` can ignore this field."
           }
         },
         "description": "Login credentials submitted by a client to obtain a JWT."
@@ -983,6 +1018,12 @@
         "description": "Enter your JWT token",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      },
+      "CookieAuth": {
+        "type": "apiKey",
+        "description": "HttpOnly cookie containing the JWT access token. Set automatically by the login endpoint for browser clients. API clients should use the Bearer scheme instead.",
+        "name": "lumacore_access",
+        "in": "cookie"
       }
     }
   },
