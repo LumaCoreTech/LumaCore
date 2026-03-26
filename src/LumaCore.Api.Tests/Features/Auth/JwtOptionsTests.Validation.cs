@@ -10,17 +10,22 @@ using Xunit;
 
 namespace LumaCore.Api.Tests.Features.Auth;
 
-// Validation behavior: from fully configured options through each failure mode.
+// Validation behavior: grouped by the property being validated.
+// Within each group, valid scenarios precede invalid ones.
 //
-//   1. Valid configurations: fully populated options pass, boundary lifetime values pass.
-//   2. Invalid configurations: each required field and range constraint produces
-//      the expected validation error when violated.
+//   1. General: fully configured options pass (WithFullyConfiguredOptions).
+//   2. AccessTokenLifetimeMinutes: boundary values pass (WithBoundaryValues),
+//      out-of-range values rejected (WhenOutOfRange).
+//   3. Audience: empty value rejected (WhenEmpty).
+//   4. Issuer: empty value rejected (WhenEmpty).
+//   5. SigningKey: empty value rejected (WhenEmpty),
+//      too-short value rejected (WhenTooShort).
 //
 // For constructor defaults and property setters, see the anchor file (JwtOptionsTests.cs).
 // For the CreateValidOptions() factory, see Helpers.
 public sealed partial class JwtOptionsTests
 {
-	// --- 1. Valid configurations ---
+	// --- 1. General ---
 
 	/// <summary>
 	/// Verifies that a fully configured <see cref="JwtOptions"/> instance passes validation.
@@ -41,6 +46,8 @@ public sealed partial class JwtOptionsTests
 		Assert.Empty(results);
 	}
 
+	// --- 2. AccessTokenLifetimeMinutes ---
+
 	/// <summary>
 	/// Verifies that <see cref="JwtOptions.AccessTokenLifetimeMinutes"/> passes validation at the boundary values
 	/// of the allowed range (1 and 1440).
@@ -49,7 +56,7 @@ public sealed partial class JwtOptionsTests
 	[Theory]
 	[InlineData(1)]    // Lower boundary
 	[InlineData(1440)] // Upper boundary (24 hours)
-	public void Validate_WithBoundaryLifetimeValues_Succeeds(int lifetime)
+	public void Validate_AccessTokenLifetimeMinutes_WithBoundaryValues_Succeeds(int lifetime)
 	{
 		// Arrange
 		JwtOptions options = CreateValidOptions();
@@ -65,8 +72,6 @@ public sealed partial class JwtOptionsTests
 		Assert.Empty(results);
 	}
 
-	// --- 2. Invalid configurations ---
-
 	/// <summary>
 	/// Verifies that validation fails when <see cref="JwtOptions.AccessTokenLifetimeMinutes"/> is outside the
 	/// allowed range.
@@ -75,7 +80,7 @@ public sealed partial class JwtOptionsTests
 	[Theory]
 	[InlineData(0)]    // Below minimum
 	[InlineData(1441)] // Above maximum
-	public void Validate_WhenAccessTokenLifetimeMinutesIsOutOfRange_Fails(int lifetime)
+	public void Validate_AccessTokenLifetimeMinutes_WhenOutOfRange_Fails(int lifetime)
 	{
 		// Arrange
 		JwtOptions options = CreateValidOptions();
@@ -96,11 +101,13 @@ public sealed partial class JwtOptionsTests
 			error.ErrorMessage);
 	}
 
+	// --- 3. Audience ---
+
 	/// <summary>
 	/// Verifies that validation fails when <see cref="JwtOptions.Audience"/> is empty.
 	/// </summary>
 	[Fact]
-	public void Validate_WhenAudienceIsEmpty_Fails()
+	public void Validate_Audience_WhenEmpty_Fails()
 	{
 		// Arrange
 		JwtOptions options = CreateValidOptions();
@@ -121,11 +128,13 @@ public sealed partial class JwtOptionsTests
 			error.ErrorMessage);
 	}
 
+	// --- 4. Issuer ---
+
 	/// <summary>
 	/// Verifies that validation fails when <see cref="JwtOptions.Issuer"/> is empty.
 	/// </summary>
 	[Fact]
-	public void Validate_WhenIssuerIsEmpty_Fails()
+	public void Validate_Issuer_WhenEmpty_Fails()
 	{
 		// Arrange
 		JwtOptions options = CreateValidOptions();
@@ -146,11 +155,13 @@ public sealed partial class JwtOptionsTests
 			error.ErrorMessage);
 	}
 
+	// --- 5. SigningKey ---
+
 	/// <summary>
 	/// Verifies that validation fails when <see cref="JwtOptions.SigningKey"/> is empty.
 	/// </summary>
 	[Fact]
-	public void Validate_WhenSigningKeyIsEmpty_Fails()
+	public void Validate_SigningKey_WhenEmpty_Fails()
 	{
 		// Arrange
 		JwtOptions options = CreateValidOptions();
@@ -177,7 +188,7 @@ public sealed partial class JwtOptionsTests
 	/// 32 characters.
 	/// </summary>
 	[Fact]
-	public void Validate_WhenSigningKeyIsTooShort_Fails()
+	public void Validate_SigningKey_WhenTooShort_Fails()
 	{
 		// Arrange
 		JwtOptions options = CreateValidOptions();

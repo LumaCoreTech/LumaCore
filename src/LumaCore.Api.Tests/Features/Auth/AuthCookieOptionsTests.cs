@@ -80,7 +80,7 @@ public sealed class AuthCookieOptionsTests
 	/// Verifies that validation fails when <see cref="AuthCookieOptions.Name"/> is empty.
 	/// </summary>
 	[Fact]
-	public void Validate_WhenNameIsEmpty_Fails()
+	public void Validate_Name_WhenEmpty_Fails()
 	{
 		// Arrange
 		var options = new AuthCookieOptions();
@@ -106,7 +106,7 @@ public sealed class AuthCookieOptionsTests
 	/// Verifies that validation fails when <see cref="AuthCookieOptions.Path"/> is empty.
 	/// </summary>
 	[Fact]
-	public void Validate_WhenPathIsEmpty_Fails()
+	public void Validate_Path_WhenEmpty_Fails()
 	{
 		// Arrange
 		var options = new AuthCookieOptions();

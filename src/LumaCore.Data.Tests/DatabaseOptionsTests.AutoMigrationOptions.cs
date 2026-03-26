@@ -25,13 +25,58 @@ public sealed partial class DatabaseOptionsTests
 	}
 
 	/// <summary>
+	/// Verifies that <see cref="DatabaseOptions.Validate"/> succeeds when
+	/// <see cref="DatabaseOptions.AutoMigrationOptions.RestoreOnFailure"/> is <see langword="true"/>
+	/// and <see cref="DatabaseOptions.AutoMigrationOptions.CreateBackupBeforeMigration"/> is also
+	/// <see langword="true"/> (the default). This is the valid configuration.
+	/// </summary>
+	[Fact]
+	public void Validate_WhenRestoreOnFailureWithBackupEnabled_Succeeds()
+	{
+		// Arrange — defaults: both RestoreOnFailure and CreateBackupBeforeMigration are true.
+		var sut = new DatabaseOptions();
+
+		// Act
+		List<ValidationResult> results = [..sut.Validate(new ValidationContext(sut))];
+
+		// Assert
+		Assert.Empty(results);
+	}
+
+	/// <summary>
+	/// Verifies that <see cref="DatabaseOptions.Validate"/> succeeds when both
+	/// <see cref="DatabaseOptions.AutoMigrationOptions.RestoreOnFailure"/> and
+	/// <see cref="DatabaseOptions.AutoMigrationOptions.CreateBackupBeforeMigration"/> are
+	/// <see langword="false"/>. Disabling both is a valid (explicit opt-out) configuration.
+	/// </summary>
+	[Fact]
+	public void Validate_WhenBothRestoreAndBackupDisabled_Succeeds()
+	{
+		// Arrange
+		var sut = new DatabaseOptions
+		{
+			AutoMigration =
+			{
+				RestoreOnFailure = false,
+				CreateBackupBeforeMigration = false
+			}
+		};
+
+		// Act
+		List<ValidationResult> results = [..sut.Validate(new ValidationContext(sut))];
+
+		// Assert
+		Assert.Empty(results);
+	}
+
+	/// <summary>
 	/// Verifies that <see cref="DatabaseOptions.Validate"/> rejects the contradictory configuration where
 	/// <see cref="DatabaseOptions.AutoMigrationOptions.RestoreOnFailure"/> is <see langword="true"/> but
 	/// <see cref="DatabaseOptions.AutoMigrationOptions.CreateBackupBeforeMigration"/> is <see langword="false"/>.
 	/// Automatic restore is impossible without a backup, so this combination is a configuration error.
 	/// </summary>
 	[Fact]
-	public void Validate_WhenRestoreOnFailureWithoutBackup_ReturnsValidationError()
+	public void Validate_WhenRestoreOnFailureWithoutBackup_Fails()
 	{
 		// Arrange
 		var sut = new DatabaseOptions
@@ -57,50 +102,5 @@ public sealed partial class DatabaseOptionsTests
 		Assert.Equal(
 			["AutoMigration.RestoreOnFailure", "AutoMigration.CreateBackupBeforeMigration"],
 			error.MemberNames);
-	}
-
-	/// <summary>
-	/// Verifies that <see cref="DatabaseOptions.Validate"/> succeeds when
-	/// <see cref="DatabaseOptions.AutoMigrationOptions.RestoreOnFailure"/> is <see langword="true"/>
-	/// and <see cref="DatabaseOptions.AutoMigrationOptions.CreateBackupBeforeMigration"/> is also
-	/// <see langword="true"/> (the default). This is the valid configuration.
-	/// </summary>
-	[Fact]
-	public void Validate_WhenRestoreOnFailureWithBackupEnabled_ReturnsNoError()
-	{
-		// Arrange — defaults: both RestoreOnFailure and CreateBackupBeforeMigration are true.
-		var sut = new DatabaseOptions();
-
-		// Act
-		List<ValidationResult> results = [..sut.Validate(new ValidationContext(sut))];
-
-		// Assert
-		Assert.Empty(results);
-	}
-
-	/// <summary>
-	/// Verifies that <see cref="DatabaseOptions.Validate"/> succeeds when both
-	/// <see cref="DatabaseOptions.AutoMigrationOptions.RestoreOnFailure"/> and
-	/// <see cref="DatabaseOptions.AutoMigrationOptions.CreateBackupBeforeMigration"/> are
-	/// <see langword="false"/>. Disabling both is a valid (explicit opt-out) configuration.
-	/// </summary>
-	[Fact]
-	public void Validate_WhenBothRestoreAndBackupDisabled_ReturnsNoError()
-	{
-		// Arrange
-		var sut = new DatabaseOptions
-		{
-			AutoMigration =
-			{
-				RestoreOnFailure = false,
-				CreateBackupBeforeMigration = false
-			}
-		};
-
-		// Act
-		List<ValidationResult> results = [..sut.Validate(new ValidationContext(sut))];
-
-		// Assert
-		Assert.Empty(results);
 	}
 }

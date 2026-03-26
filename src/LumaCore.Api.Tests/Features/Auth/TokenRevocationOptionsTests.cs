@@ -81,7 +81,7 @@ public sealed class TokenRevocationOptionsTests
 	[Theory]
 	[InlineData("minimum (cache disabled)", 0)]
 	[InlineData("maximum", 60)]
-	public void Validate_WithBoundaryValues_Succeeds(string caseName, int value)
+	public void Validate_CacheDurationSeconds_WithBoundaryValues_Succeeds(string caseName, int value)
 	{
 		_ = caseName; // Used for test output readability.
 
@@ -107,7 +107,7 @@ public sealed class TokenRevocationOptionsTests
 	[Theory]
 	[InlineData("below minimum", -1)]
 	[InlineData("above maximum", 61)]
-	public void Validate_WhenCacheDurationSecondsIsOutOfRange_Fails(string caseName, int value)
+	public void Validate_CacheDurationSeconds_WhenOutOfRange_Fails(string caseName, int value)
 	{
 		_ = caseName; // Used for test output readability.
 
