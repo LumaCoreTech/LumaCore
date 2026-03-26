@@ -304,6 +304,9 @@ Test method names must follow: **`Method_State_Expectation`**
 |---------|---------|
 | Regular method | `SomeMethod_WhenInputIsNull_ThrowsArgumentNullException` |
 | Constructor | `Constructor_WhenInputIsNull_ThrowsArgumentNullException` |
+| `Validate()` (Options) | `Validate_AllowedOrigins_WhenEmpty_Fails` |
+
+**`Validate()` tests** for `IValidatableObject` options classes use a **4-part** name: `Validate_<Property>_<Condition>_<Expectation>`. The `<Property>` segment identifies which property the test targets. Cross-cutting tests that exercise the overall validation gate (e.g., disabled feature, fully configured options) may omit the property segment and use the standard 3-part name.
 
 #### One Member per Test Method
 
@@ -479,6 +482,18 @@ To reduce ambiguity when classifying tests:
 If a file contains tests for **multiple** methods/properties, group them using `#region` blocks (one region per method/property), and apply the same ordering *within* each region.
 
 When adding new tests, immediately insert them in the correct position. Do not append out of order even temporarily.
+
+#### Options / Validation Tests
+
+For `IValidatableObject` options classes whose `Validate()` method checks multiple properties, **group tests by the property or concern being validated** instead of a flat valid/invalid split:
+
+1. **General** — cross-cutting tests (disabled feature skips validation, fully configured options pass).
+2. **One section per property** — ordered to match the `Validate()` implementation flow.
+3. **Valid → invalid** within each section.
+
+Use numbered section dividers (`// --- 1. General ---`, `// --- 2. AllowedOrigins ---`, …) and a file-level narrative comment that lists all sections. The narrative should reference test method name suffixes (the condition part) in parentheses so readers can locate each test by scanning the overview (e.g., `wildcard accepted (WhenWildcardAndNoCredentials), empty origins rejected (WhenEmptyAndEnabled)`).
+
+This structure keeps related scenarios together and makes it easy to verify that each property has both positive and negative coverage.
 
 #### Narrative Structure (Test Files)
 
