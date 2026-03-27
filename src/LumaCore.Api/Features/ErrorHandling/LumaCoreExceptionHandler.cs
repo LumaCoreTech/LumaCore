@@ -112,10 +112,12 @@ sealed class LumaCoreExceptionHandler : IExceptionHandler
 		httpContext.Response.StatusCode = problemDetails.Status.Value;
 		httpContext.Response.ContentType = "application/problem+json";
 
-		// Write the ProblemDetails as JSON.
+		// Write the ProblemDetails as JSON with the correct content type.
 		await httpContext.Response.WriteAsJsonAsync(
 				problemDetails,
-				cancellationToken)
+				options: null,
+				contentType: "application/problem+json",
+				cancellationToken: cancellationToken)
 			.ConfigureAwait(false);
 
 		// Return true to indicate the exception was handled.
