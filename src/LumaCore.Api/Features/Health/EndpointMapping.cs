@@ -7,7 +7,7 @@ using System.Diagnostics;
 using LumaCore.Api.Features.ApiVersioning;
 using LumaCore.Data.Initialization;
 
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 
 using V1 = LumaCore.Api.Contracts.V1.Health;
 
@@ -124,19 +124,26 @@ static class EndpointMapping
 		// filters like validation. Features should NOT include /api in their paths.
 		RouteGroupBuilder group = endpoints
 			.MapGroup("/health")
-			.WithTags("Health");
+			.WithTags("Health")
+			.AddEndpointFilter(async (context, next) =>
+			{
+				// Health endpoints must never be cached — callers depend on fresh status.
+				// Applied at the group level so new endpoints inherit the policy automatically.
+				context.HttpContext.Response.Headers[HeaderNames.CacheControl] = "no-store, no-cache";
+				return await next(context).ConfigureAwait(false);
+			});
 
 		// -------------------------------------------------------------------------
 		// GET /api/v{version}/health/live
 		// -------------------------------------------------------------------------
 		// Returns a small JSON payload that indicates whether the backend is
-		// responsive. The response is intentionally minimal and marked as
-		// non-cacheable so that callers always receive fresh information.
+		// responsive. The response is intentionally minimal. Cache prevention
+		// is handled by the group-level endpoint filter above.
 		//
 		// This endpoint is:
 		//   - Versioned (follows the /api/v{version} scheme)
 		//   - Anonymous (no authentication required)
-		//   - Non-cacheable (always returns fresh status)
+		//   - Non-cacheable (group-level filter)
 		// -------------------------------------------------------------------------
 		group.MapGet(
 				"/live",
@@ -149,12 +156,6 @@ static class EndpointMapping
 				"currently reachable. This endpoint is primarily intended for use by the " +
 				"LumaCore Web UI and by external monitoring systems as a lightweight " +
 				"liveness probe.")
-			.WithMetadata(
-				new ResponseCacheAttribute
-				{
-					NoStore = true,
-					Location = ResponseCacheLocation.None
-				})
 			.AllowAnonymous();
 
 		// -------------------------------------------------------------------------
@@ -171,7 +172,7 @@ static class EndpointMapping
 		// This endpoint is:
 		//   - Versioned (follows the /api/v{version} scheme)
 		//   - Anonymous (no authentication required)
-		//   - Non-cacheable (always returns fresh status)
+		//   - Non-cacheable (group-level filter)
 		// -------------------------------------------------------------------------
 		group.MapGet(
 				"/ready",
@@ -226,12 +227,6 @@ static class EndpointMapping
 				"ready. Unlike the /live endpoint (pure connectivity check), this endpoint " +
 				"reflects the actual database initialization status. Returns HTTP 200 when " +
 				"ready, or HTTP 503 with a status string and message when not.")
-			.WithMetadata(
-				new ResponseCacheAttribute
-				{
-					NoStore = true,
-					Location = ResponseCacheLocation.None
-				})
 			.AllowAnonymous();
 
 		return endpoints;
