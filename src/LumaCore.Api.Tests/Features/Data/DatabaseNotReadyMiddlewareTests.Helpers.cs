@@ -3,7 +3,6 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using System.Net;
-using System.Net.Http.Json;
 
 using LumaCore.Api.Features.Data;
 using LumaCore.Api.Tests.Infrastructure;
@@ -131,21 +130,16 @@ public sealed partial class DatabaseNotReadyMiddlewareTests
 	}
 
 	/// <summary>
-	/// Reads the response body as a <see cref="ProblemDetails"/> instance and asserts common 503 properties.
+	/// Reads the response body as a <see cref="ProblemDetails"/> instance, asserts common 503 envelope properties
+	/// via <see cref="ProblemDetailsAssert.ReadAndAssertAsync"/>, and verifies the <c>traceId</c> extension.
 	/// </summary>
 	/// <param name="response">The HTTP response to parse.</param>
-	/// <returns>The deserialized <see cref="ProblemDetails"/>.</returns>
+	/// <returns>The deserialized <see cref="ProblemDetails"/> for further semantic assertions by the caller.</returns>
 	private static async Task<ProblemDetails> ReadAndAssertProblemDetailsAsync(HttpResponseMessage response)
 	{
-		Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
-		Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
-
-		ProblemDetails? problem = await response.Content
-			                          .ReadFromJsonAsync<ProblemDetails>()
-			                          .ConfigureAwait(false);
-
-		Assert.NotNull(problem);
-		Assert.Equal(StatusCodes.Status503ServiceUnavailable, problem.Status);
+		ProblemDetails problem = await ProblemDetailsAssert
+			                         .ReadAndAssertAsync(response, HttpStatusCode.ServiceUnavailable)
+			                         .ConfigureAwait(false);
 
 		// Verify exactly one extension exists (no unintended data leakage) and that the traceId is non-empty.
 		KeyValuePair<string, object?> extension = Assert.Single(problem.Extensions);
