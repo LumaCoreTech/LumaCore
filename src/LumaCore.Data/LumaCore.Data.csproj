@@ -18,6 +18,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="LumaCore.Api.Tests" />
 		<InternalsVisibleTo Include="LumaCore.Data.Tests" />
 	</ItemGroup>
 
