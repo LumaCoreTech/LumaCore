@@ -385,7 +385,8 @@ namespace LumaCore.Data.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique()
-                        .HasDatabaseName("IX_Users_Email");
+                        .HasDatabaseName("IX_Users_Email")
+                        .HasFilter("\"Email\" IS NOT NULL");
 
                     b.HasIndex("ParticipantId")
                         .IsUnique()

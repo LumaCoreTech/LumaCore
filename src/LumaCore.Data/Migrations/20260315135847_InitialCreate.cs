@@ -334,7 +334,8 @@ public partial class InitialCreate : Migration
 			name: "IX_Users_Email",
 			table: "Users",
 			column: "Email",
-			unique: true);
+			unique: true,
+			filter: "\"Email\" IS NOT NULL");
 
 		migrationBuilder.CreateIndex(
 			name: "IX_Users_ParticipantId",

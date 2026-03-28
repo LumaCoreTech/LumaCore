@@ -687,7 +687,8 @@ public sealed class LumaCoreDbContext : DbContext
 
 			entity.HasIndex(e => e.Email)
 				.IsUnique()
-				.HasDatabaseName("IX_Users_Email");
+				.HasDatabaseName("IX_Users_Email")
+				.HasFilter("\"Email\" IS NOT NULL");
 
 			entity.HasIndex(e => e.ParticipantId)
 				.IsUnique()
