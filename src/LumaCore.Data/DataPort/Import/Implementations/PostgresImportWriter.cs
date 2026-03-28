@@ -242,26 +242,29 @@ public sealed class PostgresImportWriter : IDataImportWriter
 		}
 		else
 		{
-			// Fresh import for this table: truncate existing data.
+			// Fresh import for this table: delete existing data.
+			// TRUNCATE ... CASCADE is not safe here because tables are imported in alphabetical
+			// order — CASCADE propagates to tables that have FK references to the truncated table,
+			// wiping data that was already imported in earlier iterations (e.g., TRUNCATE Users
+			// CASCADE wipes UserRoles). DELETE FROM is safe because session_replication_role is set
+			// to 'replica', which disables FK constraint triggers. Sequence resets are handled
+			// separately in CleanupAfterImportAsync().
 			try
 			{
-				string truncateSql = $"""
-				                      TRUNCATE TABLE {QuotePostgres(mSchema)}.{QuotePostgres(table.Name)}
-				                      RESTART IDENTITY CASCADE
-				                      """;
-				var truncateCmd = new NpgsqlCommand(truncateSql, mConnection);
+				string deleteSql = $"DELETE FROM {QuotePostgres(mSchema)}.{QuotePostgres(table.Name)}";
+				var deleteCmd = new NpgsqlCommand(deleteSql, mConnection);
 				try
 				{
-					await truncateCmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+					await deleteCmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 				}
 				finally
 				{
-					await truncateCmd.DisposeAsync().ConfigureAwait(false);
+					await deleteCmd.DisposeAsync().ConfigureAwait(false);
 				}
 			}
 			catch (Exception ex)
 			{
-				logger?.LogError(ex, "Failed to truncate table {TableName}", table.Name);
+				logger?.LogError(ex, "Failed to delete data from table {TableName}", table.Name);
 				throw;
 			}
 		}
