@@ -5,6 +5,7 @@
 using System.Data;
 using System.Data.Common;
 
+using LumaCore.Core.IO;
 using LumaCore.Data.Providers;
 
 using Microsoft.Data.Sqlite;
@@ -40,11 +41,11 @@ namespace LumaCore.Data.Tests.Infrastructure;
 sealed class IntegrationTestHarness : IAsyncDisposable
 {
 	/// <summary>
-	/// Absolute path to the temporary SQLite database file.
+	/// The temporary folder containing the SQLite database file and its journal files (WAL, SHM).
 	/// <see langword="null"/> for in-memory SQLite and external providers (PostgreSQL, SQL Server)
 	/// where cleanup is handled via <see cref="DatabaseFacade.EnsureDeletedAsync"/>.
 	/// </summary>
-	private readonly string? mDatabasePath;
+	private readonly TemporaryFolder? mDatabaseFolder;
 
 	/// <summary>
 	/// The provider name for cleanup decisions.
@@ -68,9 +69,9 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 	/// </summary>
 	/// <param name="providerOperations">The provider operations for provider-agnostic schema verification.</param>
 	/// <param name="dbContext">The database context connected to the test database.</param>
-	/// <param name="databasePath">
-	/// The path to the temporary SQLite database file, or <see langword="null"/> for in-memory SQLite
-	/// and external providers.
+	/// <param name="databaseFolder">
+	/// The temporary folder containing the SQLite database file, or <see langword="null"/> for in-memory
+	/// SQLite and external providers.
 	/// </param>
 	/// <param name="providerName">
 	/// The provider name (e.g., <see cref="DatabaseProviders.Sqlite"/>), used for cleanup decisions.
@@ -83,7 +84,7 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 	private IntegrationTestHarness(
 		IDatabaseProviderOperations providerOperations,
 		LumaCoreDbContext           dbContext,
-		string?                     databasePath,
+		TemporaryFolder?            databaseFolder,
 		string                      providerName,
 		string                      connectionString,
 		SqliteConnection?           connection)
@@ -92,7 +93,7 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 		DbContext = dbContext;
 		Migrator = dbContext.GetInfrastructure().GetRequiredService<IMigrator>();
 		ConnectionString = connectionString;
-		mDatabasePath = databasePath;
+		mDatabaseFolder = databaseFolder;
 		mProviderName = providerName;
 		mConnection = connection;
 		mTestOperations = RelationalDatabaseTestOperations.Create(providerOperations);
@@ -101,7 +102,7 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 	/// <summary>
 	/// Disposes the harness: drops the test database for external providers, disposes the
 	/// <see cref="DbContext"/>, and cleans up SQLite resources (closes the in-memory connection or
-	/// deletes the temporary file).
+	/// deletes the temporary folder including WAL/SHM journals).
 	/// </summary>
 	public async ValueTask DisposeAsync()
 	{
@@ -130,15 +131,11 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 		}
 
 		// For SQLite file-based, clear the connection pool to release file locks held by
-		// pooled connections, then delete the temporary database file.
-		if (mDatabasePath is not null)
+		// pooled connections, then delete the temporary folder (database file + WAL/SHM journals).
+		if (mDatabaseFolder is not null)
 		{
 			SqliteConnection.ClearAllPools();
-			try { File.Delete(mDatabasePath); }
-			catch
-			{
-				// best-effort cleanup
-			}
+			mDatabaseFolder.Dispose();
 		}
 	}
 
@@ -185,14 +182,14 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 	/// <remarks>
 	/// The database provider is determined by <see cref="DbTestSettingsLoader"/>: <c>appsettings.json</c>,
 	/// <c>appsettings.Development.json</c>, and environment variables (in ascending priority). Defaults to
-	/// SQLite in-memory. When <see cref="DbProvider.Sqlite"/> is selected, a temporary file in the system
-	/// temp directory is used instead.
+	/// SQLite in-memory. When <see cref="DbProvider.Sqlite"/> is selected, a <see cref="TemporaryFolder"/> is used
+	/// to contain the database file and its journal files (WAL, SHM).
 	/// </remarks>
 	public static async Task<IntegrationTestHarness> CreateAsync(string dbNamePrefix, bool ensureCreated = true)
 	{
 		DbTestSettings settings = DbTestSettingsLoader.Load();
 
-		string? databasePath = null;
+		TemporaryFolder? databaseFolder = null;
 		SqliteConnection? sqliteConnection = null;
 		string providerName;
 		string connectionString;
@@ -222,8 +219,8 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 			case DbProvider.Sqlite:
 			{
 				providerName = DatabaseProviders.Sqlite;
-				databasePath = Path.Combine(Path.GetTempPath(), $"{dbNamePrefix}-test-{Guid.NewGuid():N}.db");
-				connectionString = $"Data Source={databasePath}";
+				databaseFolder = new TemporaryFolder($"{dbNamePrefix}-test");
+				connectionString = $"Data Source={databaseFolder.GetFilePath("test.db")}";
 
 				DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
 					.UseSqlite(connectionString)
@@ -306,7 +303,7 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 		return new IntegrationTestHarness(
 			providerOps,
 			dbContext,
-			databasePath,
+			databaseFolder,
 			providerName,
 			connectionString,
 			sqliteConnection);

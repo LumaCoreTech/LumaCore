@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Core.IO;
+
 using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -40,10 +42,10 @@ public sealed class DbFixture : IAsyncLifetime
 	private SqliteConnection? mConnection;
 
 	/// <summary>
-	/// Path to a temporary SQLite database file used by the <see cref="DbProvider.Sqlite"/> provider.
+	/// The temporary folder containing the SQLite database file and its journal files (WAL, SHM).
 	/// <see langword="null"/> for in-memory or external providers.
 	/// </summary>
-	private string? mDatabasePath;
+	private TemporaryFolder? mDatabaseFolder;
 
 	/// <summary>
 	/// The resolved connection string for external providers (PostgreSQL, SQL Server), including the
@@ -86,14 +88,11 @@ public sealed class DbFixture : IAsyncLifetime
 			mConnection = null;
 		}
 
-		if (mDatabasePath is not null)
+		if (mDatabaseFolder is not null)
 		{
-			try { File.Delete(mDatabasePath); }
-			catch
-			{
-				/* best-effort cleanup */
-			}
-			mDatabasePath = null;
+			SqliteConnection.ClearAllPools();
+			mDatabaseFolder.Dispose();
+			mDatabaseFolder = null;
 		}
 	}
 
@@ -154,11 +153,11 @@ public sealed class DbFixture : IAsyncLifetime
 		// EF tracking errors (identity conflicts) and never reach the database.
 		if (mSettings?.Provider is DbProvider.Sqlite)
 		{
-			if (mDatabasePath is null)
-				throw new InvalidOperationException("Fixture database path not initialized.");
+			if (mDatabaseFolder is null)
+				throw new InvalidOperationException("Fixture database folder not initialized.");
 
 			DbContextOptions<LumaCoreDbContext> fileOptions = new DbContextOptionsBuilder<LumaCoreDbContext>()
-				.UseSqlite($"Data Source={mDatabasePath}")
+				.UseSqlite($"Data Source={mDatabaseFolder.GetFilePath("test.db")}")
 				.Options;
 
 			return new LumaCoreDbContext(fileOptions);
@@ -256,12 +255,13 @@ public sealed class DbFixture : IAsyncLifetime
 	/// </returns>
 	/// <remarks>
 	/// This provides closer-to-production SQLite behavior compared to in-memory: file I/O, locking, and
-	/// journaling are exercised. The file is created in the system temp directory with a unique name.
+	/// journaling are exercised. A <see cref="TemporaryFolder"/> contains the database file and its journal
+	/// files (WAL, SHM) so that disposal cleans up everything.
 	/// </remarks>
 	private static DbFixture CreateSqliteFile(DbTestSettings settings)
 	{
-		string dbPath = Path.Combine(Path.GetTempPath(), $"lumacore-test-{Guid.NewGuid():N}.db");
-		string connectionString = $"Data Source={dbPath}";
+		var folder = new TemporaryFolder("lumacore-test");
+		string connectionString = $"Data Source={folder.GetFilePath("test.db")}";
 
 		DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
 			.UseSqlite(connectionString)
@@ -270,7 +270,7 @@ public sealed class DbFixture : IAsyncLifetime
 		var dbContext = new LumaCoreDbContext(options);
 		return new DbFixture
 		{
-			mDatabasePath = dbPath,
+			mDatabaseFolder = folder,
 			mSettings = settings,
 			DbContext = dbContext
 		};

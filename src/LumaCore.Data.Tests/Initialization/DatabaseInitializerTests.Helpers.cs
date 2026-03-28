@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.Common;
 
 using LumaCore.Core.Diagnostics;
+using LumaCore.Core.IO;
 using LumaCore.Data.DataPort;
 using LumaCore.Data.DataPort.Shuttle;
 using LumaCore.Data.Initialization;
@@ -14,6 +15,7 @@ using LumaCore.Data.Security;
 using LumaCore.Data.Services;
 using LumaCore.Data.Tests.Infrastructure;
 
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -108,11 +110,11 @@ public sealed partial class DatabaseInitializerTests
 		private readonly ServiceProvider mServiceProvider;
 
 		/// <summary>
-		/// Absolute path to the temporary SQLite database file.
+		/// The temporary folder containing the SQLite database file and its journal files (WAL, SHM).
 		/// <see langword="null"/> for external providers (PostgreSQL, SQL Server) where cleanup is
 		/// handled via <see cref="DatabaseFacade.EnsureDeletedAsync"/>.
 		/// </summary>
-		private readonly string? mDatabasePath;
+		private readonly TemporaryFolder? mDatabaseFolder;
 
 		/// <summary>
 		/// Abstracts low-level database operations (delete rows, count rows, create tables) so that test
@@ -127,8 +129,9 @@ public sealed partial class DatabaseInitializerTests
 		/// <param name="status">The initialization status tracker.</param>
 		/// <param name="options">The database options used for this test.</param>
 		/// <param name="serviceProvider">The service provider for cleanup.</param>
-		/// <param name="databasePath">
-		/// The path to the temporary SQLite database file, or <see langword="null"/> for external providers.
+		/// <param name="databaseFolder">
+		/// The temporary folder containing the SQLite database file, or <see langword="null"/> for
+		/// external providers.
 		/// </param>
 		/// <param name="timeProvider">The fake time provider used by the initializer.</param>
 		public TestHarness(
@@ -136,7 +139,7 @@ public sealed partial class DatabaseInitializerTests
 			DatabaseInitializationStatus status,
 			DatabaseOptions              options,
 			ServiceProvider              serviceProvider,
-			string?                      databasePath,
+			TemporaryFolder?             databaseFolder,
 			FakeTimeProvider             timeProvider)
 		{
 			Sut = sut;
@@ -145,7 +148,7 @@ public sealed partial class DatabaseInitializerTests
 			ProviderOperations = serviceProvider.GetRequiredService<IDatabaseProviderOperations>();
 			TimeProvider = timeProvider;
 			mServiceProvider = serviceProvider;
-			mDatabasePath = databasePath;
+			mDatabaseFolder = databaseFolder;
 			mTestOperations = RelationalDatabaseTestOperations.Create(ProviderOperations);
 		}
 
@@ -180,14 +183,12 @@ public sealed partial class DatabaseInitializerTests
 
 			await mServiceProvider.DisposeAsync().ConfigureAwait(false);
 
-			// For SQLite file-based, delete the temporary database file.
-			if (mDatabasePath is not null)
+			// For SQLite file-based, clear the connection pool to release file locks held by
+			// pooled connections, then delete the temporary folder (database file + WAL/SHM journals).
+			if (mDatabaseFolder is not null)
 			{
-				try { File.Delete(mDatabasePath); }
-				catch
-				{
-					/* best-effort cleanup */
-				}
+				SqliteConnection.ClearAllPools();
+				mDatabaseFolder.Dispose();
 			}
 		}
 
@@ -614,12 +615,12 @@ public sealed partial class DatabaseInitializerTests
 	}
 
 	/// <summary>
-	/// Resolves the database provider, connection string, and optional file path based on the test
+	/// Resolves the database provider, connection string, and optional temporary folder based on the test
 	/// environment configuration loaded via <see cref="DbTestSettingsLoader"/>.
 	/// </summary>
 	/// <returns>
 	/// A tuple of (provider name for <see cref="DatabaseOptions.Provider"/>,
-	/// connection string, optional SQLite file path for cleanup).
+	/// connection string, optional <see cref="TemporaryFolder"/> for SQLite file cleanup).
 	/// </returns>
 	/// <remarks>
 	///     <para>
@@ -636,7 +637,7 @@ public sealed partial class DatabaseInitializerTests
 	/// An external provider is selected but no connection string is configured.
 	/// </exception>
 	/// <exception cref="NotSupportedException">MySQL/MariaDB or an unknown provider is selected.</exception>
-	private static (string ProviderName, string ConnectionString, string? DatabasePath) ResolveTestDatabase()
+	private static (string ProviderName, string ConnectionString, TemporaryFolder? DatabaseFolder) ResolveTestDatabase()
 	{
 		DbTestSettings settings = DbTestSettingsLoader.Load();
 
@@ -646,8 +647,8 @@ public sealed partial class DatabaseInitializerTests
 			case DbProvider.Sqlite:
 			{
 				// Always use file-based SQLite — in-memory doesn't work for multi-scope tests.
-				string dbPath = Path.Combine(Path.GetTempPath(), $"dbinit-test-{Guid.NewGuid():N}.db");
-				return (DatabaseProviders.Sqlite, $"Data Source={dbPath}", dbPath);
+				var folder = new TemporaryFolder("dbinit-test");
+				return (DatabaseProviders.Sqlite, $"Data Source={folder.GetFilePath("test.db")}", folder);
 			}
 
 			case DbProvider.PostgreSql:
@@ -746,7 +747,7 @@ public sealed partial class DatabaseInitializerTests
 		Action<DatabaseOptions>?    configure         = null,
 		Action<IServiceCollection>? configureServices = null)
 	{
-		(string providerName, string connectionString, string? databasePath) = ResolveTestDatabase();
+		(string providerName, string connectionString, TemporaryFolder? databaseFolder) = ResolveTestDatabase();
 
 		var options = new DatabaseOptions
 		{
@@ -844,7 +845,7 @@ public sealed partial class DatabaseInitializerTests
 			fakeTimeProvider,
 			NullLogger<DatabaseInitializer>.Instance);
 
-		return new TestHarness(sut, status, options, serviceProvider, databasePath, fakeTimeProvider);
+		return new TestHarness(sut, status, options, serviceProvider, databaseFolder, fakeTimeProvider);
 	}
 
 	/// <summary>
