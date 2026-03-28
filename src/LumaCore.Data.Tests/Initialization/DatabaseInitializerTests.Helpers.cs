@@ -773,9 +773,9 @@ public sealed partial class DatabaseInitializerTests
 		services.AddSingleton(wrappedOptions);
 
 		// EF Core — register the provider determined by test settings.
-		// Downgrade PendingModelChangesWarning from exception to log entry: the model may have evolved
-		// beyond the last-generated migration (per repo convention, all changes are folded into the
-		// initial migration before release).
+		// Downgrade PendingModelChangesWarning from exception to log entry: strongly-typed ID converters
+		// registered via ConfigureConventions() change how the SQLite provider finalizes value generation
+		// metadata, creating an unavoidable mismatch between the snapshot model and the runtime model.
 		string migrationsAssembly = typeof(LumaCoreDbContext).Assembly.FullName!;
 		services.AddDbContext<LumaCoreDbContext>(dbOpts =>
 		{
