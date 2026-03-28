@@ -42,7 +42,8 @@ namespace LumaCore.Api.Features.Validation;
 /// </remarks>
 /// <example>
 /// Define a request record with validation attributes on <b>properties</b> (not constructor parameters) so that
-/// <see cref="Validator.TryValidateObject"/> can inspect them:
+/// <see cref="Validator.TryValidateObject(object, ValidationContext, ICollection{ValidationResult}?, bool)"/>
+/// can inspect them:
 /// <code>
 /// public sealed record CreateItemRequest
 /// {

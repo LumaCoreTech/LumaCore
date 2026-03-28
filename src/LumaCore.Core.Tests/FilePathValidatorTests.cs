@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-using System.Runtime.CompilerServices;
-
 using Xunit;
 
 namespace LumaCore.Core.Tests;
@@ -16,7 +14,7 @@ namespace LumaCore.Core.Tests;
 ///     <see cref="FilePathValidator.Validate"/> coverage: from accepted paths through contract violations to
 ///     OS-specific rejections. These tests exercise the three validation layers — null/whitespace guard,
 ///     <see cref="Path.GetFullPath(string)"/> structural check, and per-segment character/length validation —
-///     plus the <see cref="System.Runtime.CompilerServices.CallerArgumentExpressionAttribute"/> parameter-name
+///     plus the <c>CallerArgumentExpressionAttribute</c> parameter-name
 ///     plumbing:
 ///     </para>
 ///     <list type="number">
@@ -249,7 +247,7 @@ public sealed class FilePathValidatorTests
 
 	/// <summary>
 	/// Verifies that <see cref="FilePathValidator.Validate"/> infers the parameter name via
-	/// <see cref="CallerArgumentExpressionAttribute"/> when no explicit parameter name is provided.
+	/// <c>CallerArgumentExpressionAttribute</c> when no explicit parameter name is provided.
 	/// </summary>
 	[Fact]
 	public void Validate_WhenCalledWithoutExplicitParamName_InfersParameterName()

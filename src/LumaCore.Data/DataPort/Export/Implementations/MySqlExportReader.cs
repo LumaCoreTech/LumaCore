@@ -25,7 +25,9 @@ public sealed class MySqlExportReader : IDataExportReader
 {
 	private readonly string mConnectionString;
 
+#pragma warning disable CS0414 // Assigned but never read — placeholder for future MySQL support.
 	private bool mDisposed;
+#pragma warning restore CS0414
 
 	/// <summary>
 	/// Message used by <see cref="NotSupportedException"/> until Pomelo releases an EF Core 10 compatible provider.
@@ -273,7 +275,12 @@ public sealed class MySqlExportReader : IDataExportReader
 		[EnumeratorCancellation] CancellationToken cancellationToken)
 	{
 		throw new NotSupportedException(NotSupportedMessage);
+
+#pragma warning disable CS0162 // Unreachable code detected
+		// ReSharper disable once HeuristicUnreachableCode
 		yield break;
+#pragma warning restore CS0162 // Unreachable code detected
+
 		//ArgumentNullException.ThrowIfNull(tableName);
 
 		//// Query all rows from the table.

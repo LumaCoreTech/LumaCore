@@ -23,7 +23,7 @@ public sealed partial class LumaCoreDataServiceTests
 	///     </para>
 	///     <para>
 	///     Each nested test class gets its own fixture instance; <see cref="IAsyncLifetime.InitializeAsync"/> creates the
-	///     database schema and <see cref="IAsyncLifetime.DisposeAsync"/> tears it down to keep tests isolated.
+	///     database schema and <see cref="IAsyncDisposable.DisposeAsync"/> tears it down to keep tests isolated.
 	///     </para>
 	/// </remarks>
 	public abstract class TestBase : IAsyncLifetime

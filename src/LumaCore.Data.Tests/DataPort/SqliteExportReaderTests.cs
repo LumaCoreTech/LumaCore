@@ -339,7 +339,7 @@ public sealed partial class SqliteExportReaderTests
 	#region DisposeAsync()
 
 	/// <summary>
-	/// Verifies that <see cref="SqliteExportReader.DisposeAsync"/> can be called multiple times
+	/// Verifies that <see cref="SqliteReaderBase.DisposeAsync"/> can be called multiple times
 	/// without throwing.
 	/// </summary>
 	[Fact]

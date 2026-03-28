@@ -151,7 +151,7 @@ public sealed partial class LumaCoreDataServiceTests
 		/// <param name="scenario">A human-readable description of the test case.</param>
 		/// <param name="userId">The user id to pass to the method.</param>
 		/// <param name="roleId">The role id to pass to the method.</param>
-		/// <param name="expectedParamName">The expected <see cref="ArgumentOutOfRangeException.ParamName"/>.</param>
+		/// <param name="expectedParamName">The expected <see cref="ArgumentException.ParamName"/>.</param>
 		[Theory]
 		[MemberData(nameof(AssignRoleToUserAsync_InvalidId_Data))]
 		public async Task AssignRoleToUserAsync_WhenIdInvalid_ThrowsArgumentOutOfRangeException(
@@ -260,7 +260,7 @@ public sealed partial class LumaCoreDataServiceTests
 		/// <param name="scenario">A human-readable description of the test case.</param>
 		/// <param name="userId">The user id to pass to the method.</param>
 		/// <param name="roleId">The role id to pass to the method.</param>
-		/// <param name="expectedParamName">The expected <see cref="ArgumentOutOfRangeException.ParamName"/>.</param>
+		/// <param name="expectedParamName">The expected <see cref="ArgumentException.ParamName"/>.</param>
 		[Theory]
 		[MemberData(nameof(RemoveRoleFromUserAsync_InvalidId_Data))]
 		public async Task RemoveRoleFromUserAsync_WhenIdInvalid_ThrowsArgumentOutOfRangeException(

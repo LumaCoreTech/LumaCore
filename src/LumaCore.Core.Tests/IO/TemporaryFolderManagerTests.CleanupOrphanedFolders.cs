@@ -262,7 +262,7 @@ public sealed partial class TemporaryFolderManagerTests
 	/// Verifies that <see cref="TemporaryFolderManager.CleanupOrphanedFolders"/> still removes the orphaned folder
 	/// when the subsequent lock file deletion fails. Uses <see cref="ExecutionStageMonitor"/> to inject an
 	/// <see cref="IOException"/> at the <c>File.Delete</c> call in
-	/// <see cref="TemporaryFolderManager.TryDeleteFile"/>.
+	/// <c>TryDeleteFile()</c>.
 	/// </summary>
 	[Fact]
 	public void CleanupOrphanedFolders_LockFileDeletionFails_OrphanFolderStillCleaned()

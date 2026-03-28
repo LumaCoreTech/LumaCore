@@ -369,7 +369,7 @@ public sealed partial class LumaCoreDataServiceTests
 		/// <param name="scenario">A human-readable description of the test case.</param>
 		/// <param name="conversationId">The conversation id to pass to the method.</param>
 		/// <param name="participantId">The participant id to pass to the method.</param>
-		/// <param name="expectedParamName">The expected <see cref="ArgumentOutOfRangeException.ParamName"/>.</param>
+		/// <param name="expectedParamName">The expected <see cref="ArgumentException.ParamName"/>.</param>
 		[Theory]
 		[MemberData(nameof(AddParticipantToConversationAsync_InvalidId_Data))]
 		public async Task AddParticipantToConversationAsync_WhenIdInvalid_ThrowsArgumentOutOfRangeException(

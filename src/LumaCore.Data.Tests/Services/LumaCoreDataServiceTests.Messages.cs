@@ -210,7 +210,7 @@ public sealed partial class LumaCoreDataServiceTests
 		/// <param name="scenario">A human-readable description of the test case.</param>
 		/// <param name="conversationId">The conversation id to pass to the method.</param>
 		/// <param name="senderParticipantId">The sender participant id to pass to the method.</param>
-		/// <param name="expectedParamName">The expected <see cref="ArgumentOutOfRangeException.ParamName"/>.</param>
+		/// <param name="expectedParamName">The expected <see cref="ArgumentException.ParamName"/>.</param>
 		[Theory]
 		[MemberData(nameof(CreateMessageAsync_InvalidId_Data))]
 		public async Task CreateMessageAsync_WhenIdInvalid_ThrowsArgumentOutOfRangeException(
@@ -740,7 +740,7 @@ public sealed partial class LumaCoreDataServiceTests
 		/// <param name="scenario">A human-readable description of the test case.</param>
 		/// <param name="messageId">The message id to pass to the method.</param>
 		/// <param name="authorParticipantId">The author participant id to pass to the method.</param>
-		/// <param name="expectedParamName">The expected <see cref="ArgumentOutOfRangeException.ParamName"/>.</param>
+		/// <param name="expectedParamName">The expected <see cref="ArgumentException.ParamName"/>.</param>
 		[Theory]
 		[MemberData(nameof(RedactMessageByAuthorAsync_InvalidId_Data))]
 		public async Task RedactMessageByAuthorAsync_WhenIdInvalid_ThrowsArgumentOutOfRangeException(
@@ -1129,9 +1129,7 @@ public sealed partial class LumaCoreDataServiceTests
 		/// <param name="scenario">A human-readable description of the test case.</param>
 		/// <param name="messageId">The message id to pass to the method.</param>
 		/// <param name="modelEndpointId">The model endpoint id to set on the metadata.</param>
-		/// <param name="expectedParamName">
-		/// The expected <see cref="ArgumentOutOfRangeException.ParamName"/>.
-		/// </param>
+		/// <param name="expectedParamName">The expected <see cref="ArgumentException.ParamName"/>.</param>
 		[Theory]
 		[MemberData(nameof(CreateMessageGenerationMetadataAsync_InvalidId_Data))]
 		public async Task CreateMessageGenerationMetadataAsync_WhenIdInvalid_ThrowsArgumentOutOfRangeException(

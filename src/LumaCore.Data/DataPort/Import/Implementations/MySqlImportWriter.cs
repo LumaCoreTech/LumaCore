@@ -38,7 +38,9 @@ public sealed class MySqlImportWriter : IDataImportWriter
 	private readonly TimeProvider mTimeProvider;
 	private readonly ILogger?     mLogger;
 
+#pragma warning disable CS0414 // Assigned but never read — placeholder for future MySQL support.
 	private bool mDisposed;
+#pragma warning restore CS0414
 
 	/// <summary>
 	/// Message used by <see cref="NotSupportedException"/> until Pomelo releases an EF Core 10 compatible provider.
