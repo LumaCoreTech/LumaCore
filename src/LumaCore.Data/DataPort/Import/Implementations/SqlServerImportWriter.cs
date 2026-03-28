@@ -844,6 +844,11 @@ public sealed class SqlServerImportWriter : IDataImportWriter
 	/// The shared row enumerator. Ownership is NOT transferred — the caller must dispose it.
 	/// </param>
 	/// <param name="maxRows">Maximum number of rows this reader will yield.</param>
+	/// <param name="sqlServerTypes">
+	/// Per-column SQL Server <c>DATA_TYPE</c> strings (e.g., <c>"uniqueidentifier"</c>, <c>"bit"</c>)
+	/// used by <see cref="ConvertShuttleValue"/> to convert SQLite native types to SQL Server–compatible
+	/// CLR types during <see cref="Read"/>. When <see langword="null"/>, values are passed through unchanged.
+	/// </param>
 	/// <remarks>
 	///     <para>
 	///     <see cref="SqlBulkCopy"/> requires a synchronous <see cref="IDataReader"/>, but
