@@ -34,7 +34,15 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Sets an HttpOnly authentication cookie containing the JWT access token when cookie transport is enabled. The cookie uses `SameSite=Strict` for CSRF protection and is scoped to the configured API path. Browser clients send this cookie automatically on subsequent requests. When `RememberMe` is `true`, the cookie persists across browser sessions; otherwise it is a session cookie.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "400": {
             "description": "The request body is invalid or failed validation."
@@ -60,7 +68,15 @@
         "operationId": "Logout",
         "responses": {
           "204": {
-            "description": "No Content"
+            "description": "No Content",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Clears the authentication cookie by setting it to an expired date with matching path and domain attributes.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "401": {
             "description": "Authentication is required to access this endpoint."

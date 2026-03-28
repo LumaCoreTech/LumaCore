@@ -9,7 +9,6 @@ using LumaCore.Api.Features.ApiVersioning;
 using LumaCore.Api.Features.UserManagement;
 
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi;
 
 using V1 = LumaCore.Api.Contracts.V1.Auth;
 
@@ -217,15 +216,15 @@ static class EndpointMapping
 				"implementation uses a built-in bootstrap account; this will be replaced by a " +
 				"database-backed authentication flow once persistent user management is available.")
 			.WithName("Login")
-			.WithOpenApi(op => AddSetCookieHeader(
-				op,
-				"200",
-				"Sets an HttpOnly authentication cookie containing the JWT access token " +
-				"when cookie transport is enabled. The cookie uses `SameSite=Strict` for " +
-				"CSRF protection and is scoped to the configured API path. Browser clients " +
-				"send this cookie automatically on subsequent requests. When `RememberMe` " +
-				"is `true`, the cookie persists across browser sessions; otherwise it is a " +
-				"session cookie."));
+			.WithMetadata(
+				new SetCookieHeaderMetadata(
+					"200",
+					"Sets an HttpOnly authentication cookie containing the JWT access token " +
+					"when cookie transport is enabled. The cookie uses `SameSite=Strict` for " +
+					"CSRF protection and is scoped to the configured API path. Browser clients " +
+					"send this cookie automatically on subsequent requests. When `RememberMe` " +
+					"is `true`, the cookie persists across browser sessions; otherwise it is a " +
+					"session cookie."));
 
 		// Logout endpoint: revokes the current access token and clears the authentication cookie.
 		// Token revocation ensures the JWT is immediately rejected even before its natural expiry.
@@ -314,11 +313,11 @@ static class EndpointMapping
 				"and clears the HttpOnly authentication cookie for browser clients. API clients using Bearer " +
 				"tokens should also call this endpoint to invalidate their token. Returns 204 No Content on success.")
 			.WithName("Logout")
-			.WithOpenApi(op => AddSetCookieHeader(
-				op,
-				"204",
-				"Clears the authentication cookie by setting it to an expired date with " +
-				"matching path and domain attributes."));
+			.WithMetadata(
+				new SetCookieHeaderMetadata(
+					"204",
+					"Clears the authentication cookie by setting it to an expired date with " +
+					"matching path and domain attributes."));
 
 		// Exposes basic information about the current authenticated principal.
 		// useful as a simple "who am I according to the API?" endpoint and is available
@@ -489,37 +488,5 @@ static class EndpointMapping
 			return null;
 
 		return DateTimeOffset.FromUnixTimeSeconds(seconds).UtcDateTime;
-	}
-
-	/// <summary>
-	/// Adds a <c>Set-Cookie</c> response header to the specified status code in an <see cref="OpenApiOperation"/>.
-	/// </summary>
-	/// <param name="operation">The <see cref="OpenApiOperation"/> to modify and return.</param>
-	/// <param name="statusCode">
-	/// The HTTP status code (e.g., <c>"200"</c>) whose response receives the header.
-	/// </param>
-	/// <param name="description">The description text for the <c>Set-Cookie</c> header.</param>
-	/// <returns>The modified <paramref name="operation"/> for use with <c>WithOpenApi()</c>.</returns>
-	/// <remarks>
-	/// If the operation does not yet have a response for <paramref name="statusCode"/>, the method returns the
-	/// operation unmodified to avoid failures during early OpenAPI document generation.
-	/// </remarks>
-	private static OpenApiOperation AddSetCookieHeader(
-		OpenApiOperation operation,
-		string           statusCode,
-		string           description)
-	{
-		if (operation.Responses?.TryGetValue(statusCode, out IOpenApiResponse? response) is true &&
-		    response is OpenApiResponse concreteResponse)
-		{
-			concreteResponse.Headers ??= new Dictionary<string, IOpenApiHeader>();
-			concreteResponse.Headers["Set-Cookie"] = new OpenApiHeader
-			{
-				Description = description,
-				Schema = new OpenApiSchema { Type = JsonSchemaType.String }
-			};
-		}
-
-		return operation;
 	}
 }

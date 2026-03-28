@@ -198,6 +198,9 @@ static class ServiceRegistration
 
 				// Automatically document error responses based on endpoint metadata.
 				options.AddOperationTransformer<SecurityResponsesTransformer>();
+
+				// Add Set-Cookie response headers for endpoints annotated with SetCookieHeaderMetadata.
+				options.AddOperationTransformer<SetCookieHeaderTransformer>();
 			});
 	}
 }
