@@ -23,11 +23,13 @@ namespace LumaCore.Data.Tests.Infrastructure;
 /// </summary>
 /// <remarks>
 ///     <para>
-///     For <see cref="DbProvider.SqliteInMemory"/>, a dedicated <see cref="SqliteConnection"/> with
-///     <c>Data Source=:memory:</c> is kept open for the lifetime of the harness — the in-memory database
-///     is destroyed when the connection is disposed. For <see cref="DbProvider.Sqlite"/>, a temporary file
-///     is used to exercise real file I/O. For external providers (PostgreSQL, SQL Server), the test
-///     database is dropped via <see cref="DatabaseFacade.EnsureDeletedAsync"/>.
+///     For <see cref="DbProvider.SqliteInMemory"/>, a shared-cache in-memory database
+///     (<c>Data Source={name};Mode=Memory;Cache=Shared</c>) is used. A dedicated keeper
+///     <see cref="SqliteConnection"/> is held open for the lifetime of the harness so the database
+///     persists. Independent connections (e.g., from DataPort readers/writers) can access the same
+///     database via <see cref="ConnectionString"/>. For <see cref="DbProvider.Sqlite"/>, a temporary
+///     file is used to exercise real file I/O. For external providers (PostgreSQL, SQL Server), the
+///     test database is dropped via <see cref="DatabaseFacade.EnsureDeletedAsync"/>.
 ///     </para>
 ///     <para>
 ///     Use <see cref="CreateAsync"/> to build a harness. The <c>ensureCreated</c> parameter controls whether
@@ -50,8 +52,8 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 	private readonly string mProviderName;
 
 	/// <summary>
-	/// The owned SQLite in-memory connection. Kept open for the harness lifetime so the in-memory
-	/// database persists. <see langword="null"/> for file-based SQLite and external providers.
+	/// The owned SQLite shared-cache keeper connection. Kept open for the harness lifetime so the
+	/// in-memory database persists. <see langword="null"/> for file-based SQLite and external providers.
 	/// </summary>
 	private readonly SqliteConnection? mConnection;
 
@@ -73,20 +75,23 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 	/// <param name="providerName">
 	/// The provider name (e.g., <see cref="DatabaseProviders.Sqlite"/>), used for cleanup decisions.
 	/// </param>
+	/// <param name="connectionString">The connection string used to create the database.</param>
 	/// <param name="connection">
-	/// The owned SQLite in-memory connection, or <see langword="null"/> for file-based SQLite and
-	/// external providers.
+	/// The owned SQLite shared-cache keeper connection, or <see langword="null"/> for file-based SQLite
+	/// and external providers.
 	/// </param>
 	private IntegrationTestHarness(
 		IDatabaseProviderOperations providerOperations,
 		LumaCoreDbContext           dbContext,
 		string?                     databasePath,
 		string                      providerName,
+		string                      connectionString,
 		SqliteConnection?           connection)
 	{
 		ProviderOperations = providerOperations;
 		DbContext = dbContext;
 		Migrator = dbContext.GetInfrastructure().GetRequiredService<IMigrator>();
+		ConnectionString = connectionString;
 		mDatabasePath = databasePath;
 		mProviderName = providerName;
 		mConnection = connection;
@@ -154,6 +159,12 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 	public IMigrator Migrator { get; }
 
 	/// <summary>
+	/// The connection string used to create the test database. Components that open their own
+	/// connections (e.g., DataPort readers/writers) can use this to reach the same database.
+	/// </summary>
+	public string ConnectionString { get; }
+
+	/// <summary>
 	/// Builds an <see cref="IntegrationTestHarness"/> with a fresh database determined by the test
 	/// configuration (defaults to SQLite in-memory; switchable to any supported provider).
 	/// </summary>
@@ -184,20 +195,24 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 		string? databasePath = null;
 		SqliteConnection? sqliteConnection = null;
 		string providerName;
+		string connectionString;
 		LumaCoreDbContext dbContext;
 
 		switch (settings.Provider)
 		{
 			case DbProvider.SqliteInMemory:
 			{
-				// Use a dedicated in-memory connection. The database exists as long as the connection
-				// stays open — disposing the harness closes it, which destroys the database.
+				// Use shared-cache mode so that independent connections (e.g., DataPort readers/writers)
+				// can access the same in-memory database via ConnectionString. A keeper connection is
+				// held open for the harness lifetime — the database is destroyed when it is disposed.
 				providerName = DatabaseProviders.Sqlite;
-				sqliteConnection = new SqliteConnection("Data Source=:memory:");
+				string sharedDbName = $"{dbNamePrefix}_{Guid.NewGuid():N}";
+				connectionString = $"Data Source={sharedDbName};Mode=Memory;Cache=Shared";
+				sqliteConnection = new SqliteConnection(connectionString);
 				await sqliteConnection.OpenAsync().ConfigureAwait(false);
 
 				DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
-					.UseSqlite(sqliteConnection)
+					.UseSqlite(connectionString)
 					.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning))
 					.Options;
 				dbContext = new LumaCoreDbContext(options);
@@ -208,9 +223,10 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 			{
 				providerName = DatabaseProviders.Sqlite;
 				databasePath = Path.Combine(Path.GetTempPath(), $"{dbNamePrefix}-test-{Guid.NewGuid():N}.db");
+				connectionString = $"Data Source={databasePath}";
 
 				DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
-					.UseSqlite($"Data Source={databasePath}")
+					.UseSqlite(connectionString)
 					.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning))
 					.Options;
 				dbContext = new LumaCoreDbContext(options);
@@ -232,9 +248,10 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 					ConnectionString = settings.ConnectionString,
 					["Database"] = $"{dbNamePrefix}_test_{Guid.NewGuid():N}"
 				};
+				connectionString = csBuilder.ConnectionString;
 
 				DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
-					.UseNpgsql(csBuilder.ConnectionString)
+					.UseNpgsql(connectionString)
 					.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning))
 					.Options;
 				dbContext = new LumaCoreDbContext(options);
@@ -254,9 +271,10 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 				var csBuilder = new DbConnectionStringBuilder { ConnectionString = settings.ConnectionString };
 				string dbKey = csBuilder.ContainsKey("Initial Catalog") ? "Initial Catalog" : "Database";
 				csBuilder[dbKey] = $"{dbNamePrefix}_test_{Guid.NewGuid():N}";
+				connectionString = csBuilder.ConnectionString;
 
 				DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
-					.UseSqlServer(csBuilder.ConnectionString)
+					.UseSqlServer(connectionString)
 					.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning))
 					.Options;
 				dbContext = new LumaCoreDbContext(options);
@@ -285,7 +303,13 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 
 		IDatabaseProviderOperations providerOps = DatabaseProviderFactory.GetProvider(providerName);
 
-		return new IntegrationTestHarness(providerOps, dbContext, databasePath, providerName, sqliteConnection);
+		return new IntegrationTestHarness(
+			providerOps,
+			dbContext,
+			databasePath,
+			providerName,
+			connectionString,
+			sqliteConnection);
 	}
 
 	/// <summary>
