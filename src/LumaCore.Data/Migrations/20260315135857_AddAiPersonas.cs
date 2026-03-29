@@ -153,12 +153,23 @@ public partial class AddAiPersonas : Migration
 	/// <inheritdoc/>
 	protected override void Down(MigrationBuilder migrationBuilder)
 	{
-		// Drop tables in dependency order: referencing tables first, referenced tables last.
-		// The auto-generated Down() used DropForeignKey before DropTable, but SQLite's DropForeignKey
-		// triggers a table rebuild that requires the table in the target model — which fails because
-		// the target model (InitialCreate) does not contain these tables. Dropping in dependency order
-		// avoids the rebuild entirely and works across all providers.
+		// Drop MessageGenerationMetadata first — it references both SystemPrompts and Messages.
 		migrationBuilder.DropTable(name: "MessageGenerationMetadata");
+
+		// Personas ↔ SystemPrompts have a circular FK relationship:
+		//   - FK_SystemPrompts_Personas_PersonaId          (SystemPrompts → Personas)
+		//   - FK_Personas_SystemPrompts_ActiveSystemPromptId (Personas → SystemPrompts)
+		//
+		// PostgreSQL and SQL Server enforce FK constraints on DROP TABLE and require the cycle to be
+		// broken explicitly. SQLite does not enforce FK constraints during DROP TABLE, and its
+		// DropForeignKey implementation triggers a table rebuild that fails here because the target
+		// model (InitialCreate) does not contain these tables.
+		if (migrationBuilder.ActiveProvider != "Microsoft.EntityFrameworkCore.Sqlite")
+		{
+			migrationBuilder.DropForeignKey(
+				name: "FK_Personas_SystemPrompts_ActiveSystemPromptId",
+				table: "Personas");
+		}
 
 		migrationBuilder.DropTable(name: "SystemPrompts");
 
