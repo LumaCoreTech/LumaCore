@@ -278,6 +278,52 @@ public sealed partial class LumaCoreDataService
 		return mDbContext.Users.AnyAsync(u => u.UsernameNormalized == normalized, cancellationToken);
 	}
 
+	/// <inheritdoc/>
+	public async Task<string?> GetPreferencesJsonAsync(UserId userId, CancellationToken cancellationToken = default)
+	{
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(userId.Value);
+
+		return await mDbContext.UserPreferences
+			       .AsNoTracking()
+			       .Where(p => p.UserId == userId)
+			       .Select(p => p.PreferencesJson)
+			       .FirstOrDefaultAsync(cancellationToken)
+			       .ConfigureAwait(false);
+	}
+
+	/// <inheritdoc/>
+	public async Task UpdatePreferencesJsonAsync(
+		UserId            userId,
+		string            preferencesJson,
+		CancellationToken cancellationToken = default)
+	{
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(userId.Value);
+		Guard.ThrowIfNullOrEmptyOrTooLong(
+			preferencesJson,
+			EntityLimits.UserPreferencesJsonMaxLength,
+			out preferencesJson);
+
+		UserPreferencesEntity? existing = await mDbContext.UserPreferences
+			                                  .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken)
+			                                  .ConfigureAwait(false);
+
+		if (existing is not null)
+		{
+			existing.PreferencesJson = preferencesJson;
+		}
+		else
+		{
+			mDbContext.UserPreferences.Add(
+				new UserPreferencesEntity
+				{
+					UserId = userId,
+					PreferencesJson = preferencesJson
+				});
+		}
+
+		await mDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+	}
+
 	/// <summary>
 	/// Normalizes the specified username by trimming whitespace and converting it to uppercase
 	/// using the invariant culture.

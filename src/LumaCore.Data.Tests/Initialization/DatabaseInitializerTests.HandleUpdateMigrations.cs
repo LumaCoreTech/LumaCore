@@ -1181,7 +1181,7 @@ public sealed partial class DatabaseInitializerTests
 				await harness.Sut.WriteRestoreCheckpointAsync(
 					dbContext,
 					shuttleId,
-					SecondMigrationId,
+					ThirdMigrationId,
 					CancellationToken.None);
 			}
 			finally

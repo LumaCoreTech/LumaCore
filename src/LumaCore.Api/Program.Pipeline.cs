@@ -14,6 +14,7 @@ using LumaCore.Api.Features.HttpsRedirection;
 using LumaCore.Api.Features.ProxyHeaders;
 using LumaCore.Api.Features.SecurityHeaders;
 using LumaCore.Api.Features.System;
+using LumaCore.Api.Features.User;
 
 using Serilog;
 
@@ -180,6 +181,7 @@ public static partial class Program
 		// Map business API features to the versioned /api/v{version} group.
 		// Each feature maps its endpoints relative to the group (e.g. /auth, /system).
 		api.MapAuthFeature();
+		api.MapUserFeature();
 		api.MapSystemFeature();
 		api.MapHealthApiFeature();
 

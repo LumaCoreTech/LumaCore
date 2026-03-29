@@ -31,6 +31,13 @@ namespace LumaCore.Data.Tests.Migrations;
 ///         <b>InitialCreate</b> — Schema creation (tables + indexes) and teardown for the first migration.
 ///         </item>
 ///         <item>
+///         <b>AddAiPersonas</b> — Adds <c>Personas</c>, <c>SystemPrompts</c>, and
+///         <c>MessageGenerationMetadata</c> tables with indexes.
+///         </item>
+///         <item>
+///         <b>AddUserPreferences</b> — Adds the <c>UserPreferences</c> table (1:1 with <c>Users</c>).
+///         </item>
+///         <item>
 ///         <b>Helpers</b> — Shared <see cref="IntegrationTestHarness"/> factory method.
 ///         </item>
 ///     </list>

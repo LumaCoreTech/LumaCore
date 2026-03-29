@@ -100,6 +100,11 @@ public sealed class LumaCoreDbContext : DbContext
 	public DbSet<UserRoleEntity> UserRoles { get; set; } = null!;
 
 	/// <summary>
+	/// Gets or sets the <see cref="DbSet{TEntity}"/> for user preferences.
+	/// </summary>
+	public DbSet<UserPreferencesEntity> UserPreferences { get; set; } = null!;
+
+	/// <summary>
 	/// Gets or sets the <see cref="DbSet{TEntity}"/> for users.
 	/// </summary>
 	public DbSet<UserEntity> Users { get; set; } = null!;
@@ -167,6 +172,7 @@ public sealed class LumaCoreDbContext : DbContext
 
 		ConfigureParticipant(modelBuilder);
 		ConfigureUser(modelBuilder);
+		ConfigureUserPreferences(modelBuilder);
 		ConfigurePersona(modelBuilder);
 		ConfigureRole(modelBuilder);
 		ConfigureUserRole(modelBuilder);
@@ -698,6 +704,29 @@ public sealed class LumaCoreDbContext : DbContext
 				.WithOne(p => p.User)
 				.HasForeignKey<UserEntity>(e => e.ParticipantId)
 				.OnDelete(DeleteBehavior.Restrict); // Preserve participants for conversation history
+		});
+	}
+
+	/// <summary>
+	/// Configures table mapping, property constraints, and relationships
+	/// for <see cref="UserPreferencesEntity"/>.
+	/// </summary>
+	/// <param name="modelBuilder">The builder used to construct the model.</param>
+	private static void ConfigureUserPreferences(ModelBuilder modelBuilder)
+	{
+		modelBuilder.Entity<UserPreferencesEntity>(entity =>
+		{
+			entity.ToTable("UserPreferences");
+
+			entity.HasKey(e => e.UserId);
+
+			entity.Property(e => e.PreferencesJson)
+				.HasMaxLength(EntityLimits.UserPreferencesJsonMaxLength);
+
+			entity.HasOne(e => e.User)
+				.WithOne(u => u.Preferences)
+				.HasForeignKey<UserPreferencesEntity>(e => e.UserId)
+				.OnDelete(DeleteBehavior.Cascade);
 		});
 	}
 

@@ -121,4 +121,13 @@ public static class EntityLimits
 	/// Maximum length for usernames.
 	/// </summary>
 	public const int UsernameMaxLength = 50;
+
+	/// <summary>
+	/// Maximum length for the serialized user preferences JSON blob.
+	/// </summary>
+	/// <remarks>
+	/// Sized generously to accommodate future preference growth (recent emojis, layout settings,
+	/// theme preferences, keybindings, etc.) without requiring a migration.
+	/// </remarks>
+	public const int UserPreferencesJsonMaxLength = 8000;
 }

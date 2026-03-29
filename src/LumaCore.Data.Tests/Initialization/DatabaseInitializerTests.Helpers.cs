@@ -46,6 +46,11 @@ public sealed partial class DatabaseInitializerTests
 	private const string SecondMigrationId = "20260315135857_AddAiPersonas";
 
 	/// <summary>
+	/// The full migration ID for the third migration (user preferences table).
+	/// </summary>
+	private const string ThirdMigrationId = "20260329203940_AddUserPreferences";
+
+	/// <summary>
 	/// All migration IDs in chronological order.
 	/// Update this array when adding new migrations.
 	/// </summary>
@@ -53,7 +58,8 @@ public sealed partial class DatabaseInitializerTests
 	private static readonly string[] AllMigrationIds =
 	[
 		FirstMigrationId,
-		SecondMigrationId
+		SecondMigrationId,
+		ThirdMigrationId
 	];
 
 	/// <summary>

@@ -148,4 +148,33 @@ public interface IUserDataService
 	/// <paramref name="username"/> is empty/whitespace or exceeds the configured maximum length.
 	/// </exception>
 	Task<bool> UsernameExistsAsync(string username, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Gets the serialized preferences JSON for a user.
+	/// </summary>
+	/// <param name="userId">The user identifier.</param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns>
+	/// The raw JSON string, or <see langword="null"/> if no preferences have been stored yet.
+	/// </returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="userId"/> is less than or equal to 0.</exception>
+	Task<string?> GetPreferencesJsonAsync(UserId userId, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Creates or updates the serialized preferences JSON for a user (upsert).
+	/// </summary>
+	/// <param name="userId">The user identifier.</param>
+	/// <param name="preferencesJson">
+	/// The serialized JSON to persist. Must not exceed
+	/// <see cref="Definitions.EntityLimits.UserPreferencesJsonMaxLength"/> characters.
+	/// </param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="userId"/> is less than or equal to 0.</exception>
+	/// <exception cref="ArgumentException">
+	/// <paramref name="preferencesJson"/> is empty/whitespace or exceeds the configured maximum length.
+	/// </exception>
+	Task UpdatePreferencesJsonAsync(
+		UserId            userId,
+		string            preferencesJson,
+		CancellationToken cancellationToken = default);
 }

@@ -153,17 +153,14 @@ public partial class AddAiPersonas : Migration
 	/// <inheritdoc/>
 	protected override void Down(MigrationBuilder migrationBuilder)
 	{
-		migrationBuilder.DropForeignKey(
-			name: "FK_MessageGenerationMetadata_SystemPrompts_SystemPromptId",
-			table: "MessageGenerationMetadata");
-
-		migrationBuilder.DropForeignKey(
-			name: "FK_Personas_SystemPrompts_ActiveSystemPromptId",
-			table: "Personas");
+		// Drop tables in dependency order: referencing tables first, referenced tables last.
+		// The auto-generated Down() used DropForeignKey before DropTable, but SQLite's DropForeignKey
+		// triggers a table rebuild that requires the table in the target model — which fails because
+		// the target model (InitialCreate) does not contain these tables. Dropping in dependency order
+		// avoids the rebuild entirely and works across all providers.
+		migrationBuilder.DropTable(name: "MessageGenerationMetadata");
 
 		migrationBuilder.DropTable(name: "SystemPrompts");
-
-		migrationBuilder.DropTable(name: "MessageGenerationMetadata");
 
 		migrationBuilder.DropTable(name: "Personas");
 	}

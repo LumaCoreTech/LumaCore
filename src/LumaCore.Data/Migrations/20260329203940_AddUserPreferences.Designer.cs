@@ -3,6 +3,7 @@ using System;
 using LumaCore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LumaCore.Data.Migrations
 {
     [DbContext(typeof(LumaCoreDbContext))]
-    partial class LumaCoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260329203940_AddUserPreferences")]
+    partial class AddUserPreferences
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");

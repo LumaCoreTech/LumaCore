@@ -186,6 +186,23 @@ public class UserEntity
 	public string UsernameNormalized { get; set; } = string.Empty;
 
 	/// <summary>
+	/// Gets or sets the navigation property to the user's application preferences.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     Navigation property for Entity Framework Core.
+	///     </para>
+	///     <para>
+	///     This is a 1:1 optional relationship. The <see cref="UserPreferencesEntity"/> row is created lazily
+	///     on the first preference write and deleted via <c>CASCADE</c> when the user is removed.
+	///     </para>
+	///     <para>
+	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
+	///     </para>
+	/// </remarks>
+	public UserPreferencesEntity? Preferences { get; set; }
+
+	/// <summary>
 	/// Gets the collection of roles assigned to this user.
 	/// </summary>
 	/// <remarks>

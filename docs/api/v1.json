@@ -158,6 +158,76 @@
         ]
       }
     },
+    "/api/v1/user/preferences": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Gets the authenticated user's preferences.",
+        "description": "Returns the application preferences for the currently authenticated user. Returns default (empty) preferences if none have been saved yet.",
+        "operationId": "GetUserPreferences",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPreferencesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication is required to access this endpoint."
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Updates the authenticated user's preferences.",
+        "description": "Replaces the application preferences for the currently authenticated user. Send the full preferences object (read-modify-write). Properties set to null are treated as 'use default'.",
+        "operationId": "UpdateUserPreferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserPreferencesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "The request body is invalid or failed validation."
+          },
+          "401": {
+            "description": "Authentication is required to access this endpoint."
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          },
+          {
+            "CookieAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/system/info": {
       "get": {
         "tags": [
@@ -1026,6 +1096,44 @@
           }
         },
         "description": "Thread pool state metrics."
+      },
+      "UpdateUserPreferencesRequest": {
+        "required": [
+          "recentEmojis"
+        ],
+        "type": "object",
+        "properties": {
+          "recentEmojis": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "The most recently used emojis, ordered from most recent to least recent.\n`null` to clear the recent emojis list."
+          }
+        },
+        "description": "Request body for updating the authenticated user's application preferences."
+      },
+      "UserPreferencesResponse": {
+        "required": [
+          "recentEmojis"
+        ],
+        "type": "object",
+        "properties": {
+          "recentEmojis": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "The most recently used emojis, ordered from most recent to least recent.\n`null` when the user has no recent emojis."
+          }
+        },
+        "description": "Response containing the authenticated user's application preferences."
       }
     },
     "securitySchemes": {
@@ -1046,6 +1154,9 @@
   "tags": [
     {
       "name": "Auth"
+    },
+    {
+      "name": "User"
     },
     {
       "name": "System"

@@ -495,6 +495,48 @@ public sealed class EntitySmokeTests
 
 	#endregion
 
+	#region UserPreferencesEntity
+
+	/// <summary>
+	/// Verifies that <see cref="UserPreferencesEntity"/> (a 1:1 extension entity) can be constructed, all scalar
+	/// and reference navigation properties assigned.
+	/// </summary>
+	[Fact]
+	public void UserPreferencesEntity_CanSetAllProperties()
+	{
+		// Arrange
+		var user = new UserEntity();
+
+		// Act
+		var sut = new UserPreferencesEntity
+		{
+			UserId = new UserId(1),
+			User = user,
+			PreferencesJson = "{\"recentEmojis\":[\"😀\",\"🎉\"]}"
+		};
+
+		// Assert
+		Assert.Equal(new UserId(1), sut.UserId);
+		Assert.Same(user, sut.User);
+		Assert.Equal("{\"recentEmojis\":[\"😀\",\"🎉\"]}", sut.PreferencesJson);
+	}
+
+	/// <summary>
+	/// Verifies that <see cref="UserPreferencesEntity.PreferencesJson"/> defaults to <see langword="null"/>
+	/// when no value is assigned.
+	/// </summary>
+	[Fact]
+	public void UserPreferencesEntity_PreferencesJson_DefaultsToNull()
+	{
+		// Act
+		var sut = new UserPreferencesEntity();
+
+		// Assert
+		Assert.Null(sut.PreferencesJson);
+	}
+
+	#endregion
+
 	#region UserEntity
 
 	/// <summary>
@@ -508,6 +550,7 @@ public sealed class EntitySmokeTests
 		var lastLogin = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 		var lastRefresh = new DateTime(2026, 1, 1, 1, 0, 0, DateTimeKind.Utc);
 		var participant = new ParticipantEntity();
+		var preferences = new UserPreferencesEntity();
 
 		// Act
 		var sut = new UserEntity
@@ -520,7 +563,8 @@ public sealed class EntitySmokeTests
 			Email = "alice@example.test",
 			PasswordHash = "hash",
 			LastLoginAtUtc = lastLogin,
-			LastTokenRefreshAtUtc = lastRefresh
+			LastTokenRefreshAtUtc = lastRefresh,
+			Preferences = preferences
 		};
 
 		// Assert
@@ -533,6 +577,7 @@ public sealed class EntitySmokeTests
 		Assert.Equal("hash", sut.PasswordHash);
 		Assert.Equal(lastLogin, sut.LastLoginAtUtc);
 		Assert.Equal(lastRefresh, sut.LastTokenRefreshAtUtc);
+		Assert.Same(preferences, sut.Preferences);
 		Assert.Empty(sut.UserRoles);
 	}
 
