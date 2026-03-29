@@ -42,6 +42,13 @@
                   "type": "string"
                 }
               }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
             }
           },
           "400": {
@@ -438,7 +445,14 @@
         "operationId": "ApiHealthLive",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiHealthLiveResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -461,7 +475,24 @@
         "operationId": "ApiHealthReady",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiHealthReadyResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiHealthReadyResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -477,6 +508,61 @@
   },
   "components": {
     "schemas": {
+      "ApiHealthComponentStatus": {
+        "required": [
+          "status",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "A short textual indicator of the subsystem's health state (e.g., `\"ready\"`, `\"failed\"`)."
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "An optional human-readable message providing additional context about the subsystem's current state.\n`null` when the subsystem is fully operational."
+          }
+        },
+        "description": "Health status of a single backend subsystem (e.g., database, vector store, LLM backend)."
+      },
+      "ApiHealthLiveResponse": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "A short textual indicator of the backend state."
+          }
+        },
+        "description": "Simple liveness indicator for the backend."
+      },
+      "ApiHealthReadyResponse": {
+        "required": [
+          "status",
+          "components"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Aggregate readiness state: `\"ready\"` when all components are operational, `\"degraded\"` otherwise."
+          },
+          "components": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ApiHealthComponentStatus"
+            },
+            "description": "Per-subsystem health detail, keyed by subsystem name (e.g., `\"database\"`). Each value contains the\nsubsystem's individual string ApiHealthComponentStatus.Status and an optional\nstring? ApiHealthComponentStatus.Message."
+          }
+        },
+        "description": "Readiness indicator for the backend, reporting whether the service is ready to handle requests."
+      },
       "AuthClaimItem": {
         "required": [
           "type",
@@ -748,6 +834,19 @@
           }
         },
         "description": "Login credentials submitted by a client to obtain a JWT."
+      },
+      "LoginResponse": {
+        "required": [
+          "accessToken"
+        ],
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "The issued access token (JWT)."
+          }
+        },
+        "description": "Response returned after successful authentication."
       },
       "ManagedHeapMetrics": {
         "required": [

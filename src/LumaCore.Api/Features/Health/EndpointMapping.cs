@@ -149,6 +149,7 @@ static class EndpointMapping
 				"/live",
 				() => Results.Ok(new V1.ApiHealthLiveResponse("ok")))
 			.MapToApiVersion(ApiVersions.V1)
+			.Produces<V1.ApiHealthLiveResponse>(StatusCodes.Status200OK)
 			.WithName("ApiHealthLive")
 			.WithSummary("Returns a simple JSON-based liveness indicator for the backend.")
 			.WithDescription(
@@ -220,6 +221,8 @@ static class EndpointMapping
 					return Results.Json(response, statusCode: statusCode);
 				})
 			.MapToApiVersion(ApiVersions.V1)
+			.Produces<V1.ApiHealthReadyResponse>(StatusCodes.Status200OK)
+			.Produces<V1.ApiHealthReadyResponse>(StatusCodes.Status503ServiceUnavailable)
 			.WithName("ApiHealthReady")
 			.WithSummary("Returns whether the backend is ready to handle requests.")
 			.WithDescription(

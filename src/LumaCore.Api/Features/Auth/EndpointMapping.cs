@@ -209,6 +209,7 @@ static class EndpointMapping
 				})
 			.MapToApiVersion(ApiVersions.V1)
 			.AllowAnonymous()
+			.Produces<V1.LoginResponse>(StatusCodes.Status200OK)
 			.WithSummary("Authenticates user credentials and issues a JWT access token.")
 			.WithDescription(
 				"Validates the supplied credentials against the user authentication service " +
@@ -306,7 +307,6 @@ static class EndpointMapping
 			.MapToApiVersion(ApiVersions.V1)
 			.RequireAuthorization()
 			.Produces(StatusCodes.Status204NoContent)
-			.Produces(StatusCodes.Status401Unauthorized)
 			.WithSummary("Logs the user out by revoking the access token and clearing the authentication cookie.")
 			.WithDescription(
 				"Revokes the current JWT access token so it is immediately rejected on subsequent requests, " +
@@ -357,7 +357,6 @@ static class EndpointMapping
 			.MapToApiVersion(ApiVersions.V1)
 			.RequireAuthorization()
 			.Produces<V1.AuthWhoAmIResponse>(StatusCodes.Status200OK)
-			.Produces(StatusCodes.Status401Unauthorized)
 			.WithSummary("Returns the current authenticated user.")
 			.WithDescription(
 				"Returns basic identity information for the current authenticated principal, " +
@@ -461,7 +460,6 @@ static class EndpointMapping
 			.MapToApiVersion(ApiVersions.V1)
 			.RequireAuthorization()
 			.Produces<V1.AuthIntrospectResponse>(StatusCodes.Status200OK)
-			.Produces(StatusCodes.Status401Unauthorized)
 			.WithSummary("Introspects the current JWT and returns details about the token.")
 			.WithDescription(
 				"Provides diagnostic information about the currently used JWT access token, " +
