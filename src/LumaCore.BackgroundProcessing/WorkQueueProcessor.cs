@@ -816,21 +816,34 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	}
 
 	/// <summary>
-	/// Waits for the specified background task to complete and logs running work items periodically.
+	/// Waits for the specified background task to complete, logging running work items periodically.
 	/// </summary>
 	/// <param name="backgroundTask">The background task to wait for.</param>
-	/// <param name="shutdownTimeoutReached">Indicates whether the configured shutdown timeout has already elapsed.</param>
+	/// <param name="shutdownTimeoutReached">
+	/// Indicates whether the configured shutdown timeout has already elapsed. When <see langword="true"/>,
+	/// periodic warnings are logged every <see cref="sShutdownLoggingInterval"/> until the task completes.
+	/// </param>
 	/// <returns>A task that completes when <paramref name="backgroundTask"/> completes.</returns>
+	/// <remarks>
+	/// This method waits indefinitely for the background task to complete. It does not abandon the wait,
+	/// because doing so would create zombie tasks that access disposed resources. The periodic logging
+	/// allows operators to identify stuck work items and escalate manually (e.g., <c>kill -9</c>).
+	/// </remarks>
 	private async Task WaitForBackgroundTaskCompletionAsync(Task backgroundTask, bool shutdownTimeoutReached)
 	{
-		if (shutdownTimeoutReached)
+		if (!shutdownTimeoutReached)
 		{
-			Log.LogWarning("Shutdown timeout elapsed — waiting indefinitely for running work items to finish...");
-			LogRunningWorkItems(DateTimeOffset.UtcNow);
+			// Normal path: the background task drained the queue within the initial timeout.
+			// Just observe its completion (should be near-instant).
+			await backgroundTask.ConfigureAwait(false);
+			return;
 		}
 
-		// Use Task.WhenAny with a delay task for periodic logging instead of busy-wait polling.
-		// This is more efficient as it doesn't wake up every 100ms when the task completes quickly.
+		// Timeout path: the initial shutdown timeout has elapsed, meaning running work items are still
+		// in progress. Wait indefinitely but log periodically so operators can diagnose stuck items.
+		Log.LogWarning("Shutdown timeout elapsed — waiting for running work items to finish...");
+		LogRunningWorkItems(DateTimeOffset.UtcNow);
+
 		while (!backgroundTask.IsCompleted)
 		{
 			Task completedTask = await Task.WhenAny(backgroundTask, Task.Delay(sShutdownLoggingInterval))
@@ -838,7 +851,7 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 			if (completedTask == backgroundTask)
 				break;
 
-			// Logging interval elapsed - log running work items
+			// Logging interval elapsed — log running work items.
 			LogRunningWorkItems(DateTimeOffset.UtcNow);
 		}
 

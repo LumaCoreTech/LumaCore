@@ -67,14 +67,29 @@ public sealed class WorkQueueProcessorHostedService : IHostedService
 	/// Stops the <see cref="WorkQueueProcessor"/> by calling <see cref="WorkQueueProcessor.ShutdownAsync"/>.
 	/// </summary>
 	/// <param name="cancellationToken">
-	/// A token that signals when the host is forcing shutdown. Note that the processor has its own
-	/// <see cref="WorkQueueProcessorOptions.ShutdownTimeout"/> that controls the graceful shutdown period.
+	/// A token that the host signals when <c>HostOptions.ShutdownTimeout</c> elapses. If the processor's own
+	/// <see cref="WorkQueueProcessorOptions.ShutdownTimeout"/> has not completed by then, this token triggers
+	/// an early return so the host can continue tearing down remaining services.
 	/// </param>
-	/// <returns>A task that completes when the processor has been shut down.</returns>
+	/// <returns>A task that completes when the processor has been shut down or the host forces shutdown.</returns>
 	public async Task StopAsync(CancellationToken cancellationToken)
 	{
 		mLogger.LogDebug("Stopping WorkQueueProcessor...");
-		await mProcessor.ShutdownAsync().ConfigureAwait(false);
-		mLogger.LogInformation("WorkQueueProcessor stopped");
+
+		try
+		{
+			await mProcessor.ShutdownAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
+			mLogger.LogInformation("WorkQueueProcessor stopped");
+		}
+		catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+		{
+			// The host's shutdown timeout elapsed before the processor finished its own shutdown.
+			// Return early so the host can continue tearing down other services. The orphaned
+			// ShutdownAsync() task continues draining work items independently. When the DI
+			// container later calls DisposeAsync() on the processor, LifecycleManagement waits
+			// on NoPendingOperationsLeftEvent — effectively joining the still-running shutdown
+			// before proceeding to resource disposal.
+			mLogger.LogWarning("Host shutdown timeout elapsed before WorkQueueProcessor finished shutting down.");
+		}
 	}
 }
