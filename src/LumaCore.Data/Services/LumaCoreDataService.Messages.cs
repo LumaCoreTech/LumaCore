@@ -102,6 +102,7 @@ public sealed partial class LumaCoreDataService
 
 		return mDbContext.Messages
 			.AsNoTracking()
+			.Include(m => m.Sender)
 			.Where(m => m.ConversationId == conversationId)
 			.OrderBy(m => m.CreatedAtUtc)
 			.ToListAsync(cancellationToken);
