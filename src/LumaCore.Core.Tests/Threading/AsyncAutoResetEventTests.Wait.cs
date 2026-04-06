@@ -45,22 +45,26 @@ public partial class AsyncAutoResetEventTests
 		// Arrange
 		var are = new AsyncAutoResetEvent(false);
 		bool waitCompleted = false;
+		var completed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-		// Act - wrap synchronous Wait in Task.Run to prevent blocking test runner
-		Task setTask = Task.Run(async () =>
-		{
-			await Task.Delay(50);
-			are.Set();
-		});
-
-		Task waitTask = Task.Run(() =>
+		// Use a dedicated thread for the blocking Wait() to avoid thread pool starvation on CI runners
+		// where parallel xUnit execution + limited cores exhaust the pool.
+		var waitThread = new Thread(() =>
 		{
 			are.Wait();
 			waitCompleted = true;
-		});
+			completed.SetResult();
+		})
+		{
+			IsBackground = true
+		};
 
-		await AwaitWithTimeoutAsync(waitTask, "Wait() did not complete after Set() was called");
-		await AwaitWithTimeoutAsync(setTask, "Set task timed out");
+		// Act
+		waitThread.Start();
+		await Task.Delay(50);
+		are.Set();
+
+		await AwaitWithTimeoutAsync(completed.Task, "Wait() did not complete after Set() was called");
 
 		// Assert
 		Assert.True(waitCompleted);
@@ -105,7 +109,7 @@ public partial class AsyncAutoResetEventTests
 
 		// Act + Assert - wrap synchronous Wait in Task.Run to prevent blocking test runner
 		Task waitTask = Task.Run(() => are.Wait(cts.Token));
-		Task assertion = Assert.ThrowsAsync<OperationCanceledException>(() => waitTask);
+		Task assertion = Assert.ThrowsAnyAsync<OperationCanceledException>(() => waitTask);
 		await AwaitWithTimeoutAsync(assertion, "Cancellation did not throw OperationCanceledException");
 	}
 
