@@ -4,11 +4,17 @@
 
 using Xunit;
 
-namespace LumaCore.Core.Tests;
+namespace LumaCore.TestUtilities.Async;
 
 /// <summary>
 /// Provides helper methods for async test scenarios to prevent deadlocks and improve test reliability.
 /// </summary>
+/// <remarks>
+/// Use these helpers for <i>explicit waits</i> — operations where the test intentionally waits for
+/// something (e.g. <c>WaitAsync</c> on an async primitive, awaiting a task that should throw on
+/// cancellation). Routine awaits (property access, queue enqueues, signal sets) are covered by the
+/// global xUnit timeout configured in <c>xunit.runner.json</c> and do not need this wrapper.
+/// </remarks>
 public static class AsyncTestHelpers
 {
 	/// <summary>
@@ -26,13 +32,13 @@ public static class AsyncTestHelpers
 	/// <param name="timeout">
 	/// Optional custom timeout. If not specified, <see cref="DefaultTimeout"/> is used.
 	/// </param>
-	/// <exception cref="Xunit.Sdk.TrueException">The task does not complete within the timeout.</exception>
+	/// <exception cref="Xunit.Sdk.XunitException"><paramref name="task"/> does not complete within the timeout.</exception>
 	public static async Task AwaitWithTimeoutAsync(Task task, string? message = null, TimeSpan? timeout = null)
 	{
 		TimeSpan actualTimeout = timeout ?? DefaultTimeout;
-		bool completed = await Task.WhenAny(task, Task.Delay(actualTimeout)) == task;
-		Assert.True(completed, message ?? "Operation timed out - possible deadlock");
-		await task; // Propagate any exceptions
+		bool completed = await Task.WhenAny(task, Task.Delay(actualTimeout)).ConfigureAwait(false) == task;
+		if (!completed) Assert.Fail(message ?? "Operation timed out - possible deadlock");
+		await task.ConfigureAwait(false); // Propagate any exceptions
 	}
 
 	/// <summary>
@@ -46,12 +52,12 @@ public static class AsyncTestHelpers
 	/// Optional custom timeout. If not specified, <see cref="DefaultTimeout"/> is used.
 	/// </param>
 	/// <returns>The result of the completed task.</returns>
-	/// <exception cref="Xunit.Sdk.TrueException">The task does not complete within the timeout.</exception>
+	/// <exception cref="Xunit.Sdk.XunitException"><paramref name="task"/> does not complete within the timeout.</exception>
 	public static async Task<T> AwaitWithTimeoutAsync<T>(Task<T> task, string? message = null, TimeSpan? timeout = null)
 	{
 		TimeSpan actualTimeout = timeout ?? DefaultTimeout;
-		bool completed = await Task.WhenAny(task, Task.Delay(actualTimeout)) == task;
-		Assert.True(completed, message ?? "Operation timed out - possible deadlock");
-		return await task; // Propagate any exceptions and return result
+		bool completed = await Task.WhenAny(task, Task.Delay(actualTimeout)).ConfigureAwait(false) == task;
+		if (!completed) Assert.Fail(message ?? "Operation timed out - possible deadlock");
+		return await task.ConfigureAwait(false); // Propagate any exceptions and return result
 	}
 }
