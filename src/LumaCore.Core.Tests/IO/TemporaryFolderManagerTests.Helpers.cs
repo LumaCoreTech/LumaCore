@@ -3,6 +3,7 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using LumaCore.Core.IO;
+using LumaCore.TestUtilities.Logging;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -81,40 +82,4 @@ public sealed partial class TemporaryFolderManagerTests
 
 		return (folderPath, lockFilePath);
 	}
-
-	/// <summary>
-	/// A minimal <see cref="ILogger{T}"/> implementation that captures log entries in memory for test verification.
-	/// </summary>
-	/// <typeparam name="T">The category type for the logger.</typeparam>
-	private sealed class ListLogger<T> : ILogger<T>
-	{
-		/// <summary>
-		/// Gets the list of captured log entries.
-		/// </summary>
-		public List<LogEntry> Entries { get; } = [];
-
-		/// <inheritdoc/>
-		public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
-
-		/// <inheritdoc/>
-		public bool IsEnabled(LogLevel logLevel) => true;
-
-		/// <inheritdoc/>
-		public void Log<TState>(
-			LogLevel                         logLevel,
-			EventId                          eventId,
-			TState                           state,
-			Exception?                       exception,
-			Func<TState, Exception?, string> formatter)
-		{
-			Entries.Add(new LogEntry(logLevel, formatter(state, exception)));
-		}
-	}
-
-	/// <summary>
-	/// Represents a single captured log entry with its level and formatted message.
-	/// </summary>
-	/// <param name="Level">The log level of the entry.</param>
-	/// <param name="Message">The formatted message text.</param>
-	private sealed record LogEntry(LogLevel Level, string Message);
 }
