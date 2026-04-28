@@ -71,6 +71,11 @@ This is the most important pattern in LumaCore - understand this and you underst
 
 Learn how security is baked into the architecture from the ground up.
 
+### 📝 [Decision Records (ADRs)](decisions/README.md)
+**Understand *why* specific patterns were chosen — and what was deliberately rejected.**
+
+Short, focused records of individual design decisions. Where the documents above explain *how the system works*, ADRs explain *why a particular pattern was chosen over the obvious alternative*. Read these when reviewing changes to core patterns or when an unfamiliar design feels surprising.
+
 ---
 
 ## Key Architectural Decisions
@@ -91,10 +96,10 @@ LumaCore organizes all code by feature, not by technical layer. Each feature own
 
 LumaCore is split into two projects:
 
-- **LumaCore.Api** - Handles HTTP communication, routing, authentication
-- **LumaCore.Core** - Contains persona logic, memory, intelligence
+- **LumaCore.Api** — Handles HTTP communication, routing, authentication.
+- **LumaCore.Core** — Hosting-agnostic foundation library (lifecycle, async primitives, diagnostics, controlled termination, filesystem utilities). Higher-level domain capabilities deliberately live elsewhere; `LumaCore.Core` is intentionally kept low-level.
 
-**Why?** Testability, reusability, and clarity. Core logic can be tested without HTTP. The API could be replaced with a CLI or desktop app while reusing Core.
+**Why?** Testability, reusability, and clarity. Foundation code can be tested without HTTP. The API could be replaced with a CLI or desktop app while reusing Core.
 
 Both compile into a single application (monolithic deployment).
 
@@ -125,8 +130,8 @@ LumaCore's architecture consists of three layers, each with clear responsibiliti
 └──────────┬──────────┘
            │
 ┌──────────▼──────────┐
-│   Core Layer        │  Persona logic, Memory, Intelligence
-│  (LumaCore.Core)    │
+│   Core Layer        │  Lifecycle, Threading, Diagnostics, …
+│  (LumaCore.Core)    │  (hosting-agnostic foundation)
 └─────────────────────┘
 ```
 

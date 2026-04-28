@@ -1,380 +1,217 @@
 # Project Structure
 
-**Audience:** Architects and Developers seeking to understand LumaCore's design
+This page is for people who need to find their way in the LumaCore repository and understand what each project is for. It walks you from the top-level layout down through every project, explains how API features are organized, and points to the files that hold the actual build configuration. For exact project references, packages, and MSBuild property values, follow the links to the source files; for *why* the product is split the way it is, read [Design Principles](principles.md) and the [Architecture Overview](README.md).
 
-This document explains how the LumaCore repository is organized, how the build system works, and how versioning is managed.
+**On this page:** [Repository and solution](#repository-and-solution) · [Projects and dependencies](#projects-and-dependencies) · [API feature layout](#api-feature-layout) · [Build, SDK, and versioning](#build-sdk-and-versioning) · [Where to go next](#where-to-go-next)
 
 ---
 
-## Repository Layout
+## Repository and solution
+
+### Top-level layout
 
 ```
 LumaCore/
-├── src/                          → Source Code Organization
+├── src/                          → All `LumaCore.*` code; project folders = assembly names
 │   ├── LumaCore.Api/
 │   ├── LumaCore.Api.Contracts/
+│   ├── LumaCore.Api.Tests/
+│   ├── LumaCore.BackgroundProcessing/
+│   ├── LumaCore.BackgroundProcessing.Tests/
+│   ├── LumaCore.Configuration/
 │   ├── LumaCore.Core/
+│   ├── LumaCore.Core.Tests/
+│   ├── LumaCore.Data/
+│   ├── LumaCore.Data.Tests/
+│   ├── LumaCore.Definitions/
+│   ├── LumaCore.HealthCheck/
+│   ├── LumaCore.TestUtilities/
 │   ├── LumaCore.Ui.Web/
 │   ├── Directory.Build.props
-│   └── Directory.Build.targets
+│   ├── Directory.Build.targets
+│   └── Directory.Packages.props
 │
-├── artifacts/                    → Build Outputs (not in source control)
+├── artifacts/                    → Build output root (`UseArtifactsOutput`; not in source control)
 │   ├── bin/
 │   └── obj/
 │
-├── docs/                         → Documentation Organization
+├── docs/                         → Markdown for this product
 │   ├── architecture/
 │   ├── deployment/
 │   ├── development/
 │   └── features/
 │
-├── assets/                       → Assets
+├── assets/                       → Branding and static non-code assets
 │   └── branding/
 │
-├── build.net/                    → Build.Net Submodule
+├── build.net/                    → Git submodule with shared tooling (see Build, SDK, and versioning)
 │
-├── LumaCore.sln                  → Solution File
-├── global.json                   → SDK Configuration
+├── LumaCore.sln
+├── global.json
 ├── LICENSE
 └── README.md
 ```
 
-**Quick Navigation:**
-- [Source Code Organization](#source-code-organization) — `/src` projects and structure
-- [Build System](#build-system) — `Directory.Build.props` and artifacts
-- [Versioning](#versioning) — *MinVer* and semantic versioning via Git tags
-- [SDK Configuration](#sdk-configuration) — `global.json` and .NET SDK
-- [Solution File](#solution-file) — `LumaCore.sln`
-- [Documentation Organization](#documentation-organization) — `/docs` structure
-- [Assets](#assets) — `/assets` contents
+If a project folder is on disk but not in the tree above, the repository is the source of truth.
+
+### Solution file (`LumaCore.sln`)
+
+[`LumaCore.sln`](../../LumaCore.sln) groups the projects in [`src/`](../../src/), documentation in [`docs/`](../../docs/), and **solution items** (`.editorconfig`, `global.json`, `Directory.Packages.props`, `Dockerfile`, `coverlet.runsettings`, GitHub workflows, and similar) so you can open them in one IDE session. The on-disk order of projects inside the file is not guaranteed to be alphabetical; use search or the folder tree to find a name.
 
 ---
 
-## Source Code Organization
+## Projects and dependencies
 
-The `/src` folder contains all source code projects.
+The sections that follow describe each project's role, starting at the host and the UI and working down to contracts, the foundation, server libraries, and tests. Every project is described with the same frame:
 
-### Projects
+- **Type** — the SDK and project shape
+- **Project file** — link to the `.csproj`, which is the source of truth for `ProjectReference` and `PackageReference` items
+- A short paragraph of what role it plays in the system
+
+If you need the exact list of dependencies for a project, follow the project file link; this page does not duplicate that list.
+
+### Entry: API and UI
 
 #### LumaCore.Api
-**Type:** `Microsoft.NET.Sdk.Web` (ASP.NET Core application)  
-**Purpose:** Main HTTP API with authentication, routing, and features  
-**Status:** Operational with foundational infrastructure
+**Type:** `Microsoft.NET.Sdk.Web` (ASP.NET Core web application)  
+**Project file:** [`LumaCore.Api.csproj`](../../src/LumaCore.Api/LumaCore.Api.csproj)
 
-**Key responsibilities:**
-- HTTP request handling (Kestrel)
-- Feature-based modules (see `Features/` folder)
-- Middleware pipeline (HTTPS, CORS, logging, compression)
-- JWT authentication and authorization
-- Blazor UI hosting
+The HTTP host — the process you run as the application. The wiring of most of the `LumaCore.*` graph is easiest to read starting from this project's MSBuild file: it lists what the host pulls in, including optional `LumaCore.Ui.Web` when the **`IncludeBlazorUi`** property is `true` (the default in that file). For an API-only build without the Blazor static assets, publish with **`/p:IncludeBlazorUi=false`**.
 
-**Dependencies:**
-- `LumaCore.Api.Contracts` (project reference)
-- `LumaCore.Core` (project reference)
-- `LumaCore.Ui.Web` (project reference)
+The middleware and DI story is implemented in C# under `LumaCore.Api/`: a cross-cutting pipeline (HTTPS, CORS, logging, compression, authentication, and so on) and feature modules under `LumaCore.Api/Features/`. The running process uses Kestrel, and feature work follows [API feature layout](#api-feature-layout) below.
 
----
+When the Blazor static assets are included, the host serves the WebAssembly app from the same origin as the API in the current setup, so the default case does not need a separate CORS story for the UI.
+
+#### LumaCore.Ui.Web
+**Type:** `Microsoft.NET.Sdk.BlazorWebAssembly` (Blazor WebAssembly client)  
+**Project file:** [`LumaCore.Ui.Web.csproj`](../../src/LumaCore.Ui.Web/LumaCore.Ui.Web.csproj)
+
+The static bundle the browser runs. To keep the client thin, the WASM build does not take a `ProjectReference` to server-only stacks such as `LumaCore.Data` or the full surface of `LumaCore.Core`. The browser talks to the server over HTTP using contract types from `LumaCore.Api.Contracts`.
+
+### Contracts: DTOs and cross-layer definitions
 
 #### LumaCore.Api.Contracts
 **Type:** `Microsoft.NET.Sdk` (class library)  
-**Purpose:** Shared API contract types (DTOs) for requests and responses  
-**Status:** Operational
+**Project file:** [`LumaCore.Api.Contracts.csproj`](../../src/LumaCore.Api.Contracts/LumaCore.Api.Contracts.csproj)
 
-**Key responsibilities:**
-- Request DTOs with validation attributes
-- Response DTOs for API endpoints
-- Shared types used across multiple endpoints
+Versioned DTOs and types for the HTTP surface, shared by the API and the Blazor project without pulling EF or server internals into the client. The folders under [`src/LumaCore.Api.Contracts/`](../../src/LumaCore.Api.Contracts/) hold the version segments (e.g. `V1/`).
 
-**Why separate?**
-- **Shared access** — Both API and Blazor UI can reference contracts without circular dependencies
-- **Clear API surface** — Contract changes are intentional and visible
-- **Minimal dependencies** — Only `System.ComponentModel.Annotations` for validation
+A separate project keeps contract changes visible in one assembly and lets the UI reference DTOs without taking on `LumaCore.Data` or the persistence stack.
 
-**Structure:**
-```
-LumaCore.Api.Contracts/
-├── V1/
-│   ├── MyFeature/
-│   │   ├── CreateItemRequest.cs
-│   │   ├── ItemResponse.cs
-│   │   └── ...
-│   └── AnotherFeature/
-│       └── SomeResponse.cs
-└── V2/                              # Future versions
-```
+#### LumaCore.Definitions
+**Type:** `Microsoft.NET.Sdk` (class library)  
+**Project file:** [`LumaCore.Definitions.csproj`](../../src/LumaCore.Definitions/LumaCore.Definitions.csproj)
 
----
+Very small, widely shared constants and types with minimal dependencies, so both client and server can reference the same binary where needed.
+
+### Foundation
 
 #### LumaCore.Core
 **Type:** `Microsoft.NET.Sdk` (class library)  
-**Purpose:** Core abstractions, diagnostics, and shared functionality  
-**Status:** Operational with diagnostics infrastructure
+**Project file:** [`LumaCore.Core.csproj`](../../src/LumaCore.Core/LumaCore.Core.csproj)
 
-**Current responsibilities:**
-- Runtime diagnostics (memory, GC, process, thread pool metrics)
-- `IMetricsContributor` interface for extensible metrics
-- Shared abstractions used across features
+Hosting-agnostic building blocks: lifecycle, threading, diagnostics, controlled termination, filesystem helpers. The folder [`src/LumaCore.Core/`](../../src/LumaCore.Core) groups these into `Diagnostics/`, `IO/`, and `Threading/`, with root files such as `LifecycleManagement.cs` and `FailFast*.cs`.
 
-**Planned responsibilities:**
-- Persona runtime and state management
-- Memory system (long-term conversation storage)
-- Vector store integration (semantic search)
-- LLM orchestration (Ollama, custom backends)
+The non-obvious design choices behind this foundation — the lifecycle state machine, the custom async primitives, `ExecutionStageMonitor`, and `FailFast` — are documented in [ADRs 0001–0004](decisions/README.md).
 
-**Why separate?**
-- **Testability** — Core logic can be unit tested without HTTP
-- **Reusability** — Could be used by CLI, desktop app, or other frontends
-- **Clarity** — Clear separation between communication (API) and intelligence (Core)
+**Out of scope:** persona runtimes, long-term memory, vector stores, LLM orchestration, and similar high-level product domains do **not** belong in this assembly. They would live in other projects and consume `LumaCore.Core` as a foundation.
 
-**Structure:**
-```
-LumaCore.Core/
-└── Diagnostics/
-    ├── IMetricsContributor.cs       # Interface for metrics extensibility
-    ├── *Metrics.cs                  # Diagnostic snapshots (Memory, Gc, Process, ThreadPool)
-    ├── *MetricsFactory.cs           # Static factories for snapshot creation
-    └── *MetricsContributor.cs       # Built-in contributors for DI integration
-```
+### Server-side libraries and tooling
 
----
+#### LumaCore.BackgroundProcessing
+**Type:** `Microsoft.NET.Sdk` (class library)  
+**Project file:** [`LumaCore.BackgroundProcessing.csproj`](../../src/LumaCore.BackgroundProcessing/LumaCore.BackgroundProcessing.csproj)
 
-#### LumaCore.Ui.Web
-**Type:** `Microsoft.NET.Sdk.BlazorWebAssembly` (Blazor WebAssembly)  
-**Purpose:** Single-page application UI for LumaCore  
-**Status:** Hosted by LumaCore.Api
+Background work-queue processing infrastructure with DI integration, used by the API host for fire-and-forget background tasks.
 
-Blazor WebAssembly compiles to static files (HTML, JS, WebAssembly DLLs) and runs entirely in the browser. It is currently served by LumaCore.Api on the same origin, so no CORS configuration is needed.
+#### LumaCore.Configuration
+**Type:** `Microsoft.NET.Sdk` (class library)  
+**Project file:** [`LumaCore.Configuration.csproj`](../../src/LumaCore.Configuration/LumaCore.Configuration.csproj)
 
-**Dependencies:**
-- `LumaCore.Api.Contracts` (project reference) — Shared DTOs for API communication
+Options registration, validation, and `Secret` metadata used by the API for configuration binding and startup-time checks.
 
----
+#### LumaCore.Data
+**Type:** `Microsoft.NET.Sdk` (class library)  
+**Project file:** [`LumaCore.Data.csproj`](../../src/LumaCore.Data/LumaCore.Data.csproj)
 
-### Feature-Based Directory Structure
+EF Core, migrations, and database integration. Server-side only — the Blazor client must not reference it.
 
-Features are organized in self-contained folders under `LumaCore.Api/Features/`:
+#### LumaCore.HealthCheck
+**Type:** `Microsoft.NET.Sdk` with `OutputType=Exe` (small console executable)  
+**Project file:** [`LumaCore.HealthCheck.csproj`](../../src/LumaCore.HealthCheck/LumaCore.HealthCheck.csproj)
 
-**Common components (not every feature has all):**
-```
-Features/{FeatureName}/
-├── ServiceRegistration.cs              # Registers services and configuration with DI
-├── EndpointMapping.cs                  # HTTP endpoints (if feature exposes API)
-├── MiddlewareIntegration.cs            # Pipeline middleware (if needed)
-├── {FeatureName}Options.cs             # Configuration class
-└── *.cs                                # Implementation (factories, services, validators, etc.)
-```
+A small, standalone HTTP **probe** intended to run inside containers (e.g. as a Docker `HEALTHCHECK` instruction). It exits with code `0` for healthy and `1` for unhealthy.
 
-> **Note:** Request/response DTOs (contracts) live in the separate `LumaCore.Api.Contracts` project, organized by API version (`V1/`, `V2/`, etc.). This allows both the API and Blazor UI to share the same types.
+> **Two different "health" stories:** the in-process `AddHealthChecks` and the types under the API's `Features/Health/` are part of the web app and provide the actual health endpoints. The `LumaCore.HealthCheck` project here is a **separate** small HTTP **client** executable for container probes — it is not linked into the API as a `ProjectReference`. They are different layers.
 
-Each feature contains only what it needs. No mandatory structure beyond ServiceRegistration.cs.
+### Tests and documentation projects
 
-👉 **[Read more: Feature Pattern](feature-pattern.md)** — Complete guide to the feature architecture
+#### LumaCore.TestUtilities
+**Type:** `Microsoft.NET.Sdk` (class library, `IsPackable=false`)  
+**Project file:** [`LumaCore.TestUtilities.csproj`](../../src/LumaCore.TestUtilities/LumaCore.TestUtilities.csproj)
+
+Shared xUnit helpers used by the test assemblies (in-memory `ILogger` capture, async wait helpers, and the like). Test-only; not referenced by production code.
+
+#### Test assemblies (`LumaCore.*.Tests`)
+
+Each `LumaCore.*.Tests` project sits next to the project it tests (for example, `LumaCore.Core.Tests` next to `LumaCore.Core`). The system under test and any `InternalsVisibleTo` declarations are in the respective `*.csproj` files, so opening a test project's `.csproj` is the quickest way to see what it covers.
+
+#### docs/Docs.csproj
+**Type:** `Microsoft.Build.NoTargets` (no-targets, IDE-only)  
+**Project file:** [`docs/Docs.csproj`](../Docs.csproj)
+
+A small workaround for a Visual Studio limitation: `.sln` files do not support wildcards, so every new markdown file would otherwise have to be added by hand to be visible in Solution Explorer. This project uses the official [`Microsoft.Build.NoTargets`](https://github.com/microsoft/MSBuildSdks/tree/main/src/NoTargets) SDK and a single `<None Include="**/*" />` item to pull the entire `docs/` tree into the IDE automatically. It builds nothing and produces no artifacts.
 
 ---
 
-## Build System
+## API feature layout
 
-### Artifacts Organization
+Within `LumaCore.Api`, feature code lives under `Features/{FeatureName}/` rather than a top-level split between `Controllers/` and `Services/`. A typical feature folder contains a `ServiceRegistration.cs`, an `EndpointMapping.cs`, an optional `MiddlewareIntegration.cs`, and a `{Feature}Options.cs`. Not every feature uses all four; the actual files in the folder define the shape.
 
-LumaCore centralizes all build outputs in a single `/artifacts` folder at the repository root, instead of scattering `bin/` and `obj/` folders throughout each project.
+Wire-format DTOs stay in [`LumaCore.Api.Contracts`](#lumacoreapicontracts), so the client and host share types without the client depending on `Features/{FeatureName}` implementation details.
 
-**Structure:**
-```
-artifacts/
-├── bin/                          # Compiled outputs
-│   ├── LumaCore.Api/
-│   │   └── AnyCPU.Release/net10.0/
-│   └── LumaCore.Core/
-│       └── AnyCPU.Release/net10.0/
-└── obj/                          # Intermediate build files
-    ├── LumaCore.Api/
-    └── LumaCore.Core/
-```
-
-**Why centralized artifacts?**
-- **Cleaner repository** — No `bin/obj` clutter in source folders
-- **Easier cleanup** — Single command: `rm -rf artifacts/`
-- **CI/CD friendly** — Predictable output locations for build pipelines
-- **Git-safe** — Single `.gitignore` entry covers all outputs
-
-**How it's configured:**
-This redirection is configured in `Directory.Build.props` (see below).
+**Further reading:** [Feature Pattern](feature-pattern.md).
 
 ---
 
-### Directory.Build.props
+## Build, SDK, and versioning
 
-The `src/Directory.Build.props` file provides shared configuration for all projects.
+Build configuration lives in a small set of shared MSBuild and tooling files at the root of `src/` and the repository:
 
-#### Language & Code Style
+| Read this for… | File |
+|:---------------|------|
+| Shared MSBuild defaults, `LangVersion`, analyzers, `UseArtifactsOutput`, MinVer, Source Link, shared package references | [`src/Directory.Build.props`](../../src/Directory.Build.props) |
+| Shared targets (clean, publish output naming, …) | [`src/Directory.Build.targets`](../../src/Directory.Build.targets) |
+| Centralized NuGet package versions | [`src/Directory.Packages.props`](../../src/Directory.Packages.props) |
+| SDK `version` and `rollForward` | [`global.json`](../../global.json) (repo root) |
 
-All projects use consistent language settings:
+The intent across these files is consistent: a single C# `LangVersion` for the entire tree, a fixed SDK policy in `global.json`, versioning derived from Git tags through MinVer, and a single `artifacts/` output root configured by the shared targets.
 
-```xml
-<Nullable>enable</Nullable>                       <!-- Nullable reference types -->
-<ImplicitUsings>enable</ImplicitUsings>           <!-- Automatic using directives -->
-<LangVersion>latestMajor</LangVersion>            <!-- Latest C# version -->
-<GenerateDocumentationFile>true</GenerateDocumentationFile>  <!-- XML docs -->
-```
+### `build.net` submodule
 
-**Result:**
-- Modern C# 13 features available in all projects
-- Nullable reference types catch null-related bugs at compile time
-- XML documentation is generated for IntelliSense
+The [`build.net`](https://github.com/LumaCoreTech/build.net) Git submodule (pinned to a fixed commit) carries shared IDE settings, OpenAPI scripts, and optional generators. It is **not** loaded as an application dependency — neither the API nor the libraries take a `ProjectReference` into the submodule. Submodule bumps are an explicit step rather than something a regular build does on its own.
 
 ---
 
-#### Assembly Metadata
+## Where to go next
 
-All assemblies share common metadata:
+**Start here**
 
-```xml
-<Company>LumaCoreTech</Company>
-<Product>LumaCore</Product>
-<Authors>LumaCoreTech</Authors>
-<RepositoryUrl>https://github.com/LumaCoreTech/LumaCore</RepositoryUrl>
-```
+- **[Getting started](../getting-started.md)** — environment setup
+- **[Design Principles](principles.md)** — *why* the product is split the way it is
+- **[Architecture overview](README.md)** — system-level picture, including ADRs
+- **[Feature Pattern](feature-pattern.md)** — how feature modules are organized inside `LumaCore.Api`
 
-This appears in compiled DLLs and helps identify the source.
+**Other documentation trees**
 
----
+- **[Features](../features/README.md)** — feature-specific notes
+- **[Development](../development/README.md)** — contributor workflow
+- **[Deployment](../deployment/README.md)** — operations and configuration
 
-### Directory.Build.targets
+**Assets**
 
-The `src/Directory.Build.targets` file contains shared build targets:
-
-**CleanArtifacts Target:**
-Enables complete artifact cleanup with:
-```bash
-dotnet clean /p:RemoveArtifacts=true
-```
-This removes the entire `/artifacts` folder, not just the current project's outputs.
-
-**SetArtifactName Target:**
-Automatically names publish outputs with semantic versioning:
-```
-LumaCore.Api-0.1.42-ci/      # Prerelease build
-LumaCore.Api-1.0.0/          # Public release
-```
-
-This ensures published artifacts are clearly versioned for deployment tracking.
+- **[`assets/`](../../assets)** — branding for docs, UI, and published materials
 
 ---
 
-### Build.Net Submodule
-
-The `build.net/` folder is a **Git submodule** pointing to:  
-`https://github.com/LumaCoreTech/build.net`
-
-**Purpose:** Shared configuration and tooling reused across multiple LumaCoreTech repositories:
-- ReSharper/Rider code style settings
-- OpenAPI documentation scripts and generators
-
-The submodule points to a specific commit of the build.net repository, ensuring consistent tooling across all builds. Updates to the submodule are managed through the main repository's version control.
-
----
-
-## Versioning
-
-### Versioning
-
-Versioning is managed by *MinVer*, which derives the version automatically from Git tags. No configuration file is required.
-
-**How it works:**
-- Create a Git tag like `v1.0.0` → produces version `1.0.0`
-- Commits after a tag → produces version `1.0.1-ci.{height}` (e.g., `1.0.1-ci.5`)
-- No tags → produces version `0.0.0-ci.{height}`
-
-**Version format:**
-- Release builds: Tag-based (e.g., `v1.2.3` → `1.2.3`)
-- Prerelease builds: `{version}-ci.{commits}` (e.g., `1.0.1-ci.5`)
-
-*MinVer* is integrated via `Directory.Build.props` and requires no additional configuration.
-
----
-
-## SDK Configuration
-
-### global.json
-
-Locks the .NET SDK version to ensure consistent builds across all environments:
-
-```json
-{
-  "sdk": {
-    "version": "10.0.0",
-    "rollForward": "latestFeature",
-    "allowPrerelease": false
-  }
-}
-```
-
-**What this means:**
-- Requires .NET 10.0.0 SDK or newer
-- `rollForward: latestFeature` — Can use newer feature releases (10.1, 10.2, etc.) but not major versions (11.0)
-- `allowPrerelease: false` — Only stable SDK releases
-
-**Why lock the SDK version?**
-- Reproducible builds (same SDK = same results)
-- Prevents breaking changes from new SDK releases
-- Developers see exactly which SDK the project targets
-
----
-
-## Solution File
-
-### LumaCore.sln
-
-The Visual Studio solution file references all projects:
-
-```
-LumaCore.sln
-├── LumaCore.Api
-├── LumaCore.Api.Contracts
-├── LumaCore.Core
-└── LumaCore.Ui.Web
-```
-
----
-
-## Documentation Organization
-
-The `/docs` folder is organized by audience and topic:
-
-### By Audience
-
-- **[Architecture](README.md)** — For architects: design decisions and patterns
-- **[Features](../features/README.md)** — For developers: feature implementation details
-- **[Development](../development/README.md)** — For contributors: setup, coding standards, workflow
-- **[Deployment](../deployment/README.md)** — For operators: configuration and production setup
-
-Navigate to the relevant section based on your role.
-
----
-
-## Assets
-
-The `/assets` folder contains non-code project assets:
-
-### Branding
-- Logos (SVG, PNG)
-- Icons
-- Brand guidelines
-
-**Usage:** Referenced in documentation, UI, and marketing materials.
-
----
-
-## Next Steps
-
-### For New Developers
-👉 **[Getting Started](../getting-started.md)** — Setup guide and first steps  
-👉 **[Feature Pattern](feature-pattern.md)** — Learn the core architecture pattern
-
-### For Architects
-👉 **[Design Principles](principles.md)** — Why the structure is designed this way  
-👉 **[Architecture Overview](README.md)** — High-level architectural decisions
-
----
-
-© 2025 LumaCoreTech • MIT License
+© 2026 LumaCoreTech • MIT License

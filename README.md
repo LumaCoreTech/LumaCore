@@ -190,9 +190,7 @@ because memories deserve preservation.
 
 ```bash
 git clone https://github.com/LumaCoreTech/LumaCore
-cd LumaCore
-
-cd deploy/docker/http-only
+cd LumaCore/deploy/docker/http-only
 cp .env.example .env
 docker-compose up --build
 ```
@@ -204,59 +202,22 @@ Prerequisites: .NET 10 SDK
 ```bash
 git clone https://github.com/LumaCoreTech/LumaCore
 cd LumaCore
-
 dotnet restore
 dotnet run --project src/LumaCore.Api
 ```
 
 ### Then open:
 
-- **http://localhost:5080/** — Web UI  
-- **http://localhost:5080/swagger** — API documentation (development only)  
+- **http://localhost:5080/** — Web UI
+- **http://localhost:5080/swagger** — API documentation (development only)
 
-For configuration options, see [Configuration](docs/deployment/configuration.md).
+→ **[Full Getting Started Guide](docs/getting-started.md)** — first API call, configuration, Docker production setup
 
 ---
 
 # 📚 Documentation
 
 → [Documentation Index](docs/README.md)
-
----
-
-# 💬 Example: Persistent Conversation with Memory *(Coming Soon)*
-
-> These endpoints are planned for Phase 1. The examples below show the intended API design.
-
-LumaCore supports Server-Sent Events (SSE) for real-time responses —  
-a conversation style that feels more present, more alive, and more human than classic request/response.
-
-## 1️⃣ Request/Response
-
-```http
-POST /api/chat
-Content-Type: application/json
-
-{
-  "persona": "Mila",
-  "message": "Hey... I missed you."
-}
-```
-
-## 2️⃣ Streaming (SSE)
-
-```http
-GET /api/chat/stream?persona=Mila&message=Hello
-Accept: text/event-stream
-```
-
-### How streaming creates presence
-
-With SSE, the client sends the initial message as query parameters  
-and then **keeps the connection open** to receive the response as a live stream —  
-token by token, as the persona thinks.
-
-This creates a feeling of presence rather than a delayed, one-shot reply.
 
 ---
 

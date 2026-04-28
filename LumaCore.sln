@@ -26,6 +26,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repository Files", "Reposit
 		LumaCore.sln.DotSettings = LumaCore.sln.DotSettings
 		Pre-Commit-Actions.ps1 = Pre-Commit-Actions.ps1
 		README.md = README.md
+		THIRD-PARTY-NOTICES.md = THIRD-PARTY-NOTICES.md
 		src\xunit.runner.json = src\xunit.runner.json
 	EndProjectSection
 EndProject
