@@ -11,7 +11,6 @@
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<AssemblyName>LumaCore.Core</AssemblyName>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 	<ItemGroup>
 		<InternalsVisibleTo Include="LumaCore.Core.Tests" />
