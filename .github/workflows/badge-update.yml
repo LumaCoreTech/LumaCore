@@ -13,47 +13,80 @@ on:
     types: [completed]
     branches: [main]
 
-# One badge update per source workflow — rapid re-runs of the same workflow
-# cancel stale badge updates, but different workflows don't interfere.
+# All badge updates push to the same orphan branch ('badges'), so they must be
+# serialized globally — otherwise concurrent pushes from different source
+# workflows race and lose updates. We never cancel: every badge run carries
+# fresh data we don't want to drop.
 concurrency:
-  group: badge-update-${{ github.event.workflow_run.name }}
-  cancel-in-progress: true
+  group: badge-update
+  cancel-in-progress: false
 
 permissions:
   actions: read
+  contents: write
 
 jobs:
   update:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Checkout badges branch
+      uses: actions/checkout@v4
+      with:
+        ref: badges
+        fetch-depth: 1
+
     - name: Download Badge Data
       uses: actions/download-artifact@v4
       with:
         name: badge-data
+        path: badge-data
         run-id: ${{ github.event.workflow_run.id }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
       continue-on-error: true
 
-    - name: Update Gist
+    - name: Commit and push badge updates
       env:
-        GH_TOKEN: ${{ secrets.GIST_TOKEN }}
+        SOURCE_WORKFLOW: ${{ github.event.workflow_run.name }}
       run: |
-        payload='{}'
+        set -euo pipefail
 
-        for badge_file in lumacore-*-badge.json; do
-          if [ -f "$badge_file" ]; then
-            content=$(cat "$badge_file")
-            payload=$(echo "$payload" | jq --arg c "$content" --arg f "$badge_file" \
-              '.files[$f].content = $c')
-            echo "📊 $badge_file: $content"
-          fi
+        if [ ! -d badge-data ] || ! ls badge-data/lumacore-*-badge.json >/dev/null 2>&1; then
+          echo "⚠️ No badge data found — skipping commit"
+          exit 0
+        fi
+
+        for badge_file in badge-data/lumacore-*-badge.json; do
+          name=$(basename "$badge_file")
+          content=$(cat "$badge_file")
+          echo "📊 $name: $content"
+          cp "$badge_file" "./$name"
         done
 
-        if [ "$payload" != '{}' ]; then
-          gh api --method PATCH /gists/d3957602a84fcab1aa66ebfef44da7eb \
-            --input - <<< "$payload"
-          echo "✅ Gist updated successfully"
-        else
-          echo "⚠️ No badge data found — skipping gist update"
+        rm -rf badge-data
+
+        git config user.name  "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+        git add lumacore-*-badge.json
+
+        if git diff --cached --quiet; then
+          echo "✅ No badge changes — nothing to commit"
+          exit 0
         fi
+
+        git commit -m "chore(badges): Update badges from ${SOURCE_WORKFLOW}"
+
+        # Retry push with rebase in case another badge-update job slipped through
+        # the concurrency gate (e.g. two runs picked up at exactly the same time).
+        for attempt in 1 2 3 4 5; do
+          if git push origin badges; then
+            echo "✅ Badges pushed (attempt ${attempt})"
+            exit 0
+          fi
+          echo "⚠️ Push failed on attempt ${attempt} — rebasing and retrying"
+          git pull --rebase origin badges
+        done
+
+        echo "❌ Failed to push badge updates after 5 attempts"
+        exit 1

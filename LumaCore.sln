@@ -61,6 +61,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{6080
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{B804D941-DD50-4F4E-9F38-BC33C873A0EC}"
 	ProjectSection(SolutionItems) = preProject
+		.github\workflows\badge-update.yml = .github\workflows\badge-update.yml
 		.github\workflows\coverage-merge.yml = .github\workflows\coverage-merge.yml
 		.github\workflows\integration-tests-mysql.yml = .github\workflows\integration-tests-mysql.yml
 		.github\workflows\integration-tests-postgres.yml = .github\workflows\integration-tests-postgres.yml
