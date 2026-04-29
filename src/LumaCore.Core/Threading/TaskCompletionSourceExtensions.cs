@@ -3,7 +3,6 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 
 namespace LumaCore.Core.Threading;
 
@@ -16,37 +15,18 @@ namespace LumaCore.Core.Threading;
 ///     These extensions are particularly useful when building custom async primitives that need to
 ///     propagate completion (success/exception/cancellation) from one task to another.
 ///     </para>
+///     <para>
+///     <b>Thread-pool tuning.</b> Earlier revisions of this class raised the process-wide minimum
+///     worker thread count from a static constructor as a workaround for thread-pool starvation on
+///     small CI runners. That side-effect has been removed: library code must not mutate the
+///     process-wide <see cref="ThreadPool"/>. Applications that target very small CI runners or
+///     constrained containers should opt in explicitly via
+///     <see cref="ThreadPoolBootstrap.EnsureMinWorkerThreads"/> in their bootstrap, or set the
+///     environment variable <c>DOTNET_ThreadPool_MinWorkerThreads</c> before the runtime starts.
+///     </para>
 /// </remarks>
 public static class TaskCompletionSourceExtensions
 {
-	/// <summary>
-	/// The minimum number of worker threads to ensure in the thread pool.
-	/// </summary>
-	private const int MinWorkerThreads = 4;
-
-	/// <summary>
-	/// Initializes the <see cref="TaskCompletionSourceExtensions"/> class and ensures
-	/// the thread pool has sufficient worker threads.
-	/// </summary>
-	/// <remarks>
-	///     <para>
-	///     On machines with few CPU cores, the default thread pool configuration may cause delays
-	///     when async primitives need to schedule continuations. This static constructor increases
-	///     the minimum worker thread count to prevent such delays.
-	///     </para>
-	///     <para>
-	///     <b>Note:</b> This is a workaround for specific async synchronization patterns used in this library.
-	///     Ideally, the underlying patterns should be optimized to eliminate this requirement.
-	///     </para>
-	/// </remarks>
-	[ExcludeFromCodeCoverage(Justification = "Static initializer - environment-dependent ThreadPool configuration")]
-	static TaskCompletionSourceExtensions()
-	{
-		ThreadPool.GetMinThreads(out int minWorkerThreads, out int minCompletionPortThreads);
-		if (minWorkerThreads < MinWorkerThreads)
-			ThreadPool.SetMinThreads(MinWorkerThreads, minCompletionPortThreads);
-	}
-
 	/// <summary>
 	/// Attempts to complete a <see cref="TaskCompletionSource{TResult}"/> by propagating the completion state
 	/// (success/exception/cancellation) of another task.
