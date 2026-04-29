@@ -10,8 +10,6 @@ namespace LumaCore.Core.Tests.Diagnostics;
 
 public sealed partial class ExecutionStageMonitorTests
 {
-	#region CancelAt()
-
 	/// <summary>
 	/// Verifies that the <see langword="out"/> token from <see cref="ExecutionStageMonitor.CancelAt"/> is
 	/// cancelled when the matching stage is reported.
@@ -115,8 +113,9 @@ public sealed partial class ExecutionStageMonitorTests
 	}
 
 	/// <summary>
-	/// Verifies that <see cref="ExecutionStageMonitor.CancelAt"/> throws
-	/// <see cref="ArgumentException"/> when the same stage name is registered twice.
+	/// Verifies that <see cref="ExecutionStageMonitor.CancelAt"/> throws an
+	/// <see cref="ArgumentException"/> with <c>ParamName="stage"</c> and an API-owned message
+	/// when the same stage name is registered twice.
 	/// </summary>
 	[Fact]
 	public void CancelAt_WhenDuplicateStage_ThrowsArgumentException()
@@ -126,9 +125,16 @@ public sealed partial class ExecutionStageMonitorTests
 			.Configure()
 			.CancelAt("test.stage", out CancellationToken _);
 
-		// Act + Assert
-		Assert.Throws<ArgumentException>(() => monitor.CancelAt("test.stage", out CancellationToken _));
-	}
+		// Act
+		var ex = Assert.Throws<ArgumentException>(() => monitor.CancelAt("test.stage", out CancellationToken _));
 
-	#endregion
+		// Assert
+		Assert.Equal("stage", ex.ParamName);
+		// Assert only the production-controlled message body. ArgumentException.Message appends a
+		// "(Parameter '...')" suffix from a localized BCL resource, which differs on non-English systems.
+		Assert.StartsWith(
+			"Stage 'test.stage' is already configured. Each stage name may only be registered once per monitor.",
+			ex.Message,
+			StringComparison.Ordinal);
+	}
 }
