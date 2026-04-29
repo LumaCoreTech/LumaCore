@@ -10,8 +10,6 @@ namespace LumaCore.Core.Tests.Diagnostics;
 
 public sealed partial class ExecutionStageMonitorTests
 {
-	#region OnStage()
-
 	/// <summary>
 	/// Verifies that <see cref="ExecutionStageMonitor.OnStage"/> executes the configured action
 	/// when the matching stage is reported via <see cref="ExecutionStageMonitor.ReportStage"/>.
@@ -42,8 +40,10 @@ public sealed partial class ExecutionStageMonitorTests
 		// Arrange
 		using ExecutionStageMonitor monitor = ExecutionStageMonitor.Configure();
 
-		// Act + Assert
+		// Act
 		var ex = Assert.Throws<ArgumentNullException>(() => monitor.OnStage(null!, () => { }));
+
+		// Assert
 		Assert.Equal("stage", ex.ParamName);
 	}
 
@@ -57,8 +57,27 @@ public sealed partial class ExecutionStageMonitorTests
 		// Arrange
 		using ExecutionStageMonitor monitor = ExecutionStageMonitor.Configure();
 
-		// Act + Assert
+		// Act
 		var ex = Assert.Throws<ArgumentException>(() => monitor.OnStage("", () => { }));
+
+		// Assert
+		Assert.Equal("stage", ex.ParamName);
+	}
+
+	/// <summary>
+	/// Verifies that <see cref="ExecutionStageMonitor.OnStage"/> throws
+	/// <see cref="ArgumentException"/> when the stage name is whitespace.
+	/// </summary>
+	[Fact]
+	public void OnStage_WhenStageIsWhitespace_ThrowsArgumentException()
+	{
+		// Arrange
+		using ExecutionStageMonitor monitor = ExecutionStageMonitor.Configure();
+
+		// Act
+		var ex = Assert.Throws<ArgumentException>(() => monitor.OnStage("   ", () => { }));
+
+		// Assert
 		Assert.Equal("stage", ex.ParamName);
 	}
 
@@ -72,14 +91,17 @@ public sealed partial class ExecutionStageMonitorTests
 		// Arrange
 		using ExecutionStageMonitor monitor = ExecutionStageMonitor.Configure();
 
-		// Act + Assert
+		// Act
 		var ex = Assert.Throws<ArgumentNullException>(() => monitor.OnStage("test.stage", null!));
+
+		// Assert
 		Assert.Equal("action", ex.ParamName);
 	}
 
 	/// <summary>
-	/// Verifies that <see cref="ExecutionStageMonitor.OnStage"/> throws
-	/// <see cref="ArgumentException"/> when the same stage name is registered twice.
+	/// Verifies that <see cref="ExecutionStageMonitor.OnStage"/> throws an
+	/// <see cref="ArgumentException"/> with <c>ParamName="stage"</c> and an API-owned message
+	/// when the same stage name is registered twice.
 	/// </summary>
 	[Fact]
 	public void OnStage_WhenDuplicateStage_ThrowsArgumentException()
@@ -89,9 +111,16 @@ public sealed partial class ExecutionStageMonitorTests
 			.Configure()
 			.OnStage("test.stage", () => { });
 
-		// Act + Assert
-		Assert.Throws<ArgumentException>(() => monitor.OnStage("test.stage", () => { }));
-	}
+		// Act
+		var ex = Assert.Throws<ArgumentException>(() => monitor.OnStage("test.stage", () => { }));
 
-	#endregion
+		// Assert
+		Assert.Equal("stage", ex.ParamName);
+		// Assert only the production-controlled message body. ArgumentException.Message appends a
+		// "(Parameter '...')" suffix from a localized BCL resource, which differs on non-English systems.
+		Assert.StartsWith(
+			"Stage 'test.stage' is already configured. Each stage name may only be registered once per monitor.",
+			ex.Message,
+			StringComparison.Ordinal);
+	}
 }

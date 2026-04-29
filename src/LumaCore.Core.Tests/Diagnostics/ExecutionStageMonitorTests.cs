@@ -27,16 +27,76 @@ public sealed partial class ExecutionStageMonitorTests
 	#region Configure()
 
 	/// <summary>
-	/// Verifies that <see cref="ExecutionStageMonitor.Configure"/> returns a non-null instance.
+	/// Verifies that <see cref="ExecutionStageMonitor.Configure"/> returns a monitor that is
+	/// installed as the ambient instance for the current async flow — i.e. subsequent
+	/// <see cref="ExecutionStageMonitor.ReportStage"/> calls observe its configured stages.
 	/// </summary>
 	[Fact]
-	public void Configure_WhenCalled_ReturnsNonNullInstance()
+	public void Configure_WhenNoMonitorActive_ReturnsActiveAmbientInstance()
 	{
+		// Arrange
+		bool stageObserved = false;
+
 		// Act
-		using ExecutionStageMonitor monitor = ExecutionStageMonitor.Configure();
+		using ExecutionStageMonitor monitor = ExecutionStageMonitor
+			.Configure()
+			.OnStage("probe.stage", () => stageObserved = true);
+
+		ExecutionStageMonitor.ReportStage("probe.stage");
 
 		// Assert
 		Assert.NotNull(monitor);
+		Assert.True(stageObserved, "The returned monitor must be the active ambient instance.");
+	}
+
+	/// <summary>
+	/// Verifies that <see cref="ExecutionStageMonitor.Configure"/> throws
+	/// <see cref="InvalidOperationException"/> when another monitor is already active in the same
+	/// async flow. Nesting is intentionally unsupported — see the class-level remarks.
+	/// </summary>
+	[Fact]
+	public void Configure_WhenAnotherMonitorActive_ThrowsInvalidOperation()
+	{
+		// Arrange
+		using ExecutionStageMonitor outer = ExecutionStageMonitor.Configure();
+
+		// Act
+		var ex = Assert.Throws<InvalidOperationException>(ExecutionStageMonitor.Configure);
+
+		// Assert
+		Assert.Equal(
+			"An ExecutionStageMonitor is already active in the current async flow. " +
+			"Nested monitors are not supported — dispose the existing instance before configuring a new one. " +
+			"If this surfaces in tests, it usually indicates a leaked monitor from a previous test or " +
+			"helper that forgot to dispose.",
+			ex.Message);
+	}
+
+	/// <summary>
+	/// Verifies that <see cref="ExecutionStageMonitor.Configure"/> succeeds again after the previously
+	/// active monitor has been disposed and that the new instance is a distinct, fully functional
+	/// ambient monitor — i.e. the nesting check uses live ambient state, not a permanent latch, and
+	/// stages configured on the second monitor are observed by
+	/// <see cref="ExecutionStageMonitor.ReportStage"/>.
+	/// </summary>
+	[Fact]
+	public void Configure_WhenPreviousMonitorDisposed_ReturnsFreshActiveInstance()
+	{
+		// Arrange
+		ExecutionStageMonitor first = ExecutionStageMonitor.Configure();
+		first.Dispose();
+		bool stageObserved = false;
+
+		// Act
+		using ExecutionStageMonitor second = ExecutionStageMonitor
+			.Configure()
+			.OnStage("probe.stage", () => stageObserved = true);
+
+		ExecutionStageMonitor.ReportStage("probe.stage");
+
+		// Assert
+		Assert.NotSame(first, second);
+		Assert.True(stageObserved, "The second monitor must be the active ambient instance.");
 	}
 
 	#endregion
@@ -148,20 +208,27 @@ public sealed partial class ExecutionStageMonitorTests
 	}
 
 	/// <summary>
-	/// Verifies that <see cref="ExecutionStageMonitor.Dispose"/> can be called multiple times
-	/// without throwing.
+	/// Verifies that <see cref="ExecutionStageMonitor.Dispose"/> is idempotent: a second call neither
+	/// throws nor re-installs or disturbs the ambient slot. After two disposals
+	/// <see cref="ExecutionStageMonitor.Configure"/> still succeeds and the previously-issued
+	/// <see cref="CancellationToken"/> remains observable as disposed.
 	/// </summary>
 	[Fact]
-	public void Dispose_WhenCalledMultipleTimes_DoesNotThrow()
+	public void Dispose_WhenCalledMultipleTimes_RemainsIdempotent()
 	{
 		// Arrange
 		ExecutionStageMonitor monitor = ExecutionStageMonitor
 			.Configure()
-			.CancelAt("test.stage", out CancellationToken _);
+			.CancelAt("test.stage", out CancellationToken token);
 
-		// Act + Assert
+		// Act
 		monitor.Dispose();
-		monitor.Dispose(); // Should not throw.
+		monitor.Dispose();
+
+		// Assert — ambient slot is clear (a fresh Configure must succeed) and the CTS stays disposed.
+		using ExecutionStageMonitor next = ExecutionStageMonitor.Configure();
+		Assert.NotNull(next);
+		Assert.Throws<ObjectDisposedException>(() => _ = token.WaitHandle);
 	}
 
 	#endregion

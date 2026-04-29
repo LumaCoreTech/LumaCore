@@ -29,4 +29,14 @@
 		         Visible="false" />
 	</ItemGroup>
 
+	<!--
+		Coverage report defaults for all test projects.
+		Active only when coverage is collected via coverlet.msbuild
+		(e.g. `dotnet test /p:CollectCoverage=true`).
+	-->
+	<PropertyGroup Condition="'$(IsTestProject)' == 'true' and '$(CollectCoverage)' == 'true'">
+		<CoverletOutputFormat>cobertura</CoverletOutputFormat>
+		<ExcludeByAttribute>DebuggerNonUserCode%2cGeneratedCodeAttribute%2cExcludeFromCodeCoverage</ExcludeByAttribute>
+	</PropertyGroup>
+
 </Project>

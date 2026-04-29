@@ -4,6 +4,7 @@
 
 using LumaCore.Core.Diagnostics;
 using LumaCore.Core.IO;
+using LumaCore.TestUtilities.Logging;
 
 using Microsoft.Extensions.Logging;
 
@@ -228,7 +229,7 @@ public sealed partial class TemporaryFolderManagerTests
 		{
 			var logger = new ListLogger<TemporaryFolderManager>();
 			using TemporaryFolderManager sut = CreateManagerWithBasePath(basePath, logger);
-			logger.Entries.Clear();
+			logger.Clear();
 
 			// Simulate an orphan whose directory cannot be deleted (locked inner file on Windows)
 			(string orphanPath, string _) = SimulateOrphanedFolder(basePath, "stuck");
@@ -309,7 +310,7 @@ public sealed partial class TemporaryFolderManagerTests
 		{
 			var logger = new ListLogger<TemporaryFolderManager>();
 			using TemporaryFolderManager sut = CreateManagerWithBasePath(basePath, logger);
-			logger.Entries.Clear();
+			logger.Clear();
 
 			// Delete the basePath to simulate an externally removed directory
 			Directory.Delete(basePath, recursive: true);

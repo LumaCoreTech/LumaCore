@@ -46,6 +46,18 @@ indent_size = 4
 tab_width = 4
 max_line_length = 120
 
+# ===================================================
+# Code analysis: deliberate, repo-wide adjustments
+# ===================================================
+[*.cs]
+# CA1848: "For improved performance, use the LoggerMessage delegates."
+# CA1873: "The argument may be expensive and unnecessary if logging is disabled."
+# Kept as suggestion: the source-generated LoggerMessage pattern is preferred
+# for hot logging paths, but a blanket migration is not warranted today.
+# Suggestion keeps the hint visible in the IDE without polluting build output.
+dotnet_diagnostic.CA1848.severity = suggestion
+dotnet_diagnostic.CA1873.severity = suggestion
+
 [*.{html,xml,xaml,js,css,sql,resx}]
 indent_style = space
 indent_size = 4
@@ -67,3 +79,15 @@ dotnet_diagnostic.xUnit1051.severity = suggestion
 # preferred when tests verify a specific count alongside full element assertions —
 # Assert.Single() only covers count == 1 and loses the explicit count context.
 dotnet_diagnostic.xUnit2013.severity = suggestion
+
+# CA1707: "Identifiers should not contain underscores."
+# Disabled for test projects: the Method_Scenario_Expectation naming pattern is
+# the de-facto xUnit standard and intentionally uses underscores for readability
+# in test runners.
+dotnet_diagnostic.CA1707.severity = none
+
+# CA2263: "Prefer the generic overload."
+# Tests for non-generic API surface (e.g. Register(string, Type)) intentionally
+# call the non-generic overload to validate its behavior; flagging that is
+# noise rather than signal.
+dotnet_diagnostic.CA2263.severity = none

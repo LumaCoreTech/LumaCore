@@ -500,7 +500,13 @@ public static class MemoryMetricsFactory
 	/// <param name="newlen">Size of new value.</param>
 	/// <returns>0 on success; -1 on error.</returns>
 	/// <remarks>See the BSD <c>sysctlbyname(3)</c> man page for details.</remarks>
-	[DllImport("libSystem.dylib", CallingConvention = CallingConvention.Cdecl)]
+	[DllImport(
+		"libSystem.dylib",
+		CallingConvention      = CallingConvention.Cdecl,
+		CharSet                = CharSet.Ansi,
+		BestFitMapping         = false,
+		ThrowOnUnmappableChar  = true,
+		ExactSpelling          = true)]
 	private static extern int sysctlbyname(
 		[MarshalAs(UnmanagedType.LPStr)] string name,
 		out                              long   oldp,
@@ -511,7 +517,14 @@ public static class MemoryMetricsFactory
 	/// <summary>
 	/// Retrieves system information by name on macOS/BSD systems (int overload for page size).
 	/// </summary>
-	[DllImport("libSystem.dylib", CallingConvention = CallingConvention.Cdecl, EntryPoint = "sysctlbyname")]
+	[DllImport(
+		"libSystem.dylib",
+		EntryPoint             = "sysctlbyname",
+		CallingConvention      = CallingConvention.Cdecl,
+		CharSet                = CharSet.Ansi,
+		BestFitMapping         = false,
+		ThrowOnUnmappableChar  = true,
+		ExactSpelling          = true)]
 	private static extern int sysctlbyname(
 		[MarshalAs(UnmanagedType.LPStr)] string name,
 		out                              int    oldp,

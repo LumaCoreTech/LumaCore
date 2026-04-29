@@ -87,7 +87,7 @@ runs:
 
     - name: Upload Badge Data
       if: github.ref == 'refs/heads/main' && always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: badge-data
         path: lumacore-integration-${{ inputs.provider }}-badge.json
@@ -96,7 +96,7 @@ runs:
 
     - name: Upload Coverage Artifact
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: coverage-integration-${{ inputs.provider }}
         path: '**/coverage.cobertura.xml'

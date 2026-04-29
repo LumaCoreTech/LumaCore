@@ -6,7 +6,7 @@ using LumaCore.Core.Threading;
 
 using Xunit;
 
-using static LumaCore.Core.Tests.AsyncTestHelpers;
+using static LumaCore.TestUtilities.Async.AsyncTestHelpers;
 
 // ReSharper disable MethodHasAsyncOverload
 // ReSharper disable ReplaceAsyncWithTaskReturn

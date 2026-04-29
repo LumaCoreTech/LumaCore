@@ -13,8 +13,6 @@
 		<OutputType>Exe</OutputType>
 		<IsTestProject>true</IsTestProject>
 		<TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,5 +26,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LumaCore.Core\LumaCore.Core.csproj" />
+		<ProjectReference Include="..\LumaCore.TestUtilities\LumaCore.TestUtilities.csproj" />
 	</ItemGroup>
 </Project>

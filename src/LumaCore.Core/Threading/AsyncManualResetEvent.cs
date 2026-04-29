@@ -1,6 +1,7 @@
 // Copyright (c) 2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
+// Portions derived from Nito.AsyncEx (MIT, Copyright (c) 2014 StephenCleary) — see THIRD-PARTY-NOTICES.md
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;

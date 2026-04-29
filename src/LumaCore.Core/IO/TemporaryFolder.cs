@@ -4,6 +4,8 @@
 
 using LumaCore.Core.Diagnostics;
 
+using Microsoft.Extensions.Logging;
+
 namespace LumaCore.Core.IO;
 
 /// <summary>
@@ -38,6 +40,7 @@ public sealed class TemporaryFolder : ITemporaryFolder
 {
 	private readonly TemporaryFolderManager? mManager;
 	private readonly FileStream?             mLockFile;
+	private readonly ILogger?                mLogger;
 	private          int                     mDisposed;
 
 	/// <summary>
@@ -68,9 +71,14 @@ public sealed class TemporaryFolder : ITemporaryFolder
 	/// <param name="manager">The manager that tracks this folder.</param>
 	/// <param name="basePath">The parent directory in which the temporary folder is created.</param>
 	/// <param name="prefix">An optional human-readable prefix for the folder name.</param>
-	internal TemporaryFolder(TemporaryFolderManager manager, string basePath, string? prefix)
+	/// <param name="logger">
+	/// Optional logger that receives diagnostic entries about best-effort cleanup failures during
+	/// <see cref="Dispose"/>. May be <see langword="null"/> to opt out of logging.
+	/// </param>
+	internal TemporaryFolder(TemporaryFolderManager manager, string basePath, string? prefix, ILogger? logger = null)
 	{
 		mManager = manager;
+		mLogger = logger;
 
 		string folderName = string.IsNullOrWhiteSpace(prefix)
 			                    ? Guid.NewGuid().ToString("N")
@@ -108,7 +116,9 @@ public sealed class TemporaryFolder : ITemporaryFolder
 	/// </summary>
 	/// <remarks>
 	/// Deletion is best-effort. I/O exceptions are swallowed to prevent failures caused by transient file locks
-	/// (e.g., antivirus scanners, open handles on Windows). The manager is notified so it stops tracking this folder.
+	/// (e.g., antivirus scanners, open handles on Windows). When a logger was provided (managed mode) failures
+	/// are recorded at <see cref="LogLevel.Trace"/> so that leaked folders remain diagnosable in production.
+	/// The manager is notified so it stops tracking this folder.
 	/// </remarks>
 	public void Dispose()
 	{
@@ -122,9 +132,10 @@ public sealed class TemporaryFolder : ITemporaryFolder
 		{
 			Directory.Delete(Path, recursive: true);
 		}
-		catch
+		catch (Exception ex)
 		{
-			// Best-effort: swallow to avoid failures from transient file locks.
+			// Best-effort: swallow to avoid failures from transient file locks. Diagnostic only.
+			mLogger?.LogTrace(ex, "Best-effort delete of temporary folder '{Path}' failed.", Path);
 		}
 
 		// Delete the lock file after the directory — it lives next to the folder, not inside it.
@@ -135,9 +146,10 @@ public sealed class TemporaryFolder : ITemporaryFolder
 				ExecutionStageMonitor.ReportStage("TemporaryFolder.Dispose.DeleteLockFile");
 				File.Delete(Path + ".lock");
 			}
-			catch
+			catch (Exception ex)
 			{
-				// Best-effort.
+				// Best-effort: same rationale as above.
+				mLogger?.LogTrace(ex, "Best-effort delete of lock file '{Path}.lock' failed.", Path);
 			}
 		}
 

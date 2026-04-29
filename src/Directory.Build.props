@@ -16,7 +16,24 @@
 	<PropertyGroup>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<LangVersion>latestMajor</LangVersion>
+		<!--
+		    Pin the language version (C# 14 matches .NET 10 / net10.0 per Microsoft’s TFM defaults).
+		    Avoid latest/latestMajor: they track the installed compiler and can differ between machines
+		    (e.g. newer VS / SDK), leading to “compiles here, fails there” on newer syntax.
+		    Bump this value only when the team agrees to adopt a newer C# (and SDK support is in place).
+		-->
+		<LangVersion>14</LangVersion>
+
+		<!-- Enforce .editorconfig style/formatting rules during build (incl. CI). -->
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+		<!--
+			Pin the analyzer rule set to the .NET 10 generation (matches TargetFramework).
+			Avoid 'latest': it tracks the installed SDK and would drift between machines, just like LangVersion.
+			AnalysisMode=Recommended is a curated, high-signal subset; bump to 'All' once warning count is under control.
+		-->
+		<AnalysisLevel>10</AnalysisLevel>
+		<AnalysisMode>Recommended</AnalysisMode>
 
 		<!-- Docs + debugging -->
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>

@@ -23,24 +23,28 @@ public static class FailFast
 	/// <param name="message">The reason for termination.</param>
 	/// <exception cref="FailFastCanceledException"><see cref="BeforeTermination"/> cancels termination.</exception>
 	/// <remarks>
-	/// >
 	/// Use this method to terminate the application when continuing execution is unsafe.
 	/// </remarks>
 	public static void TerminateApplication(string message)
 	{
+		EventHandler<FailFastEventArgs>? beforeTermination;
+		Action<string, Exception?>?      terminationRequested;
 		lock (sLock)
 		{
-			// Check for cancellation BEFORE calling TerminationRequested
-			var beforeArgs = new FailFastEventArgs(message, null);
-			sBeforeTermination?.Invoke(null, beforeArgs);
-
-			if (beforeArgs.Cancel)
-				throw new FailFastCanceledException(message, null);
-
-			// Not canceled - proceed with actual termination
-			sTerminationRequested?.Invoke(message, null);
-			Environment.FailFast(message);
+			beforeTermination = sBeforeTermination;
+			terminationRequested = sTerminationRequested;
 		}
+
+		// Check for cancellation BEFORE invoking TerminationRequested. Subscribers run outside the lock.
+		var beforeArgs = new FailFastEventArgs(message, null);
+		beforeTermination?.Invoke(null, beforeArgs);
+
+		if (beforeArgs.Cancel)
+			throw new FailFastCanceledException(message, null);
+
+		// Not canceled — invoke pre-termination subscribers (whatever they do) and then terminate.
+		terminationRequested?.Invoke(message, null);
+		Environment.FailFast(message);
 	}
 
 	/// <summary>
@@ -50,26 +54,30 @@ public static class FailFast
 	/// <exception cref="ArgumentNullException"><paramref name="exception"/> is <see langword="null"/>.</exception>
 	/// <exception cref="FailFastCanceledException"><see cref="BeforeTermination"/> cancels termination.</exception>
 	/// <remarks>
-	/// >
 	/// Use this method to terminate the application when continuing execution is unsafe.
 	/// </remarks>
 	public static void TerminateApplication(Exception exception)
 	{
 		ArgumentNullException.ThrowIfNull(exception);
 
+		EventHandler<FailFastEventArgs>? beforeTermination;
+		Action<string, Exception?>?      terminationRequested;
 		lock (sLock)
 		{
-			// Check for cancellation BEFORE calling TerminationRequested
-			var beforeArgs = new FailFastEventArgs(exception.Message, exception);
-			sBeforeTermination?.Invoke(null, beforeArgs);
-
-			if (beforeArgs.Cancel)
-				throw new FailFastCanceledException(exception.Message, exception);
-
-			// Not canceled - proceed with actual termination
-			sTerminationRequested?.Invoke(exception.Message, exception);
-			Environment.FailFast(exception.Message, exception);
+			beforeTermination = sBeforeTermination;
+			terminationRequested = sTerminationRequested;
 		}
+
+		// Check for cancellation BEFORE invoking TerminationRequested. Subscribers run outside the lock.
+		var beforeArgs = new FailFastEventArgs(exception.Message, exception);
+		beforeTermination?.Invoke(null, beforeArgs);
+
+		if (beforeArgs.Cancel)
+			throw new FailFastCanceledException(exception.Message, exception);
+
+		// Not canceled — invoke pre-termination subscribers (whatever they do) and then terminate.
+		terminationRequested?.Invoke(exception.Message, exception);
+		Environment.FailFast(exception.Message, exception);
 	}
 
 	/// <summary>

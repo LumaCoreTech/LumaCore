@@ -37,9 +37,9 @@
             &nbsp;&nbsp;
             <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/windows-build.yml"><img src="https://img.shields.io/github/actions/workflow/status/LumaCoreTech/LumaCore/windows-build.yml?style=flat-square&label=Build" alt="Windows Build"></a>
             &nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/windows-build.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-windows-test-badge.json&style=flat-square" alt="Windows Tests"></a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/windows-build.yml"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/LumaCoreTech/LumaCore/badges/lumacore-windows-test-badge.json&style=flat-square" alt="Windows Tests"></a>
             &nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/windows-build.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-windows-coverage-badge.json&style=flat-square" alt="Windows Coverage"></a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/windows-build.yml"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/LumaCoreTech/LumaCore/badges/lumacore-windows-coverage-badge.json&style=flat-square" alt="Windows Coverage"></a>
           </td>
         </tr>
         <tr>
@@ -48,29 +48,29 @@
             &nbsp;&nbsp;
             <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml"><img src="https://img.shields.io/github/actions/workflow/status/LumaCoreTech/LumaCore/linux-build.yml?style=flat-square&label=Build" alt="Ubuntu Build"></a>
             &nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-ubuntu-test-badge.json&style=flat-square" alt="Ubuntu Tests"></a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/LumaCoreTech/LumaCore/badges/lumacore-ubuntu-test-badge.json&style=flat-square" alt="Ubuntu Tests"></a>
             &nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-ubuntu-coverage-badge.json&style=flat-square" alt="Ubuntu Coverage"></a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/linux-build.yml"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/LumaCoreTech/LumaCore/badges/lumacore-ubuntu-coverage-badge.json&style=flat-square" alt="Ubuntu Coverage"></a>
           </td>
         </tr>
         <tr>
           <td align="center"><b>Integration</b><br/><sub>Linux only</sub></td>
           <td align="left">
             &nbsp;&nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/integration-tests-sqlite.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-integration-sqlite-badge.json&style=flat-square" alt="SQLite Tests"></a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/integration-tests-sqlite.yml"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/LumaCoreTech/LumaCore/badges/lumacore-integration-sqlite-badge.json&style=flat-square" alt="SQLite Tests"></a>
             &nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/integration-tests-postgres.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-integration-postgresql-badge.json&style=flat-square" alt="PostgreSQL Tests"></a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/integration-tests-postgres.yml"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/LumaCoreTech/LumaCore/badges/lumacore-integration-postgresql-badge.json&style=flat-square" alt="PostgreSQL Tests"></a>
             &nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/integration-tests-sqlserver.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-integration-sqlserver-badge.json&style=flat-square" alt="SQL Server Tests"></a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/integration-tests-sqlserver.yml"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/LumaCoreTech/LumaCore/badges/lumacore-integration-sqlserver-badge.json&style=flat-square" alt="SQL Server Tests"></a>
             &nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/integration-tests-mysql.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-integration-mysql-badge.json&style=flat-square" alt="MySQL Tests"></a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/integration-tests-mysql.yml"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/LumaCoreTech/LumaCore/badges/lumacore-integration-mysql-badge.json&style=flat-square" alt="MySQL Tests"></a>
           </td>
         </tr>
         <tr>
           <td align="center"><b>Coverage</b></td>
           <td align="left">
             &nbsp;&nbsp;
-            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/coverage-merge.yml"><img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/lumacore-admin/d3957602a84fcab1aa66ebfef44da7eb/raw/lumacore-merged-coverage-badge.json&style=flat-square" alt="Merged Coverage"></a>
+            <a href="https://github.com/LumaCoreTech/LumaCore/actions/workflows/coverage-merge.yml"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/LumaCoreTech/LumaCore/badges/lumacore-merged-coverage-badge.json&style=flat-square" alt="Merged Coverage"></a>
           </td>
         </tr>
       </tbody>
@@ -190,9 +190,7 @@ because memories deserve preservation.
 
 ```bash
 git clone https://github.com/LumaCoreTech/LumaCore
-cd LumaCore
-
-cd deploy/docker/http-only
+cd LumaCore/deploy/docker/http-only
 cp .env.example .env
 docker-compose up --build
 ```
@@ -204,59 +202,22 @@ Prerequisites: .NET 10 SDK
 ```bash
 git clone https://github.com/LumaCoreTech/LumaCore
 cd LumaCore
-
 dotnet restore
 dotnet run --project src/LumaCore.Api
 ```
 
 ### Then open:
 
-- **http://localhost:5080/** — Web UI  
-- **http://localhost:5080/swagger** — API documentation (development only)  
+- **http://localhost:5080/** — Web UI
+- **http://localhost:5080/swagger** — API documentation (development only)
 
-For configuration options, see [Configuration](docs/deployment/configuration.md).
+→ **[Full Getting Started Guide](docs/getting-started.md)** — first API call, configuration, Docker production setup
 
 ---
 
 # 📚 Documentation
 
 → [Documentation Index](docs/README.md)
-
----
-
-# 💬 Example: Persistent Conversation with Memory *(Coming Soon)*
-
-> These endpoints are planned for Phase 1. The examples below show the intended API design.
-
-LumaCore supports Server-Sent Events (SSE) for real-time responses —  
-a conversation style that feels more present, more alive, and more human than classic request/response.
-
-## 1️⃣ Request/Response
-
-```http
-POST /api/chat
-Content-Type: application/json
-
-{
-  "persona": "Mila",
-  "message": "Hey... I missed you."
-}
-```
-
-## 2️⃣ Streaming (SSE)
-
-```http
-GET /api/chat/stream?persona=Mila&message=Hello
-Accept: text/event-stream
-```
-
-### How streaming creates presence
-
-With SSE, the client sends the initial message as query parameters  
-and then **keeps the connection open** to receive the response as a live stream —  
-token by token, as the persona thinks.
-
-This creates a feeling of presence rather than a delayed, one-shot reply.
 
 ---
 

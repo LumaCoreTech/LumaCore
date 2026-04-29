@@ -4,7 +4,7 @@
 
 using Xunit;
 
-using static LumaCore.Core.Tests.AsyncTestHelpers;
+using static LumaCore.TestUtilities.Async.AsyncTestHelpers;
 
 using TaskExtensions = LumaCore.Core.Threading.TaskExtensions;
 

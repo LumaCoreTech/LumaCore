@@ -3,6 +3,9 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using LumaCore.Core.Threading;
+using LumaCore.TestUtilities.Logging;
+
+using Microsoft.Extensions.Logging;
 
 using Xunit;
 
@@ -178,7 +181,8 @@ public partial class LifecycleManagementTests
 		lock (sut.LifecycleState.Sync)
 		{
 			var ex = Assert.Throws<ObjectDisposedException>(() => sut.LifecycleState.EnsureCanChangeConfiguration());
-			Assert.Equal(typeof(LifecycleState).FullName, ex.ObjectName);
+			// The exception must report the owning type (the derived class), not the LifecycleState helper itself.
+			Assert.Equal(typeof(TestableLifecycleManagement).FullName, ex.ObjectName);
 		}
 	}
 
@@ -207,7 +211,8 @@ public partial class LifecycleManagementTests
 		lock (sut.LifecycleState.Sync)
 		{
 			var ex = Assert.Throws<ObjectDisposedException>(() => sut.LifecycleState.EnsureCanChangeConfiguration());
-			Assert.Equal(typeof(LifecycleState).FullName, ex.ObjectName);
+			// The exception must report the owning type (the derived class), not the LifecycleState helper itself.
+			Assert.Equal(typeof(TestableLifecycleManagement).FullName, ex.ObjectName);
 		}
 
 		// Cleanup
@@ -280,10 +285,10 @@ public partial class LifecycleManagementTests
 		var allowInitializationToComplete = new AsyncManualResetEvent(false);
 
 		TestableLifecycleManagement sut = CreateSut(
-			onInitializingCallback: async (_, _) =>
+			onInitializingCallback: async (_, ct) =>
 			{
 				initializingStarted.Set();
-				await allowInitializationToComplete.WaitAsync();
+				await allowInitializationToComplete.WaitAsync(ct);
 			});
 
 		Task initTask = sut.InitializeAsync();
@@ -329,6 +334,34 @@ public partial class LifecycleManagementTests
 		Assert.Equal(1, sut.OnInitializingCallCount);
 		Assert.Equal(1, sut.OnShuttingDownCallCount);
 		Assert.Equal(0, sut.OnDisposingCallCount);
+	}
+
+	/// <summary>
+	/// Verifies that the diagnostic log entry emitted when <see cref="LifecycleManagement.OnInitializingAsync"/>
+	/// throws correctly identifies <c>OnInitializingAsync</c> as the failing method (regression test for the
+	/// previous copy-paste bug that mis-named the method as <c>OnShuttingDownAsync</c>).
+	/// </summary>
+	[Fact]
+	public async Task Initialize_WhenOnInitializingThrows_LogsOnInitializingAsyncAsFailingMethod()
+	{
+		// Arrange
+		var loggerFactory = new ListLoggerFactory();
+		var initException = new InvalidOperationException("Initialization failed");
+		var sut = new TestableLifecycleManagement(
+			loggerFactory,
+			onInitializingCallback: (_, _) => throw initException);
+
+		// Act
+		await Assert.ThrowsAsync<InvalidOperationException>(() => sut.InitializeAsync());
+
+		// Assert: a Debug-level entry that references the failing OnInitializingAsync method exists,
+		// and no entry references OnShuttingDownAsync as the *failing* method (cleanup succeeded).
+		LogEntry diagnostic = Assert.Single(
+			loggerFactory.Entries,
+			e => e.Level == LogLevel.Debug && e.Exception == initException);
+
+		Assert.Contains("OnInitializingAsync", diagnostic.Message);
+		Assert.DoesNotContain("OnShuttingDownAsync", diagnostic.Message);
 	}
 
 	/// <summary>

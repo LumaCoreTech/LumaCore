@@ -353,7 +353,7 @@ public sealed class LifecycleState : IDisposable
 	///     <see cref="DecrementPendingOperationsCount"/>.
 	///     </para>
 	/// </remarks>
-	public readonly AsyncManualResetEvent NoPendingOperationsLeftEvent = new(true);
+	public AsyncManualResetEvent NoPendingOperationsLeftEvent { get; } = new(true);
 
 	/// <summary>
 	/// An asynchronous event that signals when exactly one pending operation remains.
@@ -373,7 +373,7 @@ public sealed class LifecycleState : IDisposable
 	///     <see cref="DecrementPendingOperationsCount"/>.
 	///     </para>
 	/// </remarks>
-	internal readonly AsyncManualResetEvent OnlyOneOperationPendingEvent = new(false);
+	internal AsyncManualResetEvent OnlyOneOperationPendingEvent { get; } = new(false);
 
 	/// <summary>
 	/// Gets the current number of pending (in-flight) operations.
@@ -549,7 +549,7 @@ public sealed class LifecycleState : IDisposable
 	{
 		Debug.Assert(Sync.IsHeldByCurrentThread);
 		if (mIsDisposed || mIsDisposing)
-			throw new ObjectDisposedException(GetType().FullName, "The object is disposing or already disposed.");
+			throw new ObjectDisposedException(OwnerType.FullName, "The object is disposing or already disposed.");
 		if (mIsInitializing || mIsInitialized)
 			throw new InvalidOperationException("The object is initializing or already initialized.");
 		if (mIsShuttingDown)

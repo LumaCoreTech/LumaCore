@@ -54,6 +54,14 @@ namespace LumaCore.Core.Diagnostics;
 ///         .OnStage("Pipeline.StageC", () =&gt; counter++);
 ///     </code>
 ///     </para>
+///     <para>
+///     <b>Nesting is not supported.</b> Calling <see cref="Configure"/> while another monitor is
+///     already active in the same async flow throws <see cref="InvalidOperationException"/>. This is
+///     a deliberate design decision: nested monitors raise non-trivial questions about precedence,
+///     order of side-effects, and visibility, and the only legitimate use case (a single fault-injection
+///     scope per test) does not require it. A surfaced nesting exception almost always indicates a
+///     leaked monitor from a previous test or helper that forgot to dispose.
+///     </para>
 /// </remarks>
 public sealed class ExecutionStageMonitor : IDisposable
 {
@@ -78,9 +86,11 @@ public sealed class ExecutionStageMonitor : IDisposable
 
 	/// <summary>
 	/// Initializes an empty monitor and sets itself as the ambient instance for the current async flow.
-	/// Stages are added via the fluent configuration methods (<see cref="CancelAt"/>,
-	/// <see cref="ThrowAt"/>, <see cref="OnStage"/>).
 	/// </summary>
+	/// <remarks>
+	/// Callers must reach this constructor exclusively through <see cref="Configure"/>, which performs
+	/// the nesting check. Direct instantiation is prevented by the <see langword="private"/> accessor.
+	/// </remarks>
 	private ExecutionStageMonitor()
 	{
 		sCurrent.Value = this;
@@ -92,7 +102,23 @@ public sealed class ExecutionStageMonitor : IDisposable
 	/// the stages to monitor.
 	/// </summary>
 	/// <returns>A disposable monitor ready for fluent stage configuration.</returns>
-	public static ExecutionStageMonitor Configure() => new();
+	/// <exception cref="InvalidOperationException">
+	/// Another <see cref="ExecutionStageMonitor"/> is already active in the current async flow.
+	/// Nesting is not supported — dispose the existing instance before configuring a new one.
+	/// </exception>
+	public static ExecutionStageMonitor Configure()
+	{
+		if (sCurrent.Value is not null)
+		{
+			throw new InvalidOperationException(
+				"An ExecutionStageMonitor is already active in the current async flow. " +
+				"Nested monitors are not supported — dispose the existing instance before configuring a new one. " +
+				"If this surfaces in tests, it usually indicates a leaked monitor from a previous test or " +
+				"helper that forgot to dispose.");
+		}
+
+		return new ExecutionStageMonitor();
+	}
 
 	/// <summary>
 	/// Reports a named execution stage. If an ambient monitor is listening for this stage, its action
@@ -121,6 +147,8 @@ public sealed class ExecutionStageMonitor : IDisposable
 	public ExecutionStageMonitor CancelAt(string stage, out CancellationToken token)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(stage);
+		EnsureStageNotConfigured(stage);
+
 		var cts = new CancellationTokenSource();
 		mOwnedTokenSources.Add(cts);
 		mStageActions.Add(stage, cts.Cancel);
@@ -148,6 +176,8 @@ public sealed class ExecutionStageMonitor : IDisposable
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(stage);
 		ArgumentNullException.ThrowIfNull(exception);
+		EnsureStageNotConfigured(stage);
+
 		mStageActions.Add(stage, () => throw exception);
 		return this;
 	}
@@ -170,11 +200,18 @@ public sealed class ExecutionStageMonitor : IDisposable
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(stage);
 		ArgumentNullException.ThrowIfNull(action);
+		EnsureStageNotConfigured(stage);
+
 		mStageActions.Add(stage, action);
 		return this;
 	}
 
 	/// <inheritdoc/>
+	/// <remarks>
+	/// Clears the ambient slot for the current async flow if this instance is currently active.
+	/// Idempotent: a second call is a no-op for the ambient slot but still runs the (already-disposed)
+	/// <see cref="CancellationTokenSource"/> dispose loop, which is itself idempotent.
+	/// </remarks>
 	public void Dispose()
 	{
 		if (sCurrent.Value == this)
@@ -195,5 +232,26 @@ public sealed class ExecutionStageMonitor : IDisposable
 	{
 		if (mStageActions.TryGetValue(stage, out Action? action))
 			action();
+	}
+
+	/// <summary>
+	/// Throws an <see cref="ArgumentException"/> with <see cref="ArgumentException.ParamName"/> set to
+	/// <c>"stage"</c> when <paramref name="stage"/> is already registered. Centralises the duplicate
+	/// check so that <see cref="CancelAt"/>, <see cref="ThrowAt"/> and <see cref="OnStage"/> share an
+	/// identical, API-owned exception (instead of leaking the BCL <c>Dictionary.Add</c> message which
+	/// would expose <c>ParamName="key"</c>).
+	/// </summary>
+	/// <param name="stage">The stage name to check; assumed to be non-null and non-whitespace.</param>
+	/// <exception cref="ArgumentException">
+	/// A stage with the same name has already been configured on this monitor.
+	/// </exception>
+	private void EnsureStageNotConfigured(string stage)
+	{
+		if (mStageActions.ContainsKey(stage))
+		{
+			throw new ArgumentException(
+				$"Stage '{stage}' is already configured. Each stage name may only be registered once per monitor.",
+				nameof(stage));
+		}
 	}
 }

@@ -296,7 +296,7 @@ public abstract partial class LifecycleManagement :
 					iex,
 					"{TypeName}.{MethodName}() threw an unexpected exception. This should never occur",
 					GetType().FullName,
-					nameof(OnShuttingDownAsync));
+					nameof(OnInitializingAsync));
 
 				// Shut down to try to bring the instance into a valid state and rethrow the exception.
 				try
@@ -506,9 +506,25 @@ public abstract partial class LifecycleManagement :
 	/// Disposes the object, shutting it down (if necessary) and freeing resources.<br/>
 	/// This method is expected not to throw any exceptions.
 	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     <b>Prefer <see cref="DisposeAsync()"/>.</b> This synchronous overload only exists to satisfy
+	///     <see cref="IDisposable"/>. It performs a blocking wait on the asynchronous disposal pipeline and
+	///     can therefore <b>deadlock</b> when invoked on a thread that owns a single-threaded
+	///     <see cref="SynchronizationContext"/> (for example legacy ASP.NET, WPF/WinForms UI threads, or
+	///     Blazor WebAssembly). In those scenarios always call <see cref="DisposeAsync()"/> with
+	///     <c>await</c> instead.
+	///     </para>
+	///     <para>
+	///     <see cref="ValueTask.AsTask"/> is awaited via <c>GetAwaiter().GetResult()</c> so that exceptions
+	///     surface in their original form instead of being wrapped in an <see cref="AggregateException"/>.
+	///     </para>
+	/// </remarks>
+	[Obsolete(
+		"Use DisposeAsync() instead. Dispose() blocks the calling thread and can deadlock on single-threaded synchronization contexts such as Blazor WebAssembly.")]
 	public void Dispose()
 	{
-		DisposeAsync().AsTask().Wait();
+		DisposeAsync().AsTask().GetAwaiter().GetResult();
 		GC.SuppressFinalize(this);
 	}
 

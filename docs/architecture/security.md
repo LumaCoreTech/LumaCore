@@ -6,15 +6,16 @@ This document explains how LumaCore approaches security - not just what exists t
 
 ## Table of Contents
 
-- [Understanding LumaCore's Security Journey](#understanding-lumacores-security-journey)
+- [Understanding LumaCore's Security Architecture](#understanding-lumacores-security-architecture)
 - [Why JWT? Understanding the Authentication Strategy](#why-jwt-understanding-the-authentication-strategy)
 - [The Authentication Flow: How Tokens Actually Work](#the-authentication-flow-how-tokens-actually-work)
 - [Authorization: From Authentication to Access Control](#authorization-from-authentication-to-access-control)
 - [JWT Token Anatomy: What's Actually in There?](#jwt-token-anatomy-whats-actually-in-there)
+- [Cookie Transport: Tokens for Browser Clients](#cookie-transport-tokens-for-browser-clients)
+- [Token Revocation: Invalidating Active Tokens](#token-revocation-invalidating-active-tokens)
 - [Configuration Security: Getting the Foundation Right](#configuration-security-getting-the-foundation-right)
 - [HTTPS: Protecting Tokens in Transit](#https-protecting-tokens-in-transit)
 - [Understanding the Threat Model](#understanding-the-threat-model)
-- [The Path Forward: Security Roadmap](#the-path-forward-security-roadmap)
 
 ---
 
@@ -26,21 +27,23 @@ LumaCore's security follows a **defense-in-depth philosophy**: multiple layers o
 > 
 > ⚠️ **Development Note:** During early development, LumaCore may use a simplified bootstrap authentication (hardcoded credentials) to enable rapid iteration. This is documented in status.md and will be replaced with production-grade security.
 
-### Target Security Features
+### Security Scope
 
-LumaCore's security architecture includes:
+LumaCore's security architecture covers:
 
-- ✅ **JWT-based authentication** - Tokens contain all user info, enabling stateless API servers that can scale across multiple instances without shared session storage
-- ✅ **Role-based authorization** - Users have roles (like "admin"), and endpoints verify roles before granting access
-- ✅ **HTTPS enforcement** - All traffic encrypted, preventing tokens and credentials from being intercepted on the network
-- ✅ **Fail-fast configuration** - Application refuses to start if JWT settings are missing or invalid, catching security misconfigurations during deployment
-- ✅ **Secure token signing** - Tokens are cryptographically signed using HMAC SHA256 with a strong secret key (minimum 32 characters enforced)
-- ✅ **Persistent user store** - Database-backed user accounts with individual credentials
-- ✅ **Password hashing** - Passwords stored using bcrypt or Argon2
-- ✅ **User management** - Admin-controlled account creation and management
-- ✅ **Refresh tokens** - Long-lived tokens for session persistence with short-lived access tokens for security
-- ✅ **Rate limiting** - Restrict login attempts per IP address to prevent brute-force attacks
-- ✅ **Audit logging** - Track all security events for compliance and incident investigation
+- **JWT-based authentication** — tokens contain all user info, enabling stateless API servers that can scale across multiple instances without shared session storage
+- **Role-based authorization** — users have roles (like `admin`), and endpoints verify roles before granting access
+- **HTTPS enforcement** — all traffic encrypted, preventing tokens and credentials from being intercepted on the network
+- **Fail-fast configuration** — application refuses to start if JWT settings are missing or invalid, catching security misconfigurations during deployment
+- **Secure token signing** — tokens are cryptographically signed using HMAC SHA256 with a strong secret key (minimum 32 characters enforced)
+- **Persistent user store** — database-backed user accounts with individual credentials
+- **Password hashing** — passwords stored using bcrypt or Argon2
+- **User management** — admin-controlled account creation and management
+- **Refresh tokens** — long-lived tokens for session persistence with short-lived access tokens for security
+- **Rate limiting** — restrict login attempts per IP address to prevent brute-force attacks
+- **Audit logging** — track all security events for compliance and incident investigation
+
+> 📊 **For current implementation status of each capability**, see **[Status & Roadmap](../status.md)**
 
 ---
 
@@ -61,9 +64,9 @@ This works fine for monolithic applications running on a single server. But it c
 
 JWT takes a different approach: **your identity is encoded in the token itself**. When you log in, the server creates a signed token containing your identity (username, roles, etc.) and gives it to you. On every subsequent request, you send that token, and the server validates the signature to prove it's legitimate.
 
-**Key advantage:** The server doesn't need to remember anything. No session storage, no database lookups. Just validate the signature and trust the claims inside.
+**Key advantage:** The server doesn't need to remember anything for *most* requests. No session storage, no per-request database lookups for identity. Just validate the signature and trust the claims inside.
 
-**Key trade-off:** Once issued, a JWT can't be revoked before it expires. If someone steals your token, they can use it until it naturally expires. This is why JWTs are designed to be short-lived - we'll explore this more below.
+**Key trade-off:** A JWT is self-contained — the signature alone proves it is valid. To invalidate one before its natural expiration, the server has to maintain a *negative* list ("this token has been revoked") and consult it on every request. LumaCore does exactly that (see [Token Revocation](#token-revocation-invalidating-active-tokens), below); the cost is one cache lookup per request, not a full session rehydration. This is why JWTs are still designed to be short-lived: revocation is a safety net, not the primary expiration mechanism.
 
 ### Why HS256 (HMAC with SHA256)?
 
@@ -77,15 +80,13 @@ JWT supports multiple signing algorithms. LumaCore uses **HS256** (HMAC with SHA
 
 ### Token Lifetime: The Security/Convenience Trade-off
 
-JWTs are valid until they expire - there's no "logout" that invalidates them server-side. This means if a token is stolen, the thief can use it until it naturally expires.
-
-**The security solution:** Make tokens short-lived. Default is 60 minutes. After that, the user must re-authenticate.
+A JWT is valid until it expires *or* until it is explicitly revoked. The default access token lifetime is 60 minutes; after that, the user must re-authenticate.
 
 **The convenience problem:** Re-authenticating every hour is annoying for users.
 
-**The production solution:** Implement **refresh tokens** - users receive a long-lived refresh token (stored securely, can be revoked) that allows obtaining new short-lived access tokens without re-entering credentials. This provides both security (short-lived access tokens limit exposure) and convenience (infrequent re-authentication).
+**The production solution:** Pair short-lived access tokens with **refresh tokens** — users receive a long-lived refresh token (stored securely, server-side revocable) that allows obtaining new short-lived access tokens without re-entering credentials. This provides both security (short-lived access tokens limit exposure) and convenience (infrequent re-authentication). Refresh tokens are not yet implemented in LumaCore; see [Status & Roadmap](../status.md).
 
-For now, during bootstrap, we accept the inconvenience of 60-minute re-authentication because it's simpler to implement and secure enough for development scenarios.
+In the meantime, the combination of a 60-minute lifetime and explicit revocation on logout (see [Token Revocation](#token-revocation-invalidating-active-tokens)) is the security model: stolen tokens expire quickly *and* a user who logs out invalidates their token immediately.
 
 ---
 
@@ -127,7 +128,7 @@ Store token for |                                            |
 future requests |                                            |
 ```
 
-**What the client does next:** Store the token (in memory for SPAs, secure storage for mobile apps) and include it in the `Authorization` header of every subsequent request: `Authorization: Bearer eyJhbGc...`
+**What the client does next:** Browser clients receive the token in two forms — the JSON response body *and* an `HttpOnly` cookie set by the API. The cookie is sent automatically on subsequent requests, so the browser never has to handle the token from JavaScript. Non-browser clients (CLI tools, companion AIs) ignore the cookie and store the token themselves, sending it on each request as `Authorization: Bearer eyJhbGc...`. See [Cookie Transport](#cookie-transport-tokens-for-browser-clients) below for why browser and non-browser clients are treated differently.
 
 **Security considerations:**
 - Failed login returns generic `401 Unauthorized` without details - we don't leak whether the username exists or the password was wrong
@@ -243,7 +244,7 @@ This is useful for UI applications that want to display "Logged in as: John Doe"
   "expiresIn": "00:45:23",
   "jwtId": "unique-token-id",
   "issuer": "LumaCore",
-  "audience": "LumaCore-API",
+  "audience": "LumaCore",
   "configuredAccessTokenLifetimeMinutes": 60
 }
 ```
@@ -307,10 +308,7 @@ A JWT is three Base64-encoded chunks separated by dots:
 Here's a real token based on the example data shown below:
 ```
 [header]    = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
-[payload]   = eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJpc3MiOiJMdW1hQ
-              29yZSIsImF1ZCI6Ikx1bWFDb3JlLUFQSSIsImV4cCI6MTczNTU3NDQwMCwibmJmIjoxNzM1NTcwOD
-              AwLCJpYXQiOjE3MzU1NzA4MDAsImp0aSI6IjhmM2UyYTFiLS4uLiIsIm5hbWUiOiJKb2huIERvZSI
-              sInJvbGUiOiJ1c2VyIn0
+[payload]   = <Base64URL encoding of the JSON shown in "Part 2" below>
 [signature] = computed from header + payload using SigningKey
 ```
 
@@ -335,11 +333,11 @@ The header tells validators **how to verify the signature**. `HS256` means "HMAC
 {
   "sub": "550e8400-e29b-41d4-a716-446655440000",  // Subject - unique user identifier
   "iss": "LumaCore",                              // Issuer - who created this token
-  "aud": "LumaCore-API",                          // Audience - who should accept this token
+  "aud": "LumaCore",                              // Audience - who should accept this token
   "exp": 1735574400,                              // Expiration - latest valid time (Unix timestamp)
   "nbf": 1735570800,                              // Not Before - earliest valid time (Unix timestamp)
   "iat": 1735570800,                              // Issued At - when token was created (Unix timestamp)
-  "jti": "8f3e2a1b-...",                          // JWT ID - unique identifier for this token
+  "jti": "8f3e2a1b-...",                          // JWT ID - unique identifier for this token (used for revocation)
   "name": "John Doe",                             // Display name (custom claim)
   "role": "user"                                  // User's role(s) (custom claim)
 }
@@ -355,7 +353,7 @@ These are called **claims** - statements about the user. Some are standard JWT c
 - **`exp` (expiration)** - Unix timestamp when token becomes invalid. After this time, validators reject it.
 - **`nbf` (not before)** - Unix timestamp before which token is invalid. Prevents time-travel attacks (using a token before it's supposed to be active).
 - **`iat` (issued at)** - Unix timestamp when the token was created. Useful for logging and debugging.
-- **`jti` (JWT ID)** - Unique identifier for this specific token. Used for token tracking or revocation systems.
+- **`jti` (JWT ID)** - Unique identifier for this specific token. LumaCore stores revoked `jti` values in the `RevokedJwts` table; see [Token Revocation](#token-revocation-invalidating-active-tokens).
 
 **Custom claims:**
 
@@ -404,10 +402,67 @@ Now that we understand what's inside a token and how it's secured, let's look at
 
 1. **Issuance** - Token created during `/auth/login`
 2. **Active Period** - Token valid for configured lifetime (default: 60 minutes)
-3. **Expiration** - Token becomes invalid after `exp` timestamp
-4. **Revocation** - Token can be invalidated via blacklist or refresh token revocation
+3. **Revocation (optional)** - Token's `jti` recorded in the `RevokedJwts` table on logout; further requests with this token are rejected. See [Token Revocation](#token-revocation-invalidating-active-tokens).
+4. **Expiration** - Token becomes invalid after `exp` timestamp; expired entries can be pruned from the revocation table.
 
-**Security Note:** Short-lived tokens reduce the impact of token theft. Stolen tokens become useless after expiration. The `exp` claim prevents indefinite use of a stolen token, and the refresh token mechanism allows server-side revocation when needed.
+**Security Note:** Short-lived tokens reduce the impact of token theft. Stolen tokens become useless after expiration even if they were never revoked. The `exp` claim is the floor; explicit revocation is the ceiling.
+
+---
+
+## Cookie Transport: Tokens for Browser Clients
+
+The authentication flow above describes the canonical case: clients send `Authorization: Bearer <token>` on every request. That works perfectly for CLI tools, server-to-server calls, and companion AI agents — they have full control over their HTTP layer and can store the token wherever it makes sense.
+
+For **browser-based clients** (LumaCore's Blazor WebAssembly UI), this same pattern is a security liability: any code that can read the token can also leak it. A single cross-site scripting (XSS) bug anywhere in the UI — a third-party dependency, a vulnerable component, an unsanitized rendering path — turns into total account compromise the moment that script reads `localStorage` or `sessionStorage`.
+
+LumaCore solves this by **shipping the same token over two transports** at the same time:
+
+1. **Response body** — The login response still contains `{ "accessToken": "..." }`, exactly as before. Non-browser clients consume this and ignore everything else.
+2. **`HttpOnly` cookie** — The login endpoint additionally sets a cookie containing the token. The cookie is marked `HttpOnly`, so JavaScript cannot read it; `Secure`, so it is only sent over HTTPS; and `SameSite=Strict`, so the browser refuses to send it on cross-origin navigations or sub-requests.
+
+On subsequent requests, the browser attaches the cookie automatically. The Blazor UI never touches the token — there is no value in JavaScript scope to steal.
+
+**Why both transports at once?**
+
+A single endpoint serving two client classes (browsers and APIs) needs to satisfy both without forking the auth flow. The dual transport keeps the API surface uniform; browsers simply *also* get a cookie they cannot read, while non-browsers see exactly the JSON they expected.
+
+**What about CSRF?**
+
+Cookies are notoriously vulnerable to cross-site request forgery: if any other site can convince the browser to issue a request to the API, the cookie rides along. `SameSite=Strict` is the primary mitigation — the browser refuses to attach the cookie to any request that did not originate from the same site. Combined with the existing CORS policy (which restricts which origins may call the API in the first place), this closes the standard CSRF attack vectors without needing a separate anti-forgery token.
+
+**Bearer header still wins.** If a request arrives with both an `Authorization: Bearer` header *and* the cookie, the Bearer header takes priority. This keeps API testing and explicit token use deterministic: a manually supplied token is never silently overridden by a stale cookie.
+
+The transport is controlled by `AuthCookieOptions` (configuration section `Jwt:Cookie`). It is enabled by default; deployments that only serve non-browser clients can disable it by setting `Jwt:Cookie:Enabled` to `false`.
+
+---
+
+## Token Revocation: Invalidating Active Tokens
+
+A stateless JWT cannot be "unissued". Once signed, it is valid until its `exp` timestamp — unless the server keeps a record that this specific token must no longer be accepted. LumaCore maintains exactly such a record so that **logout, account suspension, and emergency response** all have an immediate effect, instead of waiting up to 60 minutes for the token to expire on its own.
+
+### How Revocation Works
+
+Each token carries a unique `jti` (JWT ID) claim. When the user calls `POST /api/v1/auth/logout`:
+
+1. The API extracts `jti` and `exp` from the presented token.
+2. A row is inserted into the `RevokedJwts` table containing the `jti`, the original `exp` (so expired entries can be pruned), and the time of revocation.
+3. The HTTP response also clears the auth cookie, so browser clients stop sending the revoked token immediately.
+
+From that moment on, the authentication pipeline rejects any request bearing the same `jti` with `401 Unauthorized`, even though the signature is still mathematically valid.
+
+### Avoiding a Database Hit per Request
+
+Checking the `RevokedJwts` table on every authenticated request would add a round trip to the hot path. LumaCore's `TokenRevocationOptions` introduces a small in-memory cache with a deliberately asymmetric policy:
+
+- **Negative results are cached.** "This `jti` is not revoked" is the overwhelmingly common case and is safe to cache for a few seconds.
+- **Positive results are never cached.** Once a token is revoked, it stays revoked — there is no need to remember that fact in a TTL cache.
+- **Cache is invalidated on revoke.** When a new revocation is recorded, the cache is evicted, so freshly revoked tokens are rejected immediately on the same instance.
+
+The cache duration is governed by `Jwt:TokenRevocation:CacheDurationSeconds` (default: `5`, range: `0`–`60`). Setting it to `0` disables caching entirely and queries the database on every request — the strongest consistency guarantee, at the cost of one extra database round trip per authenticated call.
+
+### What Revocation Does *Not* Solve
+
+Revocation is bounded by the `RevokedJwts` table, which only sees tokens that pass through `/auth/logout` (or a future administrative revoke endpoint). It does **not** retroactively invalidate tokens issued before a credential change, and it does **not** replace the need for short token lifetimes — a token that was stolen and never logged out will still be valid until its `exp`. The roadmap entries for refresh tokens and "last password change" timestamp validation (see [Status & Roadmap](../status.md)) close those remaining gaps.
 
 ---
 
@@ -417,29 +472,35 @@ JWT security depends entirely on configuration. Get the config wrong, and signat
 
 ### The JwtOptions Configuration Class
 
-All JWT settings live in a single configuration class:
+The core JWT settings live in a single configuration class:
 
 ```csharp
 public sealed class JwtOptions
 {
     public const string SectionName = "Jwt";
-    
+
     [Required]
     public string Issuer { get; set; } = string.Empty;
-    
+
     [Required]
     public string Audience { get; set; } = string.Empty;
-    
-    [Required]
-    [MinLength(32)]
+
+    [Required, MinLength(32)]
     public string SigningKey { get; set; } = string.Empty;
-    
+
     [Range(1, 1440)]
     public int AccessTokenLifetimeMinutes { get; set; } = 60;
 }
 ```
 
-Notice the validation attributes: `[Required]`, `[MinLength(32)]`, `[Range(1, 1440)]`. These enforce security requirements at the type level.
+The validation attributes — `[Required]`, `[MinLength(32)]`, `[Range(1, 1440)]` — enforce security requirements at the type level.
+
+Two related option classes bind to **sibling** configuration sections and carry their own defaults:
+
+- **`AuthCookieOptions`** (`Jwt:Cookie`) — controls the `HttpOnly` cookie used to ship the token to browser clients (see [Cookie Transport](#cookie-transport-tokens-for-browser-clients)).
+- **`TokenRevocationOptions`** (`Jwt:TokenRevocation`) — controls the `jti`-based revocation cache (see [Token Revocation](#token-revocation-invalidating-active-tokens)).
+
+Both have safe defaults, so the minimum required configuration remains the four `JwtOptions` fields above.
 
 ### Configuration Sources
 
@@ -455,7 +516,7 @@ Configuration can come from multiple sources, checked in this priority order:
 {
   "Jwt": {
     "Issuer": "LumaCore",
-    "Audience": "LumaCore-API",
+    "Audience": "LumaCore",
     "SigningKey": "development-key-minimum-32-characters-long-not-for-production",
     "AccessTokenLifetimeMinutes": 60
   }
@@ -467,7 +528,7 @@ This is fine for development because it's never deployed.
 **Production configuration** (environment variables):
 ```bash
 Jwt__Issuer=LumaCore
-Jwt__Audience=LumaCore-API
+Jwt__Audience=LumaCore
 Jwt__SigningKey=<strong-random-secret-from-secret-manager>
 Jwt__AccessTokenLifetimeMinutes=15
 ```
@@ -690,13 +751,15 @@ Security isn't about preventing all possible attacks - that's impossible. It's a
 
 **Attack scenario:** Attacker gains access to client device (malware, stolen laptop) and extracts stored token.
 
-**Impact:** Attacker can use token until it expires.
+**Impact:** Attacker can use token until it expires *or* until it is revoked.
 
 **Mitigation:**
+- ✅ Browser clients receive the token in an `HttpOnly` cookie — JavaScript (and therefore XSS) cannot read it (see [Cookie Transport](#cookie-transport-tokens-for-browser-clients))
+- ✅ `SameSite=Strict` on the cookie blocks cross-site CSRF flows
 - ✅ Short token lifetime limits exposure window
-- ✅ Documentation recommends secure storage (memory for SPAs, keychain for mobile)
-- ✅ Refresh tokens with server-side revocation
-- ✅ Device fingerprinting detects unusual access patterns
+- ✅ Explicit logout revokes the token immediately ([Token Revocation](#token-revocation-invalidating-active-tokens))
+- 📌 Refresh tokens with server-side revocation (see [Status & Roadmap](../status.md))
+- 📌 Device fingerprinting to detect unusual access patterns (planned)
 
 ### Threat 3: Brute-Force Login Attempts
 
@@ -726,15 +789,15 @@ Security isn't about preventing all possible attacks - that's impossible. It's a
 
 ### Threat 5: Token Revocation
 
-**Attack scenario:** User account is compromised or terminated, but existing tokens remain valid until they naturally expire.
+**Attack scenario:** User logs out, account is disabled, or a token is suspected of being compromised, but the token has not yet reached its `exp` timestamp.
 
-**Impact:** Unauthorized access until token expiration.
+**Impact:** Without revocation, the token would remain valid until natural expiration — even minutes after "logout".
 
 **Mitigation:**
-- ✅ Short token lifetime limits exposure window
-- ✅ Token blacklist (check JTI against revoked list)
-- ✅ Refresh token revocation (revoke refresh token, access tokens expire naturally)
-- ✅ "Last password change" timestamp validation
+- ✅ Token blacklist via `jti` — `POST /api/v1/auth/logout` records the `jti` in `RevokedJwts` and the authentication pipeline rejects revoked tokens (see [Token Revocation](#token-revocation-invalidating-active-tokens))
+- ✅ Short token lifetime keeps the worst-case window bounded even if a logout is missed
+- 📌 Refresh token revocation (planned — invalidate the refresh token, access tokens expire naturally)
+- 📌 "Last password change" timestamp validation (planned)
 
 ---
 
@@ -746,4 +809,4 @@ For implementation status of security features and the current development phase
 
 ---
 
-© 2025 LumaCoreTech • MIT License
+© 2025-2026 LumaCoreTech • MIT License
