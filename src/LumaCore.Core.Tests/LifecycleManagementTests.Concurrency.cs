@@ -107,10 +107,10 @@ public partial class LifecycleManagementTests
 		var allowInitializationToComplete = new AsyncManualResetEvent(false);
 
 		TestableLifecycleManagement sut = CreateSut(
-			onInitializingCallback: async (_, _) =>
+			onInitializingCallback: async (_, ct) =>
 			{
 				initializingStarted.Set();
-				await allowInitializationToComplete.WaitAsync();
+				await allowInitializationToComplete.WaitAsync(ct);
 			});
 
 		// Act
@@ -143,13 +143,13 @@ public partial class LifecycleManagementTests
 		var allowFirstInitToFail = new AsyncManualResetEvent(false);
 
 		TestableLifecycleManagement sut = CreateSut(
-			onInitializingCallback: async (_, _) =>
+			onInitializingCallback: async (_, ct) =>
 			{
 				int currentCall = ++callCount;
 				if (currentCall == 1)
 				{
 					initializingStarted.Set();
-					await allowFirstInitToFail.WaitAsync();
+					await allowFirstInitToFail.WaitAsync(ct);
 					throw new InvalidOperationException("First init failed");
 				}
 			});
@@ -187,10 +187,10 @@ public partial class LifecycleManagementTests
 		var allowInitializationToComplete = new AsyncManualResetEvent(false);
 
 		TestableLifecycleManagement sut = CreateSut(
-			onInitializingCallback: async (_, _) =>
+			onInitializingCallback: async (_, ct) =>
 			{
 				initializingStarted.Set();
-				await allowInitializationToComplete.WaitAsync();
+				await allowInitializationToComplete.WaitAsync(ct);
 			});
 
 		// Act
@@ -256,10 +256,10 @@ public partial class LifecycleManagementTests
 		var disposeCallbackInvoked = new AsyncManualResetEvent(false);
 
 		TestableLifecycleManagement sut = CreateSut(
-			onInitializingCallback: async (_, _) =>
+			onInitializingCallback: async (_, ct) =>
 			{
 				initializingStarted.Set();
-				await allowInitializationToComplete.WaitAsync();
+				await allowInitializationToComplete.WaitAsync(ct);
 			},
 			onDisposingCallback: _ =>
 			{
