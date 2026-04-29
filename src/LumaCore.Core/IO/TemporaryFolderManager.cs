@@ -68,7 +68,7 @@ public sealed class TemporaryFolderManager : ITemporaryFolderManager
 		lock (mFolders)
 		{
 			ObjectDisposedException.ThrowIf(mDisposed != 0, this);
-			var folder = new TemporaryFolder(this, BasePath, prefix);
+			var folder = new TemporaryFolder(this, BasePath, prefix, mLogger);
 			mFolders.Add(folder);
 			return folder;
 		}
