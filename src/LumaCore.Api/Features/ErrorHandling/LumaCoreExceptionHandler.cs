@@ -4,6 +4,8 @@
 
 using System.Diagnostics;
 
+using LumaCore.Core;
+
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -89,8 +91,8 @@ sealed class LumaCoreExceptionHandler : IExceptionHandler
 		mLogger.LogError(
 			exception,
 			"Unhandled exception occurred while processing request {Method} {Path}",
-			httpContext.Request.Method,
-			httpContext.Request.Path);
+			LogHelpers.SanitizeText(httpContext.Request.Method),
+			LogHelpers.SanitizeText(httpContext.Request.Path));
 
 		// Build a ProblemDetails response with our custom error type URN.
 		// We intentionally omit exception details to prevent information disclosure.

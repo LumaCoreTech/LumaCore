@@ -7,6 +7,7 @@ using System.Security.Claims;
 
 using LumaCore.Api.Features.ApiVersioning;
 using LumaCore.Api.Features.UserManagement;
+using LumaCore.Core;
 
 using Microsoft.Extensions.Options;
 
@@ -154,7 +155,7 @@ static class EndpointMapping
 						// Log failed authentication attempt for diagnostics. Do not log the password.
 						logger.LogWarning(
 							"Authentication failed for login attempt with username '{Username}'",
-							request.Username);
+							LogHelpers.SanitizeText(request.Username));
 
 						// Deliberately return a generic 401 without details to avoid
 						// leaking information about valid user names.
@@ -452,7 +453,7 @@ static class EndpointMapping
 					// Log the introspection request for diagnostics.
 					logger.LogDebug(
 						"Introspection requested for subject '{Subject}'",
-						subject);
+						LogHelpers.SanitizeText(subject));
 
 					// Return the introspection response.
 					return Results.Ok(response);

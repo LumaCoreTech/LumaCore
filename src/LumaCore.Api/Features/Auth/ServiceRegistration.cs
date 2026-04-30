@@ -5,6 +5,7 @@
 using System.Text;
 
 using LumaCore.Configuration;
+using LumaCore.Core;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
@@ -118,7 +119,7 @@ static class ServiceRegistration
 						logger.LogWarning(
 							context.Exception,
 							"JWT authentication failed for request to {Path}",
-							context.HttpContext.Request.Path);
+							LogHelpers.SanitizeText(context.HttpContext.Request.Path));
 
 						return Task.CompletedTask;
 					},
@@ -161,7 +162,7 @@ static class ServiceRegistration
 						logger.LogDebug(
 							"JWT token successfully validated for subject '{Subject}' on request to {Path}",
 							subject,
-							context.HttpContext.Request.Path);
+							LogHelpers.SanitizeText(context.HttpContext.Request.Path));
 					}
 				};
 			});
