@@ -23,6 +23,9 @@ on:
     types: [completed]
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   merge:
     name: Merge Coverage
