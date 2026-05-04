@@ -784,7 +784,7 @@ namespace LumaCore.Data.Migrations
                     b.HasOne("LumaCore.Data.Entities.ParticipantEntity", "CreatedByParticipant")
                         .WithMany()
                         .HasForeignKey("CreatedByParticipantId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("LumaCore.Data.Entities.ParticipantEntity", "Participant")
                         .WithOne("Persona")

@@ -85,7 +85,7 @@ public partial class AddAiPersonas : Migration
 					column: x => x.CreatedByParticipantId,
 					principalTable: "Participants",
 					principalColumn: "Id",
-					onDelete: ReferentialAction.SetNull);
+					onDelete: ReferentialAction.NoAction);
 			});
 
 		// SystemPrompts cannot move ahead of Personas because PersonaId is an immediate FK.

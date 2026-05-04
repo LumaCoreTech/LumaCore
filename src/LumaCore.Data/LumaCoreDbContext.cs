@@ -700,10 +700,15 @@ public sealed partial class LumaCoreDbContext : DbContext
 
 			entity.Property(e => e.CreatedByParticipantId);
 
+			// NoAction (instead of SetNull) to avoid a SQL Server multi-cascade-path error: Participants
+			// already cascades into Personas via ParticipantId, so a SetNull on this secondary FK would
+			// form a second path from Participants to Personas. Stand-alone deletes of a referenced
+			// participant are blocked at the database level; in practice, participants are removed via the
+			// user lifecycle (which scrubs/anonymizes rather than deletes the participant row).
 			entity.HasOne(e => e.CreatedByParticipant)
 				.WithMany()
 				.HasForeignKey(e => e.CreatedByParticipantId)
-				.OnDelete(DeleteBehavior.SetNull);
+				.OnDelete(DeleteBehavior.NoAction);
 
 			entity.HasIndex(e => e.CreatedByParticipantId)
 				.HasDatabaseName("IX_Personas_CreatedByParticipantId");
