@@ -17,6 +17,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LumaCore.Data\LumaCore.Data.csproj" />
+		<ProjectReference Include="..\LumaCore.TestUtilities\LumaCore.TestUtilities.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

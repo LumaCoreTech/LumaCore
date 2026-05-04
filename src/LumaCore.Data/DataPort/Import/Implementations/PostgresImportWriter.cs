@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 using Npgsql;
 
-using static LumaCore.Data.DataPort.SqlIdentifierHelper;
+using static LumaCore.Data.Providers.SqlIdentifierHelper;
 
 namespace LumaCore.Data.DataPort.Import.Implementations;
 
@@ -470,6 +470,7 @@ public sealed class PostgresImportWriter : IDataImportWriter
 			// - Table has rows: setval(seq, max, true)  → next nextval() returns max + 1
 			// - Empty table:    setval(seq, 1,   false) → next nextval() returns 1
 			sb.AppendLine(
+				CultureInfo.InvariantCulture,
 				$"SELECT setval(pg_get_serial_sequence({seqTableArg}, '{escapedCol}'), " +
 				$"COALESCE(MAX({quotedCol}), 1), " +
 				$"MAX({quotedCol}) IS NOT NULL) FROM {qualifiedTable};");

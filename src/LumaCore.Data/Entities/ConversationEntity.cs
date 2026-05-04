@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Definitions;
+
 namespace LumaCore.Data.Entities;
 
 /// <summary>
@@ -39,6 +41,8 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public class ConversationEntity
 {
+	// --- 1. Primary key ---
+
 	/// <summary>
 	/// Gets or sets the internal unique identifier for database relationships.
 	/// </summary>
@@ -51,6 +55,8 @@ public class ConversationEntity
 	///     </para>
 	/// </remarks>
 	public ConversationId Id { get; set; }
+
+	// --- 2. Public identifier ---
 
 	/// <summary>
 	/// Gets or sets the public unique identifier for external references.
@@ -65,21 +71,13 @@ public class ConversationEntity
 	/// </remarks>
 	public Guid PublicId { get; set; }
 
-	/// <summary>
-	/// Gets or sets the human-readable title of this conversation.
-	/// </summary>
-	/// <remarks>
-	/// Can be auto-generated from the first message or manually set by participants.
-	/// The database enforces a maximum length.
-	/// </remarks>
-	public string Title { get; set; } = string.Empty;
+	// --- 3. Foreign keys + Navigation properties (none) ---
+
+	// --- 4. Timestamps ---
 
 	/// <summary>
 	/// Gets or sets the UTC timestamp when this conversation was created.
 	/// </summary>
-	/// <remarks>
-	/// Set when the conversation is first created.
-	/// </remarks>
 	public DateTime CreatedAtUtc { get; set; }
 
 	/// <summary>
@@ -95,13 +93,32 @@ public class ConversationEntity
 	/// </remarks>
 	public DateTime UpdatedAtUtc { get; set; }
 
+	// --- 5. Scalar domain fields ---
+
+	/// <summary>
+	/// Gets or sets the human-readable title of this conversation.
+	/// </summary>
+	/// <remarks>
+	/// Maximum length: <see cref="EntityLimits.ConversationTitleMaxLength"/>.
+	/// </remarks>
+	public string Title { get; set; } = string.Empty;
+
+	/// <summary>
+	/// Gets or sets the optional description of this conversation.
+	/// </summary>
+	/// <remarks>
+	/// Free-form text that can describe the purpose, agenda, or topic of the conversation.
+	/// Maximum length: <see cref="EntityLimits.ConversationDescriptionMaxLength"/>. <see langword="null"/> when no
+	/// description is set.
+	/// </remarks>
+	public string? Description { get; set; }
+
+	// --- 6. Collection navigation properties ---
+
 	/// <summary>
 	/// Gets the collection of messages in this conversation.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
 	///     <para>
 	///     Typically queried ordered by <see cref="MessageEntity.CreatedAtUtc"/>.
 	///     </para>
@@ -115,9 +132,6 @@ public class ConversationEntity
 	/// Gets the collection of participants in this conversation.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
 	///     <para>
 	///     Membership details (role, join timestamp) are stored in <see cref="ConversationParticipantEntity"/>.
 	///     </para>

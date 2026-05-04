@@ -13,18 +13,18 @@ namespace LumaCore.Data.Queries;
 /// </summary>
 /// <remarks>
 ///     <para>
-///     Compiled queries eliminate the overhead of expression tree parsing and SQL generation
-///     on each execution. Use these for frequently-executed queries in hot paths.
+///     Compiled queries eliminate the overhead of expression-tree parsing and SQL generation on each
+///     execution. Use these for frequently-executed queries in hot paths.
 ///     </para>
 ///     <para>
 ///     <b>Important:</b> EF Core compiled queries do not accept a <see cref="CancellationToken"/>.
-///     Cancellation is "best effort" only – the caller stops awaiting, but the underlying database
+///     Cancellation is "best effort" only — the caller stops awaiting, but the underlying database
 ///     operation may still run to completion. Consider this trade-off when using these queries in
 ///     contexts where responsiveness to cancellation is critical.
 ///     </para>
 ///     <para>
-///     All query delegates in this class are thread-safe and can be used concurrently.
-///     The <see cref="LumaCoreDbContext"/> instances passed to them are not thread-safe and must remain scoped.
+///     All query delegates in this class are thread-safe and can be used concurrently. The
+///     <see cref="LumaCoreDbContext"/> instances passed to them are not thread-safe and must remain scoped.
 ///     </para>
 /// </remarks>
 public static class UserQueries

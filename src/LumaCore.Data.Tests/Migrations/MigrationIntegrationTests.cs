@@ -38,6 +38,10 @@ namespace LumaCore.Data.Tests.Migrations;
 ///         <b>AddUserPreferences</b> — Adds the <c>UserPreferences</c> table (1:1 with <c>Users</c>).
 ///         </item>
 ///         <item>
+///         <b>AddResources</b> — Adds <c>Resources</c>, <c>ResourceReferences</c>, and
+///         <c>ResourceGcState</c> for the polymorphic resource-storage subsystem.
+///         </item>
+///         <item>
 ///         <b>Helpers</b> — Shared <see cref="IntegrationTestHarness"/> factory method.
 ///         </item>
 ///     </list>

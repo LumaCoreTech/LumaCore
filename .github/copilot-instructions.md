@@ -4,6 +4,7 @@
 
 1. [General](#general)
    - [Repository Constraints](#repository-constraints)
+   - [Third-Party Notices](#third-party-notices)
    - [Build Configuration](#build-configuration)
    - [Terminal Usage](#terminal-usage)
 2. [Working with Code](#working-with-code)
@@ -21,8 +22,10 @@
 5. [Data Layer / EF Core](#data-layer--ef-core)
    - [Entity Documentation](#entity-documentation)
    - [Entity Layout](#entity-layout)
+   - [DbContext Configuration](#dbcontext-configuration)
    - [Migrations](#migrations)
    - [Data Layer Guidelines](#data-layer-guidelines)
+   - [Service API Conventions](#service-api-conventions)
 6. [Privacy & Data Minimization](#privacy--data-minimization)
 7. [Logging & Configuration](#logging--configuration)
 8. [Code Layout & Naming](#code-layout--naming)
@@ -40,6 +43,14 @@
 
 - Do **not** perform any **write** operations using Git (e.g., commit, push, reset, rebase, merge, tag, branch creation/deletion).
 - Localization is only active in the UI (Blazor) — API responses and validation messages remain in **English**.
+
+### Third-Party Notices
+
+When **adding, removing, or updating** a third-party dependency (NuGet package, npm package, bundled JS library, or any other external asset), **always update `THIRD-PARTY-NOTICES.md`** in the repository root accordingly:
+
+- **Adding:** Insert a new entry with Author, License, and URL.
+- **Removing:** Delete the corresponding entry.
+- **Updating:** Adjust the entry if the license or author changed (version bumps with no license change need no update).
 
 ### Terminal Usage
 
@@ -69,6 +80,7 @@
 - **Keep changes minimal** and focused on the task at hand.
 - **Match the existing code style** of the surrounding code.
 - **Line length limit: 120 characters.** Use the available width — don't break lines unnecessarily short.
+- **Comment non-obvious decisions.** When a choice isn't immediately self-evident (empty templates, suppressed defaults, workarounds, defensive guards, intentional no-ops), add a comment explaining *why* — not *what*. If someone might later ask "why was this done this way?", a comment is mandatory.
 - When you notice opportunities for improvement (refactoring, better patterns, code quality):
   - **Explicitly mention them** and start a dialog.
   - After user approval, improvements can be implemented.
@@ -101,6 +113,12 @@
 - Ensure proper list and paragraph structure in XMLDocs.
 - When updating XML documentation, prioritize improved readability.
 - **Keep public XMLDoc consumer-focused.** Public `<summary>`, `<remarks>`, and `<example>` must describe *what* the type/member does for its consumers — not *why* it is implemented a certain way. Implementation rationale (e.g., "attributes must be on properties because the validation filter reads them") belongs in **code comments**, not in XMLDoc visible to API consumers.
+  - **Observable behavior IS contract** and must stay in public docs. If the consumer can see, measure, or react to a consequence, document it — even if it sounds implementation-flavored. Examples that **must** appear in public XMLDoc:
+    - **Side effects** ("a file written to disk during the unit of work remains on disk after the rollback completes if a compensation fails").
+    - **Process termination** ("aborts the process immediately rather than risk silently corrupting data") — describe the consequence, not the mechanism (do **not** name internal helpers like `FailFast.TerminateApplication`).
+    - **Ordering guarantees** ("compensations run in LIFO order"), **best-effort vs. all-or-nothing semantics**, **cancellation policy** (honoured / pre-flight only / not honoured), and **state transitions** the caller can observe.
+  - **Mechanism stays out of public docs.** Internal types, private field names, counter bookkeeping, why a `List<T>` was chosen over a `Dictionary<TKey, TValue>`, etc., belong in code comments or in XMLDoc on private/internal members. The litmus test: *"Could the consumer act differently based on this information?"* If yes, it is contract; if no, it is mechanism.
+  - **`<inheritdoc/>` warning:** `<remarks>` and `<exception>` on a method marked `<inheritdoc/>` are aggregated into the inherited public documentation by most doc-generation tools. Do **not** put implementation rationale in `<remarks>` on `<inheritdoc/>` methods — move it to body comments. Define the public contract (including all observable consequences) on the **interface or base class**, then let the implementation inherit it cleanly.
 
 #### `<see cref="..."/>` Brevity
 
@@ -567,7 +585,6 @@ Example:
 // Tests for generic Ignore<T>(Task<T>)
 #endregion
 ```
-
 #### Async Tests & Deadlock Prevention
 
 Tests use a **two-tier timeout strategy**:
@@ -580,7 +597,7 @@ Tests use a **two-tier timeout strategy**:
 
 ```csharp
 // Add to test file:
-using static LumaCore.Core.Tests.AsyncTestHelpers;
+using static LumaCore.TestUtilities.Async.AsyncTestHelpers;
 ```
 
 **When to use the timeout helper:**
@@ -612,7 +629,7 @@ queue.Enqueue();  // Just use directly
 are.Set();        // Just use directly
 ```
 
-The helper is defined in `src/LumaCore.Core.Tests/AsyncTestHelpers.cs`:
+The helper is defined in `src/LumaCore.TestUtilities/Async/AsyncTestHelpers.cs`:
 - `AwaitWithTimeoutAsync(Task, message?, timeout?)` — for void tasks
 - `AwaitWithTimeoutAsync<T>(Task<T>, message?, timeout?)` — for tasks with results
 - Default timeout: 1 second
@@ -725,14 +742,110 @@ Do **not** hide reachable logic behind `ExcludeFromCodeCoverage` just to satisfy
 
 | Order | Content |
 |-------|---------|
-| 1 | First FK + Navigation (grouped) |
-| 2 | Second FK + Navigation (grouped) |
-| 3 | Timestamps |
-| 4 | Other properties — enums, flags, etc. |
+| 1 | `ToTable(...)` and the composite `HasKey(...)` |
+| 2 | First FK + Navigation (grouped) |
+| 3 | Second FK + Navigation (grouped) |
+| 4 | Timestamps |
+| 5 | Other properties — enums, flags, etc. |
+
+#### Section Markers
+
+To make the section boundaries visible in the source — especially when timestamps are pushed downward
+or when sections are skipped entirely — every entity class **and** the corresponding `Configure*()` method
+in `LumaCoreDbContext` carries inline section-divider comments.
+
+**Style:**
+
+| Case | Marker style | Example |
+|---|---|---|
+| Section has members | Numbered, using the canonical numbers from the layout table above | `// --- 4. Timestamps ---` |
+| Section is empty | Numbered placeholder with `(none)` suffix — preserves the visual sequence and signals intent | `// --- 2. Public identifier (none) ---` |
+
+**Always emit the full canonical sequence** — including Section 1. Skipping markers (even for single-section
+entities or empty sections) breaks the side-by-side correspondence between the entity class and its
+`Configure*()` counterpart and creates ambiguous gaps that read as oversights rather than deliberate omissions.
+
+A `(none)` placeholder marker has no body — it sits between the surrounding sections as a single comment
+line with a blank line above and below, just like a populated marker. This makes "Section 2 deliberately
+empty" instantly readable instead of requiring the reader to count.
+
+**Placement:**
+
+- **Entity class:** marker goes directly above the XMLDoc of the section's first member. Empty-section
+  placeholders sit between the neighboring sections on their own.
+- **`Configure*()` method:** marker goes directly above the section's first `Property(...)` /
+  `HasOne(...)` / `HasIndex(...)` call. **Section 1 is marked too** — its marker goes at the very top of
+  the lambda body, above `ToTable(...)`. `ToTable` / `HasKey` / `Property(Id)` all belong to Section 1
+  because the table mapping is part of *how the primary key is persisted* (table + key form one
+  storage-identity unit). To make this explicit in the marker text, Section 1 is titled
+  **`Table mapping & primary key`** in `Configure*()` methods for standard entities, and
+  **`Table mapping & composite key`** for join entities (where the composite key is declared via
+  `HasKey(e => new { ... })` rather than a single `Id` property). Entity classes keep the shorter
+  **`Primary key`** title since they have no `ToTable` equivalent.
+
+#### Classification Rules
+
+To remove ambiguity when deciding which section a property belongs to:
+
+- **Single-entity reverse navigations** (`T?` properties whose foreign key column lives on the *other*
+  side of the relationship — e.g. `UserEntity.Preferences`, `MessageEntity.GenerationMetadata`,
+  `ParticipantEntity.User` / `Persona`) are still single-entity navigations and belong to **Section 3**.
+  The decisive question is the property type, not where the FK column lives (same rule as the full-fat
+  include guidance under [Read APIs](#read-apis)).
+
+- **Polymorphic foreign keys without a CLR navigation** (e.g. `ResourceReferenceEntity.OwnerKind` +
+  `OwnerId`) belong to **Section 3**. They behave like FK + Nav pairs at the persistence level even
+  though no `T?` navigation property exists, and grouping them with Section 5 scalars would obscure
+  their role as the entity's primary join column.
+
+- **Audit timestamps** (`CreatedAtUtc`, `UpdatedAtUtc`, `JoinedAtUtc`, `AssignedAtUtc`, `AppliedAtUtc`,
+  `RevokedAtUtc`, `LastLoginAtUtc`, `LastTokenRefreshAtUtc`, `LastRunAtUtc`) belong to **Section 4**.
+  They describe *when something happened to the row itself*.
+
+- **Domain timestamps** (`RedactedAtUtc`, `ExpiresAtUtc`) belong to **Section 5** alongside the scalar
+  fields they semantically pair with (e.g. `RedactedAtUtc` next to `RedactionReason`, `ExpiresAtUtc`
+  next to the JWT payload columns). They describe *the data*, not the row's lifecycle.
+
+### DbContext Configuration
+
+The `LumaCoreDbContext` follows two distinct ordering conventions — **alphabetical** for the top-level
+`Configure*()` calls in `OnModelCreating`, and the **Entity Layout order** (see above) for property/relationship
+calls *inside* each `Configure*()` method.
+
+#### `Configure*()` Method Calls in `OnModelCreating` — Alphabetical
+
+Keep the call list alphabetical and matching the physical method ordering in the file:
+
+- No domain-grouping debates — entities are independent, so any grouping would be arbitrary.
+- New entities slot in trivially.
+- A single `Configure*()` method is easy to locate by name.
+
+#### Inside Each `Configure*()` — Mirror the Entity Layout
+
+The `entity.Property(...)`, `entity.HasIndex(...)`, and `entity.HasOne(...)` calls inside a `Configure*()`
+method follow the **same ordering as the entity class itself** (see [Entity Layout](#entity-layout)):
+
+1. `ToTable(...)` and `HasKey(...)` first (Section 1 — *Table mapping & primary key*).
+2. `Property(Id).ValueGeneratedOnAdd()` (or `ValueGeneratedNever()` for singletons).
+3. `Property(PublicId)` (if present).
+4. Foreign-key `Property(...)` calls — grouped with their corresponding `HasOne(...)` if it improves locality.
+5. Timestamps — `CreatedAtUtc` before `UpdatedAtUtc`.
+6. Scalar domain fields — required before optional, matching the entity's property order.
+7. `HasIndex(...)` calls — placed after the property they reference, or grouped at the end for composite indexes.
+8. Remaining `HasOne(...)` / `HasMany(...)` relationships — at the end.
+
+**Why mirror the entity?** Side-by-side reading: opening the entity class and the `Configure*()` method shows the
+same field order, so it is immediately obvious which property maps to which configuration call. Alphabetical
+ordering would destroy this correspondence (e.g., `BaseUrl` would jump in front of `CreatedAtUtc`).
+
+> [!NOTE]
+> Pure alphabetical ordering inside `Configure*()` is **not** wanted — it loses the semantic correspondence to
+> the entity class. The Entity Layout convention transports meaning (PK → identity → FKs → timestamps → domain),
+> alphabetical ordering does not.
 
 ### Migrations
 
-Create a **new migration** for each schema change using `dotnet ef migrations add <Name>`. Do **not** fold changes into existing migrations — the schema has matured past the initial bootstrap phase.
+Create a **new migration** for each schema change using `dotnet ef migrations add <Name>`. **You may fold schema changes into existing migrations** instead of creating new ones, as the DB is not distributed, yet.
 
 ### Data Layer Guidelines
 
@@ -740,6 +853,87 @@ Create a **new migration** for each schema change using `dotnet ef migrations ad
 - Place service-like infrastructure under `LumaCore.Data.Services`.
 - Track login and token refresh timestamps, but avoid `LastActivity` updates on every request.
 - Usernames: store as entered, but lookups are case-insensitive.
+- Ensure that the nullable email unique index preserves the semantic 'allow multiple missing emails but enforce uniqueness for actual email values' across supported database providers.
+
+### Service API Conventions
+
+Data service APIs (`IUserDataService`, `IPersonaDataService`, `IRoleDataService`, etc.) follow these conventions to keep the surface predictable, the EF Core change tracker contained, and Compiled Queries effective.
+
+#### Method Categories
+
+Every method in a data service interface (and its implementing partial class) belongs to exactly one of four categories. The category determines section placement, ordering, and naming.
+
+| Category | Returns | Examples | Section header |
+|---|---|---|---|
+| **Read API** | Entity (or list of entities) with full-fat includes | `GetPersonaByPublicIdAsync`, `GetAllRolesAsync`, `ListConversationsByParticipantAsync` | `#region Read APIs` |
+| **Projection API** | Scalar, ID, dictionary, sub-entity, or non-entity DTO | `GetRoleNamesByUserIdAsync`, `GetParticipantCountsAsync`, `GetCurrentSystemPromptAsync`, `GetPersonaIdsWithAvatarAsync`, `GetAvatarAsync`, `GetPreferencesJsonAsync`, `GetModelEndpointCredentialsAsync`, `ListConversationIdsWithNoUsersAsync` | `#region Projection APIs` |
+| **Existence Check** | `bool` (yes/no, no data) | `EmailExistsAsync`, `UsernameExistsAsync`, `IsParticipantInConversationAsync`, `HasUserParticipantsAsync`, `UserHasRoleAsync`, `ModelEndpointExistsAsync` | `#region Existence Checks` |
+| **Mutation API** | `bool`/`int`/freshly-loaded detached entity | `CreatePersonaAsync`, `UpdatePersonaAsync`, `DeactivatePersonaAsync`, `AssignRoleToUserAsync`, `RedactMessageAsync`, `CleanupConversationsWithNoUsersAsync` | `#region Mutation APIs` |
+
+#### Method Ordering
+
+- **Section order** is fixed: Read APIs → Projection APIs → Existence Checks → Mutation APIs. Reader flow goes from "common + harmless" to "rare + state-changing".
+- **Within each section**, methods are ordered **alphabetically**. Deterministic placement avoids semantic disputes (e.g. "is Update before or after Delete?").
+- **Interface and implementation must match exactly.** The order in `IFooDataService.cs` mirrors the order in `LumaCoreDataService.Foo.cs`.
+- **Test files mirror the same order.** `LumaCoreDataServiceTests.Foo.cs` uses `#region` blocks per method in the same sequence.
+- **Empty sections are omitted.** If a service has no Existence Checks (e.g. Personas), simply skip that `#region`.
+
+#### Read APIs
+
+- **No tracking, ever.** All Read APIs use `AsNoTracking()`. Returned entities are detached — callers cannot mutate-and-save them.
+- **Full-fat includes.** Read APIs load all navigations a typical consumer is likely to need. Callers must not have to remember which navigations are populated. See the explicit definition below.
+- **Return type for collections is `Task<IReadOnlyList<T>>`.** Signals "do not mutate" at the API boundary. Internal helpers and infrastructure (DataPort, providers, test fixtures) may use `Task<List<T>>`.
+- **No tracking flag.** A `bool tracked = false` parameter is forbidden — it hides intent at the call site, doubles the Compiled-Query cache footprint, and tempts callers into ad-hoc mutation patterns.
+- **No include selector.** A `[Flags] enum XxxIncludes` parameter is forbidden — the combinatorial explosion defeats Compiled Queries and obscures performance characteristics.
+- **If a hot-path needs a leaner shape**, add a dedicated method with a clear suffix (e.g. `GetPersonaSummaryByPublicIdAsync` returning only `Participant`). Do *not* introduce shape flags on existing methods.
+
+##### "Full-fat includes" — explicit definition
+
+A Read API loads:
+
+| Navigation property type | In full-fat? | Rationale |
+|---|---|---|
+| `T?` or `T` (single-entity navigation) | ✅ Yes, if typically needed | 0–1 additional row, indexed FK join, cheap |
+| `ICollection<T>` (one-to-many) | ❌ No | Potentially unbounded, Cartesian explosion risk |
+
+The **FK direction does not matter** — a one-to-one reverse navigation (e.g. `UserEntity.Preferences` where the FK lives on `UserPreferencesEntity.UserId`) is **also a single-entity navigation** and belongs in full-fat. The decisive question is the property type, not where the FK column lives.
+
+**Depth limit**: maximum `Include(...).ThenInclude(...)` (2 levels). Deeper navigation requires a dedicated method.
+
+**Cycle avoidance**: when `A → B` is loaded full-fat, **do not** also load `B → A`. EF Core would detect this but it adds zero value and confuses the contract.
+
+**Intentional omissions** must be documented in the method's XMLDoc with a `<remarks>` paragraph explaining why (e.g. *"`MessageEntity.Conversation` is intentionally excluded because callers reach messages through their conversation context."*).
+
+**Code-review heuristic**: look at the navigation property type. `ICollection<T>` → out. `T?` / `T` → in, if typically needed.
+
+#### Projection APIs
+
+- **Same `AsNoTracking()` rule** as Read APIs.
+- **Return type is intentionally lean** — scalar, ID collection, dictionary, or single sub-entity. Never the full entity graph.
+- **Naming**: still `GetXxxAsync` / `ListXxxAsync`, but the return type signals the projection (e.g. `Task<List<string>>` for `GetRoleNamesByUserIdAsync`, `Task<HashSet<PersonaId>>` for `GetPersonaIdsWithAvatarAsync`, `Task<SystemPromptEntity?>` for `GetCurrentSystemPromptAsync` because it returns a single sub-entity, not the parent).
+- **Sub-entity returns** (e.g. `GetCurrentSystemPromptAsync` returning a `SystemPromptEntity` instead of the parent `PersonaEntity`) belong here, not in Read APIs — they expose only a slice of the parent's graph.
+- **Same Compiled Query rules** as Read APIs apply: every projection that has a compiled query must be wired with the `PreferCompiledHotPathQueries` toggle.
+
+#### Existence Checks
+
+- **Return type is `Task<bool>`.** No data, just yes/no.
+- **No `Include(...)`** — these queries should compile to `SELECT EXISTS(...)` or equivalent.
+- **Naming**: `XxxExistsAsync`, `IsXxxAsync`, `HasXxxAsync`, `UserHasXxxAsync`. Always reads as a yes/no question.
+- **Argument validation rules apply** (e.g. `ArgumentOutOfRangeException` for non-positive ids, same as elsewhere).
+
+#### Mutation APIs
+
+- **One service method per use case.** Mutations are exposed as dedicated methods that take only the changeable fields as parameters (e.g. `UpdatePersonaAsync(publicId, displayName, description, …)`), not as a generic `UpdateAsync(entity)` overload.
+- **Tracked entities never leave the service.** A mutation method loads the entity internally with tracking, validates, mutates, calls `SaveChangesAsync`, and returns either a `bool` success indicator or a freshly loaded *detached* entity. Callers never see a tracked entity.
+- **Each mutation method controls its own includes.** Load only the navigations needed for that specific mutation — typically *less* than what the corresponding Read API loads.
+- **No "load → mutate → update" pattern across the API boundary.** Callers must not retrieve an entity via a Read API, modify it, and pass it back. This pattern is unsafe (no field-level control over what is changeable, double validation, concurrency leaks) and breaks down across process boundaries (Blazor WASM clients have no `DbContext`).
+
+#### Compiled Queries
+
+- Each compiled query in `LumaCore.Data.Queries` must be wired to at least one service-API method. Unused compiled queries are dead code — either wire them up or delete them.
+- The compiled query's `Include(…)` shape must match the service method's documented contract exactly so it can serve as a drop-in hot-path replacement.
+- The service method chooses between the compiled hot-path and the regular EF query via `if (PreferCompiledHotPathQueries)`. Both branches must yield identical results — verify with `[Theory] [InlineData(false)] [InlineData(true)]` toggle tests.
+- Compiled queries cannot accept a `CancellationToken`. The toggled hot-path branch documents this with the standard comment: *"With PreferCompiledHotPathQueries enabled, cancellation is best-effort only."*
 
 ---
 

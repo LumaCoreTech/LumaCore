@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Definitions;
+
 namespace LumaCore.Data.Entities;
 
 /// <summary>
@@ -46,6 +48,8 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public class SystemPromptEntity
 {
+	// --- 1. Primary key ---
+
 	/// <summary>
 	/// Gets or sets the internal unique identifier for database relationships.
 	/// </summary>
@@ -59,6 +63,8 @@ public class SystemPromptEntity
 	/// </remarks>
 	public SystemPromptId Id { get; set; }
 
+	// --- 2. Public identifier ---
+
 	/// <summary>
 	/// Gets or sets the public unique identifier for external references.
 	/// </summary>
@@ -71,6 +77,8 @@ public class SystemPromptEntity
 	///     </para>
 	/// </remarks>
 	public Guid PublicId { get; set; }
+
+	// --- 3. Foreign keys + Navigation properties ---
 
 	/// <summary>
 	/// Gets or sets the foreign key to the persona this prompt belongs to.
@@ -90,9 +98,6 @@ public class SystemPromptEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     This relationship is required at the database level via <see cref="PersonaId"/>,
 	///     but the navigation may be <see langword="null"/> if it was not loaded.
 	///     </para>
@@ -102,10 +107,14 @@ public class SystemPromptEntity
 	/// </remarks>
 	public PersonaEntity? Persona { get; set; }
 
+	// --- 4. Timestamps ---
+
 	/// <summary>
 	/// Gets or sets the UTC timestamp when this prompt was created.
 	/// </summary>
 	public DateTime CreatedAtUtc { get; set; }
+
+	// --- 5. Scalar domain fields ---
 
 	/// <summary>
 	/// Gets or sets the full text of the system prompt.
@@ -134,18 +143,17 @@ public class SystemPromptEntity
 	///     If so, reuse the existing row instead of creating a duplicate.
 	///     </para>
 	///     <para>
-	///     The database enforces a fixed maximum length (hex-encoded SHA-256).
+	///     Maximum length: <see cref="EntityLimits.Sha256HexLength"/>.
 	///     </para>
 	/// </remarks>
 	public string Hash { get; set; } = string.Empty;
+
+	// --- 6. Collection navigation properties ---
 
 	/// <summary>
 	/// Gets the collection of message generation metadata that used this prompt.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
 	///     <para>
 	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
 	///     </para>

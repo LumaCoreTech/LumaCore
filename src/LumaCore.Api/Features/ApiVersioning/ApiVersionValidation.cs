@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.Globalization;
 using System.Text;
 
 using Asp.Versioning;
@@ -142,7 +143,7 @@ static class ApiVersionValidation
 
 			foreach (string endpoint in endpointsMissingVersionMapping)
 			{
-				message.AppendLine($"  • {endpoint}");
+				message.AppendLine(CultureInfo.InvariantCulture, $"  • {endpoint}");
 			}
 
 			message.AppendLine();

@@ -4,6 +4,8 @@
 
 using LumaCore.Data.Services;
 
+using Xunit;
+
 namespace LumaCore.Data.Tests.Services;
 
 /// <summary>
@@ -64,12 +66,28 @@ namespace LumaCore.Data.Tests.Services;
 ///             </description>
 ///         </item>
 ///         <item>
+///             <term>Personas</term>
+///             <description>
+///             <see cref="IPersonaDataService"/> — persona CRUD with ownership and visibility
+///             filtering, system prompt versioning with SHA-256 deduplication, participant identity
+///             management, cloning, and activation/deactivation.
+///             </description>
+///         </item>
+///         <item>
 ///             <term>Integrity</term>
 ///             <description>
 ///             <see cref="IDataIntegrityService"/> — integrity queries and cleanup routines that
 ///             detect and remove invalid data shapes (e.g., conversations with no user participants).
 ///             </description>
 ///         </item>
+///         <item>
+///             <term>Resources</term>
+///             <description>
+///             <see cref="IResourceDataService"/> — resource reference metadata queries and set-based
+///             owner assignment for attachment wiring.
+///             </description>
+///         </item>
 ///     </list>
 /// </remarks>
+[Trait("Category", "Services")]
 public sealed partial class LumaCoreDataServiceTests { }

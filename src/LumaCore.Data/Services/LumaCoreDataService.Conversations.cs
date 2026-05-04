@@ -14,23 +14,205 @@ namespace LumaCore.Data.Services;
 
 public sealed partial class LumaCoreDataService
 {
+	#region Read APIs
+
+	/// <inheritdoc/>
+	public Task<ConversationEntity?> GetConversationByPublicIdAsync(
+		Guid              publicId,
+		CancellationToken cancellationToken = default)
+	{
+		Guard.ThrowIfEmpty(publicId);
+
+		if (PreferCompiledHotPathQueries)
+		{
+			// Note: EF Core compiled queries do not accept a CancellationToken.
+			// With PreferCompiledHotPathQueries enabled, cancellation is best-effort only.
+			return ConversationQueries.GetByPublicId(mDbContext, publicId);
+		}
+
+		return mDbContext.Conversations
+			.AsNoTracking()
+			.FirstOrDefaultAsync(c => c.PublicId == publicId, cancellationToken);
+	}
+
+	/// <inheritdoc/>
+	public async Task<IReadOnlyList<ConversationParticipantEntity>> GetConversationParticipantsAsync(
+		ConversationId    conversationId,
+		CancellationToken cancellationToken = default)
+	{
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(conversationId.Value);
+
+		return await mDbContext.ConversationParticipants
+			       .AsNoTracking()
+			       .Include(cp => cp.Participant)
+			       .ThenInclude(p => p!.Persona)
+			       .Where(cp => cp.ConversationId == conversationId)
+			       .ToListAsync(cancellationToken)
+			       .ConfigureAwait(false);
+	}
+
+	/// <inheritdoc/>
+	public async Task<IReadOnlyList<ParticipantEntity>> GetOwnedPersonaParticipantsInConversationAsync(
+		ConversationId    conversationId,
+		ParticipantId     ownerParticipantId,
+		CancellationToken cancellationToken = default)
+	{
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(conversationId.Value);
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(ownerParticipantId.Value);
+
+		// Join ConversationParticipants → Participants → Personas to find personas
+		// in this conversation that were created by the departing user.
+		return await mDbContext.ConversationParticipants
+			       .AsNoTracking()
+			       .Where(cp => cp.ConversationId == conversationId)
+			       .Join(
+				       mDbContext.Personas
+					       .AsNoTracking()
+					       .Where(p => p.CreatedByParticipantId == ownerParticipantId),
+				       cp => cp.ParticipantId,
+				       p => p.ParticipantId,
+				       (cp, _) => cp.Participant!)
+			       .ToListAsync(cancellationToken)
+			       .ConfigureAwait(false);
+	}
+
+	/// <inheritdoc/>
+	public async Task<IReadOnlyList<ParticipantEntity>> GetPersonaParticipantsAsync(
+		ConversationId    conversationId,
+		CancellationToken cancellationToken = default)
+	{
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(conversationId.Value);
+
+		return await mDbContext.ConversationParticipants
+			       .AsNoTracking()
+			       .Where(cp => cp.ConversationId == conversationId &&
+			                    cp.Participant!.Persona != null)
+			       .Select(cp => cp.Participant!)
+			       .OrderBy(p => p.Id)
+			       .ToListAsync(cancellationToken)
+			       .ConfigureAwait(false);
+	}
+
+	/// <inheritdoc/>
+	public async Task<IReadOnlyList<ConversationEntity>> ListConversationsByParticipantAsync(
+		ParticipantId     participantId,
+		CancellationToken cancellationToken = default)
+	{
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(participantId.Value);
+
+		if (PreferCompiledHotPathQueries)
+		{
+			// Note: EF Core compiled queries do not accept a CancellationToken.
+			// With PreferCompiledHotPathQueries enabled, cancellation is best-effort only.
+			return await MaterializeAsync(
+					       ConversationQueries.GetByParticipantId(mDbContext, participantId),
+					       cancellationToken)
+				       .ConfigureAwait(false);
+		}
+
+		return await mDbContext.ConversationParticipants
+			       .AsNoTracking()
+			       .Where(cp => cp.ParticipantId == participantId)
+			       .Select(cp => cp.Conversation!)
+			       .OrderByDescending(c => c.UpdatedAtUtc)
+			       .ToListAsync(cancellationToken)
+			       .ConfigureAwait(false);
+	}
+
+	#endregion
+
+	#region Projection APIs
+
+	/// <inheritdoc/>
+	public async Task<IReadOnlyDictionary<ConversationId, int>> GetParticipantCountsAsync(
+		IEnumerable<ConversationId> conversationIds,
+		CancellationToken           cancellationToken = default)
+	{
+		ArgumentNullException.ThrowIfNull(conversationIds);
+
+		// Materialize once so the caller-supplied enumerable is enumerated exactly once and the
+		// EF translation gets a stable in-memory list to use for the IN-clause.
+		List<ConversationId> ids = conversationIds as List<ConversationId> ?? conversationIds.ToList();
+
+		if (ids.Count == 0)
+			return new Dictionary<ConversationId, int>();
+
+		return (await mDbContext.ConversationParticipants
+			        .AsNoTracking()
+			        .Where(cp => ids.Contains(cp.ConversationId))
+			        .GroupBy(cp => cp.ConversationId)
+			        .Select(g => new { ConversationId = g.Key, Count = g.Count() })
+			        .ToListAsync(cancellationToken)
+			        .ConfigureAwait(false))
+			.ToDictionary(x => x.ConversationId, x => x.Count);
+	}
+
+	#endregion
+
+	#region Existence Checks
+
+	/// <inheritdoc/>
+	public Task<bool> HasUserParticipantsAsync(
+		ConversationId    conversationId,
+		CancellationToken cancellationToken = default)
+	{
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(conversationId.Value);
+
+		// A "user participant" is one whose ParticipantId has a matching row in Users.
+		return mDbContext.ConversationParticipants
+			.AsNoTracking()
+			.Where(cp => cp.ConversationId == conversationId)
+			.AnyAsync(
+				cp => mDbContext.Users.Any(u => u.ParticipantId == cp.ParticipantId),
+				cancellationToken);
+	}
+
+	/// <inheritdoc/>
+	public Task<bool> IsParticipantInConversationAsync(
+		ConversationId    conversationId,
+		ParticipantId     participantId,
+		CancellationToken cancellationToken = default)
+	{
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(conversationId.Value);
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(participantId.Value);
+
+		if (PreferCompiledHotPathQueries)
+		{
+			// Note: EF Core compiled queries do not accept a CancellationToken.
+			// With PreferCompiledHotPathQueries enabled, cancellation is best-effort only.
+			return ConversationQueries.IsParticipantInConversation(mDbContext, conversationId, participantId);
+		}
+
+		return mDbContext.ConversationParticipants
+			.AsNoTracking()
+			.AnyAsync(
+				cp => cp.ConversationId == conversationId && cp.ParticipantId == participantId,
+				cancellationToken);
+	}
+
+	#endregion
+
+	#region Mutation APIs
+
 	/// <inheritdoc/>
 	public async Task<bool> AddParticipantToConversationAsync(
 		ConversationId              conversationId,
 		ParticipantId               participantId,
 		ConversationParticipantRole role,
-		DateTime                    utcNow,
+		DateTime?                   utcNow            = null,
 		CancellationToken           cancellationToken = default)
 	{
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(conversationId.Value);
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(participantId.Value);
+
+		DateTime effectiveUtcNow = ResolveUtcNow(utcNow);
 
 		var join = new ConversationParticipantEntity
 		{
 			ConversationId = conversationId,
 			ParticipantId = participantId,
 			Role = role,
-			JoinedAtUtc = utcNow
+			JoinedAtUtc = effectiveUtcNow
 		};
 
 		mDbContext.ConversationParticipants.Add(join);
@@ -67,12 +249,15 @@ public sealed partial class LumaCoreDataService
 	public async Task<ConversationEntity> CreateConversationAsync(
 		string            title,
 		ParticipantId     creatorParticipantId,
-		DateTime          utcNow,
+		DateTime?         utcNow            = null,
+		string?           description       = null,
 		CancellationToken cancellationToken = default)
 	{
 		Guard.ThrowIfNullOrEmptyOrTooLong(title, EntityLimits.ConversationTitleMaxLength, out title);
-
+		Guard.ThrowIfTooLong(description, EntityLimits.ConversationDescriptionMaxLength, out description);
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(creatorParticipantId.Value);
+
+		DateTime effectiveUtcNow = ResolveUtcNow(utcNow);
 
 		// Explicitly ensure the creator is a user participant. Personas can participate in conversations,
 		// but cannot be the entity that "creates" one (auditability/authorization boundary).
@@ -98,8 +283,9 @@ public sealed partial class LumaCoreDataService
 			{
 				PublicId = Guid.NewGuid(),
 				Title = title,
-				CreatedAtUtc = utcNow,
-				UpdatedAtUtc = utcNow
+				Description = description,
+				CreatedAtUtc = effectiveUtcNow,
+				UpdatedAtUtc = effectiveUtcNow
 			};
 
 			mDbContext.Conversations.Add(conversation);
@@ -109,13 +295,17 @@ public sealed partial class LumaCoreDataService
 				Conversation = conversation,
 				ParticipantId = creatorParticipantId,
 				Role = ConversationParticipantRole.Owner,
-				JoinedAtUtc = utcNow
+				JoinedAtUtc = effectiveUtcNow
 			};
 
 			mDbContext.ConversationParticipants.Add(join);
 
 			await mDbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 			await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+			// Detach so the tracked entity does not cross the data-service boundary (service API convention).
+			mDbContext.Entry(join).State = EntityState.Detached;
+			mDbContext.Entry(conversation).State = EntityState.Detached;
 			return conversation;
 		}
 		finally
@@ -204,59 +394,49 @@ public sealed partial class LumaCoreDataService
 	}
 
 	/// <inheritdoc/>
-	public Task<ConversationEntity?> GetConversationByPublicIdAsync(
-		Guid              publicId,
-		CancellationToken cancellationToken = default)
-	{
-		if (publicId == Guid.Empty)
-			throw new ArgumentException("PublicId must not be empty.", nameof(publicId));
-
-		if (PreferCompiledHotPathQueries)
-		{
-			// Note: EF Core compiled queries do not accept a CancellationToken.
-			// With PreferCompiledHotPathQueries enabled, cancellation is best-effort only.
-			return ConversationQueries.GetByPublicId(mDbContext, publicId);
-		}
-
-		return mDbContext.Conversations
-			.AsNoTracking()
-			.FirstOrDefaultAsync(c => c.PublicId == publicId, cancellationToken);
-	}
-
-	/// <inheritdoc/>
-	public Task<List<ConversationEntity>> ListConversationsByParticipantAsync(
+	public async Task<bool> RemoveParticipantFromConversationAsync(
+		ConversationId    conversationId,
 		ParticipantId     participantId,
 		CancellationToken cancellationToken = default)
 	{
+		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(conversationId.Value);
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(participantId.Value);
 
-		return mDbContext.ConversationParticipants
-			.AsNoTracking()
-			.Where(cp => cp.ParticipantId == participantId)
-			.Select(cp => cp.Conversation!)
-			.OrderByDescending(c => c.UpdatedAtUtc)
-			.ToListAsync(cancellationToken);
+		int deleted = await mDbContext.ConversationParticipants
+			              .Where(cp => cp.ConversationId == conversationId &&
+			                           cp.ParticipantId == participantId)
+			              .ExecuteDeleteAsync(cancellationToken)
+			              .ConfigureAwait(false);
+
+		return deleted > 0;
 	}
 
 	/// <inheritdoc/>
-	public async Task<bool> UpdateConversationTitleAsync(
+	public async Task<bool> UpdateConversationAsync(
 		ConversationId    conversationId,
 		string            title,
-		DateTime          utcNow,
+		string?           description,
+		DateTime?         utcNow            = null,
 		CancellationToken cancellationToken = default)
 	{
 		ArgumentOutOfRangeException.ThrowIfNegativeOrZero(conversationId.Value);
 		Guard.ThrowIfNullOrEmptyOrTooLong(title, EntityLimits.ConversationTitleMaxLength, out title);
+		Guard.ThrowIfTooLong(description, EntityLimits.ConversationDescriptionMaxLength, out description);
+
+		DateTime effectiveUtcNow = ResolveUtcNow(utcNow);
 
 		int updated = await mDbContext.Conversations
 			              .Where(c => c.Id == conversationId)
 			              .ExecuteUpdateAsync(
 				              setters => setters
 					              .SetProperty(c => c.Title, title)
-					              .SetProperty(c => c.UpdatedAtUtc, utcNow),
+					              .SetProperty(c => c.Description, description)
+					              .SetProperty(c => c.UpdatedAtUtc, effectiveUtcNow),
 				              cancellationToken)
 			              .ConfigureAwait(false);
 
 		return updated > 0;
 	}
+
+	#endregion
 }

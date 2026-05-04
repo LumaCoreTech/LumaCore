@@ -14,6 +14,7 @@ namespace LumaCore.Data.Tests;
 /// These tests exercise both the "to provider" (write) and "from provider" (read) conversion expressions
 /// across all three <see cref="DateTimeKind"/> values.
 /// </remarks>
+[Trait("Category", "Converters")]
 public sealed class UtcDateTimeConverterTests
 {
 	/// <summary>

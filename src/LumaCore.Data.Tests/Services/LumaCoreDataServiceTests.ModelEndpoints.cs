@@ -7,6 +7,7 @@ using LumaCore.Data.Services;
 using LumaCore.Data.Tests.Infrastructure;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Time.Testing;
 
 using Xunit;
 
@@ -21,7 +22,7 @@ public sealed partial class LumaCoreDataServiceTests
 	/// These tests cover the full lifecycle of model endpoints: creation, lookup, existence checks, listing,
 	/// metadata updates, and credential management (encrypt-at-rest / decrypt-on-read roundtrips).
 	/// </remarks>
-	[Trait("Category", "Data")]
+	[Trait("Category", "Services")]
 	public sealed class ModelEndpoints : TestBase
 	{
 		#region CreateModelEndpointAsync
@@ -569,7 +570,7 @@ public sealed partial class LumaCoreDataServiceTests
 			await Fixture.DbContext.SaveChangesAsync();
 
 			// Act
-			List<ModelEndpointEntity> result = await service.ListModelEndpointsAsync(includeInactive: false);
+			IReadOnlyList<ModelEndpointEntity> result = await service.ListModelEndpointsAsync(includeInactive: false);
 
 			// Assert
 			Assert.Equal(2, result.Count);
@@ -612,7 +613,7 @@ public sealed partial class LumaCoreDataServiceTests
 			await Fixture.DbContext.SaveChangesAsync();
 
 			// Act
-			List<ModelEndpointEntity> result = await service.ListModelEndpointsAsync(includeInactive: true);
+			IReadOnlyList<ModelEndpointEntity> result = await service.ListModelEndpointsAsync(includeInactive: true);
 
 			// Assert
 			Assert.Equal(2, result.Count);
@@ -649,7 +650,8 @@ public sealed partial class LumaCoreDataServiceTests
 				               endpointId: created.Id,
 				               name: "Renamed",
 				               description: "New description",
-				               isActive: false);
+				               isActive: false,
+				               utcNow: utcNow);
 
 			// Assert
 			Assert.True(updated);
@@ -690,7 +692,8 @@ public sealed partial class LumaCoreDataServiceTests
 				               endpointId: created.Id,
 				               name: "  Renamed  ",
 				               description: "  New description  ",
-				               isActive: true);
+				               isActive: true,
+				               utcNow: utcNow);
 
 			// Special: UpdateModelEndpointMetadataAsync() trims name and description via Guard helpers.
 			ModelEndpointEntity? reloaded = await Fixture.DbContext.ModelEndpoints
@@ -729,7 +732,8 @@ public sealed partial class LumaCoreDataServiceTests
 				               endpointId: created.Id,
 				               name: "Endpoint",
 				               description: "   ",
-				               isActive: true);
+				               isActive: true,
+				               utcNow: utcNow);
 
 			ModelEndpointEntity? reloaded = await Fixture.DbContext.ModelEndpoints
 				                                .AsNoTracking()
@@ -756,7 +760,8 @@ public sealed partial class LumaCoreDataServiceTests
 				               endpointId: new ModelEndpointId(12345),
 				               name: "Name",
 				               description: null,
-				               isActive: true);
+				               isActive: true,
+				               utcNow: DateTime.UtcNow);
 
 			// Assert
 			Assert.False(updated);
@@ -779,7 +784,8 @@ public sealed partial class LumaCoreDataServiceTests
 					         endpointId: new ModelEndpointId(0),
 					         name: "Name",
 					         description: null,
-					         isActive: true));
+					         isActive: true,
+					         utcNow: DateTime.UtcNow));
 			Assert.Equal("endpointId.Value", ex.ParamName);
 		}
 
@@ -828,7 +834,8 @@ public sealed partial class LumaCoreDataServiceTests
 					         endpointId: new ModelEndpointId(1),
 					         name: name,
 					         description: description,
-					         isActive: true));
+					         isActive: true,
+					         utcNow: DateTime.UtcNow));
 			Assert.Equal(expectedParamName, ex.ParamName);
 		}
 
@@ -862,7 +869,8 @@ public sealed partial class LumaCoreDataServiceTests
 				               name: "Renamed",
 				               description: "New description",
 				               isActive: false,
-				               credentials: "new-secret");
+				               credentials: "new-secret",
+				               utcNow: utcNow);
 
 			// Assert
 			Assert.True(updated);
@@ -905,7 +913,8 @@ public sealed partial class LumaCoreDataServiceTests
 				               name: "Endpoint",
 				               description: null,
 				               isActive: true,
-				               credentials: null);
+				               credentials: null,
+				               utcNow: utcNow);
 
 			// Assert
 			Assert.True(updated);
@@ -944,7 +953,8 @@ public sealed partial class LumaCoreDataServiceTests
 				               name: "  Renamed  ",
 				               description: "  New description  ",
 				               isActive: true,
-				               credentials: null);
+				               credentials: null,
+				               utcNow: utcNow);
 
 			ModelEndpointEntity? reloaded = await Fixture.DbContext.ModelEndpoints
 				                                .AsNoTracking()
@@ -983,7 +993,8 @@ public sealed partial class LumaCoreDataServiceTests
 				               name: "Endpoint",
 				               description: "   ",
 				               isActive: true,
-				               credentials: null);
+				               credentials: null,
+				               utcNow: utcNow);
 
 			ModelEndpointEntity? reloaded = await Fixture.DbContext.ModelEndpoints
 				                                .AsNoTracking()
@@ -1011,7 +1022,8 @@ public sealed partial class LumaCoreDataServiceTests
 				               name: "Name",
 				               description: null,
 				               isActive: true,
-				               credentials: null);
+				               credentials: null,
+				               utcNow: DateTime.UtcNow);
 
 			// Assert
 			Assert.False(updated);
@@ -1034,7 +1046,8 @@ public sealed partial class LumaCoreDataServiceTests
 					         name: "Name",
 					         description: null,
 					         isActive: true,
-					         credentials: null));
+					         credentials: null,
+					         utcNow: DateTime.UtcNow));
 			Assert.Equal("endpointId.Value", ex.ParamName);
 		}
 
@@ -1082,7 +1095,8 @@ public sealed partial class LumaCoreDataServiceTests
 					         name: name,
 					         description: description,
 					         isActive: true,
-					         credentials: null));
+					         credentials: null,
+					         utcNow: DateTime.UtcNow));
 			Assert.Equal(expectedParamName, ex.ParamName);
 		}
 
@@ -1113,7 +1127,8 @@ public sealed partial class LumaCoreDataServiceTests
 			// Act
 			bool updated = await service.UpdateModelEndpointCredentialsAsync(
 				               endpointId: created.Id,
-				               credentials: "new-api-key");
+				               credentials: "new-api-key",
+				               utcNow: utcNow);
 
 			// Assert
 			Assert.True(updated);
@@ -1151,7 +1166,7 @@ public sealed partial class LumaCoreDataServiceTests
 			const string plaintext = "updated-secret-key-67890";
 
 			// Act
-			bool updated = await service.UpdateModelEndpointCredentialsAsync(created.Id, plaintext);
+			bool updated = await service.UpdateModelEndpointCredentialsAsync(created.Id, plaintext, utcNow);
 			string? decrypted = await service.GetModelEndpointCredentialsAsync(created.Id);
 
 			// Assert
@@ -1182,7 +1197,8 @@ public sealed partial class LumaCoreDataServiceTests
 			// Act
 			bool updated = await service.UpdateModelEndpointCredentialsAsync(
 				               endpointId: created.Id,
-				               credentials: null);
+				               credentials: null,
+				               utcNow: utcNow);
 
 			// Assert
 			Assert.True(updated);
@@ -1208,7 +1224,8 @@ public sealed partial class LumaCoreDataServiceTests
 			// Act
 			bool updated = await service.UpdateModelEndpointCredentialsAsync(
 				               endpointId: new ModelEndpointId(12345),
-				               credentials: "secret");
+				               credentials: "secret",
+				               utcNow: DateTime.UtcNow);
 
 			// Assert
 			Assert.False(updated);
@@ -1229,7 +1246,8 @@ public sealed partial class LumaCoreDataServiceTests
 			var ex = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
 				         service.UpdateModelEndpointCredentialsAsync(
 					         endpointId: new ModelEndpointId(0),
-					         credentials: "secret"));
+					         credentials: "secret",
+					         utcNow: DateTime.UtcNow));
 			Assert.Equal("endpointId.Value", ex.ParamName);
 		}
 
@@ -1323,8 +1341,163 @@ public sealed partial class LumaCoreDataServiceTests
 
 			// Act + Assert
 			var ex = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
-				         service.GetModelEndpointCredentialsAsync(new ModelEndpointId(0)));
+						 service.GetModelEndpointCredentialsAsync(new ModelEndpointId(0)));
 			Assert.Equal("endpointId.Value", ex.ParamName);
+		}
+
+		#endregion
+
+		#region UTC clock fallback
+
+		/// <summary>
+		/// Verifies that <see cref="IModelEndpointDataService.CreateModelEndpointAsync"/> falls back to the
+		/// injected <see cref="TimeProvider"/> for both <see cref="ModelEndpointEntity.CreatedAtUtc"/> and
+		/// <see cref="ModelEndpointEntity.UpdatedAtUtc"/> when the optional <c>utcNow</c> argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c> and silently
+		/// captures wall-clock time instead.
+		/// </remarks>
+		[Fact]
+		public async Task CreateModelEndpointAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext, timeProvider: clock);
+
+			// Act
+			ModelEndpointEntity entity = await service.CreateModelEndpointAsync(
+												 publicId: Guid.NewGuid(),
+												 providerType: "openai",
+												 baseUrl: "https://api.example.test",
+												 name: "Endpoint",
+												 description: null,
+												 credentials: null);
+
+			// Assert
+			Assert.Equal(fixedNow, entity.CreatedAtUtc);
+			Assert.Equal(fixedNow, entity.UpdatedAtUtc);
+		}
+
+		/// <summary>
+		/// Verifies that <see cref="IModelEndpointDataService.UpdateModelEndpointAsync"/> falls back to the
+		/// injected <see cref="TimeProvider"/> for <see cref="ModelEndpointEntity.UpdatedAtUtc"/> when the optional
+		/// <c>utcNow</c> argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c>.
+		/// </remarks>
+		[Fact]
+		public async Task UpdateModelEndpointAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext, timeProvider: clock);
+
+			ModelEndpointEntity entity = await service.CreateModelEndpointAsync(
+												 publicId: Guid.NewGuid(),
+												 providerType: "openai",
+												 baseUrl: "https://api.example.test",
+												 name: "Endpoint",
+												 description: null,
+												 credentials: null,
+												 utcNow: fixedNow.AddDays(-1));
+
+			// Act
+			bool updated = await service.UpdateModelEndpointAsync(
+							   entity.Id,
+							   name: "Updated",
+							   description: null,
+							   isActive: true,
+							   credentials: null);
+
+			// Assert
+			Assert.True(updated);
+			ModelEndpointEntity? reloaded = await Fixture.DbContext.ModelEndpoints
+												.AsNoTracking()
+												.FirstOrDefaultAsync(e => e.Id == entity.Id);
+			Assert.NotNull(reloaded);
+			Assert.Equal(fixedNow, reloaded.UpdatedAtUtc);
+		}
+
+		/// <summary>
+		/// Verifies that <see cref="IModelEndpointDataService.UpdateModelEndpointCredentialsAsync"/> falls back to
+		/// the injected <see cref="TimeProvider"/> for <see cref="ModelEndpointEntity.UpdatedAtUtc"/> when the
+		/// optional <c>utcNow</c> argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c>.
+		/// </remarks>
+		[Fact]
+		public async Task UpdateModelEndpointCredentialsAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext, timeProvider: clock);
+
+			ModelEndpointEntity entity = await service.CreateModelEndpointAsync(
+												 publicId: Guid.NewGuid(),
+												 providerType: "openai",
+												 baseUrl: "https://api.example.test",
+												 name: "Endpoint",
+												 description: null,
+												 credentials: null,
+												 utcNow: fixedNow.AddDays(-1));
+
+			// Act
+			bool updated = await service.UpdateModelEndpointCredentialsAsync(entity.Id, credentials: "secret");
+
+			// Assert
+			Assert.True(updated);
+			ModelEndpointEntity? reloaded = await Fixture.DbContext.ModelEndpoints
+												.AsNoTracking()
+												.FirstOrDefaultAsync(e => e.Id == entity.Id);
+			Assert.NotNull(reloaded);
+			Assert.Equal(fixedNow, reloaded.UpdatedAtUtc);
+		}
+
+		/// <summary>
+		/// Verifies that <see cref="IModelEndpointDataService.UpdateModelEndpointMetadataAsync"/> falls back to
+		/// the injected <see cref="TimeProvider"/> for <see cref="ModelEndpointEntity.UpdatedAtUtc"/> when the
+		/// optional <c>utcNow</c> argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c>.
+		/// </remarks>
+		[Fact]
+		public async Task UpdateModelEndpointMetadataAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext, timeProvider: clock);
+
+			ModelEndpointEntity entity = await service.CreateModelEndpointAsync(
+												 publicId: Guid.NewGuid(),
+												 providerType: "openai",
+												 baseUrl: "https://api.example.test",
+												 name: "Endpoint",
+												 description: null,
+												 credentials: null,
+												 utcNow: fixedNow.AddDays(-1));
+
+			// Act
+			bool updated = await service.UpdateModelEndpointMetadataAsync(
+							   entity.Id,
+							   name: "Updated",
+							   description: null,
+							   isActive: true);
+
+			// Assert
+			Assert.True(updated);
+			ModelEndpointEntity? reloaded = await Fixture.DbContext.ModelEndpoints
+												.AsNoTracking()
+												.FirstOrDefaultAsync(e => e.Id == entity.Id);
+			Assert.NotNull(reloaded);
+			Assert.Equal(fixedNow, reloaded.UpdatedAtUtc);
 		}
 
 		#endregion

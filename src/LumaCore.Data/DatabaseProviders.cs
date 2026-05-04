@@ -47,8 +47,11 @@ public static class DatabaseProviders
 	///     </para>
 	///     <para>
 	///     <b>Temporarily unavailable:</b> <c>Pomelo.EntityFrameworkCore.MySql</c> has not yet released an
-	///     EF Core 10 compatible version. MySQL is excluded from <see cref="GetSupportedProviders"/> until
-	///     the provider becomes available. Track progress at
+	///     EF Core 10 compatible version. The constant is kept so that configuration, tooling, and the
+	///     <see cref="Providers.MySqlProviderOperations"/> implementation remain ready for re-activation.
+	///     MySQL is excluded from <see cref="GetSupportedProviders"/>, is hard-rejected by
+	///     <see cref="Providers.DatabaseProviderFactory.GetProvider"/>, and is hard-rejected at DbContext
+	///     configuration time. Track progress at
 	///     <see href="https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues"/>.
 	///     </para>
 	/// </remarks>

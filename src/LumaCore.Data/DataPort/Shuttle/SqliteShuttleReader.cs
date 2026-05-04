@@ -10,7 +10,7 @@ using LumaCore.Data.DataPort.Models;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 
-using static LumaCore.Data.DataPort.SqlIdentifierHelper;
+using static LumaCore.Data.Providers.SqlIdentifierHelper;
 
 namespace LumaCore.Data.DataPort.Shuttle;
 
@@ -359,7 +359,7 @@ public sealed class SqliteShuttleReader : SqliteReaderBase, IShuttleReader
 	///     <see langword="false"/>.
 	///     </para>
 	/// </remarks>
-	private async Task<bool> VerifyCompletionMarkerAsync(
+	private static async Task<bool> VerifyCompletionMarkerAsync(
 		SqliteConnection  connection,
 		SqliteTransaction transaction,
 		CancellationToken cancellationToken)

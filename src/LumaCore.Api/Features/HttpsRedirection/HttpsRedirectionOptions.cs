@@ -36,7 +36,7 @@ sealed class HttpsRedirectionOptions
 	/// When running behind a reverse proxy that terminates TLS, this should typically remain
 	/// <see langword="false"/> as the proxy handles HTTPS redirection.
 	/// </remarks>
-	public bool Enabled { get; set; } = false;
+	public bool Enabled { get; set; }
 
 	/// <summary>
 	/// Gets or sets the HTTPS port to use for redirection.

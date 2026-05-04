@@ -57,5 +57,4 @@ namespace LumaCore.Data.Tests.Security;
 ///     </para>
 /// </remarks>
 [Trait("Category", "Security")]
-[Trait("Category", "Cryptography")]
 public sealed partial class AesGcmSecretProtectorTests;

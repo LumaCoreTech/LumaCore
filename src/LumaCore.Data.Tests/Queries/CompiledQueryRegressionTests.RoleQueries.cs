@@ -22,6 +22,7 @@ public sealed partial class CompiledQueryRegressionTests
 
 		// Assert
 		Assert.Single(roles);
+		Assert.Equal(mRoleId, roles[0].Id);
 		Assert.Equal("admin", roles[0].Name);
 	}
 
@@ -36,6 +37,7 @@ public sealed partial class CompiledQueryRegressionTests
 
 		// Assert
 		Assert.NotNull(result);
+		Assert.Equal(mRoleId, result.Id);
 		Assert.Equal("admin", result.Name);
 	}
 
@@ -55,18 +57,20 @@ public sealed partial class CompiledQueryRegressionTests
 	}
 
 	/// <summary>
-	/// Verifies that <see cref="RoleQueries.UserHasRole"/> returns <see langword="true"/> for an assigned
-	/// role and <see langword="false"/> for a non-assigned one.
+	/// Verifies that <see cref="RoleQueries.UserHasRole"/> returns <see langword="true"/> only for roles
+	/// actually assigned to the user.
 	/// </summary>
-	[Fact]
-	public async Task RoleQueries_UserHasRole_ReturnsExpectedResult()
+	/// <param name="roleName">The role name to query.</param>
+	/// <param name="expected">The expected outcome.</param>
+	[Theory]
+	[InlineData("admin", true)]      // Assigned in seed.
+	[InlineData("moderator", false)] // Not assigned in seed.
+	public async Task RoleQueries_UserHasRole_ReturnsTrueOnlyForAssignedRole(string roleName, bool expected)
 	{
 		// Act
-		bool hasAdmin = await RoleQueries.UserHasRole(mFixture.DbContext, mAliceUserId, "admin");
-		bool hasModerator = await RoleQueries.UserHasRole(mFixture.DbContext, mAliceUserId, "moderator");
+		bool actual = await RoleQueries.UserHasRole(mFixture.DbContext, mAliceUserId, roleName);
 
 		// Assert
-		Assert.True(hasAdmin);
-		Assert.False(hasModerator);
+		Assert.Equal(expected, actual);
 	}
 }

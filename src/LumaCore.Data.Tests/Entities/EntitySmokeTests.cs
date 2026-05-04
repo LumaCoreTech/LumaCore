@@ -59,7 +59,14 @@ namespace LumaCore.Data.Tests.Entities;
 ///     These tests intentionally do not involve <see cref="DbContext"/>; they are designed to be fast
 ///     and to validate that entity types can be constructed and assigned as plain CLR objects.
 ///     </para>
+///     <para>
+///     <b>Exception to the smoke-test charter:</b> A small number of tests verify <i>default values</i> of
+///     properties that are not exercised by the standard <c>CanSetAllProperties</c> shape (e.g.
+///     <see cref="UserPreferencesEntity_PreferencesJson_DefaultsToNull"/>). These remain in this file
+///     because they target the same POCO surface and would not justify a separate file by themselves.
+///     </para>
 /// </remarks>
+[Trait("Category", "Entities")]
 public sealed class EntitySmokeTests
 {
 	#region ConversationEntity
@@ -82,6 +89,7 @@ public sealed class EntitySmokeTests
 			Id = new ConversationId(1),
 			PublicId = publicId,
 			Title = "Test conversation",
+			Description = "A test description",
 			CreatedAtUtc = created,
 			UpdatedAtUtc = updated
 		};
@@ -90,6 +98,7 @@ public sealed class EntitySmokeTests
 		Assert.Equal(new ConversationId(1), sut.Id);
 		Assert.Equal(publicId, sut.PublicId);
 		Assert.Equal("Test conversation", sut.Title);
+		Assert.Equal("A test description", sut.Description);
 		Assert.Equal(created, sut.CreatedAtUtc);
 		Assert.Equal(updated, sut.UpdatedAtUtc);
 		Assert.Empty(sut.Messages);
@@ -111,6 +120,7 @@ public sealed class EntitySmokeTests
 		var joined = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 		var conversation = new ConversationEntity();
 		var participant = new ParticipantEntity();
+		var lastReadMessage = new MessageEntity();
 
 		// Act
 		var sut = new ConversationParticipantEntity
@@ -120,7 +130,9 @@ public sealed class EntitySmokeTests
 			ParticipantId = new ParticipantId(2),
 			Participant = participant,
 			JoinedAtUtc = joined,
-			Role = ConversationParticipantRole.Member
+			Role = ConversationParticipantRole.Member,
+			LastReadMessageId = new MessageId(7),
+			LastReadMessage = lastReadMessage
 		};
 
 		// Assert
@@ -130,6 +142,8 @@ public sealed class EntitySmokeTests
 		Assert.Same(participant, sut.Participant);
 		Assert.Equal(joined, sut.JoinedAtUtc);
 		Assert.Equal(ConversationParticipantRole.Member, sut.Role);
+		Assert.Equal(new MessageId(7), sut.LastReadMessageId);
+		Assert.Same(lastReadMessage, sut.LastReadMessage);
 	}
 
 	#endregion
@@ -161,6 +175,7 @@ public sealed class EntitySmokeTests
 			SenderId = new ParticipantId(3),
 			Sender = sender,
 			GenerationMetadata = metadata,
+			Type = MessageType.System,
 			Content = "Hello",
 			CreatedAtUtc = created,
 			RedactedAtUtc = redacted,
@@ -175,6 +190,7 @@ public sealed class EntitySmokeTests
 		Assert.Equal(new ParticipantId(3), sut.SenderId);
 		Assert.Same(sender, sut.Sender);
 		Assert.Same(metadata, sut.GenerationMetadata);
+		Assert.Equal(MessageType.System, sut.Type);
 		Assert.Equal("Hello", sut.Content);
 		Assert.Equal(created, sut.CreatedAtUtc);
 		Assert.Equal(redacted, sut.RedactedAtUtc);
@@ -248,6 +264,7 @@ public sealed class EntitySmokeTests
 		// Arrange
 		var publicId = Guid.NewGuid();
 		var created = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		var updated = new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc);
 
 		// Act
 		var sut = new ModelEndpointEntity
@@ -255,6 +272,7 @@ public sealed class EntitySmokeTests
 			Id = new ModelEndpointId(1),
 			PublicId = publicId,
 			CreatedAtUtc = created,
+			UpdatedAtUtc = updated,
 			ProviderType = "ollama",
 			BaseUrl = "http://localhost:11434",
 			Name = "Local Ollama",
@@ -267,6 +285,7 @@ public sealed class EntitySmokeTests
 		Assert.Equal(new ModelEndpointId(1), sut.Id);
 		Assert.Equal(publicId, sut.PublicId);
 		Assert.Equal(created, sut.CreatedAtUtc);
+		Assert.Equal(updated, sut.UpdatedAtUtc);
 		Assert.Equal("ollama", sut.ProviderType);
 		Assert.Equal("http://localhost:11434", sut.BaseUrl);
 		Assert.Equal("Local Ollama", sut.Name);
@@ -300,7 +319,6 @@ public sealed class EntitySmokeTests
 			PublicId = publicId,
 			CreatedAtUtc = created,
 			DisplayName = "Alice",
-			AvatarUrl = "https://example.test/avatar.png",
 			User = user,
 			Persona = persona
 		};
@@ -310,7 +328,6 @@ public sealed class EntitySmokeTests
 		Assert.Equal(publicId, sut.PublicId);
 		Assert.Equal(created, sut.CreatedAtUtc);
 		Assert.Equal("Alice", sut.DisplayName);
-		Assert.Equal("https://example.test/avatar.png", sut.AvatarUrl);
 		Assert.Same(user, sut.User);
 		Assert.Same(persona, sut.Persona);
 		Assert.Empty(sut.ConversationParticipants);
@@ -329,7 +346,10 @@ public sealed class EntitySmokeTests
 	public void PersonaEntity_CanSetAllProperties()
 	{
 		// Arrange
+		var updated = new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc);
+		var created = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 		var participant = new ParticipantEntity();
+		var createdBy = new ParticipantEntity();
 		var activePrompt = new SystemPromptEntity();
 
 		// Act
@@ -338,23 +358,172 @@ public sealed class EntitySmokeTests
 			Id = new PersonaId(1),
 			ParticipantId = new ParticipantId(2),
 			Participant = participant,
+			CreatedByParticipantId = new ParticipantId(4),
+			CreatedByParticipant = createdBy,
 			ActiveSystemPromptId = new SystemPromptId(3),
 			ActiveSystemPrompt = activePrompt,
+			CreatedAtUtc = created,
+			UpdatedAtUtc = updated,
 			DefaultModel = "gpt-test",
-			Description = "Test persona",
-			IsActive = true
+			IsActive = true,
+			Visibility = PersonaVisibility.Shared
 		};
 
 		// Assert
 		Assert.Equal(new PersonaId(1), sut.Id);
 		Assert.Equal(new ParticipantId(2), sut.ParticipantId);
 		Assert.Same(participant, sut.Participant);
+		Assert.Equal(new ParticipantId(4), sut.CreatedByParticipantId);
+		Assert.Same(createdBy, sut.CreatedByParticipant);
 		Assert.Equal(new SystemPromptId(3), sut.ActiveSystemPromptId);
 		Assert.Same(activePrompt, sut.ActiveSystemPrompt);
+		Assert.Equal(created, sut.CreatedAtUtc);
+		Assert.Equal(updated, sut.UpdatedAtUtc);
 		Assert.Equal("gpt-test", sut.DefaultModel);
-		Assert.Equal("Test persona", sut.Description);
 		Assert.True(sut.IsActive);
+		Assert.Equal(PersonaVisibility.Shared, sut.Visibility);
 		Assert.Empty(sut.SystemPrompts);
+		Assert.Empty(sut.DescriptionTranslations);
+	}
+
+	#endregion
+
+	#region ResourceEntity
+
+	/// <summary>
+	/// Verifies that <see cref="ResourceEntity"/> can be constructed, all scalar, reference navigation, and
+	/// collection navigation properties assigned.
+	/// </summary>
+	[Fact]
+	public void ResourceEntity_CanSetAllProperties()
+	{
+		// Arrange
+		var created = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		var createdBy = new ParticipantEntity();
+
+		// Act
+		var sut = new ResourceEntity
+		{
+			Id = new ResourceId(1),
+			CreatedByParticipantId = new ParticipantId(2),
+			CreatedByParticipant = createdBy,
+			CreatedAtUtc = created,
+			ContentHash = "abc123",
+			StoragePath = "ab/abc123-def456",
+			SizeBytes = 1024,
+			DeletionState = ResourceDeletionState.Active
+		};
+
+		// Assert
+		Assert.Equal(new ResourceId(1), sut.Id);
+		Assert.Equal(new ParticipantId(2), sut.CreatedByParticipantId);
+		Assert.Same(createdBy, sut.CreatedByParticipant);
+		Assert.Equal(created, sut.CreatedAtUtc);
+		Assert.Equal("abc123", sut.ContentHash);
+		Assert.Equal("ab/abc123-def456", sut.StoragePath);
+		Assert.Equal(1024, sut.SizeBytes);
+		Assert.Equal(ResourceDeletionState.Active, sut.DeletionState);
+		Assert.Empty(sut.References);
+	}
+
+	#endregion
+
+	#region ResourceGcStateEntity
+
+	/// <summary>
+	/// Verifies that <see cref="ResourceGcStateEntity"/> (a singleton state row) can be constructed and all
+	/// properties assigned.
+	/// </summary>
+	[Fact]
+	public void ResourceGcStateEntity_CanSetAllProperties()
+	{
+		// Arrange
+		var lastRun = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+		// Act
+		var sut = new ResourceGcStateEntity
+		{
+			Id = 1,
+			LastRunAtUtc = lastRun
+		};
+
+		// Assert
+		Assert.Equal(1, sut.Id);
+		Assert.Equal(lastRun, sut.LastRunAtUtc);
+	}
+
+	#endregion
+
+	#region ResourceReferenceEntity
+
+	/// <summary>
+	/// Verifies that <see cref="ResourceReferenceEntity"/> can be constructed, all scalar and reference
+	/// navigation properties assigned.
+	/// </summary>
+	[Fact]
+	public void ResourceReferenceEntity_CanSetAllProperties()
+	{
+		// Arrange
+		var publicId = Guid.NewGuid();
+		var created = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		var resource = new ResourceEntity();
+
+		// Act
+		var sut = new ResourceReferenceEntity
+		{
+			Id = new ResourceReferenceId(1),
+			PublicId = publicId,
+			ResourceId = new ResourceId(2),
+			Resource = resource,
+			CreatedAtUtc = created,
+			OwnerKind = ResourceOwnerKind.Message,
+			OwnerId = new ResourceOwnerId(42),
+			ContentType = "image/png",
+			OriginalFileName = "avatar.png"
+		};
+
+		// Assert
+		Assert.Equal(new ResourceReferenceId(1), sut.Id);
+		Assert.Equal(publicId, sut.PublicId);
+		Assert.Equal(new ResourceId(2), sut.ResourceId);
+		Assert.Same(resource, sut.Resource);
+		Assert.Equal(created, sut.CreatedAtUtc);
+		Assert.Equal(ResourceOwnerKind.Message, sut.OwnerKind);
+		Assert.Equal(new ResourceOwnerId(42), sut.OwnerId);
+		Assert.Equal("image/png", sut.ContentType);
+		Assert.Equal("avatar.png", sut.OriginalFileName);
+	}
+
+	#endregion
+
+	#region RevokedJwtEntity
+
+	/// <summary>
+	/// Verifies that <see cref="RevokedJwtEntity"/> can be constructed and all properties assigned.
+	/// </summary>
+	[Fact]
+	public void RevokedJwtEntity_CanSetAllProperties()
+	{
+		// Arrange
+		var expires = new DateTime(2026, 1, 1, 1, 0, 0, DateTimeKind.Utc);
+		var revoked = new DateTime(2026, 1, 1, 0, 30, 0, DateTimeKind.Utc);
+
+		// Act
+		var sut = new RevokedJwtEntity
+		{
+			Jti = "test-jti-001",
+			ExpiresAtUtc = expires,
+			RevokedAtUtc = revoked,
+			Subject = "alice",
+			Reason = "Logout"
+		};
+
+		// Assert
+		Assert.Equal("test-jti-001", sut.Jti);
+		Assert.Equal(expires, sut.ExpiresAtUtc);
+		Assert.Equal(revoked, sut.RevokedAtUtc);
+		Assert.Equal("alice", sut.Subject);
+		Assert.Equal("Logout", sut.Reason);
 	}
 
 	#endregion
@@ -389,38 +558,6 @@ public sealed class EntitySmokeTests
 		Assert.Equal("admin", sut.Name);
 		Assert.Equal("Full system access", sut.Description);
 		Assert.Empty(sut.UserRoles);
-	}
-
-	#endregion
-
-	#region RevokedJwtEntity
-
-	/// <summary>
-	/// Verifies that <see cref="RevokedJwtEntity"/> can be constructed and all properties assigned.
-	/// </summary>
-	[Fact]
-	public void RevokedJwtEntity_CanSetAllProperties()
-	{
-		// Arrange
-		var expires = new DateTime(2026, 1, 1, 1, 0, 0, DateTimeKind.Utc);
-		var revoked = new DateTime(2026, 1, 1, 0, 30, 0, DateTimeKind.Utc);
-
-		// Act
-		var sut = new RevokedJwtEntity
-		{
-			Jti = "test-jti-001",
-			ExpiresAtUtc = expires,
-			RevokedAtUtc = revoked,
-			Subject = "alice",
-			Reason = "Logout"
-		};
-
-		// Assert
-		Assert.Equal("test-jti-001", sut.Jti);
-		Assert.Equal(expires, sut.ExpiresAtUtc);
-		Assert.Equal(revoked, sut.RevokedAtUtc);
-		Assert.Equal("alice", sut.Subject);
-		Assert.Equal("Logout", sut.Reason);
 	}
 
 	#endregion
@@ -495,6 +632,55 @@ public sealed class EntitySmokeTests
 
 	#endregion
 
+	#region UserEntity
+
+	/// <summary>
+	/// Verifies that <see cref="UserEntity"/> can be constructed, all scalar, reference navigation, and collection
+	/// navigation properties assigned.
+	/// </summary>
+	[Fact]
+	public void UserEntity_CanSetAllProperties()
+	{
+		// Arrange
+		var created = new DateTime(2025, 12, 31, 0, 0, 0, DateTimeKind.Utc);
+		var lastLogin = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+		var lastRefresh = new DateTime(2026, 1, 1, 1, 0, 0, DateTimeKind.Utc);
+		var participant = new ParticipantEntity();
+		var preferences = new UserPreferencesEntity();
+
+		// Act
+		var sut = new UserEntity
+		{
+			Id = new UserId(1),
+			ParticipantId = new ParticipantId(2),
+			Participant = participant,
+			CreatedAtUtc = created,
+			Username = "alice",
+			UsernameNormalized = "ALICE",
+			PasswordHash = "hash",
+			Email = "alice@example.test",
+			LastLoginAtUtc = lastLogin,
+			LastTokenRefreshAtUtc = lastRefresh,
+			Preferences = preferences
+		};
+
+		// Assert
+		Assert.Equal(new UserId(1), sut.Id);
+		Assert.Equal(new ParticipantId(2), sut.ParticipantId);
+		Assert.Same(participant, sut.Participant);
+		Assert.Equal("alice", sut.Username);
+		Assert.Equal("ALICE", sut.UsernameNormalized);
+		Assert.Equal("alice@example.test", sut.Email);
+		Assert.Equal("hash", sut.PasswordHash);
+		Assert.Equal(created, sut.CreatedAtUtc);
+		Assert.Equal(lastLogin, sut.LastLoginAtUtc);
+		Assert.Equal(lastRefresh, sut.LastTokenRefreshAtUtc);
+		Assert.Same(preferences, sut.Preferences);
+		Assert.Empty(sut.UserRoles);
+	}
+
+	#endregion
+
 	#region UserPreferencesEntity
 
 	/// <summary>
@@ -523,7 +709,8 @@ public sealed class EntitySmokeTests
 
 	/// <summary>
 	/// Verifies that <see cref="UserPreferencesEntity.PreferencesJson"/> defaults to <see langword="null"/>
-	/// when no value is assigned.
+	/// when no value is assigned. This is the only behavior-style assertion in this file (see the class-level
+	/// note about the "Defaults" exception to the smoke-test charter).
 	/// </summary>
 	[Fact]
 	public void UserPreferencesEntity_PreferencesJson_DefaultsToNull()
@@ -533,52 +720,6 @@ public sealed class EntitySmokeTests
 
 		// Assert
 		Assert.Null(sut.PreferencesJson);
-	}
-
-	#endregion
-
-	#region UserEntity
-
-	/// <summary>
-	/// Verifies that <see cref="UserEntity"/> can be constructed, all scalar, reference navigation, and collection
-	/// navigation properties assigned.
-	/// </summary>
-	[Fact]
-	public void UserEntity_CanSetAllProperties()
-	{
-		// Arrange
-		var lastLogin = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		var lastRefresh = new DateTime(2026, 1, 1, 1, 0, 0, DateTimeKind.Utc);
-		var participant = new ParticipantEntity();
-		var preferences = new UserPreferencesEntity();
-
-		// Act
-		var sut = new UserEntity
-		{
-			Id = new UserId(1),
-			ParticipantId = new ParticipantId(2),
-			Participant = participant,
-			Username = "alice",
-			UsernameNormalized = "ALICE",
-			Email = "alice@example.test",
-			PasswordHash = "hash",
-			LastLoginAtUtc = lastLogin,
-			LastTokenRefreshAtUtc = lastRefresh,
-			Preferences = preferences
-		};
-
-		// Assert
-		Assert.Equal(new UserId(1), sut.Id);
-		Assert.Equal(new ParticipantId(2), sut.ParticipantId);
-		Assert.Same(participant, sut.Participant);
-		Assert.Equal("alice", sut.Username);
-		Assert.Equal("ALICE", sut.UsernameNormalized);
-		Assert.Equal("alice@example.test", sut.Email);
-		Assert.Equal("hash", sut.PasswordHash);
-		Assert.Equal(lastLogin, sut.LastLoginAtUtc);
-		Assert.Equal(lastRefresh, sut.LastTokenRefreshAtUtc);
-		Assert.Same(preferences, sut.Preferences);
-		Assert.Empty(sut.UserRoles);
 	}
 
 	#endregion

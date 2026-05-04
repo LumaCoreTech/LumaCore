@@ -112,4 +112,32 @@ public static class Guard
 				paramName);
 		}
 	}
+
+	/// <summary>
+	/// Validates that <paramref name="value"/> is not <see cref="Guid.Empty"/>.
+	/// </summary>
+	/// <param name="value">The <see cref="Guid"/> value to validate.</param>
+	/// <param name="paramName">
+	/// The parameter name for exception messages. Automatically inferred via
+	/// <see cref="CallerArgumentExpressionAttribute"/>.
+	/// </param>
+	/// <exception cref="ArgumentException">
+	/// <paramref name="value"/> is <see cref="Guid.Empty"/>.
+	/// </exception>
+	/// <remarks>
+	/// Mirrors the BCL <c>ThrowIf</c> convention. Use for public identifiers and other GUIDs where the
+	/// all-zero sentinel value is never a valid input.
+	/// </remarks>
+	public static void ThrowIfEmpty(
+		Guid value,
+		[CallerArgumentExpression(nameof(value))]
+		string? paramName = null)
+	{
+		if (value == Guid.Empty)
+		{
+			throw new ArgumentException(
+				$"Value must not be {nameof(Guid.Empty)}.",
+				paramName);
+		}
+	}
 }

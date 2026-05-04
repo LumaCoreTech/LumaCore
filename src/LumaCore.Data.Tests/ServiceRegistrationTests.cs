@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Core.IO;
 using LumaCore.Data.DataPort.Shuttle;
 using LumaCore.Data.Initialization;
 using LumaCore.Data.Providers;
@@ -25,6 +26,7 @@ namespace LumaCore.Data.Tests;
 /// These tests validate wiring only (registration and option parsing/provider branching).
 /// They do not validate connectivity to external database servers.
 /// </remarks>
+[Trait("Category", "DbContext")]
 public sealed class ServiceRegistrationTests
 {
 	/// <summary>
@@ -42,6 +44,8 @@ public sealed class ServiceRegistrationTests
 	{
 		var services = new ServiceCollection();
 		services.AddSingleton(TimeProvider.System);
+		services.AddOptions<StreamBufferPoolOptions>();
+		services.AddSingleton<IStreamBufferPool, StreamBufferPool>();
 		services.AddLogging();
 		return services;
 	}

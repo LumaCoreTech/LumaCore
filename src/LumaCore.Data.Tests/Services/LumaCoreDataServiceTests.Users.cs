@@ -7,6 +7,7 @@ using LumaCore.Data.Services;
 using LumaCore.Data.Tests.Infrastructure;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Time.Testing;
 
 using Xunit;
 
@@ -21,35 +22,10 @@ public sealed partial class LumaCoreDataServiceTests
 	/// These tests focus on validation/normalization (trimming, limits, null handling), query helpers (lookup and
 	/// existence checks), and privacy-sensitive deletion behavior (scrubbing participant profile and redaction).
 	/// </remarks>
-	[Trait("Category", "Data")]
+	[Trait("Category", "Services")]
 	public sealed class Users : TestBase
 	{
 		#region CreateParticipantAsync
-
-		/// <summary>
-		/// Verifies that <see cref="IUserDataService.CreateParticipantAsync"/> normalizes whitespace-only avatar URLs to
-		/// <c>null</c>.
-		/// </summary>
-		[Fact]
-		public async Task CreateParticipantAsync_WhenAvatarUrlWhitespace_BecomesNull()
-		{
-			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
-
-			// Act
-			ParticipantEntity participant = await service.CreateParticipantAsync(
-				                                displayName: "Alice",
-				                                avatarUrl: "   ",
-				                                utcNow: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-
-			ParticipantEntity? reloaded = await Fixture.DbContext.Participants
-				                              .AsNoTracking()
-				                              .FirstOrDefaultAsync(p => p.Id == participant.Id);
-
-			// Assert
-			Assert.NotNull(reloaded);
-			Assert.Null(reloaded.AvatarUrl);
-		}
 
 		/// <summary>
 		/// Verifies that <see cref="IUserDataService.CreateParticipantAsync"/> creates a participant with all fields
@@ -65,7 +41,6 @@ public sealed partial class LumaCoreDataServiceTests
 			// Act
 			ParticipantEntity participant = await service.CreateParticipantAsync(
 				                                displayName: "  Alice  ",
-				                                avatarUrl: "  https://example.test/avatar.png  ",
 				                                utcNow: utcNow);
 
 			ParticipantEntity? reloaded = await Fixture.DbContext.Participants
@@ -77,25 +52,20 @@ public sealed partial class LumaCoreDataServiceTests
 			Assert.True(reloaded.Id.Value > 0);
 			Assert.NotEqual(Guid.Empty, reloaded.PublicId);
 			Assert.Equal("Alice", reloaded.DisplayName);
-			Assert.Equal("https://example.test/avatar.png", reloaded.AvatarUrl);
 			Assert.Equal(utcNow, reloaded.CreatedAtUtc);
 		}
 
 		/// <summary>
 		/// Test data for <see cref="CreateParticipantAsync_WhenInputInvalid_ThrowsArgumentException"/>. Each row
-		/// provides an invalid combination of display name and avatar URL that triggers an
-		/// <see cref="ArgumentException"/>.
+		/// provides an invalid display name that triggers an <see cref="ArgumentException"/>.
 		/// </summary>
-		public static TheoryData<string, string, string?, string> CreateParticipantAsync_InvalidInput_Data => new()
+		public static TheoryData<string, string, string> CreateParticipantAsync_InvalidInput_Data => new()
 		{
 			// Whitespace-only display name
-			{ "Whitespace display name", "   ", null, "displayName" },
+			{ "Whitespace display name", "   ", "displayName" },
 
 			// Display name exceeds the 100-character maximum
-			{ "Display name too long", new string('x', 101), null, "displayName" },
-
-			// Avatar URL exceeds the 500-character maximum
-			{ "Avatar URL too long", "Alice", new string('x', 501), "avatarUrl" }
+			{ "Display name too long", new string('x', 101), "displayName" }
 		};
 
 		/// <summary>
@@ -104,15 +74,13 @@ public sealed partial class LumaCoreDataServiceTests
 		/// </summary>
 		/// <param name="scenario">A human-readable description of the test case.</param>
 		/// <param name="displayName">The display name to pass to the method.</param>
-		/// <param name="avatarUrl">The avatar URL to pass to the method.</param>
 		/// <param name="expectedParamName">The expected <see cref="ArgumentException.ParamName"/>.</param>
 		[Theory]
 		[MemberData(nameof(CreateParticipantAsync_InvalidInput_Data))]
 		public async Task CreateParticipantAsync_WhenInputInvalid_ThrowsArgumentException(
-			string  scenario,
-			string  displayName,
-			string? avatarUrl,
-			string  expectedParamName)
+			string scenario,
+			string displayName,
+			string expectedParamName)
 		{
 			_ = scenario;
 
@@ -123,7 +91,6 @@ public sealed partial class LumaCoreDataServiceTests
 			var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
 				         service.CreateParticipantAsync(
 					         displayName: displayName,
-					         avatarUrl: avatarUrl,
 					         utcNow: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)));
 			Assert.Equal(expectedParamName, ex.ParamName);
 		}
@@ -160,7 +127,8 @@ public sealed partial class LumaCoreDataServiceTests
 				                  participantId: participant.Id,
 				                  username: "alice",
 				                  email: "   ",
-				                  passwordHash: "hash");
+				                  passwordHash: "hash",
+				                  utcNow: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
 			// Special: CreateUserAsync() treats whitespace-only email as "no email" and normalizes it to null.
 			UserEntity? reloaded = await Fixture.DbContext.Users
@@ -196,7 +164,8 @@ public sealed partial class LumaCoreDataServiceTests
 				                  participantId: participant.Id,
 				                  username: "  alice  ",
 				                  email: "  alice@example.test  ",
-				                  passwordHash: "  hash  ");
+				                  passwordHash: "  hash  ",
+				                  utcNow: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
 			// Special: CreateUserAsync() trims inputs and computes UsernameNormalized.
 			UserEntity? reloaded = await Fixture.DbContext.Users
@@ -265,7 +234,8 @@ public sealed partial class LumaCoreDataServiceTests
 					         participantId: new ParticipantId(1),
 					         username: username,
 					         email: email,
-					         passwordHash: passwordHash));
+					         passwordHash: passwordHash,
+					         utcNow: DateTime.UtcNow));
 			Assert.Equal(expectedParamName, ex.ParamName);
 		}
 
@@ -285,7 +255,8 @@ public sealed partial class LumaCoreDataServiceTests
 					         participantId: new ParticipantId(0),
 					         username: "alice",
 					         email: null,
-					         passwordHash: "hash"));
+					         passwordHash: "hash",
+					         utcNow: DateTime.UtcNow));
 			Assert.Equal("participantId.Value", ex.ParamName);
 		}
 
@@ -295,13 +266,24 @@ public sealed partial class LumaCoreDataServiceTests
 
 		/// <summary>
 		/// Verifies that <see cref="IUserDataService.CreateUserWithParticipantAsync"/> assigns the default "user" role
-		/// when it exists and default-role assignment is enabled.
+		/// when it exists and default-role assignment is enabled. The toggle parameter asserts the contract — both the
+		/// regular EF branch and the compiled hot-path branch (delegating to <c>RoleQueries.GetByName</c>) must yield
+		/// the same result.
 		/// </summary>
-		[Fact]
-		public async Task CreateUserWithParticipantAsync_WhenDefaultRolePresent_AssignsRole()
+		/// <param name="preferCompiledHotPathQueries">
+		/// Whether to enable
+		/// <see cref="DatabaseOptions.PreferCompiledHotPathQueries"/> for this run.
+		/// </param>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task CreateUserWithParticipantAsync_WhenDefaultRolePresent_AssignsRole(
+			bool preferCompiledHotPathQueries)
 		{
 			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
+				Fixture.DbContext,
+				o => o.PreferCompiledHotPathQueries = preferCompiledHotPathQueries);
 
 			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -312,7 +294,6 @@ public sealed partial class LumaCoreDataServiceTests
 			// Act
 			UserEntity user = await service.CreateUserWithParticipantAsync(
 				                  displayName: "Alice",
-				                  avatarUrl: null,
 				                  username: "alice",
 				                  email: "alice@example.test",
 				                  passwordHash: "hash",
@@ -344,7 +325,6 @@ public sealed partial class LumaCoreDataServiceTests
 			// Act
 			UserEntity user = await service.CreateUserWithParticipantAsync(
 				                  displayName: "Alice",
-				                  avatarUrl: null,
 				                  username: "alice",
 				                  email: "   ",
 				                  passwordHash: "hash",
@@ -361,7 +341,7 @@ public sealed partial class LumaCoreDataServiceTests
 		}
 
 		/// <summary>
-		/// Verifies that <see cref="IUserDataService.CreateUserWithParticipantAsync"/> trims display name, avatar URL,
+		/// Verifies that <see cref="IUserDataService.CreateUserWithParticipantAsync"/> trims display name,
 		/// username, email, and password hash before persisting.
 		/// </summary>
 		[Fact]
@@ -374,7 +354,6 @@ public sealed partial class LumaCoreDataServiceTests
 			// Act
 			UserEntity user = await service.CreateUserWithParticipantAsync(
 				                  displayName: "  Alice  ",
-				                  avatarUrl: "  https://example.test/avatar.png  ",
 				                  username: "  alice  ",
 				                  email: "  alice@example.test  ",
 				                  passwordHash: "  hash  ",
@@ -394,37 +373,6 @@ public sealed partial class LumaCoreDataServiceTests
 			Assert.Equal("hash", reloadedUser.PasswordHash);
 			Assert.NotNull(reloadedUser.Participant);
 			Assert.Equal("Alice", reloadedUser.Participant!.DisplayName);
-			Assert.Equal("https://example.test/avatar.png", reloadedUser.Participant.AvatarUrl);
-		}
-
-		/// <summary>
-		/// Verifies that <see cref="IUserDataService.CreateUserWithParticipantAsync"/> normalizes whitespace-only avatar
-		/// URLs to <c>null</c>.
-		/// </summary>
-		[Fact]
-		public async Task CreateUserWithParticipantAsync_WhenAvatarUrlWhitespace_BecomesNull()
-		{
-			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
-			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-			// Act
-			UserEntity user = await service.CreateUserWithParticipantAsync(
-				                  displayName: "Alice",
-				                  avatarUrl: "   ",
-				                  username: "alice",
-				                  email: "alice@example.test",
-				                  passwordHash: "hash",
-				                  assignDefaultUserRole: false,
-				                  utcNow: utcNow);
-
-			ParticipantEntity? participantAfter = await Fixture.DbContext.Participants
-				                                      .AsNoTracking()
-				                                      .FirstOrDefaultAsync(p => p.Id == user.ParticipantId);
-
-			// Assert
-			Assert.NotNull(participantAfter);
-			Assert.Null(participantAfter.AvatarUrl);
 		}
 
 		/// <summary>
@@ -441,7 +389,6 @@ public sealed partial class LumaCoreDataServiceTests
 			// Act
 			UserEntity user = await service.CreateUserWithParticipantAsync(
 				                  displayName: "Alice",
-				                  avatarUrl: null,
 				                  username: "alice",
 				                  email: "alice@example.test",
 				                  passwordHash: "hash",
@@ -473,7 +420,6 @@ public sealed partial class LumaCoreDataServiceTests
 			var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
 				         service.CreateUserWithParticipantAsync(
 					         displayName: "Alice",
-					         avatarUrl: null,
 					         username: "alice",
 					         email: "alice@example.test",
 					         passwordHash: "hash",
@@ -486,44 +432,38 @@ public sealed partial class LumaCoreDataServiceTests
 		/// Test data for <see cref="CreateUserWithParticipantAsync_WhenInputInvalid_ThrowsArgumentException"/>. Each
 		/// row provides an invalid combination of fields that triggers an <see cref="ArgumentException"/>.
 		/// </summary>
-		public static TheoryData<string, string, string?, string, string?, string, string>
+		public static TheoryData<string, string, string, string?, string, string>
 			CreateUserWithParticipantAsync_InvalidInput_Data => new()
 		{
 			// Whitespace-only display name
-			{ "Whitespace display name", "   ", null, "alice", "alice@example.test", "hash", "displayName" },
+			{ "Whitespace display name", "   ", "alice", "alice@example.test", "hash", "displayName" },
 
 			// Whitespace-only username
-			{ "Whitespace username", "Alice", null, "   ", "alice@example.test", "hash", "username" },
+			{ "Whitespace username", "Alice", "   ", "alice@example.test", "hash", "username" },
 
 			// Whitespace-only password hash
-			{ "Whitespace password hash", "Alice", null, "alice", "alice@example.test", "   ", "passwordHash" },
+			{ "Whitespace password hash", "Alice", "alice", "alice@example.test", "   ", "passwordHash" },
 
 			// Display name exceeds the 100-character maximum
 			{
-				"Display name too long", new string('x', 101), null, "alice", "alice@example.test", "hash",
+				"Display name too long", new string('x', 101), "alice", "alice@example.test", "hash",
 				"displayName"
-			},
-
-			// Avatar URL exceeds the 500-character maximum
-			{
-				"Avatar URL too long", "Alice", new string('x', 501), "alice", "alice@example.test", "hash",
-				"avatarUrl"
 			},
 
 			// Username exceeds the 50-character maximum
 			{
-				"Username too long", "Alice", null, new string('x', 51), "alice@example.test", "hash",
+				"Username too long", "Alice", new string('x', 51), "alice@example.test", "hash",
 				"username"
 			},
 
 			// Password hash exceeds the 255-character maximum
 			{
-				"Password hash too long", "Alice", null, "alice", "alice@example.test", new string('x', 256),
+				"Password hash too long", "Alice", "alice", "alice@example.test", new string('x', 256),
 				"passwordHash"
 			},
 
 			// Email exceeds the 254-character maximum
-			{ "Email too long", "Alice", null, "alice", new string('x', 255), "hash", "email" }
+			{ "Email too long", "Alice", "alice", new string('x', 255), "hash", "email" }
 		};
 
 		/// <summary>
@@ -532,7 +472,6 @@ public sealed partial class LumaCoreDataServiceTests
 		/// </summary>
 		/// <param name="scenario">A human-readable description of the test case.</param>
 		/// <param name="displayName">The display name to pass to the method.</param>
-		/// <param name="avatarUrl">The avatar URL to pass to the method.</param>
 		/// <param name="username">The username to pass to the method.</param>
 		/// <param name="email">The email to pass to the method.</param>
 		/// <param name="passwordHash">The password hash to pass to the method.</param>
@@ -542,7 +481,6 @@ public sealed partial class LumaCoreDataServiceTests
 		public async Task CreateUserWithParticipantAsync_WhenInputInvalid_ThrowsArgumentException(
 			string  scenario,
 			string  displayName,
-			string? avatarUrl,
 			string  username,
 			string? email,
 			string  passwordHash,
@@ -557,7 +495,6 @@ public sealed partial class LumaCoreDataServiceTests
 			var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
 				         service.CreateUserWithParticipantAsync(
 					         displayName: displayName,
-					         avatarUrl: avatarUrl,
 					         username: username,
 					         email: email,
 					         passwordHash: passwordHash,
@@ -571,14 +508,23 @@ public sealed partial class LumaCoreDataServiceTests
 		#region GetUserByEmailAsync
 
 		/// <summary>
-		/// Verifies that <see cref="IUserDataService.GetUserByEmailAsync"/> returns <c>null</c> when no user with the email
-		/// exists.
+		/// Verifies that <see cref="IUserDataService.GetUserByEmailAsync"/> returns <see langword="null"/> when no user
+		/// with the email exists. The toggle parameter asserts the contract — both the regular EF branch and the
+		/// compiled hot-path branch must yield the same result.
 		/// </summary>
-		[Fact]
-		public async Task GetUserByEmailAsync_WhenNotFound_ReturnsNull()
+		/// <param name="preferCompiledHotPathQueries">
+		/// Whether to enable
+		/// <see cref="DatabaseOptions.PreferCompiledHotPathQueries"/> for this run.
+		/// </param>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task GetUserByEmailAsync_WhenNotFound_ReturnsNull(bool preferCompiledHotPathQueries)
 		{
 			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
+				Fixture.DbContext,
+				o => o.PreferCompiledHotPathQueries = preferCompiledHotPathQueries);
 
 			// Act
 			UserEntity? user = await service.GetUserByEmailAsync("nobody@example.test");
@@ -589,13 +535,24 @@ public sealed partial class LumaCoreDataServiceTests
 
 		/// <summary>
 		/// Verifies that <see cref="IUserDataService.GetUserByEmailAsync"/> trims email input and returns the matching
-		/// user including <see cref="UserEntity.Participant"/>.
+		/// user including <see cref="UserEntity.Participant"/>. The toggle parameter asserts the contract — both the
+		/// regular EF branch and the compiled hot-path branch must yield the same result (trimming happens in C# before
+		/// the query, so it must work uniformly across branches).
 		/// </summary>
-		[Fact]
-		public async Task GetUserByEmailAsync_WhenEmailTrimmed_ReturnsUserIncludingParticipant()
+		/// <param name="preferCompiledHotPathQueries">
+		/// Whether to enable
+		/// <see cref="DatabaseOptions.PreferCompiledHotPathQueries"/> for this run.
+		/// </param>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task GetUserByEmailAsync_WhenEmailTrimmed_ReturnsUserIncludingParticipant(
+			bool preferCompiledHotPathQueries)
 		{
 			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
+				Fixture.DbContext,
+				o => o.PreferCompiledHotPathQueries = preferCompiledHotPathQueries);
 
 			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -609,25 +566,6 @@ public sealed partial class LumaCoreDataServiceTests
 			Assert.NotNull(reloaded);
 			Assert.Equal("alice", reloaded.Username);
 			Assert.NotNull(reloaded.Participant);
-		}
-
-		/// <summary>
-		/// Verifies that <see cref="IUserDataService.GetUserByEmailAsync"/> returns <c>null</c> when compiled hot-path
-		/// queries are enabled and no user with the specified email exists.
-		/// </summary>
-		[Fact]
-		public async Task GetUserByEmailAsync_WhenPreferCompiledHotPathQueriesEnabled_AndNotFound_ReturnsNull()
-		{
-			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
-				Fixture.DbContext,
-				o => o.PreferCompiledHotPathQueries = true);
-
-			// Act
-			UserEntity? user = await service.GetUserByEmailAsync("nobody@example.test");
-
-			// Assert
-			Assert.Null(user);
 		}
 
 		/// <summary>
@@ -656,30 +594,6 @@ public sealed partial class LumaCoreDataServiceTests
 			Assert.NotNull(user);
 			EntityState userState = Fixture.DbContext.Entry(user).State;
 			Assert.Equal(EntityState.Detached, userState);
-		}
-
-		/// <summary>
-		/// Verifies that <see cref="IUserDataService.GetUserByEmailAsync"/> can use the compiled-query hot path when
-		/// enabled.
-		/// </summary>
-		[Fact]
-		public async Task GetUserByEmailAsync_WhenPreferCompiledHotPathQueriesEnabled_ReturnsUserIncludingParticipant()
-		{
-			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
-				Fixture.DbContext,
-				o => o.PreferCompiledHotPathQueries = true);
-
-			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-			await CreateUserParticipantAsync("alice", "alice@example.test", utcNow);
-
-			// Act
-			UserEntity? reloaded = await service.GetUserByEmailAsync("alice@example.test");
-
-			// Assert
-			Assert.NotNull(reloaded);
-			Assert.Equal("alice", reloaded.Username);
-			Assert.NotNull(reloaded.Participant);
 		}
 
 		/// <summary>
@@ -720,33 +634,23 @@ public sealed partial class LumaCoreDataServiceTests
 		#region GetUserByUsernameAsync
 
 		/// <summary>
-		/// Verifies that <see cref="IUserDataService.GetUserByUsernameAsync"/> returns <c>null</c> when no user with the
-		/// username exists.
+		/// Verifies that <see cref="IUserDataService.GetUserByUsernameAsync"/> returns <see langword="null"/> when no
+		/// user with the username exists. The toggle parameter asserts the contract — both the regular EF branch and
+		/// the compiled hot-path branch must yield the same result.
 		/// </summary>
-		[Fact]
-		public async Task GetUserByUsernameAsync_WhenNotFound_ReturnsNull()
-		{
-			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
-
-			// Act
-			UserEntity? user = await service.GetUserByUsernameAsync("nobody");
-
-			// Assert
-			Assert.Null(user);
-		}
-
-		/// <summary>
-		/// Verifies that <see cref="IUserDataService.GetUserByUsernameAsync"/> returns <c>null</c> when compiled hot-path
-		/// queries are enabled and no user with the specified username exists.
-		/// </summary>
-		[Fact]
-		public async Task GetUserByUsernameAsync_WhenPreferCompiledHotPathQueriesEnabled_AndNotFound_ReturnsNull()
+		/// <param name="preferCompiledHotPathQueries">
+		/// Whether to enable
+		/// <see cref="DatabaseOptions.PreferCompiledHotPathQueries"/> for this run.
+		/// </param>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task GetUserByUsernameAsync_WhenNotFound_ReturnsNull(bool preferCompiledHotPathQueries)
 		{
 			// Arrange
 			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
 				Fixture.DbContext,
-				o => o.PreferCompiledHotPathQueries = true);
+				o => o.PreferCompiledHotPathQueries = preferCompiledHotPathQueries);
 
 			// Act
 			UserEntity? user = await service.GetUserByUsernameAsync("nobody");
@@ -757,13 +661,24 @@ public sealed partial class LumaCoreDataServiceTests
 
 		/// <summary>
 		/// Verifies that <see cref="IUserDataService.GetUserByUsernameAsync"/> trims username input and returns the
-		/// matching user including <see cref="UserEntity.Participant"/>.
+		/// matching user including <see cref="UserEntity.Participant"/>. The toggle parameter asserts the contract —
+		/// both the regular EF branch and the compiled hot-path branch must yield the same result (trimming happens in
+		/// C# before the query, so it must work uniformly across branches).
 		/// </summary>
-		[Fact]
-		public async Task GetUserByUsernameAsync_WhenUsernameTrimmed_ReturnsUserIncludingParticipant()
+		/// <param name="preferCompiledHotPathQueries">
+		/// Whether to enable
+		/// <see cref="DatabaseOptions.PreferCompiledHotPathQueries"/> for this run.
+		/// </param>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task GetUserByUsernameAsync_WhenUsernameTrimmed_ReturnsUserIncludingParticipant(
+			bool preferCompiledHotPathQueries)
 		{
 			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
+				Fixture.DbContext,
+				o => o.PreferCompiledHotPathQueries = preferCompiledHotPathQueries);
 
 			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -772,31 +687,6 @@ public sealed partial class LumaCoreDataServiceTests
 			// Act
 			// Special: GetUserByUsernameAsync() trims input and includes Participant navigation.
 			UserEntity? reloaded = await service.GetUserByUsernameAsync("  alice  ");
-
-			// Assert
-			Assert.NotNull(reloaded);
-			Assert.Equal("alice@example.test", reloaded.Email);
-			Assert.NotNull(reloaded.Participant);
-		}
-
-		/// <summary>
-		/// Verifies that <see cref="IUserDataService.GetUserByUsernameAsync"/> can use the compiled-query hot path when
-		/// enabled.
-		/// </summary>
-		[Fact]
-		public async Task
-			GetUserByUsernameAsync_WhenPreferCompiledHotPathQueriesEnabled_ReturnsUserIncludingParticipant()
-		{
-			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
-				Fixture.DbContext,
-				o => o.PreferCompiledHotPathQueries = true);
-
-			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-			await CreateUserParticipantAsync("alice", "alice@example.test", utcNow);
-
-			// Act
-			UserEntity? reloaded = await service.GetUserByUsernameAsync("alice");
 
 			// Assert
 			Assert.NotNull(reloaded);
@@ -890,14 +780,23 @@ public sealed partial class LumaCoreDataServiceTests
 		#region EmailExistsAsync
 
 		/// <summary>
-		/// Verifies that <see cref="IUserDataService.EmailExistsAsync"/> returns <c>true</c> when a user with the email
-		/// exists.
+		/// Verifies that <see cref="IUserDataService.EmailExistsAsync"/> returns <see langword="true"/> when a user with
+		/// the email exists. The toggle parameter asserts the contract — both the regular EF branch and the compiled
+		/// hot-path branch must yield the same result.
 		/// </summary>
-		[Fact]
-		public async Task EmailExistsAsync_WhenEmailExists_ReturnsTrue()
+		/// <param name="preferCompiledHotPathQueries">
+		/// Whether to enable
+		/// <see cref="DatabaseOptions.PreferCompiledHotPathQueries"/> for this run.
+		/// </param>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task EmailExistsAsync_WhenEmailExists_ReturnsTrue(bool preferCompiledHotPathQueries)
 		{
 			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
+				Fixture.DbContext,
+				o => o.PreferCompiledHotPathQueries = preferCompiledHotPathQueries);
 
 			await CreateUserParticipantAsync(
 				"alice",
@@ -934,62 +833,29 @@ public sealed partial class LumaCoreDataServiceTests
 		}
 
 		/// <summary>
-		/// Verifies that <see cref="IUserDataService.EmailExistsAsync"/> returns <c>false</c> when no user with the email
-		/// exists.
+		/// Verifies that <see cref="IUserDataService.EmailExistsAsync"/> returns <see langword="false"/> when no user
+		/// with the email exists. The toggle parameter asserts the contract — both the regular EF branch and the
+		/// compiled hot-path branch must yield the same result.
 		/// </summary>
-		[Fact]
-		public async Task EmailExistsAsync_WhenEmailDoesNotExist_ReturnsFalse()
+		/// <param name="preferCompiledHotPathQueries">
+		/// Whether to enable
+		/// <see cref="DatabaseOptions.PreferCompiledHotPathQueries"/> for this run.
+		/// </param>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task EmailExistsAsync_WhenEmailDoesNotExist_ReturnsFalse(bool preferCompiledHotPathQueries)
 		{
 			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
+				Fixture.DbContext,
+				o => o.PreferCompiledHotPathQueries = preferCompiledHotPathQueries);
 
 			// Act
 			bool exists = await service.EmailExistsAsync("nobody@example.test");
 
 			// Assert
 			Assert.False(exists);
-		}
-
-		/// <summary>
-		/// Verifies that <see cref="IUserDataService.EmailExistsAsync"/> returns <c>false</c> when compiled hot-path queries
-		/// are enabled and no user with the specified email exists.
-		/// </summary>
-		[Fact]
-		public async Task EmailExistsAsync_WhenPreferCompiledHotPathQueriesEnabled_AndNotFound_ReturnsFalse()
-		{
-			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
-				Fixture.DbContext,
-				o => o.PreferCompiledHotPathQueries = true);
-
-			// Act
-			bool exists = await service.EmailExistsAsync("nobody@example.test");
-
-			// Assert
-			Assert.False(exists);
-		}
-
-		/// <summary>
-		/// Verifies that <see cref="IUserDataService.EmailExistsAsync"/> can use the compiled-query hot path when enabled.
-		/// </summary>
-		[Fact]
-		public async Task EmailExistsAsync_WhenPreferCompiledHotPathQueriesEnabled_ReturnsTrue()
-		{
-			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
-				Fixture.DbContext,
-				o => o.PreferCompiledHotPathQueries = true);
-
-			await CreateUserParticipantAsync(
-				"alice",
-				"alice@example.test",
-				new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-
-			// Act
-			bool exists = await service.EmailExistsAsync("alice@example.test");
-
-			// Assert
-			Assert.True(exists);
 		}
 
 		/// <summary>
@@ -1030,14 +896,23 @@ public sealed partial class LumaCoreDataServiceTests
 		#region UsernameExistsAsync
 
 		/// <summary>
-		/// Verifies that <see cref="IUserDataService.UsernameExistsAsync"/> returns <c>true</c> when a user with the
-		/// username exists.
+		/// Verifies that <see cref="IUserDataService.UsernameExistsAsync"/> returns <see langword="true"/> when a user
+		/// with the username exists. The toggle parameter asserts the contract — both the regular EF branch and the
+		/// compiled hot-path branch must yield the same result.
 		/// </summary>
-		[Fact]
-		public async Task UsernameExistsAsync_WhenUsernameExists_ReturnsTrue()
+		/// <param name="preferCompiledHotPathQueries">
+		/// Whether to enable
+		/// <see cref="DatabaseOptions.PreferCompiledHotPathQueries"/> for this run.
+		/// </param>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task UsernameExistsAsync_WhenUsernameExists_ReturnsTrue(bool preferCompiledHotPathQueries)
 		{
 			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
+				Fixture.DbContext,
+				o => o.PreferCompiledHotPathQueries = preferCompiledHotPathQueries);
 
 			await CreateUserParticipantAsync(
 				"alice",
@@ -1098,62 +973,29 @@ public sealed partial class LumaCoreDataServiceTests
 		}
 
 		/// <summary>
-		/// Verifies that <see cref="IUserDataService.UsernameExistsAsync"/> returns <c>false</c> when no user with the
-		/// username exists.
+		/// Verifies that <see cref="IUserDataService.UsernameExistsAsync"/> returns <see langword="false"/> when no user
+		/// with the username exists. The toggle parameter asserts the contract — both the regular EF branch and the
+		/// compiled hot-path branch must yield the same result.
 		/// </summary>
-		[Fact]
-		public async Task UsernameExistsAsync_WhenUsernameDoesNotExist_ReturnsFalse()
+		/// <param name="preferCompiledHotPathQueries">
+		/// Whether to enable
+		/// <see cref="DatabaseOptions.PreferCompiledHotPathQueries"/> for this run.
+		/// </param>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task UsernameExistsAsync_WhenUsernameDoesNotExist_ReturnsFalse(bool preferCompiledHotPathQueries)
 		{
 			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
+				Fixture.DbContext,
+				o => o.PreferCompiledHotPathQueries = preferCompiledHotPathQueries);
 
 			// Act
 			bool exists = await service.UsernameExistsAsync("nobody");
 
 			// Assert
 			Assert.False(exists);
-		}
-
-		/// <summary>
-		/// Verifies that <see cref="IUserDataService.UsernameExistsAsync"/> returns <c>false</c> when compiled hot-path
-		/// queries are enabled and no user with the specified username exists.
-		/// </summary>
-		[Fact]
-		public async Task UsernameExistsAsync_WhenPreferCompiledHotPathQueriesEnabled_AndNotFound_ReturnsFalse()
-		{
-			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
-				Fixture.DbContext,
-				o => o.PreferCompiledHotPathQueries = true);
-
-			// Act
-			bool exists = await service.UsernameExistsAsync("nobody");
-
-			// Assert
-			Assert.False(exists);
-		}
-
-		/// <summary>
-		/// Verifies that <see cref="IUserDataService.UsernameExistsAsync"/> can use the compiled-query hot path when enabled.
-		/// </summary>
-		[Fact]
-		public async Task UsernameExistsAsync_WhenPreferCompiledHotPathQueriesEnabled_ReturnsTrue()
-		{
-			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
-				Fixture.DbContext,
-				o => o.PreferCompiledHotPathQueries = true);
-
-			await CreateUserParticipantAsync(
-				"alice",
-				"alice@example.test",
-				new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-
-			// Act
-			bool exists = await service.UsernameExistsAsync("alice");
-
-			// Assert
-			Assert.True(exists);
 		}
 
 		/// <summary>
@@ -1234,7 +1076,6 @@ public sealed partial class LumaCoreDataServiceTests
 				                                      .FirstOrDefaultAsync(p => p.Id == participant.Id);
 			Assert.NotNull(participantAfter);
 			Assert.Equal("Deleted user", participantAfter.DisplayName);
-			Assert.Null(participantAfter.AvatarUrl);
 
 			MessageEntity? messageAfter = await Fixture.DbContext.Messages
 				                              .AsNoTracking()
@@ -1331,7 +1172,6 @@ public sealed partial class LumaCoreDataServiceTests
 
 			Assert.NotNull(participantAfter);
 			Assert.Equal("Deleted user", participantAfter.DisplayName);
-			Assert.Null(participantAfter.AvatarUrl);
 		}
 
 		/// <summary>
@@ -1405,8 +1245,6 @@ public sealed partial class LumaCoreDataServiceTests
 			Assert.Equal("userId.Value", ex.ParamName);
 		}
 
-		#endregion
-
 		/// <summary>
 		/// Creates a user participant with a linked conversation, conversation membership, and message for deletion
 		/// scenario tests.
@@ -1416,8 +1254,11 @@ public sealed partial class LumaCoreDataServiceTests
 		/// A tuple containing the created <see cref="ParticipantEntity"/>, <see cref="UserEntity"/>,
 		/// <see cref="ConversationEntity"/>, and <see cref="MessageEntity"/>.
 		/// </returns>
-		private async
-			Task<(ParticipantEntity Participant, UserEntity User, ConversationEntity Conversation, MessageEntity Message
+		private async Task<(
+				ParticipantEntity Participant,
+				UserEntity User,
+				ConversationEntity Conversation,
+				MessageEntity Message
 				)>
 			CreateUserWithConversationAndMessageAsync(DateTime utcNow)
 		{
@@ -1425,7 +1266,6 @@ public sealed partial class LumaCoreDataServiceTests
 			{
 				PublicId = Guid.NewGuid(),
 				DisplayName = "Alice",
-				AvatarUrl = "https://example.test/avatar.png",
 				CreatedAtUtc = utcNow
 			};
 			Fixture.DbContext.Participants.Add(participant);
@@ -1434,6 +1274,7 @@ public sealed partial class LumaCoreDataServiceTests
 			var user = new UserEntity
 			{
 				ParticipantId = participant.Id,
+				CreatedAtUtc = utcNow,
 				Username = "alice",
 				UsernameNormalized = "ALICE",
 				Email = "alice@example.test",
@@ -1475,5 +1316,139 @@ public sealed partial class LumaCoreDataServiceTests
 
 			return (participant, user, conversation, message);
 		}
+
+		#endregion
+
+		#region UTC clock fallback
+
+		/// <summary>
+		/// Verifies that <see cref="IUserDataService.CreateParticipantAsync"/> falls back to the injected
+		/// <see cref="TimeProvider"/> for <see cref="ParticipantEntity.CreatedAtUtc"/> when the optional
+		/// <c>utcNow</c> argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c> and silently
+		/// captures wall-clock time instead.
+		/// </remarks>
+		[Fact]
+		public async Task CreateParticipantAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext, timeProvider: clock);
+
+			// Act
+			ParticipantEntity participant = await service.CreateParticipantAsync(displayName: "Alice");
+
+			// Assert
+			Assert.Equal(fixedNow, participant.CreatedAtUtc);
+		}
+
+		/// <summary>
+		/// Verifies that <see cref="IUserDataService.CreateUserAsync"/> falls back to the injected
+		/// <see cref="TimeProvider"/> for <see cref="UserEntity.CreatedAtUtc"/> when the optional <c>utcNow</c>
+		/// argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c>.
+		/// </remarks>
+		[Fact]
+		public async Task CreateUserAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext, timeProvider: clock);
+
+			ParticipantEntity participant = await service.CreateParticipantAsync(
+				                                displayName: "Alice",
+				                                utcNow: fixedNow.AddMinutes(-1));
+
+			// Act
+			UserEntity user = await service.CreateUserAsync(
+				                  participant.Id,
+				                  username: "alice",
+				                  email: "alice@example.test",
+				                  passwordHash: "hash");
+
+			// Assert
+			Assert.Equal(fixedNow, user.CreatedAtUtc);
+		}
+
+		/// <summary>
+		/// Verifies that <see cref="IUserDataService.CreateUserWithParticipantAsync"/> falls back to the injected
+		/// <see cref="TimeProvider"/> for both the participant and user <c>CreatedAtUtc</c> values when the optional
+		/// <c>utcNow</c> argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c>.
+		/// </remarks>
+		[Fact]
+		public async Task CreateUserWithParticipantAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext, timeProvider: clock);
+
+			// Act
+			UserEntity user = await service.CreateUserWithParticipantAsync(
+				                  displayName: "Alice",
+				                  username: "alice",
+				                  email: "alice@example.test",
+				                  passwordHash: "hash",
+				                  assignDefaultUserRole: false);
+
+			UserEntity? reloaded = await Fixture.DbContext.Users
+				                       .AsNoTracking()
+				                       .Include(u => u.Participant)
+				                       .FirstOrDefaultAsync(u => u.Id == user.Id);
+
+			// Assert
+			Assert.NotNull(reloaded);
+			Assert.Equal(fixedNow, reloaded.CreatedAtUtc);
+			Assert.NotNull(reloaded.Participant);
+			Assert.Equal(fixedNow, reloaded.Participant.CreatedAtUtc);
+		}
+
+		/// <summary>
+		/// Verifies that <see cref="IUserDataService.DeleteUserAndScrubParticipantAsync"/> falls back to the injected
+		/// <see cref="TimeProvider"/> for <see cref="MessageEntity.RedactedAtUtc"/> on bulk message redaction when
+		/// the optional <c>utcNow</c> argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c>.
+		/// </remarks>
+		[Fact]
+		public async Task DeleteUserAndScrubParticipantAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
+				Fixture.DbContext,
+				// Keep the conversation around so the message survives deletion and we can observe its
+				// redaction timestamp written by the bulk ExecuteUpdateAsync path.
+				configure: o => o.UserDeletion.DeletePrivateConversations = false,
+				timeProvider: clock);
+
+			DateTime seedNow = fixedNow.AddDays(-1);
+			(ParticipantEntity _, UserEntity user, ConversationEntity _, MessageEntity message) =
+				await CreateUserWithConversationAndMessageAsync(seedNow);
+
+			// Act
+			bool deleted = await service.DeleteUserAndScrubParticipantAsync(user.Id);
+
+			// Assert
+			Assert.True(deleted);
+			MessageEntity? reloaded = await Fixture.DbContext.Messages
+				                          .AsNoTracking()
+				                          .FirstOrDefaultAsync(m => m.Id == message.Id);
+			Assert.NotNull(reloaded);
+			Assert.Equal(fixedNow, reloaded.RedactedAtUtc);
+		}
+
+		#endregion
 	}
 }

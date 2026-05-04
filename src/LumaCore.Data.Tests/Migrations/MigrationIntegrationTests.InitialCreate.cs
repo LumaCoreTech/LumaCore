@@ -12,7 +12,7 @@ namespace LumaCore.Data.Tests.Migrations;
 // InitialCreate migration: verify that Up() creates the expected schema and Down() removes it cleanly.
 //
 //   1. Up — tables: applies the migration and asserts all 10 domain tables exist (discovery-based).
-//   2. Up — indexes: asserts all 21 explicitly-defined indexes exist (discovery-based).
+//   2. Up — indexes: asserts all 22 explicitly-defined indexes exist (discovery-based).
 //   3. Down — reverts the migration and asserts all domain tables are gone.
 //
 // All three tests use discovery-based assertions (querying the provider's system catalog for the
@@ -50,12 +50,11 @@ public sealed partial class MigrationIntegrationTests
 	/// </summary>
 	private static readonly string[] sInitialCreateExpectedIndexes =
 	[
+		"IX_ConversationParticipants_LastReadMessageId",
 		"IX_ConversationParticipants_ParticipantId",
 		"IX_Conversations_PublicId",
 		"IX_Conversations_UpdatedAtUtc",
-		"IX_Messages_ConversationId",
 		"IX_Messages_ConversationId_CreatedAtUtc",
-		"IX_Messages_CreatedAtUtc",
 		"IX_Messages_PublicId",
 		"IX_Messages_SenderId",
 		"IX_ModelEndpoints_IsActive",
@@ -102,7 +101,7 @@ public sealed partial class MigrationIntegrationTests
 	// --- 2. Up — apply InitialCreate and verify indexes ---
 
 	/// <summary>
-	/// Verifies that <see cref="InitialCreate.Up"/> creates all 21 explicitly-defined indexes against the
+	/// Verifies that <see cref="InitialCreate.Up"/> creates all 22 explicitly-defined indexes against the
 	/// configured database provider. Uses discovery-based assertion (full index list from the system catalog).
 	/// </summary>
 	[Fact]

@@ -11,6 +11,7 @@ namespace LumaCore.Data.Tests;
 /// <summary>
 /// Tests for the EF Core design-time DbContext factory to ensure tooling scenarios remain functional.
 /// </summary>
+[Trait("Category", "DbContext")]
 public sealed class DesignTimeFactoryTests
 {
 	/// <summary>

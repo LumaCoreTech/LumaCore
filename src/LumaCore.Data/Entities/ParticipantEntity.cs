@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Definitions;
+
 namespace LumaCore.Data.Entities;
 
 /// <summary>
@@ -54,6 +56,8 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public class ParticipantEntity
 {
+	// --- 1. Primary key ---
+
 	/// <summary>
 	/// Gets or sets the internal unique identifier for database relationships.
 	/// </summary>
@@ -66,6 +70,8 @@ public class ParticipantEntity
 	///     </para>
 	/// </remarks>
 	public ParticipantId Id { get; set; }
+
+	// --- 2. Public identifier ---
 
 	/// <summary>
 	/// Gets or sets the public unique identifier for external references.
@@ -81,36 +87,12 @@ public class ParticipantEntity
 	/// </remarks>
 	public Guid PublicId { get; set; }
 
-	/// <summary>
-	/// Gets or sets the UTC timestamp when this participant was created.
-	/// </summary>
-	public DateTime CreatedAtUtc { get; set; }
-
-	/// <summary>
-	/// Gets or sets the display name of this participant.
-	/// </summary>
-	/// <remarks>
-	/// For users, this might be their chosen display name. For personas, this is the character name.
-	/// The database enforces a maximum length.
-	/// </remarks>
-	public string DisplayName { get; set; } = string.Empty;
-
-	/// <summary>
-	/// Gets or sets the URL to the participant's avatar image.
-	/// </summary>
-	/// <remarks>
-	/// Can be a relative path to a local asset or an absolute URL to an external image.
-	/// The database enforces a maximum length.
-	/// </remarks>
-	public string? AvatarUrl { get; set; }
+	// --- 3. Foreign keys + Navigation properties (single-entity reverse navs) ---
 
 	/// <summary>
 	/// Gets or sets the persona linked to this participant, if any.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
 	///     <para>
 	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
 	///     </para>
@@ -126,9 +108,6 @@ public class ParticipantEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
 	///     </para>
 	///     <para>
@@ -138,13 +117,30 @@ public class ParticipantEntity
 	/// </remarks>
 	public UserEntity? User { get; set; }
 
+	// --- 4. Timestamps ---
+
+	/// <summary>
+	/// Gets or sets the UTC timestamp when this participant was created.
+	/// </summary>
+	public DateTime CreatedAtUtc { get; set; }
+
+	// --- 5. Scalar domain fields ---
+
+	/// <summary>
+	/// Gets or sets the display name of this participant.
+	/// </summary>
+	/// <remarks>
+	/// For users, this might be their chosen display name. For personas, this is the character name.
+	/// Maximum length: <see cref="EntityLimits.ParticipantDisplayNameMaxLength"/>.
+	/// </remarks>
+	public string DisplayName { get; set; } = string.Empty;
+
+	// --- 6. Collection navigation properties ---
+
 	/// <summary>
 	/// Gets the collection of conversation participations.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
 	///     <para>
 	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
 	///     </para>
@@ -155,9 +151,6 @@ public class ParticipantEntity
 	/// Gets the collection of messages sent by this participant.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
 	///     <para>
 	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
 	///     </para>

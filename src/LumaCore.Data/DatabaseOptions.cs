@@ -223,8 +223,13 @@ public sealed class DatabaseOptions : IValidatableObject
 	///         <item><c>sqlite</c> — SQLite, default for development and small deployments</item>
 	///         <item><c>postgresql</c> — PostgreSQL, recommended for production</item>
 	///         <item><c>sqlserver</c> — Microsoft SQL Server</item>
-	///         <item><c>mysql</c> — MySQL / MariaDB (via Pomelo)</item>
 	///     </list>
+	///     <para>
+	///     <c>mysql</c> (MySQL / MariaDB via Pomelo) is recognized but <b>temporarily unavailable</b>:
+	///     <c>Pomelo.EntityFrameworkCore.MySql</c> has not yet released an EF Core 10 compatible version.
+	///     Selecting <c>mysql</c> will fail fast at startup with a descriptive error. Track progress at
+	///     <see href="https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues"/>.
+	///     </para>
 	/// </remarks>
 	[Required(ErrorMessage = ProviderRequiredError)]
 	public string Provider { get; set; } = "sqlite";

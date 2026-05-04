@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
 using Xunit;
+using Xunit.Internal;
 
 namespace LumaCore.Api.Tests.Features.Auth;
 
@@ -61,7 +62,7 @@ public sealed partial class EndpointMappingTests
 			.SelectMany(ds => ds.Endpoints)
 			.OfType<RouteEndpoint>()
 			.Where(e => e.RoutePattern.RawText?.Contains("/auth/") == true)
-			.ToList();
+			.CastOrToReadOnlyList();
 	}
 
 	/// <summary>
@@ -85,7 +86,7 @@ public sealed partial class EndpointMappingTests
 			.SelectMany(ds => ds.Endpoints)
 			.OfType<RouteEndpoint>()
 			.FirstOrDefault(e =>
-				e.RoutePattern.RawText?.EndsWith(routeSuffix) == true &&
+				e.RoutePattern.RawText?.EndsWith(routeSuffix, StringComparison.Ordinal) == true &&
 				e.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods.Contains(httpMethod) == true);
 
 		Assert.NotNull(match);

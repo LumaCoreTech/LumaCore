@@ -12,10 +12,13 @@ using LumaCore.Api.Features.HttpsRedirection;
 using LumaCore.Api.Features.OpenApi;
 using LumaCore.Api.Features.ProxyHeaders;
 using LumaCore.Api.Features.SecurityHeaders;
+using LumaCore.Api.Features.StreamBufferPool;
 using LumaCore.Api.Features.System;
 using LumaCore.Api.Features.UserManagement;
 using LumaCore.BackgroundProcessing;
 using LumaCore.Configuration;
+
+namespace LumaCore.Api;
 
 public static partial class Program
 {
@@ -38,6 +41,12 @@ public static partial class Program
 	/// </remarks>
 	private static void ConfigureServices(WebApplicationBuilder builder)
 	{
+		// Register the Stream Buffer Pool feature for efficient memory management of streaming responses.
+		// This provides a shared pool of reusable buffers for streaming large responses without excessive
+		// allocations. Used in conjunction with MemoryBlockStream for streaming model responses and file
+		// downloads.
+		builder.AddStreamBufferPoolFeature();
+
 		// Register ProblemDetails services for RFC 7807 compliant error responses.
 		// This enables consistent, machine-readable error payloads across all endpoints.
 		// Unhandled exceptions, validation errors, and status codes are automatically

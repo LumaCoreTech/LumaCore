@@ -9,7 +9,7 @@ using LumaCore.Data.DataPort.Models;
 
 using Npgsql;
 
-using static LumaCore.Data.DataPort.SqlIdentifierHelper;
+using static LumaCore.Data.Providers.SqlIdentifierHelper;
 
 namespace LumaCore.Data.DataPort.Export.Implementations;
 

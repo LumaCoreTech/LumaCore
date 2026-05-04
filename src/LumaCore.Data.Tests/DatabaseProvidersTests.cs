@@ -9,6 +9,7 @@ namespace LumaCore.Data.Tests;
 /// <summary>
 /// Unit tests for <see cref="DatabaseProviders"/>.
 /// </summary>
+[Trait("Category", "Options")]
 public sealed class DatabaseProvidersTests
 {
 	/// <summary>

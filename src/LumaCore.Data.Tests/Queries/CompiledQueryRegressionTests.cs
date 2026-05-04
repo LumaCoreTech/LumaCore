@@ -4,6 +4,7 @@
 
 using LumaCore.Data.Entities;
 using LumaCore.Data.Tests.Infrastructure;
+using LumaCore.Definitions;
 
 using Xunit;
 
@@ -38,8 +39,14 @@ namespace LumaCore.Data.Tests.Queries;
 ///     covering all entity types referenced by the queries.
 ///     </para>
 ///     <para>
+///     <b>Scope:</b> These are smoke tests for model-compatibility. Functional behaviour of the queries
+///     (filtering predicates, business rules, edge cases) is verified by the corresponding service-level
+///     tests in <c>LumaCoreDataServiceTests</c>. The seed is intentionally minimal — just enough for each
+///     compiled query to execute against the EF model without throwing.
+///     </para>
+///     <para>
 ///     Partial files: <c>UserQueries</c>, <c>RoleQueries</c>, <c>ConversationQueries</c>,
-///     <c>MessageQueries</c>, <c>PersonaQueries</c>.
+///     <c>MessageQueries</c>, <c>PersonaQueries</c>, <c>ResourceQueries</c>.
 ///     </para>
 /// </remarks>
 [Trait("Category", "Queries")]
@@ -62,7 +69,13 @@ public sealed partial class CompiledQueryRegressionTests : IAsyncLifetime
 	private ConversationId mConversationId;
 	private Guid           mConversationPublicId;
 
+	private RoleId mRoleId;
+
 	private Guid mMessagePublicId;
+
+	private ResourceId mResourceId;
+	private string     mResourceContentHash = string.Empty;
+	private Guid       mResourceReferencePublicId;
 
 	/// <summary>
 	/// Disposes the database fixture.
@@ -106,6 +119,7 @@ public sealed partial class CompiledQueryRegressionTests : IAsyncLifetime
 		var user = new UserEntity
 		{
 			ParticipantId = mAliceParticipantId,
+			CreatedAtUtc = sSeedUtc,
 			Username = "alice",
 			UsernameNormalized = "ALICE",
 			Email = "alice@example.test",
@@ -129,16 +143,30 @@ public sealed partial class CompiledQueryRegressionTests : IAsyncLifetime
 		var persona = new PersonaEntity
 		{
 			ParticipantId = mBotParticipantId,
-			Description = "Test bot persona",
 			DefaultModel = "gpt-test",
-			IsActive = true
+			IsActive = true,
+			CreatedAtUtc = sSeedUtc,
+			UpdatedAtUtc = sSeedUtc
 		};
 		db.Personas.Add(persona);
+
+		await db.SaveChangesAsync();
+
+		// Seed description translations for the persona
+		db.PersonaDescriptionTranslations.Add(
+			new PersonaDescriptionTranslationEntity
+			{
+				PersonaId = persona.Id,
+				CultureCode = "en",
+				Value = "Test bot persona",
+				Source = TranslationSource.Manual
+			});
 
 		await db.SaveChangesAsync();
 		mAliceUserId = user.Id;
 		mConversationId = conversation.Id;
 		mPersonaId = persona.Id;
+		mRoleId = role.Id;
 
 		// --- 3. Join entities, message, system prompt (depend on IDs from step 2) ---
 
@@ -159,24 +187,82 @@ public sealed partial class CompiledQueryRegressionTests : IAsyncLifetime
 				Role = ConversationParticipantRole.Owner
 			});
 
-		db.SystemPrompts.Add(
-			new SystemPromptEntity
-			{
-				PublicId = Guid.NewGuid(),
-				PersonaId = mPersonaId,
-				Content = "You are a test bot.",
-				Hash = "0000000000000000000000000000000000000000000000000000000000000000",
-				CreatedAtUtc = sSeedUtc
-			});
+		var systemPrompt = new SystemPromptEntity
+		{
+			PublicId = Guid.NewGuid(),
+			PersonaId = mPersonaId,
+			Content = "You are a test bot.",
+			Hash = "0000000000000000000000000000000000000000000000000000000000000000",
+			CreatedAtUtc = sSeedUtc
+		};
+		db.SystemPrompts.Add(systemPrompt);
 
+		// Save so the SystemPrompt gets its DB-generated PK, then link it back as the persona's
+		// active prompt. PersonaQueries.GetCurrentSystemPrompt resolves via Persona.ActiveSystemPromptId
+		// (not "latest by CreatedAtUtc"), so the link must be explicit for the regression test to pass.
+		await db.SaveChangesAsync();
+		persona.ActiveSystemPromptId = systemPrompt.Id;
+
+		// Three messages with distinct timestamps so MessageQueries.GetRecentByConversationId can verify
+		// both the ordering (newest first) and the limit semantics. mMessagePublicId points to the
+		// middle message so GetByPublicId asserts can distinguish it from first/last.
 		mMessagePublicId = Guid.NewGuid();
-		db.Messages.Add(
+		var middleMessage = new MessageEntity
+		{
+			PublicId = mMessagePublicId,
+			ConversationId = mConversationId,
+			SenderId = mAliceParticipantId,
+			Content = "Middle message",
+			CreatedAtUtc = sSeedUtc.AddMinutes(1)
+		};
+		db.Messages.AddRange(
 			new MessageEntity
 			{
-				PublicId = mMessagePublicId,
+				PublicId = Guid.NewGuid(),
 				ConversationId = mConversationId,
 				SenderId = mAliceParticipantId,
-				Content = "Hello, world!",
+				Content = "First message",
+				CreatedAtUtc = sSeedUtc
+			},
+			middleMessage,
+			new MessageEntity
+			{
+				PublicId = Guid.NewGuid(),
+				ConversationId = mConversationId,
+				SenderId = mAliceParticipantId,
+				Content = "Last message",
+				CreatedAtUtc = sSeedUtc.AddMinutes(2)
+			});
+
+		await db.SaveChangesAsync();
+
+		// --- 4. Resource + reference (depend on the middle message's database-generated PK) ---
+
+		// Deterministic 64-character lowercase hex hash so ResourceQueries.GetActiveByContentHash
+		// can probe both a hit and a miss without coupling to a real SHA-256 computation.
+		mResourceContentHash = new string('a', 64);
+		var resource = new ResourceEntity
+		{
+			ContentHash = mResourceContentHash,
+			StoragePath = "ab/abcdef01-2345-6789-abcd-ef0123456789",
+			SizeBytes = 1024,
+			DeletionState = ResourceDeletionState.Active,
+			CreatedAtUtc = sSeedUtc
+		};
+		db.Resources.Add(resource);
+		await db.SaveChangesAsync();
+		mResourceId = resource.Id;
+
+		mResourceReferencePublicId = Guid.NewGuid();
+		db.ResourceReferences.Add(
+			new ResourceReferenceEntity
+			{
+				PublicId = mResourceReferencePublicId,
+				ResourceId = mResourceId,
+				OwnerKind = ResourceOwnerKind.Message,
+				OwnerId = new ResourceOwnerId(middleMessage.Id.Value),
+				ContentType = "image/png",
+				OriginalFileName = "test.png",
 				CreatedAtUtc = sSeedUtc
 			});
 

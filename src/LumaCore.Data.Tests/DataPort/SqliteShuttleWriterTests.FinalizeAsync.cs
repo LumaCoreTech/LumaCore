@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.Globalization;
+
 using LumaCore.Core.IO;
 using LumaCore.Data.DataPort.Shuttle;
 
@@ -55,7 +57,7 @@ public sealed partial class SqliteShuttleWriterTests
 				// ShuttleFormatVersion
 				string? version = await ReadMetadataValueAsync(connection, "ShuttleFormatVersion");
 				Assert.Equal(
-					SqliteShuttleSchema.CurrentShuttleFormatVersion.ToString(),
+					SqliteShuttleSchema.CurrentShuttleFormatVersion.ToString(CultureInfo.InvariantCulture),
 					version);
 
 				// ShuttleId — must be a valid GUID

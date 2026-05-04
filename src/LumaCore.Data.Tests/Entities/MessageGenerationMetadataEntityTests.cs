@@ -11,6 +11,12 @@ namespace LumaCore.Data.Tests.Entities;
 /// <summary>
 /// Unit tests for <see cref="MessageGenerationMetadataEntity.CreateForMessage"/>.
 /// </summary>
+/// <remarks>
+/// Construction and POCO-property coverage for <see cref="MessageGenerationMetadataEntity"/> is provided by
+/// <see cref="EntitySmokeTests.MessageGenerationMetadataEntity_CanSetAllProperties"/>. This file focuses on
+/// the behavior of the <see cref="MessageGenerationMetadataEntity.CreateForMessage"/> factory method.
+/// </remarks>
+[Trait("Category", "Entities")]
 public sealed class MessageGenerationMetadataEntityTests
 {
 	#region CreateForMessage()
@@ -99,10 +105,12 @@ public sealed class MessageGenerationMetadataEntityTests
 			source,
 			storeFullPrompt: false);
 
-		// Assert
+		// Assert — navigations are not propagated, but scalar fields still are.
 		Assert.Null(result.Message);
 		Assert.Null(result.ModelEndpoint);
 		Assert.Null(result.SystemPrompt);
+		Assert.Equal(new ModelEndpointId(1), result.ModelEndpointId);
+		Assert.Equal("test-model", result.Model);
 	}
 
 	// --- 2. Invalid scenarios ---
@@ -120,7 +128,7 @@ public sealed class MessageGenerationMetadataEntityTests
 		string scenario,
 		long   idValue)
 	{
-		_ = scenario;
+		_ = scenario; // Used by xUnit test display name only.
 
 		// Arrange
 		var source = new MessageGenerationMetadataEntity { ModelEndpointId = new ModelEndpointId(1), Model = "m" };

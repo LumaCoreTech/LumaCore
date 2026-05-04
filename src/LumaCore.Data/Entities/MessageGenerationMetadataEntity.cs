@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Definitions;
+
 namespace LumaCore.Data.Entities;
 
 /// <summary>
@@ -39,6 +41,8 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public class MessageGenerationMetadataEntity
 {
+	// --- 1. Primary key (also foreign key to MessageEntity) ---
+
 	/// <summary>
 	/// Gets or sets the foreign key to the message. Also serves as the primary key.
 	/// </summary>
@@ -57,9 +61,6 @@ public class MessageGenerationMetadataEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     The relationship is required at the database level via <see cref="MessageId"/>,
 	///     but the navigation may be <see langword="null"/> if it was not loaded.
 	///     </para>
@@ -68,6 +69,10 @@ public class MessageGenerationMetadataEntity
 	///     </para>
 	/// </remarks>
 	public MessageEntity? Message { get; set; }
+
+	// --- 2. Public identifier (none) ---
+
+	// --- 3. Foreign keys + Navigation properties ---
 
 	/// <summary>
 	/// Gets or sets the foreign key to the model endpoint that generated this message.
@@ -87,9 +92,6 @@ public class MessageGenerationMetadataEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     The relationship is required at the database level via <see cref="ModelEndpointId"/>,
 	///     but the navigation may be <see langword="null"/> if it was not loaded.
 	///     </para>
@@ -103,10 +105,13 @@ public class MessageGenerationMetadataEntity
 	/// Gets or sets the foreign key to the system prompt used for generation.
 	/// </summary>
 	/// <remarks>
-	/// <see langword="null"/> if no system prompt was used.
-	/// Configured with <see cref="Microsoft.EntityFrameworkCore.DeleteBehavior.SetNull"/> so that historical generation
-	/// metadata can remain even if
-	/// prompts are removed.
+	///     <para>
+	///     <see langword="null"/> if no system prompt was used.
+	///     </para>
+	///     <para>
+	///     Configured with <see cref="Microsoft.EntityFrameworkCore.DeleteBehavior.SetNull"/> so that historical
+	///     generation metadata can remain even if prompts are removed.
+	///     </para>
 	/// </remarks>
 	public SystemPromptId? SystemPromptId { get; set; }
 
@@ -114,9 +119,6 @@ public class MessageGenerationMetadataEntity
 	/// Gets or sets the navigation property to the system prompt.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
 	///     <para>
 	///     May be <see langword="null"/> if no system prompt was used or if it was deleted and the foreign key was set to
 	///     <see langword="null"/> (see <see cref="SystemPromptId"/>).
@@ -127,11 +129,20 @@ public class MessageGenerationMetadataEntity
 	/// </remarks>
 	public SystemPromptEntity? SystemPrompt { get; set; }
 
+	// --- 4. Timestamps (none) ---
+
+	// --- 5. Scalar domain fields ---
+
 	/// <summary>
 	/// Gets or sets the identifier of the model used to generate the response.
 	/// </summary>
 	/// <remarks>
-	/// Examples: <c>mistral:7b</c>, <c>llama3.1:8b-instruct-q4_0</c>, <c>gpt-4-turbo</c>
+	///     <para>
+	///     Examples: <c>mistral:7b</c>, <c>llama3.1:8b-instruct-q4_0</c>, <c>gpt-4-turbo</c>
+	///     </para>
+	///     <para>
+	///     Maximum length: <see cref="EntityLimits.ModelIdentifierMaxLength"/>.
+	///     </para>
 	/// </remarks>
 	public string Model { get; set; } = string.Empty;
 
@@ -195,6 +206,8 @@ public class MessageGenerationMetadataEntity
 	/// <see langword="null"/> if not provided by the underlying model/provider.
 	/// </remarks>
 	public double? TopP { get; set; }
+
+	// --- 6. Collection navigation properties (none) ---
 
 	/// <summary>
 	/// Creates a persistence-safe copy of an existing metadata instance for a specific message.

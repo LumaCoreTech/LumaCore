@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Definitions;
+
 namespace LumaCore.Data.Entities;
 
 /// <summary>
@@ -40,6 +42,8 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public class RoleEntity
 {
+	// --- 1. Primary key ---
+
 	/// <summary>
 	/// Gets or sets the internal unique identifier for database relationships.
 	/// </summary>
@@ -52,6 +56,8 @@ public class RoleEntity
 	///     </para>
 	/// </remarks>
 	public RoleId Id { get; set; }
+
+	// --- 2. Public identifier ---
 
 	/// <summary>
 	/// Gets or sets the public unique identifier for external references.
@@ -66,13 +72,16 @@ public class RoleEntity
 	/// </remarks>
 	public Guid PublicId { get; set; }
 
+	// --- 3. Foreign keys + Navigation properties (none) ---
+
+	// --- 4. Timestamps ---
+
 	/// <summary>
 	/// Gets or sets the UTC timestamp when this role was created.
 	/// </summary>
-	/// <remarks>
-	/// Set when the role is first created.
-	/// </remarks>
 	public DateTime CreatedAtUtc { get; set; }
+
+	// --- 5. Scalar domain fields ---
 
 	/// <summary>
 	/// Gets or sets the unique name of the role.
@@ -83,7 +92,8 @@ public class RoleEntity
 	///     Examples: <c>admin</c>, <c>user</c>, <c>moderator</c>
 	///     </para>
 	///     <para>
-	///     The database enforces uniqueness and a maximum length.
+	///     Maximum length: <see cref="EntityLimits.RoleNameMaxLength"/>.
+	///     The database enforces uniqueness.
 	///     </para>
 	///     <para>
 	///     <b>Index:</b> Unique index.
@@ -95,18 +105,16 @@ public class RoleEntity
 	/// Gets or sets a human-readable description of the role's purpose and permissions.
 	/// </summary>
 	/// <remarks>
-	/// Provides a human-readable description for documentation and administrative tooling.
-	/// The database enforces a maximum length.
+	/// Maximum length: <see cref="EntityLimits.RoleDescriptionMaxLength"/>.
 	/// </remarks>
 	public string? Description { get; set; }
+
+	// --- 6. Collection navigation properties ---
 
 	/// <summary>
 	/// Gets the collection of user-role assignments.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
 	///     <para>
 	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
 	///     </para>

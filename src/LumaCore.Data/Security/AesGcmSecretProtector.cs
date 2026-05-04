@@ -127,7 +127,7 @@ public sealed class AesGcmSecretProtector : ISecretProtector
 	/// <summary>
 	/// Collection of fallback keys with their fingerprints, used for decryption after key rotation.
 	/// </summary>
-	private readonly IReadOnlyList<(string fingerprint, byte[] fingerprintBytes, byte[] key)> mFallbackKeys;
+	private readonly (string fingerprint, byte[] fingerprintBytes, byte[] key)[] mFallbackKeys;
 
 	/// <summary>
 	/// Indicates whether this instance has been disposed.
@@ -224,7 +224,7 @@ public sealed class AesGcmSecretProtector : ISecretProtector
 	/// This property is internal for testing purposes and returns the count of valid fallback keys
 	/// that were retained after filtering out empty/null values during construction.
 	/// </remarks>
-	internal int FallbackKeyCount => mFallbackKeys.Count;
+	internal int FallbackKeyCount => mFallbackKeys.Length;
 
 	/// <inheritdoc/>
 	public string Protect(string plaintext)

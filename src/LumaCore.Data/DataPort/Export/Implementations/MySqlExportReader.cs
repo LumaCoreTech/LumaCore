@@ -270,7 +270,9 @@ public sealed class MySqlExportReader : IDataExportReader
 	/// An asynchronous enumerable of object arrays, each representing a row in the table.
 	/// </returns>
 	/// <exception cref="ArgumentNullException"><paramref name="tableName"/> is <see langword="null"/>.</exception>
+#pragma warning disable CA1822 // Mark members as static
 	private async IAsyncEnumerable<object?[]> ReadRowsAsync(
+#pragma warning restore CA1822 // Mark members as static
 		string                                     tableName,
 		[EnumeratorCancellation] CancellationToken cancellationToken)
 	{

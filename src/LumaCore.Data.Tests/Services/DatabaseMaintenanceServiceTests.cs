@@ -41,7 +41,7 @@ namespace LumaCore.Data.Tests.Services;
 ///         </item>
 ///     </list>
 /// </remarks>
-[Trait("Category", "Data")]
+[Trait("Category", "Services")]
 public sealed partial class DatabaseMaintenanceServiceTests
 {
 	#region Constructor

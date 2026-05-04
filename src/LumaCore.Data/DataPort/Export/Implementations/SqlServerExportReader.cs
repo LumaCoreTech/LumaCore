@@ -3,6 +3,7 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using System.Data;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 using LumaCore.Data.DataPort.Models;
@@ -10,7 +11,7 @@ using LumaCore.Data.DataPort.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 
-using static LumaCore.Data.DataPort.SqlIdentifierHelper;
+using static LumaCore.Data.Providers.SqlIdentifierHelper;
 
 namespace LumaCore.Data.DataPort.Export.Implementations;
 
@@ -194,7 +195,7 @@ public sealed class SqlServerExportReader : IDataExportReader
 				object? result = await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
 				if (result != null && result != DBNull.Value)
 				{
-					estimatedRows = Convert.ToInt64(result);
+					estimatedRows = Convert.ToInt64(result, CultureInfo.InvariantCulture);
 				}
 			}
 			finally
@@ -236,7 +237,9 @@ public sealed class SqlServerExportReader : IDataExportReader
 			mTransaction);
 		try
 		{
-			bool exists = Convert.ToBoolean(await checkCmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false));
+			bool exists = Convert.ToBoolean(
+				await checkCmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
+				CultureInfo.InvariantCulture);
 			if (!exists) return migrations; // Empty list.
 		}
 		finally
@@ -288,7 +291,7 @@ public sealed class SqlServerExportReader : IDataExportReader
 		try
 		{
 			object? result = await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
-			return result != null && Convert.ToBoolean(result);
+			return result != null && Convert.ToBoolean(result, CultureInfo.InvariantCulture);
 		}
 		finally
 		{

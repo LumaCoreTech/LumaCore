@@ -3,6 +3,7 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using System.Data;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 using LumaCore.Core.Diagnostics;
@@ -11,7 +12,7 @@ using LumaCore.Data.DataPort.Models;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 
-using static LumaCore.Data.DataPort.SqlIdentifierHelper;
+using static LumaCore.Data.Providers.SqlIdentifierHelper;
 
 namespace LumaCore.Data.DataPort;
 
@@ -84,6 +85,8 @@ public abstract class SqliteReaderBase : IAsyncDisposable
 
 		if (connection != null)
 			await connection.DisposeAsync().ConfigureAwait(false);
+
+		GC.SuppressFinalize(this);
 	}
 
 	/// <summary>
@@ -339,7 +342,7 @@ public abstract class SqliteReaderBase : IAsyncDisposable
 				countCmd.CommandText = $"SELECT COUNT(*) FROM {QuoteSqlite(tableName)}";
 				object? result = await countCmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
 				if (result is not null and not DBNull)
-					rowCount = Convert.ToInt64(result);
+					rowCount = Convert.ToInt64(result, CultureInfo.InvariantCulture);
 			}
 			finally
 			{

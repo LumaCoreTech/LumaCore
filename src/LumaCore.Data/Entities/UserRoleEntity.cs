@@ -21,6 +21,11 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public class UserRoleEntity
 {
+	// --- 1. Primary key (none) ---
+	// Composite key (UserId, RoleId) is configured via the fluent API in LumaCoreDbContext.
+
+	// --- 2. First FK + Navigation ---
+
 	/// <summary>
 	/// Gets or sets the foreign key to the user.
 	/// </summary>
@@ -42,9 +47,6 @@ public class UserRoleEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     The relationship is required at the database level via <see cref="UserId"/>,
 	///     but the navigation may be <see langword="null"/> if it was not loaded.
 	///     </para>
@@ -53,6 +55,8 @@ public class UserRoleEntity
 	///     </para>
 	/// </remarks>
 	public UserEntity? User { get; set; }
+
+	// --- 3. Second FK + Navigation ---
 
 	/// <summary>
 	/// Gets or sets the foreign key to the role.
@@ -75,9 +79,6 @@ public class UserRoleEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     The relationship is required at the database level via <see cref="RoleId"/>,
 	///     but the navigation may be <see langword="null"/> if it was not loaded.
 	///     </para>
@@ -87,6 +88,8 @@ public class UserRoleEntity
 	/// </remarks>
 	public RoleEntity? Role { get; set; }
 
+	// --- 4. Timestamps ---
+
 	/// <summary>
 	/// Gets or sets the UTC timestamp when this role was assigned to the user.
 	/// </summary>
@@ -95,4 +98,6 @@ public class UserRoleEntity
 	/// This value is set by the application at assignment time and is required by the database schema.
 	/// </remarks>
 	public DateTime AssignedAtUtc { get; set; }
+
+	// --- 5. Other properties (none) ---
 }

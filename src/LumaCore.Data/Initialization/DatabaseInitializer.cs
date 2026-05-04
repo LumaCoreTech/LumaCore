@@ -67,7 +67,7 @@ namespace LumaCore.Data.Initialization;
 ///     instances start simultaneously. Consider running migrations as a separate step in production.
 ///     </para>
 /// </remarks>
-public sealed partial class DatabaseInitializer : IHostedService
+public sealed partial class DatabaseInitializer : IHostedService, IDisposable
 {
 	private readonly DatabaseInitializationStatus mInitializationStatus;
 	private readonly ILogger<DatabaseInitializer> mLogger;
@@ -135,6 +135,16 @@ public sealed partial class DatabaseInitializer : IHostedService
 		mProviderOperations = providerOperations;
 		mTimeProvider = timeProvider;
 		mLogger = logger;
+	}
+
+	/// <summary>
+	/// Disposes the internal semaphore.
+	/// The hosted service itself does not hold any unmanaged resources, but this
+	/// ensures that the semaphore is properly released.
+	/// </summary>
+	public void Dispose()
+	{
+		mInitializationGate.Dispose();
 	}
 
 	/// <summary>

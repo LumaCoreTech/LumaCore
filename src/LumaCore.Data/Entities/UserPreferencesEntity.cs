@@ -30,6 +30,8 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public class UserPreferencesEntity
 {
+	// --- 1. Primary key (also foreign key to UserEntity) ---
+
 	/// <summary>
 	/// Gets or sets the user identifier. This is both the primary key and the foreign key
 	/// to <see cref="UserEntity.Id"/>.
@@ -46,9 +48,6 @@ public class UserPreferencesEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     This relationship is required at the database level via <see cref="UserId"/>,
 	///     but the navigation may be <see langword="null"/> if it was not loaded.
 	///     </para>
@@ -57,6 +56,14 @@ public class UserPreferencesEntity
 	///     </para>
 	/// </remarks>
 	public UserEntity? User { get; set; }
+
+	// --- 2. Public identifier (none) ---
+
+	// --- 3. Foreign keys + Navigation properties (none) ---
+
+	// --- 4. Timestamps (none) ---
+
+	// --- 5. Scalar domain fields ---
 
 	/// <summary>
 	/// Gets or sets the serialized JSON preferences blob.
@@ -68,9 +75,11 @@ public class UserPreferencesEntity
 	///     (the application should fall back to defaults).
 	///     </para>
 	///     <para>
-	///     The database column is limited to <see cref="EntityLimits.UserPreferencesJsonMaxLength"/>
-	///     characters. The application is responsible for serialization and deserialization.
+	///     Maximum length: <see cref="EntityLimits.UserPreferencesJsonMaxLength"/>.
+	///     The application is responsible for serialization and deserialization.
 	///     </para>
 	/// </remarks>
 	public string? PreferencesJson { get; set; }
+
+	// --- 6. Collection navigation properties (none) ---
 }

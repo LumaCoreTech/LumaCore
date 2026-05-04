@@ -35,7 +35,6 @@ namespace LumaCore.Data.Tests.DataPort;
 ///     </list>
 /// </remarks>
 [Trait("Category", "DataPort")]
-[Trait("Category", "Import")]
 public sealed partial class SqliteImportWriterTests
 {
 	#region InitializeAsync()

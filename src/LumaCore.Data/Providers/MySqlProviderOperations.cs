@@ -7,7 +7,6 @@ using System.Data.Common;
 using System.Net.Sockets;
 using System.Reflection;
 
-using LumaCore.Data.DataPort;
 using LumaCore.Data.DataPort.Export;
 using LumaCore.Data.DataPort.Import;
 using LumaCore.Data.Initialization;
@@ -653,10 +652,10 @@ public sealed class MySqlProviderOperations : IDatabaseProviderOperations
 	/// <param name="cancellationToken">A token to cancel the operation.</param>
 	/// <returns>A list of backtick-quoted, schema-qualified identifiers.</returns>
 	private static async Task<List<string>> CollectQualifiedNamesAsync(
-		DbConnection          connection,
-		string                sql,
-		IReadOnlySet<string>? preserveNames,
-		CancellationToken     cancellationToken)
+		DbConnection      connection,
+		string            sql,
+		HashSet<string>?  preserveNames,
+		CancellationToken cancellationToken)
 	{
 		var names = new List<string>();
 

@@ -27,6 +27,9 @@ namespace LumaCore.Data.Migrations
 
                     b.Property<DateTime>("CreatedAtUtc");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(500);
+
                     b.Property<Guid>("PublicId");
 
                     b.Property<string>("Title")
@@ -55,9 +58,14 @@ namespace LumaCore.Data.Migrations
 
                     b.Property<DateTime>("JoinedAtUtc");
 
+                    b.Property<long?>("LastReadMessageId");
+
                     b.Property<int>("Role");
 
                     b.HasKey("ConversationId", "ParticipantId");
+
+                    b.HasIndex("LastReadMessageId")
+                        .HasDatabaseName("IX_ConversationParticipants_LastReadMessageId");
 
                     b.HasIndex("ParticipantId")
                         .HasDatabaseName("IX_ConversationParticipants_ParticipantId");
@@ -84,13 +92,11 @@ namespace LumaCore.Data.Migrations
 
                     b.Property<long?>("SenderId");
 
+                    b.Property<int>("Type")
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValue(0);
+
                     b.HasKey("Id");
-
-                    b.HasIndex("ConversationId")
-                        .HasDatabaseName("IX_Messages_ConversationId");
-
-                    b.HasIndex("CreatedAtUtc")
-                        .HasDatabaseName("IX_Messages_CreatedAtUtc");
 
                     b.HasIndex("PublicId")
                         .IsUnique()
@@ -154,7 +160,7 @@ namespace LumaCore.Data.Migrations
                     b.Property<DateTime>("CreatedAtUtc");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(1000);
+                        .HasMaxLength(500);
 
                     b.Property<string>("EncryptedCredentials")
                         .HasMaxLength(4000);
@@ -173,6 +179,8 @@ namespace LumaCore.Data.Migrations
 
                     b.Property<Guid>("PublicId");
 
+                    b.Property<DateTime>("UpdatedAtUtc");
+
                     b.HasKey("Id");
 
                     b.HasIndex("IsActive")
@@ -189,9 +197,6 @@ namespace LumaCore.Data.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
-
-                    b.Property<string>("AvatarUrl")
-                        .HasMaxLength(500);
 
                     b.Property<DateTime>("CreatedAtUtc");
 
@@ -217,11 +222,13 @@ namespace LumaCore.Data.Migrations
 
                     b.Property<long?>("ActiveSystemPromptId");
 
+                    b.Property<DateTime>("CreatedAtUtc");
+
                     b.Property<string>("DefaultModel")
                         .HasMaxLength(100);
 
                     b.Property<string>("Description")
-                        .HasMaxLength(1000);
+                        .HasMaxLength(2000);
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -277,7 +284,7 @@ namespace LumaCore.Data.Migrations
                     b.Property<DateTime>("CreatedAtUtc");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(500);
+                        .HasMaxLength(200);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -300,14 +307,14 @@ namespace LumaCore.Data.Migrations
 
             modelBuilder.Entity("LumaCore.Data.Entities.SeedHistoryEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<DateTime>("AppliedAtUtc");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(500);
+                        .HasMaxLength(200);
 
                     b.Property<string>("SeedId")
                         .IsRequired()
@@ -363,6 +370,8 @@ namespace LumaCore.Data.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<DateTime>("CreatedAtUtc");
+
                     b.Property<string>("Email")
                         .HasMaxLength(254);
 
@@ -389,7 +398,7 @@ namespace LumaCore.Data.Migrations
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasDatabaseName("IX_Users_Email")
-                        .HasFilter("\"Email\" IS NOT NULL");
+                        .HasFilter("[Email] IS NOT NULL");
 
                     b.HasIndex("ParticipantId")
                         .IsUnique()
@@ -428,6 +437,11 @@ namespace LumaCore.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("LumaCore.Data.Entities.MessageEntity", "LastReadMessage")
+                        .WithMany()
+                        .HasForeignKey("LastReadMessageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("LumaCore.Data.Entities.ParticipantEntity", "Participant")
                         .WithMany("ConversationParticipants")
                         .HasForeignKey("ParticipantId")
@@ -435,6 +449,8 @@ namespace LumaCore.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Conversation");
+
+                    b.Navigation("LastReadMessage");
 
                     b.Navigation("Participant");
                 });

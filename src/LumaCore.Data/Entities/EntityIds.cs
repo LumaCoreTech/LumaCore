@@ -49,13 +49,61 @@ public readonly record struct ModelEndpointId(long Value);
 public readonly record struct PersonaId(long Value);
 
 /// <summary>
+/// Strongly-typed identifier for a <see cref="ResourceEntity"/>.
+/// </summary>
+/// <param name="Value">The underlying database identifier.</param>
+public readonly record struct ResourceId(long Value);
+
+/// <summary>
+/// Strongly-typed identifier for a <see cref="ResourceReferenceEntity"/>.
+/// </summary>
+/// <param name="Value">The underlying database identifier.</param>
+public readonly record struct ResourceReferenceId(long Value);
+
+/// <summary>
 /// Strongly-typed identifier for a <see cref="SystemPromptEntity"/>.
 /// </summary>
 /// <param name="Value">The underlying database identifier.</param>
 public readonly record struct SystemPromptId(long Value);
 
-// ----- EF Core Value Converters -----
-// These converters allow EF Core to transparently persist XxxId ↔ long in the database.
+/// <summary>
+/// Strongly-typed polymorphic identifier for the owner of a <see cref="ResourceReferenceEntity"/>.
+/// </summary>
+/// <remarks>
+///     <para>
+///     The interpretation of <see cref="Value"/> depends on the accompanying
+///     <see cref="ResourceOwnerKind"/> discriminator carried alongside on
+///     <see cref="ResourceReferenceEntity.OwnerKind"/>: e.g. for <see cref="ResourceOwnerKind.Message"/>
+///     the value is a <see cref="MessageId"/> value, for <see cref="ResourceOwnerKind.User"/> a
+///     <see cref="UserId"/> value, for <see cref="ResourceOwnerKind.Persona"/> a <see cref="PersonaId"/>
+///     value, and so on.
+///     </para>
+///     <para>
+///     Because the discriminator and id form a logical unit, the conversion from a per-table strongly-typed
+///     id (e.g. <see cref="UserId"/>) to <see cref="ResourceOwnerId"/> is intentionally explicit at the
+///     call site (<c>new ResourceOwnerId(userId.Value)</c>) — there is no implicit conversion.
+///     </para>
+///     <para>
+///     Use <see cref="Unassigned"/> as the sentinel for pending references that have not yet been wired to
+///     their final owner; see <see cref="ResourceReferenceEntity.OwnerId"/> for the full sentinel rationale.
+///     </para>
+/// </remarks>
+/// <param name="Value">The underlying database identifier.</param>
+public readonly record struct ResourceOwnerId(long Value)
+{
+	/// <summary>
+	/// Sentinel value indicating that the reference is <em>pending</em> — it has been created (typically
+	/// during an upload that precedes the owning entity's INSERT) but not yet wired to its final owner.
+	/// </summary>
+	/// <remarks>
+	/// Zero is safe as a sentinel because every entity-table primary key in this database is a positive
+	/// auto-increment <see cref="long"/> — no real <see cref="ResourceReferenceEntity.OwnerId"/> can ever
+	/// take this value.
+	/// </remarks>
+	public static ResourceOwnerId Unassigned { get; } = new(0);
+}
+
+// EF Core value converters that allow EF to transparently persist XxxId ↔ long in the database.
 // They are registered globally via ConfigureConventions in LumaCoreDbContext.
 
 /// <summary>EF Core value converter for <see cref="ConversationId"/>.</summary>
@@ -86,6 +134,18 @@ sealed class ModelEndpointIdConverter()
 sealed class PersonaIdConverter()
 	: ValueConverter<PersonaId, long>(id => id.Value, value => new PersonaId(value));
 
+/// <summary>EF Core value converter for <see cref="ResourceId"/>.</summary>
+sealed class ResourceIdConverter()
+	: ValueConverter<ResourceId, long>(id => id.Value, value => new ResourceId(value));
+
+/// <summary>EF Core value converter for <see cref="ResourceReferenceId"/>.</summary>
+sealed class ResourceReferenceIdConverter()
+	: ValueConverter<ResourceReferenceId, long>(id => id.Value, value => new ResourceReferenceId(value));
+
 /// <summary>EF Core value converter for <see cref="SystemPromptId"/>.</summary>
 sealed class SystemPromptIdConverter()
 	: ValueConverter<SystemPromptId, long>(id => id.Value, value => new SystemPromptId(value));
+
+/// <summary>EF Core value converter for <see cref="ResourceOwnerId"/>.</summary>
+sealed class ResourceOwnerIdConverter()
+	: ValueConverter<ResourceOwnerId, long>(id => id.Value, value => new ResourceOwnerId(value));

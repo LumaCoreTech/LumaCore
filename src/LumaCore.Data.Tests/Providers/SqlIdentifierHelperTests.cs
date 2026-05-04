@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-using LumaCore.Data.DataPort;
+using LumaCore.Data.Providers;
 
 using Xunit;
 
-namespace LumaCore.Data.Tests.DataPort;
+namespace LumaCore.Data.Tests.Providers;
 
 /// <summary>
 /// Unit tests for <see cref="SqlIdentifierHelper"/>.
 /// </summary>
-[Trait("Category", "DataPort")]
+[Trait("Category", "Providers")]
 public sealed class SqlIdentifierHelperTests
 {
 	#region QuoteSqlite()

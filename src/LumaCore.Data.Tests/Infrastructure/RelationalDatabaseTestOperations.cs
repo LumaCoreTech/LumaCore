@@ -3,6 +3,7 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using System.Data.Common;
+using System.Globalization;
 
 using LumaCore.Data.Providers;
 
@@ -96,7 +97,7 @@ abstract class RelationalDatabaseTestOperations : IDatabaseTestOperations
 		{
 			cmd.CommandText = $"SELECT COUNT(*) FROM {quoted}";
 			object? result = await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
-			return Convert.ToInt64(result);
+			return Convert.ToInt64(result, CultureInfo.InvariantCulture);
 		}
 		finally
 		{

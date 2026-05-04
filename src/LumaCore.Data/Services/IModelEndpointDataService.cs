@@ -13,33 +13,17 @@ namespace LumaCore.Data.Services;
 /// </summary>
 public interface IModelEndpointDataService
 {
+	#region Read APIs
+
 	/// <summary>
-	/// Creates a new model endpoint.
+	/// Gets a model endpoint by its internal identifier.
 	/// </summary>
-	/// <param name="publicId">The public identifier to store.</param>
-	/// <param name="providerType">The endpoint type/protocol identifier.</param>
-	/// <param name="baseUrl">The base URL of the endpoint.</param>
-	/// <param name="name">The human-friendly name.</param>
-	/// <param name="description">An optional description.</param>
-	/// <param name="credentials">
-	/// Optional plaintext credentials to protect and store in <see cref="ModelEndpointEntity.EncryptedCredentials"/>.
-	/// </param>
-	/// <param name="utcNow">The timestamp to store as creation time.</param>
+	/// <param name="endpointId">The internal endpoint identifier.</param>
 	/// <param name="cancellationToken">A token to cancel the operation.</param>
-	/// <returns>The created <see cref="ModelEndpointEntity"/>.</returns>
-	/// <exception cref="ArgumentException">
-	/// <paramref name="providerType"/>, <paramref name="baseUrl"/>, or <paramref name="name"/> is
-	/// empty/whitespace after trimming.
-	/// </exception>
-	/// <exception cref="ArgumentException"><paramref name="publicId"/> is <see cref="Guid.Empty"/>.</exception>
-	Task<ModelEndpointEntity> CreateModelEndpointAsync(
-		Guid              publicId,
-		string            providerType,
-		string            baseUrl,
-		string            name,
-		string?           description,
-		string?           credentials,
-		DateTime          utcNow,
+	/// <returns>The matching endpoint, or <see langword="null"/> if not found.</returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="endpointId"/> is less than or equal to 0.</exception>
+	Task<ModelEndpointEntity?> GetModelEndpointByIdAsync(
+		ModelEndpointId   endpointId,
 		CancellationToken cancellationToken = default);
 
 	/// <summary>
@@ -54,35 +38,6 @@ public interface IModelEndpointDataService
 		CancellationToken cancellationToken = default);
 
 	/// <summary>
-	/// Gets a model endpoint by its internal identifier.
-	/// </summary>
-	/// <param name="endpointId">The internal endpoint identifier.</param>
-	/// <param name="cancellationToken">A token to cancel the operation.</param>
-	/// <returns>The matching endpoint, or <see langword="null"/> if not found.</returns>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="endpointId"/> is less than or equal to 0.</exception>
-	Task<ModelEndpointEntity?> GetModelEndpointByIdAsync(
-		ModelEndpointId   endpointId,
-		CancellationToken cancellationToken = default);
-
-	/// <summary>
-	/// Checks whether a model endpoint exists.
-	/// </summary>
-	/// <param name="endpointId">The internal endpoint identifier.</param>
-	/// <param name="cancellationToken">A token to cancel the operation.</param>
-	/// <returns><see langword="true"/> if the endpoint exists; otherwise <see langword="false"/>.</returns>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="endpointId"/> is less than or equal to 0.</exception>
-	Task<bool> ModelEndpointExistsAsync(ModelEndpointId endpointId, CancellationToken cancellationToken = default);
-
-	/// <summary>
-	/// Checks whether a model endpoint exists.
-	/// </summary>
-	/// <param name="publicId">The public identifier.</param>
-	/// <param name="cancellationToken">A token to cancel the operation.</param>
-	/// <returns><see langword="true"/> if the endpoint exists; otherwise <see langword="false"/>.</returns>
-	/// <exception cref="ArgumentException"><paramref name="publicId"/> is <see cref="Guid.Empty"/>.</exception>
-	Task<bool> ModelEndpointExistsByPublicIdAsync(Guid publicId, CancellationToken cancellationToken = default);
-
-	/// <summary>
 	/// Lists all model endpoints.
 	/// </summary>
 	/// <param name="includeInactive">
@@ -90,71 +45,13 @@ public interface IModelEndpointDataService
 	/// </param>
 	/// <param name="cancellationToken">A token to cancel the operation.</param>
 	/// <returns>The endpoints ordered by name.</returns>
-	Task<List<ModelEndpointEntity>> ListModelEndpointsAsync(
+	Task<IReadOnlyList<ModelEndpointEntity>> ListModelEndpointsAsync(
 		bool              includeInactive,
 		CancellationToken cancellationToken = default);
 
-	/// <summary>
-	/// Updates the human-facing metadata of an endpoint.
-	/// </summary>
-	/// <param name="endpointId">The internal endpoint identifier.</param>
-	/// <param name="name">The new name.</param>
-	/// <param name="description">The new description.</param>
-	/// <param name="isActive">Whether the endpoint should be active.</param>
-	/// <param name="cancellationToken">A token to cancel the operation.</param>
-	/// <returns><see langword="true"/> if the endpoint existed and was updated; otherwise <see langword="false"/>.</returns>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="endpointId"/> is less than or equal to 0.</exception>
-	/// <exception cref="ArgumentException"><paramref name="name"/> is empty/whitespace after trimming.</exception>
-	Task<bool> UpdateModelEndpointMetadataAsync(
-		ModelEndpointId   endpointId,
-		string            name,
-		string?           description,
-		bool              isActive,
-		CancellationToken cancellationToken = default);
+	#endregion
 
-	/// <summary>
-	/// Updates the stored credentials for an endpoint.
-	/// </summary>
-	/// <param name="endpointId">The internal endpoint identifier.</param>
-	/// <param name="credentials">
-	/// The new plaintext credentials to protect and persist.
-	/// Set to <see langword="null"/> to remove stored credentials.
-	/// </param>
-	/// <param name="cancellationToken">A token to cancel the operation.</param>
-	/// <returns><see langword="true"/> if the endpoint existed and was updated; otherwise <see langword="false"/>.</returns>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="endpointId"/> is less than or equal to 0.</exception>
-	Task<bool> UpdateModelEndpointCredentialsAsync(
-		ModelEndpointId   endpointId,
-		string?           credentials,
-		CancellationToken cancellationToken = default);
-
-	/// <summary>
-	/// Updates an existing model endpoint.
-	/// </summary>
-	/// <param name="endpointId">The internal endpoint identifier.</param>
-	/// <param name="name">The new name.</param>
-	/// <param name="description">The new description.</param>
-	/// <param name="isActive">Whether the endpoint should be active.</param>
-	/// <param name="credentials">
-	/// The new plaintext credentials to protect and persist.
-	/// Set to <see langword="null"/> to remove stored credentials.
-	/// </param>
-	/// <param name="cancellationToken">A token to cancel the operation.</param>
-	/// <returns><see langword="true"/> if the endpoint existed and was updated; otherwise <see langword="false"/>.</returns>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="endpointId"/> is less than or equal to 0.</exception>
-	/// <exception cref="ArgumentException"><paramref name="name"/> is empty/whitespace after trimming.</exception>
-	/// <remarks>
-	/// This update method intentionally does not allow changing <see cref="ModelEndpointEntity.ProviderType"/> or
-	/// <see cref="ModelEndpointEntity.BaseUrl"/> to preserve historical reproducibility. To move an endpoint to a new
-	/// URL/protocol, create a new endpoint and deactivate the old one.
-	/// </remarks>
-	Task<bool> UpdateModelEndpointAsync(
-		ModelEndpointId   endpointId,
-		string            name,
-		string?           description,
-		bool              isActive,
-		string?           credentials,
-		CancellationToken cancellationToken = default);
+	#region Projection APIs
 
 	/// <summary>
 	/// Gets the decrypted credentials for an endpoint.
@@ -170,4 +67,155 @@ public interface IModelEndpointDataService
 	Task<string?> GetModelEndpointCredentialsAsync(
 		ModelEndpointId   endpointId,
 		CancellationToken cancellationToken = default);
+
+	#endregion
+
+	#region Existence Checks
+
+	/// <summary>
+	/// Checks whether a model endpoint exists.
+	/// </summary>
+	/// <param name="endpointId">The internal endpoint identifier.</param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns><see langword="true"/> if the endpoint exists; otherwise <see langword="false"/>.</returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="endpointId"/> is less than or equal to 0.</exception>
+	Task<bool> ModelEndpointExistsAsync(
+		ModelEndpointId   endpointId,
+		CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Checks whether a model endpoint exists.
+	/// </summary>
+	/// <param name="publicId">The public identifier.</param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns><see langword="true"/> if the endpoint exists; otherwise <see langword="false"/>.</returns>
+	/// <exception cref="ArgumentException"><paramref name="publicId"/> is <see cref="Guid.Empty"/>.</exception>
+	Task<bool> ModelEndpointExistsByPublicIdAsync(
+		Guid              publicId,
+		CancellationToken cancellationToken = default);
+
+	#endregion
+
+	#region Mutation APIs
+
+	/// <summary>
+	/// Creates a new model endpoint.
+	/// </summary>
+	/// <param name="publicId">The public identifier to store.</param>
+	/// <param name="providerType">The endpoint type/protocol identifier.</param>
+	/// <param name="baseUrl">The base URL of the endpoint.</param>
+	/// <param name="name">The human-friendly name.</param>
+	/// <param name="description">An optional description.</param>
+	/// <param name="credentials">
+	/// Optional plaintext credentials to protect and store in <see cref="ModelEndpointEntity.EncryptedCredentials"/>.
+	/// </param>
+	/// <param name="utcNow">
+	/// The timestamp to store as creation time, or <see langword="null"/> to use the service's configured
+	/// <see cref="TimeProvider"/>.
+	/// </param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns>The created <see cref="ModelEndpointEntity"/>.</returns>
+	/// <exception cref="ArgumentException">
+	/// <paramref name="publicId"/> is <see cref="Guid.Empty"/>, or <paramref name="providerType"/>,
+	/// <paramref name="baseUrl"/>, or <paramref name="name"/> is empty/whitespace after trimming.
+	/// </exception>
+	/// <exception cref="Microsoft.EntityFrameworkCore.DbUpdateException">
+	/// The database rejected the insert. The most likely cause is a unique-index violation on
+	/// <see cref="ModelEndpointEntity.PublicId"/> when the caller-supplied <paramref name="publicId"/>
+	/// already exists; the caller is responsible for either choosing a fresh value or surfacing the conflict.
+	/// </exception>
+	Task<ModelEndpointEntity> CreateModelEndpointAsync(
+		Guid              publicId,
+		string            providerType,
+		string            baseUrl,
+		string            name,
+		string?           description,
+		string?           credentials,
+		DateTime?         utcNow            = null,
+		CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Updates an existing model endpoint.
+	/// </summary>
+	/// <param name="endpointId">The internal endpoint identifier.</param>
+	/// <param name="name">The new name.</param>
+	/// <param name="description">The new description.</param>
+	/// <param name="isActive">Whether the endpoint should be active.</param>
+	/// <param name="credentials">
+	/// The new plaintext credentials to protect and persist.
+	/// Set to <see langword="null"/> to remove stored credentials.
+	/// </param>
+	/// <param name="utcNow">
+	/// The timestamp to store as the last update time, or <see langword="null"/> to use the service's configured
+	/// <see cref="TimeProvider"/>.
+	/// </param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns>
+	/// <see langword="true"/> if the endpoint existed and was updated;
+	/// otherwise <see langword="false"/>.
+	/// </returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="endpointId"/> is less than or equal to 0.</exception>
+	/// <exception cref="ArgumentException"><paramref name="name"/> is empty/whitespace after trimming.</exception>
+	/// <remarks>
+	/// This update method intentionally does not allow changing <see cref="ModelEndpointEntity.ProviderType"/> or
+	/// <see cref="ModelEndpointEntity.BaseUrl"/> to preserve historical reproducibility. To move an endpoint to a new
+	/// URL/protocol, create a new endpoint and deactivate the old one.
+	/// </remarks>
+	Task<bool> UpdateModelEndpointAsync(
+		ModelEndpointId   endpointId,
+		string            name,
+		string?           description,
+		bool              isActive,
+		string?           credentials,
+		DateTime?         utcNow            = null,
+		CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Updates the stored credentials for an endpoint.
+	/// </summary>
+	/// <param name="endpointId">The internal endpoint identifier.</param>
+	/// <param name="credentials">
+	/// The new plaintext credentials to protect and persist.
+	/// Set to <see langword="null"/> to remove stored credentials.
+	/// </param>
+	/// <param name="utcNow">
+	/// The timestamp to store as the last update time, or <see langword="null"/> to use the service's configured
+	/// <see cref="TimeProvider"/>.
+	/// </param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns><see langword="true"/> if the endpoint existed and was updated; otherwise <see langword="false"/>.</returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="endpointId"/> is less than or equal to 0.</exception>
+	Task<bool> UpdateModelEndpointCredentialsAsync(
+		ModelEndpointId   endpointId,
+		string?           credentials,
+		DateTime?         utcNow            = null,
+		CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Updates the human-facing metadata of an endpoint.
+	/// </summary>
+	/// <param name="endpointId">The internal endpoint identifier.</param>
+	/// <param name="name">The new name.</param>
+	/// <param name="description">The new description.</param>
+	/// <param name="isActive">Whether the endpoint should be active.</param>
+	/// <param name="utcNow">
+	/// The timestamp to store as the last update time, or <see langword="null"/> to use the service's configured
+	/// <see cref="TimeProvider"/>.
+	/// </param>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns>
+	/// <see langword="true"/> if the endpoint existed and was updated;
+	/// otherwise <see langword="false"/>.
+	/// </returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="endpointId"/> is less than or equal to 0.</exception>
+	/// <exception cref="ArgumentException"><paramref name="name"/> is empty/whitespace after trimming.</exception>
+	Task<bool> UpdateModelEndpointMetadataAsync(
+		ModelEndpointId   endpointId,
+		string            name,
+		string?           description,
+		bool              isActive,
+		DateTime?         utcNow            = null,
+		CancellationToken cancellationToken = default);
+
+	#endregion
 }

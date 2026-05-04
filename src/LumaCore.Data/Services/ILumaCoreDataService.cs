@@ -29,4 +29,6 @@ public interface ILumaCoreDataService :
 	IConversationDataService,
 	IModelEndpointDataService,
 	IMessageDataService,
+	IPersonaDataService,
+	IResourceDataService,
 	IDataIntegrityService;

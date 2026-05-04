@@ -33,6 +33,11 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public class ConversationParticipantEntity
 {
+	// --- 1. Primary key (none) ---
+	// Composite key (ConversationId, ParticipantId) is configured via the fluent API in LumaCoreDbContext.
+
+	// --- 2. First FK + Navigation ---
+
 	/// <summary>
 	/// Gets or sets the foreign key to the conversation.
 	/// </summary>
@@ -54,9 +59,6 @@ public class ConversationParticipantEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     This relationship is required at the database level via <see cref="ConversationId"/>,
 	///     but the navigation may be <see langword="null"/> if it was not loaded.
 	///     </para>
@@ -65,6 +67,8 @@ public class ConversationParticipantEntity
 	///     </para>
 	/// </remarks>
 	public ConversationEntity? Conversation { get; set; }
+
+	// --- 3. Second FK + Navigation ---
 
 	/// <summary>
 	/// Gets or sets the foreign key to the participant.
@@ -88,9 +92,6 @@ public class ConversationParticipantEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     This relationship is required at the database level via <see cref="ParticipantId"/>,
 	///     but the navigation may be <see langword="null"/> if it was not loaded.
 	///     </para>
@@ -100,10 +101,14 @@ public class ConversationParticipantEntity
 	/// </remarks>
 	public ParticipantEntity? Participant { get; set; }
 
+	// --- 4. Timestamps ---
+
 	/// <summary>
 	/// Gets or sets the UTC timestamp when this participant joined the conversation.
 	/// </summary>
 	public DateTime JoinedAtUtc { get; set; }
+
+	// --- 5. Other properties ---
 
 	/// <summary>
 	/// Gets or sets the participant's role within this conversation.
@@ -113,4 +118,36 @@ public class ConversationParticipantEntity
 	/// is typically the participant who initiated the conversation.
 	/// </remarks>
 	public ConversationParticipantRole Role { get; set; }
+
+	/// <summary>
+	/// Gets or sets the foreign key to the last message read by this participant.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     Used for read tracking. Counting unread messages requires a <c>COUNT</c> query filtered
+	///     by <see cref="ConversationId"/>.
+	///     </para>
+	///     <para>
+	///     <see langword="null"/> when the participant has not read any messages yet, or when the
+	///     referenced message was deleted (the foreign key uses <c>DeleteBehavior.SetNull</c>).
+	///     </para>
+	///     <para>
+	///     <b>Index:</b> Non-unique index to support filtering by read state.
+	///     </para>
+	/// </remarks>
+	public MessageId? LastReadMessageId { get; set; }
+
+	/// <summary>
+	/// Gets or sets the navigation property to the last read message.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     This relationship is optional. <see cref="LastReadMessageId"/> may be <see langword="null"/> if
+	///     no message has been read or the referenced message was deleted.
+	///     </para>
+	///     <para>
+	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
+	///     </para>
+	/// </remarks>
+	public MessageEntity? LastReadMessage { get; set; }
 }

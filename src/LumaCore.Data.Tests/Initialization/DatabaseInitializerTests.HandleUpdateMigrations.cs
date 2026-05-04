@@ -1181,7 +1181,7 @@ public sealed partial class DatabaseInitializerTests
 				await harness.Sut.WriteRestoreCheckpointAsync(
 					dbContext,
 					shuttleId,
-					ThirdMigrationId,
+					FourthMigrationId,
 					CancellationToken.None);
 			}
 			finally
@@ -1807,8 +1807,7 @@ public sealed partial class DatabaseInitializerTests
 				{
 					PublicId = participantPublicId,
 					DisplayName = "Restore Test User",
-					CreatedAtUtc = seedCreatedAtUtc,
-					AvatarUrl = "/avatars/restore-test.png"
+					CreatedAtUtc = seedCreatedAtUtc
 				};
 				seedCtx.Participants.Add(participant);
 				await seedCtx.SaveChangesAsync();
@@ -1817,6 +1816,7 @@ public sealed partial class DatabaseInitializerTests
 					new UserEntity
 					{
 						ParticipantId = participant.Id,
+						CreatedAtUtc = seedCreatedAtUtc,
 						Username = "restore-test",
 						UsernameNormalized = "RESTORE-TEST",
 						PasswordHash = "$2a$11$fakehashfortest",
@@ -1881,7 +1881,6 @@ public sealed partial class DatabaseInitializerTests
 				Assert.Equal(participantPublicId, restoredUser.Participant.PublicId);
 				Assert.Equal("Restore Test User", restoredUser.Participant.DisplayName);
 				Assert.Equal(seedCreatedAtUtc, restoredUser.Participant.CreatedAtUtc);
-				Assert.Equal("/avatars/restore-test.png", restoredUser.Participant.AvatarUrl);
 			}
 			finally
 			{

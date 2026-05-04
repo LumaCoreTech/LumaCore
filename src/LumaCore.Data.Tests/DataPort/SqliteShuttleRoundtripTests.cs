@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.Globalization;
+
 using LumaCore.Core.IO;
 using LumaCore.Data.DataPort;
 using LumaCore.Data.DataPort.Models;
@@ -144,7 +146,7 @@ public sealed class SqliteShuttleRoundtripTests
 				SqliteShuttleSchema.CompletedValue,
 				metadata[SqliteShuttleSchema.ExportStatusKey]);
 			Assert.Equal(
-				SqliteShuttleSchema.CurrentShuttleFormatVersion.ToString(),
+				SqliteShuttleSchema.CurrentShuttleFormatVersion.ToString(CultureInfo.InvariantCulture),
 				metadata[SqliteShuttleSchema.ShuttleFormatVersionKey]);
 			Assert.True(metadata.ContainsKey(SqliteShuttleSchema.ShuttleIdKey));
 			Assert.False(string.IsNullOrWhiteSpace(metadata[SqliteShuttleSchema.ShuttleIdKey]));

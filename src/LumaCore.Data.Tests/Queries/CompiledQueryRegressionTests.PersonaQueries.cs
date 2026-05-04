@@ -23,8 +23,12 @@ public sealed partial class CompiledQueryRegressionTests
 
 		// Assert
 		Assert.Single(personas);
-		Assert.Equal("Test bot persona", personas[0].Description);
+		Assert.Equal(mPersonaId, personas[0].Id);
+		Assert.Equal(mBotParticipantId, personas[0].ParticipantId);
+		Assert.Single(personas[0].DescriptionTranslations);
+		Assert.Equal("Test bot persona", personas[0].DescriptionTranslations.First().Value);
 		Assert.NotNull(personas[0].Participant);
+		Assert.Equal(mBotPublicId, personas[0].Participant!.PublicId);
 		Assert.Equal("Bot", personas[0].Participant!.DisplayName);
 	}
 
@@ -40,7 +44,10 @@ public sealed partial class CompiledQueryRegressionTests
 
 		// Assert
 		Assert.NotNull(result);
-		Assert.Equal("Test bot persona", result.Description);
+		Assert.Equal(mPersonaId, result.Id);
+		Assert.Equal(mBotParticipantId, result.ParticipantId);
+		Assert.Single(result.DescriptionTranslations);
+		Assert.Equal("Test bot persona", result.DescriptionTranslations.First().Value);
 		Assert.NotNull(result.Participant);
 	}
 
@@ -56,8 +63,12 @@ public sealed partial class CompiledQueryRegressionTests
 
 		// Assert
 		Assert.NotNull(result);
-		Assert.Equal("Test bot persona", result.Description);
+		Assert.Equal(mPersonaId, result.Id);
+		Assert.Equal(mBotParticipantId, result.ParticipantId);
+		Assert.Single(result.DescriptionTranslations);
+		Assert.Equal("Test bot persona", result.DescriptionTranslations.First().Value);
 		Assert.NotNull(result.Participant);
+		Assert.Equal(mBotPublicId, result.Participant.PublicId);
 	}
 
 	/// <summary>
@@ -73,6 +84,7 @@ public sealed partial class CompiledQueryRegressionTests
 
 		// Assert
 		Assert.NotNull(result);
+		Assert.Equal(mPersonaId, result.PersonaId);
 		Assert.Equal("You are a test bot.", result.Content);
 	}
 }

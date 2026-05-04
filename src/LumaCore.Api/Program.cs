@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.Globalization;
 using System.Reflection;
 
 using LumaCore.Core;
 
 using Serilog;
+
+namespace LumaCore.Api;
 
 /// <summary>
 /// Entry point of the LumaCore API application.
@@ -44,7 +47,7 @@ public static partial class Program
 		// This logger is replaced later by the fully configured Serilog pipeline.
 		Log.Logger = new LoggerConfiguration()
 			.MinimumLevel.Information()
-			.WriteTo.Console()
+			.WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
 			.CreateBootstrapLogger();
 
 		// Register FailFast handler to ensure logs are flushed before application termination.

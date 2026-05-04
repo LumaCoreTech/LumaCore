@@ -12,35 +12,41 @@ namespace LumaCore.Data.Tests.Queries;
 public sealed partial class CompiledQueryRegressionTests
 {
 	/// <summary>
-	/// Verifies that <see cref="UserQueries.ExistsByEmail"/> returns <see langword="true"/> for a seeded user
-	/// and <see langword="false"/> for a non-existent email.
+	/// Verifies that <see cref="UserQueries.ExistsByEmail"/> returns <see langword="true"/> only for an email
+	/// belonging to a seeded user.
 	/// </summary>
-	[Fact]
-	public async Task UserQueries_ExistsByEmail_ReturnsExpectedResult()
+	/// <param name="email">The email address to probe.</param>
+	/// <param name="expected">The expected outcome.</param>
+	[Theory]
+	[InlineData("alice@example.test", true)]   // Seeded.
+	[InlineData("nobody@example.test", false)] // Not seeded.
+	public async Task UserQueries_ExistsByEmail_ReturnsTrueOnlyForExistingEmail(string email, bool expected)
 	{
 		// Act
-		bool exists = await UserQueries.ExistsByEmail(mFixture.DbContext, "alice@example.test");
-		bool notExists = await UserQueries.ExistsByEmail(mFixture.DbContext, "nobody@example.test");
+		bool actual = await UserQueries.ExistsByEmail(mFixture.DbContext, email);
 
 		// Assert
-		Assert.True(exists);
-		Assert.False(notExists);
+		Assert.Equal(expected, actual);
 	}
 
 	/// <summary>
-	/// Verifies that <see cref="UserQueries.ExistsByUsernameNormalized"/> returns <see langword="true"/> for
-	/// a seeded normalized username and <see langword="false"/> for a non-existent one.
+	/// Verifies that <see cref="UserQueries.ExistsByUsernameNormalized"/> returns <see langword="true"/> only
+	/// for a normalized username belonging to a seeded user.
 	/// </summary>
-	[Fact]
-	public async Task UserQueries_ExistsByUsernameNormalized_ReturnsExpectedResult()
+	/// <param name="usernameNormalized">The normalized username to probe.</param>
+	/// <param name="expected">The expected outcome.</param>
+	[Theory]
+	[InlineData("ALICE", true)]   // Seeded.
+	[InlineData("NOBODY", false)] // Not seeded.
+	public async Task UserQueries_ExistsByUsernameNormalized_ReturnsTrueOnlyForExistingUser(
+		string usernameNormalized,
+		bool   expected)
 	{
 		// Act
-		bool exists = await UserQueries.ExistsByUsernameNormalized(mFixture.DbContext, "ALICE");
-		bool notExists = await UserQueries.ExistsByUsernameNormalized(mFixture.DbContext, "NOBODY");
+		bool actual = await UserQueries.ExistsByUsernameNormalized(mFixture.DbContext, usernameNormalized);
 
 		// Assert
-		Assert.True(exists);
-		Assert.False(notExists);
+		Assert.Equal(expected, actual);
 	}
 
 	/// <summary>

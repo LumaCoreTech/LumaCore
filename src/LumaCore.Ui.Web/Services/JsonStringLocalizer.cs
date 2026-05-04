@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.Globalization;
+
 using LumaCore.Ui.Web.Models;
 
 using Microsoft.Extensions.Localization;
@@ -79,7 +81,9 @@ public sealed class JsonStringLocalizer : IStringLocalizer
 		{
 			LocalizedString localizedString = this[name];
 			return !localizedString.ResourceNotFound
-				       ? new LocalizedString(name, string.Format(localizedString.Value, arguments))
+				       ? new LocalizedString(
+					       name,
+					       string.Format(CultureInfo.InvariantCulture, localizedString.Value, arguments))
 				       : localizedString;
 		}
 	}

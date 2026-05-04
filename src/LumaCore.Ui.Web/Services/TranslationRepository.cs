@@ -3,6 +3,7 @@
 // Project: https://github.com/LumaCoreTech/LumaCore
 
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Text.Json;
 
 using LumaCore.Ui.Web.Models;
@@ -56,7 +57,7 @@ public sealed partial class TranslationRepository
 	/// and locked writes with atomic publication.
 	/// </summary>
 	private RepositoryState mState = new(
-		new Dictionary<string, TranslationTable>(),
+		new Dictionary<string, TranslationTable>().ToFrozenDictionary(),
 		new List<LocaleInfo>().AsReadOnly());
 
 	/// <summary>
@@ -271,7 +272,7 @@ public sealed partial class TranslationRepository
 					[locale] = translationTable
 				};
 
-				RepositoryState updated = current with { AllTranslations = allTranslations };
+				RepositoryState updated = current with { AllTranslations = allTranslations.ToFrozenDictionary() };
 
 				// Atomic publish - ensures cache coherency across CPU cores
 				Volatile.Write(ref mState, updated);
@@ -303,7 +304,7 @@ public sealed partial class TranslationRepository
 	/// </summary>
 	/// <param name="element">The JSON element to convert.</param>
 	/// <returns>A nested dictionary representing the JSON structure.</returns>
-	private static IReadOnlyDictionary<string, object> ConvertToNestedDictionary(JsonElement element)
+	private static Dictionary<string, object> ConvertToNestedDictionary(JsonElement element)
 	{
 		// Create dictionary to hold properties of the JSON object
 		// Recursively convert each property value to appropriate .NET type

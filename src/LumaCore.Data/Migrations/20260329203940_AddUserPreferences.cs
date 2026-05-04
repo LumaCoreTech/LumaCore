@@ -15,7 +15,7 @@ public partial class AddUserPreferences : Migration
 			columns: table => new
 			{
 				UserId = table.Column<long>(nullable: false),
-				PreferencesJson = table.Column<string>(maxLength: 8000, nullable: true)
+				PreferencesJson = table.Column<string>(maxLength: 4000, nullable: true)
 			},
 			constraints: table =>
 			{
@@ -32,7 +32,6 @@ public partial class AddUserPreferences : Migration
 	/// <inheritdoc/>
 	protected override void Down(MigrationBuilder migrationBuilder)
 	{
-		migrationBuilder.DropTable(
-			name: "UserPreferences");
+		migrationBuilder.DropTable(name: "UserPreferences");
 	}
 }

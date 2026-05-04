@@ -5,6 +5,8 @@
 using Serilog;
 using Serilog.Debugging;
 
+namespace LumaCore.Api;
+
 public static partial class Program
 {
 	/// <summary>

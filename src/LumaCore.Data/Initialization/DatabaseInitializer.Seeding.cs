@@ -38,11 +38,11 @@ partial class DatabaseInitializer
 		[
 			new DefaultRolesSeed(
 				scopeProvider.GetRequiredService<ILogger<DefaultRolesSeed>>(),
-				mTimeProvider)
+				mTimeProvider),
 
-			// Add more seeds here as needed:
-			// new InitialSystemPromptsSeed(...),
-			// new DefaultPersonasSeed(...),
+			new DefaultPersonaSeed(
+				scopeProvider.GetRequiredService<ILogger<DefaultPersonaSeed>>(),
+				mTimeProvider)
 		];
 
 		int executedCount = await seedExecutor

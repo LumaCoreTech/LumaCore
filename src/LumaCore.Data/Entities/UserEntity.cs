@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Definitions;
+
 namespace LumaCore.Data.Entities;
 
 /// <summary>
@@ -37,7 +39,8 @@ namespace LumaCore.Data.Entities;
 ///     <list type="bullet">
 ///         <item>
 ///             <description>
-///             The database enforces uniqueness for <see cref="Username"/>.
+///             The database enforces uniqueness for <see cref="UsernameNormalized"/>, not for the display-cased
+///             <see cref="Username"/> value itself.
 ///             </description>
 ///         </item>
 ///         <item>
@@ -52,6 +55,8 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public class UserEntity
 {
+	// --- 1. Primary key ---
+
 	/// <summary>
 	/// Gets or sets the internal unique identifier for database relationships.
 	/// </summary>
@@ -64,6 +69,10 @@ public class UserEntity
 	///     </para>
 	/// </remarks>
 	public UserId Id { get; set; }
+
+	// --- 2. Public identifier (none) ---
+
+	// --- 3. Foreign keys + Navigation properties ---
 
 	/// <summary>
 	/// Gets or sets the foreign key to the associated participant.
@@ -83,9 +92,6 @@ public class UserEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     This relationship is required at the database level via <see cref="ParticipantId"/>,
 	///     but the navigation may be <see langword="null"/> if it was not loaded.
 	///     </para>
@@ -98,6 +104,33 @@ public class UserEntity
 	///     </para>
 	/// </remarks>
 	public ParticipantEntity? Participant { get; set; }
+
+	/// <summary>
+	/// Gets or sets the navigation property to the user's application preferences.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     This is a 1:1 optional relationship. The <see cref="UserPreferencesEntity"/> row is created lazily
+	///     on the first preference write and deleted via <c>CASCADE</c> when the user is removed.
+	///     </para>
+	///     <para>
+	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
+	///     </para>
+	/// </remarks>
+	public UserPreferencesEntity? Preferences { get; set; }
+
+	// --- 4. Timestamps ---
+
+	/// <summary>
+	/// Gets or sets the UTC timestamp when this user account was created.
+	/// </summary>
+	/// <remarks>
+	/// Stamped once on insert by the data layer and never modified afterwards. The data layer treats this column as
+	/// required so consumers can rely on a meaningful value without coalescing. This is distinct from
+	/// <see cref="LastLoginAtUtc"/> (interactive sign-ins) and <see cref="LastTokenRefreshAtUtc"/> (token refreshes),
+	/// and supports audit, cohort, and inactive-account cleanup queries.
+	/// </remarks>
+	public DateTime CreatedAtUtc { get; set; }
 
 	/// <summary>
 	/// Gets or sets the UTC timestamp of the user's last successful login.
@@ -119,37 +152,7 @@ public class UserEntity
 	/// </remarks>
 	public DateTime? LastTokenRefreshAtUtc { get; set; }
 
-	/// <summary>
-	/// Gets or sets the user's email address.
-	/// </summary>
-	/// <remarks>
-	///     <para>
-	///     Optional.
-	///     Used for password recovery and notifications. The database enforces uniqueness for non-<see langword="null"/>
-	///     values.
-	///     </para>
-	///     <para>
-	///     <b>Index:</b> Unique index.
-	///     </para>
-	/// </remarks>
-	public string? Email { get; set; }
-
-	/// <summary>
-	/// Gets or sets the securely hashed password.
-	/// </summary>
-	/// <remarks>
-	///     <para>
-	///     Never store plain-text passwords.
-	///     </para>
-	///     <para>
-	///     This value is expected to contain the full output of a password hashing scheme (e.g. bcrypt, Argon2),
-	///     including salt and work/variant parameters.
-	///     </para>
-	///     <para>
-	///     The database column length is limited; ensure the chosen hash format fits (e.g. common bcrypt formats do).
-	///     </para>
-	/// </remarks>
-	public string PasswordHash { get; set; } = string.Empty;
+	// --- 5. Scalar domain fields ---
 
 	/// <summary>
 	/// Gets or sets the unique username for authentication.
@@ -166,7 +169,10 @@ public class UserEntity
 	///     Uniqueness is enforced via <see cref="UsernameNormalized"/>.
 	///     </para>
 	///     <para>
-	///     <b>Index:</b> Non-unique index.
+	///     Maximum length: <see cref="EntityLimits.UsernameMaxLength"/>.
+	///     </para>
+	///     <para>
+	///     <b>Index:</b> Non-unique index for case-preserving lookups and administrative queries.
 	///     </para>
 	/// </remarks>
 	public string Username { get; set; } = string.Empty;
@@ -180,35 +186,56 @@ public class UserEntity
 	///     (typically <c>Trim()</c> + <c>ToUpperInvariant()</c>).
 	///     </para>
 	///     <para>
+	///     Maximum length: <see cref="EntityLimits.UsernameMaxLength"/> (matches <see cref="Username"/>).
+	///     </para>
+	///     <para>
 	///     <b>Index:</b> Unique index.
 	///     </para>
 	/// </remarks>
 	public string UsernameNormalized { get; set; } = string.Empty;
 
 	/// <summary>
-	/// Gets or sets the navigation property to the user's application preferences.
+	/// Gets or sets the securely hashed password.
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
+	///     Never store plain-text passwords.
 	///     </para>
 	///     <para>
-	///     This is a 1:1 optional relationship. The <see cref="UserPreferencesEntity"/> row is created lazily
-	///     on the first preference write and deleted via <c>CASCADE</c> when the user is removed.
+	///     This value is expected to contain the full output of a password hashing scheme (e.g. bcrypt, Argon2),
+	///     including salt and work/variant parameters.
 	///     </para>
 	///     <para>
-	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
+	///     Maximum length: <see cref="EntityLimits.PasswordHashMaxLength"/>.
+	///     Ensure the chosen hash format fits (e.g. common bcrypt formats do).
 	///     </para>
 	/// </remarks>
-	public UserPreferencesEntity? Preferences { get; set; }
+	public string PasswordHash { get; set; } = string.Empty;
+
+	/// <summary>
+	/// Gets or sets the user's email address.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     Optional.
+	///     Used for password recovery and notifications. The database enforces uniqueness for non-<see langword="null"/>
+	///     values.
+	///     </para>
+	///     <para>
+	///     Maximum length: <see cref="EntityLimits.EmailMaxLength"/>.
+	///     </para>
+	///     <para>
+	///     <b>Index:</b> Unique index.
+	///     </para>
+	/// </remarks>
+	public string? Email { get; set; }
+
+	// --- 6. Collection navigation properties ---
 
 	/// <summary>
 	/// Gets the collection of roles assigned to this user.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
 	///     <para>
 	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
 	///     </para>

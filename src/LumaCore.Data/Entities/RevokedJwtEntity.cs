@@ -4,6 +4,8 @@
 
 using System.Security.Claims;
 
+using LumaCore.Definitions;
+
 namespace LumaCore.Data.Entities;
 
 /// <summary>
@@ -30,6 +32,8 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public sealed class RevokedJwtEntity
 {
+	// --- 1. Primary key ---
+
 	/// <summary>
 	/// Gets or sets the JWT ID (<c>jti</c> claim) of the revoked token.
 	/// </summary>
@@ -39,10 +43,26 @@ public sealed class RevokedJwtEntity
 	///     extracted from the authenticated <see cref="ClaimsPrincipal"/> during revocation.
 	///     </para>
 	///     <para>
+	///     Maximum length: <see cref="EntityLimits.RevokedJwtJtiMaxLength"/>.
+	///     </para>
+	///     <para>
 	///     <b>Index:</b> Primary key (clustered).
 	///     </para>
 	/// </remarks>
 	public string Jti { get; set; } = string.Empty;
+
+	// --- 2. Public identifier (none) ---
+
+	// --- 3. Foreign keys + Navigation properties (none) ---
+
+	// --- 4. Timestamps ---
+
+	/// <summary>
+	/// Gets or sets the UTC timestamp when the token was revoked.
+	/// </summary>
+	public DateTime RevokedAtUtc { get; set; }
+
+	// --- 5. Scalar domain fields ---
 
 	/// <summary>
 	/// Gets or sets the UTC timestamp when the token naturally expires.
@@ -60,15 +80,11 @@ public sealed class RevokedJwtEntity
 	public DateTime ExpiresAtUtc { get; set; }
 
 	/// <summary>
-	/// Gets or sets the UTC timestamp when the token was revoked.
-	/// </summary>
-	public DateTime RevokedAtUtc { get; set; }
-
-	/// <summary>
 	/// Gets or sets the subject (<c>sub</c> claim) of the revoked token.
 	/// </summary>
 	/// <remarks>
 	/// Stored for auditing and diagnostics. Allows filtering revoked tokens by user.
+	/// Maximum length: <see cref="EntityLimits.RevokedJwtSubjectMaxLength"/>.
 	/// </remarks>
 	public string Subject { get; set; } = string.Empty;
 
@@ -78,6 +94,9 @@ public sealed class RevokedJwtEntity
 	/// <remarks>
 	/// A short description of why the token was revoked (e.g., <c>"Logout"</c>, <c>"Admin revocation"</c>).
 	/// Stored for auditing purposes only — not used in the revocation check itself.
+	/// Maximum length: <see cref="EntityLimits.RevokedJwtReasonMaxLength"/>.
 	/// </remarks>
 	public string Reason { get; set; } = string.Empty;
+
+	// --- 6. Collection navigation properties (none) ---
 }

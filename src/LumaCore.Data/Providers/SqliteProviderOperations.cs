@@ -7,7 +7,6 @@ using System.Data.Common;
 using System.Net.Sockets;
 
 using LumaCore.Core.Diagnostics;
-using LumaCore.Data.DataPort;
 using LumaCore.Data.DataPort.Export;
 using LumaCore.Data.DataPort.Export.Implementations;
 using LumaCore.Data.DataPort.Import;

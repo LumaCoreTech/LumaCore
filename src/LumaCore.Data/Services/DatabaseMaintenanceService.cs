@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.Globalization;
+
 using LumaCore.Data.DataPort;
 using LumaCore.Data.DataPort.Export;
 using LumaCore.Data.DataPort.Shuttle;
@@ -60,7 +62,7 @@ public sealed class DatabaseMaintenanceService : IDatabaseMaintenanceService
 
 		// Include milliseconds and a short random suffix to prevent filename collisions in
 		// fast restart loops or scale-out scenarios where multiple instances start simultaneously.
-		string timestamp = mTimeProvider.GetUtcNow().ToString("yyyyMMdd-HHmmss-fff");
+		string timestamp = mTimeProvider.GetUtcNow().ToString("yyyyMMdd-HHmmss-fff", CultureInfo.InvariantCulture);
 		string suffix = Guid.NewGuid().ToString("N")[..8];
 		string backupPath = Path.Combine(
 			backupDirectory,

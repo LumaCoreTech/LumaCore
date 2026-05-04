@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Headers;
@@ -145,7 +146,8 @@ public sealed partial class AuthIntegrationTests
 				["Jwt:Issuer"] = TestIssuer,
 				["Jwt:Audience"] = TestAudience,
 				["Jwt:SigningKey"] = TestSigningKey,
-				["Jwt:AccessTokenLifetimeMinutes"] = TestAccessTokenLifetimeMinutes.ToString(),
+				["Jwt:AccessTokenLifetimeMinutes"] =
+					TestAccessTokenLifetimeMinutes.ToString(CultureInfo.InvariantCulture),
 				["Jwt:Cookie:Enabled"] = cookieEnabled.ToString(),
 				["Jwt:Cookie:Name"] = cookieName,
 				["Jwt:Cookie:Path"] = "/api",

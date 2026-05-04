@@ -24,6 +24,7 @@ public partial class InitialCreate : Migration
 					.Annotation("Sqlite:Autoincrement", true),
 				PublicId = table.Column<Guid>(nullable: false),
 				Title = table.Column<string>(maxLength: 200, nullable: false),
+				Description = table.Column<string>(maxLength: 500, nullable: true),
 				CreatedAtUtc = table.Column<DateTime>(nullable: false),
 				UpdatedAtUtc = table.Column<DateTime>(nullable: false)
 			},
@@ -42,10 +43,11 @@ public partial class InitialCreate : Migration
 					.Annotation("Sqlite:Autoincrement", true),
 				PublicId = table.Column<Guid>(nullable: false),
 				CreatedAtUtc = table.Column<DateTime>(nullable: false),
+				UpdatedAtUtc = table.Column<DateTime>(nullable: false),
 				ProviderType = table.Column<string>(maxLength: 50, nullable: false),
 				BaseUrl = table.Column<string>(maxLength: 500, nullable: false),
 				Name = table.Column<string>(maxLength: 100, nullable: false),
-				Description = table.Column<string>(maxLength: 1000, nullable: true),
+				Description = table.Column<string>(maxLength: 500, nullable: true),
 				IsActive = table.Column<bool>(nullable: false, defaultValue: true),
 				EncryptedCredentials = table.Column<string>(maxLength: 4000, nullable: true)
 			},
@@ -64,8 +66,7 @@ public partial class InitialCreate : Migration
 					.Annotation("Sqlite:Autoincrement", true),
 				PublicId = table.Column<Guid>(nullable: false),
 				CreatedAtUtc = table.Column<DateTime>(nullable: false),
-				DisplayName = table.Column<string>(maxLength: 100, nullable: false),
-				AvatarUrl = table.Column<string>(maxLength: 500, nullable: true)
+				DisplayName = table.Column<string>(maxLength: 100, nullable: false)
 			},
 			constraints: table =>
 			{
@@ -98,7 +99,7 @@ public partial class InitialCreate : Migration
 				PublicId = table.Column<Guid>(nullable: false),
 				CreatedAtUtc = table.Column<DateTime>(nullable: false),
 				Name = table.Column<string>(maxLength: 50, nullable: false),
-				Description = table.Column<string>(maxLength: 500, nullable: true)
+				Description = table.Column<string>(maxLength: 200, nullable: true)
 			},
 			constraints: table =>
 			{
@@ -109,13 +110,13 @@ public partial class InitialCreate : Migration
 			name: "SeedHistory",
 			columns: table => new
 			{
-				Id = table.Column<int>(nullable: false)
+				Id = table.Column<long>(nullable: false)
 					.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 					.Annotation("SqlServer:Identity", "1, 1")
 					.Annotation("Sqlite:Autoincrement", true),
 				SeedId = table.Column<string>(maxLength: 100, nullable: false),
 				Version = table.Column<int>(nullable: false),
-				Description = table.Column<string>(maxLength: 500, nullable: false),
+				Description = table.Column<string>(maxLength: 200, nullable: false),
 				AppliedAtUtc = table.Column<DateTime>(nullable: false)
 			},
 			constraints: table =>
@@ -123,7 +124,7 @@ public partial class InitialCreate : Migration
 				table.PrimaryKey("PK_SeedHistory", x => x.Id);
 			});
 
-		// --- Dependent tables (have foreign keys, alphabetical) ---
+		// --- Dependent tables (have foreign keys, alphabetical where dependencies allow) ---
 
 		migrationBuilder.CreateTable(
 			name: "ConversationParticipants",
@@ -132,6 +133,7 @@ public partial class InitialCreate : Migration
 				ConversationId = table.Column<long>(nullable: false),
 				ParticipantId = table.Column<long>(nullable: false),
 				JoinedAtUtc = table.Column<DateTime>(nullable: false),
+				LastReadMessageId = table.Column<long>(nullable: true),
 				Role = table.Column<int>(nullable: false)
 			},
 			constraints: table =>
@@ -163,6 +165,7 @@ public partial class InitialCreate : Migration
 				ConversationId = table.Column<long>(nullable: false),
 				SenderId = table.Column<long>(nullable: true),
 				CreatedAtUtc = table.Column<DateTime>(nullable: false),
+				Type = table.Column<int>(nullable: false, defaultValue: 0),
 				Content = table.Column<string>(nullable: true),
 				RedactedAtUtc = table.Column<DateTime>(nullable: true),
 				RedactionReason = table.Column<int>(nullable: true)
@@ -193,6 +196,7 @@ public partial class InitialCreate : Migration
 					.Annotation("SqlServer:Identity", "1, 1")
 					.Annotation("Sqlite:Autoincrement", true),
 				ParticipantId = table.Column<long>(nullable: false),
+				CreatedAtUtc = table.Column<DateTime>(nullable: false),
 				LastLoginAtUtc = table.Column<DateTime>(nullable: true),
 				LastTokenRefreshAtUtc = table.Column<DateTime>(nullable: true),
 				Email = table.Column<string>(maxLength: 254, nullable: true),
@@ -211,6 +215,7 @@ public partial class InitialCreate : Migration
 					onDelete: ReferentialAction.Restrict);
 			});
 
+		// UserRoles would sort before Users alphabetically, but its FK to Users requires Users to exist first.
 		migrationBuilder.CreateTable(
 			name: "UserRoles",
 			columns: table => new
@@ -236,7 +241,22 @@ public partial class InitialCreate : Migration
 					onDelete: ReferentialAction.Cascade);
 			});
 
+		// --- Deferred foreign keys (cross-reference between dependent tables) ---
+
+		migrationBuilder.AddForeignKey(
+			name: "FK_ConversationParticipants_Messages_LastReadMessageId",
+			table: "ConversationParticipants",
+			column: "LastReadMessageId",
+			principalTable: "Messages",
+			principalColumn: "Id",
+			onDelete: ReferentialAction.SetNull);
+
 		// --- Indexes (alphabetical by index name) ---
+
+		migrationBuilder.CreateIndex(
+			name: "IX_ConversationParticipants_LastReadMessageId",
+			table: "ConversationParticipants",
+			column: "LastReadMessageId");
 
 		migrationBuilder.CreateIndex(
 			name: "IX_ConversationParticipants_ParticipantId",
@@ -255,19 +275,9 @@ public partial class InitialCreate : Migration
 			column: "UpdatedAtUtc");
 
 		migrationBuilder.CreateIndex(
-			name: "IX_Messages_ConversationId",
-			table: "Messages",
-			column: "ConversationId");
-
-		migrationBuilder.CreateIndex(
 			name: "IX_Messages_ConversationId_CreatedAtUtc",
 			table: "Messages",
-			columns: new[] { "ConversationId", "CreatedAtUtc" });
-
-		migrationBuilder.CreateIndex(
-			name: "IX_Messages_CreatedAtUtc",
-			table: "Messages",
-			column: "CreatedAtUtc");
+			columns: ["ConversationId", "CreatedAtUtc"]);
 
 		migrationBuilder.CreateIndex(
 			name: "IX_Messages_PublicId",
@@ -330,12 +340,16 @@ public partial class InitialCreate : Migration
 			table: "UserRoles",
 			column: "RoleId");
 
+		// Provider-specific filter for the nullable unique Users.Email index. Delegated to the
+		// DbContext so model snapshot and migration cannot drift apart — both sides throw
+		// consistently for unknown providers (the DbContext would already fail at model-build
+		// time, so a silent null fallback here would be dead code).
 		migrationBuilder.CreateIndex(
 			name: "IX_Users_Email",
 			table: "Users",
 			column: "Email",
 			unique: true,
-			filter: "\"Email\" IS NOT NULL");
+			filter: LumaCoreDbContext.GetUniqueEmailIndexFilter(ActiveProvider));
 
 		migrationBuilder.CreateIndex(
 			name: "IX_Users_ParticipantId",

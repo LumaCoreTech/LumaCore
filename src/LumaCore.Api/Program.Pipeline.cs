@@ -20,6 +20,8 @@ using Serilog;
 
 using Swashbuckle.AspNetCore.SwaggerUI;
 
+namespace LumaCore.Api;
+
 public static partial class Program
 {
 	/// <summary>

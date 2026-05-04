@@ -4,6 +4,7 @@
 
 using LumaCore.Data.Entities;
 using LumaCore.Data.Tests.Infrastructure;
+using LumaCore.Definitions;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -29,24 +30,26 @@ public sealed partial class DataPortRoundtripTests
 	/// <param name="UserRoles">The user-to-role assignments (3).</param>
 	/// <param name="ModelEndpoints">The model endpoint configurations (3).</param>
 	/// <param name="Personas">The persona entities, each linked to a persona participant (3).</param>
+	/// <param name="PersonaDescriptionTranslations">The localized description translations for personas (5).</param>
 	/// <param name="SystemPrompts">The system prompts, one per persona (3).</param>
 	/// <param name="Conversations">The conversation threads (3).</param>
 	/// <param name="ConversationParticipants">The conversation membership entries across all conversations (7).</param>
 	/// <param name="Messages">The messages across all conversations, including one orphaned and one redacted message (8).</param>
 	/// <param name="MessageGenerationMetadata">The generation metadata for bot-generated messages (3).</param>
 	private sealed record SeedData(
-		ParticipantEntity[]               UserParticipants,
-		ParticipantEntity[]               PersonaParticipants,
-		UserEntity[]                      Users,
-		RoleEntity[]                      Roles,
-		UserRoleEntity[]                  UserRoles,
-		ModelEndpointEntity[]             ModelEndpoints,
-		PersonaEntity[]                   Personas,
-		SystemPromptEntity[]              SystemPrompts,
-		ConversationEntity[]              Conversations,
-		ConversationParticipantEntity[]   ConversationParticipants,
-		MessageEntity[]                   Messages,
-		MessageGenerationMetadataEntity[] MessageGenerationMetadata);
+		ParticipantEntity[]                   UserParticipants,
+		ParticipantEntity[]                   PersonaParticipants,
+		UserEntity[]                          Users,
+		RoleEntity[]                          Roles,
+		UserRoleEntity[]                      UserRoles,
+		ModelEndpointEntity[]                 ModelEndpoints,
+		PersonaEntity[]                       Personas,
+		PersonaDescriptionTranslationEntity[] PersonaDescriptionTranslations,
+		SystemPromptEntity[]                  SystemPrompts,
+		ConversationEntity[]                  Conversations,
+		ConversationParticipantEntity[]       ConversationParticipants,
+		MessageEntity[]                       Messages,
+		MessageGenerationMetadataEntity[]     MessageGenerationMetadata);
 
 	/// <summary>
 	/// Creates a source <see cref="IntegrationTestHarness"/> with an empty database. Schema is created
@@ -92,6 +95,7 @@ public sealed partial class DataPortRoundtripTests
 	///     <see cref="ParticipantEntity"/> (6), <see cref="UserEntity"/> (3),
 	///     <see cref="RoleEntity"/> (3), <see cref="UserRoleEntity"/> (3),
 	///     <see cref="ModelEndpointEntity"/> (3), <see cref="PersonaEntity"/> (3),
+	///     <see cref="PersonaDescriptionTranslationEntity"/> (5),
 	///     <see cref="SystemPromptEntity"/> (3), <see cref="ConversationEntity"/> (3),
 	///     <see cref="ConversationParticipantEntity"/> (7), <see cref="MessageEntity"/> (8),
 	///     <see cref="MessageGenerationMetadataEntity"/> (3).
@@ -157,8 +161,7 @@ public sealed partial class DataPortRoundtripTests
 		{
 			PublicId = Guid.Parse("00000000-0000-0000-0000-000000000006"),
 			CreatedAtUtc = now,
-			DisplayName = "Creative Writer",
-			AvatarUrl = "https://example.com/writer-avatar.png" // Non-null — nullable string roundtrip.
+			DisplayName = "Creative Writer"
 		};
 
 		ParticipantEntity[] userParticipants = [alice, bob, carol];
@@ -176,6 +179,7 @@ public sealed partial class DataPortRoundtripTests
 		var userAlice = new UserEntity
 		{
 			ParticipantId = alice.Id,
+			CreatedAtUtc = now,
 			Username = "alice",
 			UsernameNormalized = "ALICE",
 			PasswordHash = "$2a$12$fakehashfakehashfakehashfakehashfakehashfakehashfake12"
@@ -183,6 +187,7 @@ public sealed partial class DataPortRoundtripTests
 		var userBob = new UserEntity
 		{
 			ParticipantId = bob.Id,
+			CreatedAtUtc = now,
 			Username = "bob",
 			UsernameNormalized = "BOB",
 			PasswordHash = "$2a$12$anotherfakehashfakehashfakehashfakehashfakehashfake34",
@@ -191,6 +196,7 @@ public sealed partial class DataPortRoundtripTests
 		var userCarol = new UserEntity
 		{
 			ParticipantId = carol.Id,
+			CreatedAtUtc = now,
 			Username = "carol",
 			UsernameNormalized = "CAROL",
 			PasswordHash = "$2a$12$yetanotherfakehashfakehashfakehashfakehashfakehashf56",
@@ -301,24 +307,74 @@ public sealed partial class DataPortRoundtripTests
 		{
 			ParticipantId = helpfulBot.Id,
 			DefaultModel = "mistral:7b",
-			Description = "A helpful assistant"
+			CreatedAtUtc = now,
+			UpdatedAtUtc = now
 		};
 		var personaCoder = new PersonaEntity
 		{
 			ParticipantId = codeAssistant.Id,
 			DefaultModel = "codellama:13b",
-			Description = "A code review expert"
+			CreatedAtUtc = now,
+			UpdatedAtUtc = now
 		};
 		var personaWriter = new PersonaEntity
 		{
 			ParticipantId = creativeWriter.Id,
 			DefaultModel = "llama2:70b",
-			Description = "A creative writing aide",
-			IsActive = false // Explicit false — boolean roundtrip.
+			IsActive = false, // Explicit false — boolean roundtrip.
+			CreatedAtUtc = now,
+			UpdatedAtUtc = now
 		};
 
 		PersonaEntity[] personas = [personaBot, personaCoder, personaWriter];
 		dbContext.Personas.AddRange(personas);
+		await dbContext.SaveChangesAsync().ConfigureAwait(false);
+
+		// ====================================================================
+		// PersonaDescriptionTranslations (5): varying counts per persona.
+		//   - Helpful Bot:    en + de (2)
+		//   - Code Assistant: en only (1 — tests varying translation counts)
+		//   - Creative Writer: en + de (2 — inactive persona, tests translations survive IsActive=false)
+		// ====================================================================
+		var transBotEn = new PersonaDescriptionTranslationEntity
+		{
+			PersonaId = personaBot.Id,
+			CultureCode = "en",
+			Value = "A helpful general-purpose assistant.",
+			Source = TranslationSource.Manual
+		};
+		var transBotDe = new PersonaDescriptionTranslationEntity
+		{
+			PersonaId = personaBot.Id,
+			CultureCode = "de",
+			Value = "Ein hilfsbereiter Allzweck-Assistent.",
+			Source = TranslationSource.Manual
+		};
+		var transCoderEn = new PersonaDescriptionTranslationEntity
+		{
+			PersonaId = personaCoder.Id,
+			CultureCode = "en",
+			Value = "An expert code reviewer focused on correctness and readability.",
+			Source = TranslationSource.Manual
+		};
+		var transWriterEn = new PersonaDescriptionTranslationEntity
+		{
+			PersonaId = personaWriter.Id,
+			CultureCode = "en",
+			Value = "A creative writing aide with a vivid imagination.",
+			Source = TranslationSource.Manual
+		};
+		var transWriterDe = new PersonaDescriptionTranslationEntity
+		{
+			PersonaId = personaWriter.Id,
+			CultureCode = "de",
+			Value = "Ein kreativer Schreibassistent mit lebhafter Fantasie.",
+			Source = TranslationSource.Manual
+		};
+
+		PersonaDescriptionTranslationEntity[] translations =
+			[transBotEn, transBotDe, transCoderEn, transWriterEn, transWriterDe];
+		dbContext.PersonaDescriptionTranslations.AddRange(translations);
 		await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
 		// ====================================================================
@@ -617,6 +673,7 @@ public sealed partial class DataPortRoundtripTests
 			UserRoles: userRoles,
 			ModelEndpoints: endpoints,
 			Personas: personas,
+			PersonaDescriptionTranslations: translations,
 			SystemPrompts: prompts,
 			Conversations: conversations,
 			ConversationParticipants: convParticipants,
@@ -667,7 +724,7 @@ public sealed partial class DataPortRoundtripTests
 	{
 		LumaCoreDbContext db = target.DbContext;
 
-		// --- Participants: PK, PublicId, CreatedAtUtc, DisplayName, AvatarUrl (nullable) ---
+		// --- Participants: PK, PublicId, CreatedAtUtc, DisplayName ---
 		ParticipantEntity[] allSeedParticipants = [.. seed.UserParticipants, .. seed.PersonaParticipants];
 		List<ParticipantEntity> actualParticipants = await db.Participants.ToListAsync().ConfigureAwait(false);
 		Assert.Equal(allSeedParticipants.Length, actualParticipants.Count);
@@ -678,7 +735,6 @@ public sealed partial class DataPortRoundtripTests
 			Assert.Equal(expected.PublicId, actual.PublicId);
 			Assert.Equal(expected.CreatedAtUtc, actual.CreatedAtUtc);
 			Assert.Equal(expected.DisplayName, actual.DisplayName);
-			Assert.Equal(expected.AvatarUrl, actual.AvatarUrl);
 		}
 
 		// --- Users: PK, FK (ParticipantId), all scalars, nullable Email/LastLogin/LastTokenRefresh ---
@@ -750,8 +806,21 @@ public sealed partial class DataPortRoundtripTests
 			Assert.Equal(expected.ParticipantId, actual.ParticipantId);
 			Assert.Equal(expected.ActiveSystemPromptId, actual.ActiveSystemPromptId);
 			Assert.Equal(expected.DefaultModel, actual.DefaultModel);
-			Assert.Equal(expected.Description, actual.Description);
 			Assert.Equal(expected.IsActive, actual.IsActive);
+		}
+
+		// --- PersonaDescriptionTranslations: PK, FK (PersonaId), CultureCode, Value, Source (enum) ---
+		List<PersonaDescriptionTranslationEntity> actualTranslations =
+			await db.PersonaDescriptionTranslations.ToListAsync().ConfigureAwait(false);
+		Assert.Equal(seed.PersonaDescriptionTranslations.Length, actualTranslations.Count);
+
+		foreach (PersonaDescriptionTranslationEntity expected in seed.PersonaDescriptionTranslations)
+		{
+			PersonaDescriptionTranslationEntity actual = Assert.Single(
+				actualTranslations,
+				t => t.PersonaId == expected.PersonaId && t.CultureCode == expected.CultureCode);
+			Assert.Equal(expected.Value, actual.Value);
+			Assert.Equal(expected.Source, actual.Source);
 		}
 
 		// --- SystemPrompts: PK, PublicId, FK (PersonaId), CreatedAtUtc, Content, Hash ---

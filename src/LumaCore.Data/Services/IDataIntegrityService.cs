@@ -11,16 +11,7 @@ namespace LumaCore.Data.Services;
 /// </summary>
 public interface IDataIntegrityService
 {
-	/// <summary>
-	/// Deletes all conversations that currently have no user participants.
-	/// </summary>
-	/// <param name="cancellationToken">A token to cancel the operation.</param>
-	/// <returns>The number of conversations deleted.</returns>
-	/// <remarks>
-	/// This is a cleanup operation for inconsistent/unreachable data. Under normal operation, conversations without
-	/// user participants should not exist.
-	/// </remarks>
-	Task<int> CleanupConversationsWithNoUsersAsync(CancellationToken cancellationToken = default);
+	#region Projection APIs
 
 	/// <summary>
 	/// Lists conversations that have no user participants.
@@ -35,7 +26,24 @@ public interface IDataIntegrityService
 	/// This is a data integrity check. Under normal operation, every conversation should include at least one
 	/// user participant. Conversations without users are typically unreachable and indicate inconsistent data.
 	/// </remarks>
-	Task<List<ConversationId>> ListConversationIdsWithNoUsersAsync(
+	Task<IReadOnlyList<ConversationId>> ListConversationIdsWithNoUsersAsync(
 		int               limit,
 		CancellationToken cancellationToken = default);
+
+	#endregion
+
+	#region Mutation APIs
+
+	/// <summary>
+	/// Deletes all conversations that currently have no user participants.
+	/// </summary>
+	/// <param name="cancellationToken">A token to cancel the operation.</param>
+	/// <returns>The number of conversations deleted.</returns>
+	/// <remarks>
+	/// This is a cleanup operation for inconsistent/unreachable data.
+	/// Under normal operation, conversations without user participants should not exist.
+	/// </remarks>
+	Task<int> CleanupConversationsWithNoUsersAsync(CancellationToken cancellationToken = default);
+
+	#endregion
 }

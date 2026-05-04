@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.Globalization;
+
 using LumaCore.Data.Entities;
 using LumaCore.Definitions;
 
@@ -46,7 +48,7 @@ public sealed class DefaultRolesSeed : ISeedDefinition
 	{
 		// Get existing roles (case-insensitive check)
 		List<string> existingRoleNames = await dbContext.Roles
-			                                 .Select(r => r.Name.ToLower())
+			                                 .Select(r => r.Name.ToLower(CultureInfo.InvariantCulture))
 			                                 .ToListAsync(cancellationToken)
 			                                 .ConfigureAwait(false);
 
@@ -56,7 +58,7 @@ public sealed class DefaultRolesSeed : ISeedDefinition
 
 		foreach ((string name, string description) in RoleDefinitions.Defaults)
 		{
-			if (existingRoleNames.Contains(name.ToLower()))
+			if (existingRoleNames.Contains(name.ToLower(CultureInfo.InvariantCulture)))
 			{
 				mLogger.LogDebug("Role '{RoleName}' already exists, skipping", name);
 				continue;

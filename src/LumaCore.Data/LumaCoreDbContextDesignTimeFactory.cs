@@ -45,7 +45,7 @@ namespace LumaCore.Data;
 ///     <para>
 ///     At runtime, <see cref="LumaCoreDbContext"/> is configured through dependency injection in
 ///     <see cref="ServiceRegistration"/> based on <see cref="DatabaseOptions"/> (supporting SQLite, PostgreSQL,
-///     SQL Server, and MySQL). This factory is <b>never</b> used at runtime — it exists solely for EF Core tooling.
+///     and SQL Server). This factory is <b>never</b> used at runtime — it exists solely for EF Core tooling.
 ///     </para>
 /// </remarks>
 sealed class LumaCoreDbContextDesignTimeFactory : IDesignTimeDbContextFactory<LumaCoreDbContext>

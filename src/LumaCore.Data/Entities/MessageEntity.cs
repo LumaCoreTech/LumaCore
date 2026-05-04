@@ -46,6 +46,8 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public class MessageEntity
 {
+	// --- 1. Primary key ---
+
 	/// <summary>
 	/// Gets or sets the internal unique identifier for database relationships.
 	/// </summary>
@@ -58,6 +60,8 @@ public class MessageEntity
 	///     </para>
 	/// </remarks>
 	public MessageId Id { get; set; }
+
+	// --- 2. Public identifier ---
 
 	/// <summary>
 	/// Gets or sets the public unique identifier for external references.
@@ -72,6 +76,8 @@ public class MessageEntity
 	/// </remarks>
 	public Guid PublicId { get; set; }
 
+	// --- 3. Foreign keys + Navigation properties ---
+
 	/// <summary>
 	/// Gets or sets the foreign key to the conversation this message belongs to.
 	/// </summary>
@@ -80,10 +86,8 @@ public class MessageEntity
 	///     Points to <see cref="ConversationEntity.Id"/>.
 	///     </para>
 	///     <para>
-	///     <b>Index:</b> Non-unique index.
-	///     </para>
-	///     <para>
-	///     <b>Index:</b> Composite non-unique index <c>(ConversationId, CreatedAtUtc)</c>.
+	///     <b>Index:</b> Leading column of the composite non-unique index <c>(ConversationId, CreatedAtUtc)</c>.
+	///     This supports per-conversation lookups and ordered retrieval within a conversation.
 	///     </para>
 	/// </remarks>
 	public ConversationId ConversationId { get; set; }
@@ -92,9 +96,6 @@ public class MessageEntity
 	/// Gets or sets the navigation property to the conversation.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
 	///     <para>
 	///     This relationship is required at the database level via <see cref="ConversationId"/>,
 	///     but the navigation may be <see langword="null"/> if it was not loaded.
@@ -125,9 +126,6 @@ public class MessageEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     This relationship is optional. <see cref="SenderId"/> may be <see langword="null"/> if the original
 	///     sender was deleted (the foreign key uses <c>DeleteBehavior.SetNull</c> to preserve message history).
 	///     </para>
@@ -138,25 +136,9 @@ public class MessageEntity
 	public ParticipantEntity? Sender { get; set; }
 
 	/// <summary>
-	/// Gets or sets the UTC timestamp when this message was created.
-	/// </summary>
-	/// <remarks>
-	///     <para>
-	///     <b>Index:</b> Non-unique index.
-	///     </para>
-	///     <para>
-	///     <b>Index:</b> Composite non-unique index <c>(ConversationId, CreatedAtUtc)</c>.
-	///     </para>
-	/// </remarks>
-	public DateTime CreatedAtUtc { get; set; }
-
-	/// <summary>
 	/// Gets or sets the generation metadata for AI-generated messages.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
 	///     <para>
 	///     Only populated for messages sent by personas; <see langword="null"/> for user messages.
 	///     </para>
@@ -170,13 +152,46 @@ public class MessageEntity
 	/// </remarks>
 	public MessageGenerationMetadataEntity? GenerationMetadata { get; set; }
 
+	// --- 4. Timestamps ---
+
+	/// <summary>
+	/// Gets or sets the UTC timestamp when this message was created.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     <b>Index:</b> Second column of the composite non-unique index <c>(ConversationId, CreatedAtUtc)</c>.
+	///     </para>
+	///     <para>
+	///     This helps chronological retrieval only when the query is already constrained by <see cref="ConversationId"/>.
+	///     There is no standalone index on <see cref="CreatedAtUtc"/> for global time-based queries.
+	///     </para>
+	/// </remarks>
+	public DateTime CreatedAtUtc { get; set; }
+
+	// --- 5. Scalar domain fields ---
+
+	/// <summary>
+	/// Gets or sets the type of this message.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     The CLR default <see cref="MessageType.User"/> covers ordinary participant messages, so callers do
+	///     not need to set this property explicitly. Use <see cref="MessageType.System"/> for platform-generated
+	///     messages (e.g., "X joined the conversation") that have no <see cref="SenderId"/>.
+	///     </para>
+	///     <para>
+	///     The database stores this as an integer column with the same default.
+	///     </para>
+	/// </remarks>
+	public MessageType Type { get; set; }
+
 	/// <summary>
 	/// Gets or sets the textual content of this message.
 	/// </summary>
 	/// <remarks>
 	///     <para>
 	///     For user messages, this is the input text. For AI messages, this is the complete generated response.
-	///     Content may include Markdown formatting.
+	///     Content is stored as plain text; the application layer may interpret it as Markdown when rendering.
 	///     </para>
 	///     <para>
 	///     Content may be <see langword="null"/> if it was redacted.
@@ -201,4 +216,6 @@ public class MessageEntity
 	/// The database stores only the reason code to support privacy-first data minimization.
 	/// </remarks>
 	public MessageRedactionReason? RedactionReason { get; set; }
+
+	// --- 6. Collection navigation properties (none) ---
 }

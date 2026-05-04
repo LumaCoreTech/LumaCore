@@ -109,7 +109,10 @@ public sealed partial class SqliteShuttleWriterTests
 	/// </summary>
 	/// <param name="connection">An open SQLite connection.</param>
 	/// <param name="tableName">The name of the table to read.</param>
-	/// <returns>A list of object arrays representing all rows, with <see cref="DBNull"/> values converted to <see langword="null"/>.</returns>
+	/// <returns>
+	/// A list of object arrays representing all rows, with <see cref="DBNull"/> values converted to
+	/// <see langword="null"/>.
+	/// </returns>
 	private static async Task<List<object?[]>> ReadAllRowsAsync(SqliteConnection connection, string tableName)
 	{
 		var rows = new List<object?[]>();

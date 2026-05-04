@@ -2,13 +2,15 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using System.Globalization;
+
 using LumaCore.Core;
 using LumaCore.Data.DataPort.Models;
 
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 
-using static LumaCore.Data.DataPort.SqlIdentifierHelper;
+using static LumaCore.Data.Providers.SqlIdentifierHelper;
 
 namespace LumaCore.Data.DataPort.Shuttle;
 
@@ -47,7 +49,7 @@ public sealed class SqliteShuttleWriter : IShuttleWriter
 	private readonly TimeProvider      mTimeProvider;
 	private readonly string            mConnectionString;
 	private          SqliteConnection? mConnection;
-	private          bool              mIsFinalized = false;
+	private          bool              mIsFinalized;
 	private          bool              mDisposed;
 
 	/// <summary>
@@ -614,7 +616,9 @@ public sealed class SqliteShuttleWriter : IShuttleWriter
 				// Write the version marker.
 				markerCmd.Parameters.Clear();
 				markerCmd.Parameters.AddWithValue("@key", SqliteShuttleSchema.ShuttleFormatVersionKey);
-				markerCmd.Parameters.AddWithValue("@value", SqliteShuttleSchema.CurrentShuttleFormatVersion.ToString());
+				markerCmd.Parameters.AddWithValue(
+					"@value",
+					SqliteShuttleSchema.CurrentShuttleFormatVersion.ToString(CultureInfo.InvariantCulture));
 				await markerCmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
 				// Write the shuttle identity for checkpoint-based resume during import.

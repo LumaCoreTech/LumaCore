@@ -11,10 +11,10 @@ namespace LumaCore.Data.Tests.Migrations;
 
 // AddUserPreferences migration: verify that Up() adds the UserPreferences table and Down() removes it.
 //
-//   1. Up — tables: applies all three migrations and asserts all 14 domain tables exist (discovery-based).
+//   1. Up — tables: applies all three migrations and asserts all domain tables exist (discovery-based).
 //   2. Up — indexes: asserts index list is unchanged from AddAiPersonas (no new explicit indexes — PK is
 //      auto-generated).
-//   3. Down — reverts to AddAiPersonas and asserts UserPreferences is gone (back to 13 tables).
+//   3. Down — reverts to AddAiPersonas and asserts UserPreferences is gone.
 //
 // Discovery-based assertions (same approach as InitialCreate): query the provider's system catalog for
 // the complete list of objects rather than checking individual names.
@@ -38,6 +38,7 @@ public sealed partial class MigrationIntegrationTests
 		"Messages",
 		"ModelEndpoints",
 		"Participants",
+		"PersonaDescriptionTranslations",
 		"Personas",
 		"RevokedJwts",
 		"Roles",
@@ -51,8 +52,8 @@ public sealed partial class MigrationIntegrationTests
 	// --- 1. Up — apply AddUserPreferences and verify tables ---
 
 	/// <summary>
-	/// Verifies that <see cref="AddUserPreferences.Up"/> adds the <c>UserPreferences</c> table, bringing the
-	/// total to 14 domain tables. Uses discovery-based assertion (full table list from the system catalog).
+	/// Verifies that <see cref="AddUserPreferences.Up"/> adds the <c>UserPreferences</c> table.
+	/// Uses discovery-based assertion (full table list from the system catalog).
 	/// </summary>
 	[Fact]
 	public async Task AddUserPreferences_Up_CreatesAllExpectedTables()
@@ -79,7 +80,7 @@ public sealed partial class MigrationIntegrationTests
 	/// <summary>
 	/// Verifies that <see cref="AddUserPreferences.Up"/> does not create additional explicit indexes.
 	/// The <c>UserPreferences</c> table uses <c>UserId</c> as its primary key (auto-indexed by the provider),
-	/// so the explicit index list remains at 28 (same as after <see cref="AddAiPersonas"/>).
+	/// same as after <see cref="AddAiPersonas"/>.
 	/// </summary>
 	[Fact]
 	public async Task AddUserPreferences_Up_DoesNotCreateAdditionalIndexes()
@@ -105,7 +106,7 @@ public sealed partial class MigrationIntegrationTests
 
 	/// <summary>
 	/// Verifies that <see cref="AddUserPreferences.Down"/> removes the <c>UserPreferences</c> table, restoring
-	/// the schema to the <see cref="AddAiPersonas"/> state (13 domain tables).
+	/// the schema to the <see cref="AddAiPersonas"/> state.
 	/// </summary>
 	[Fact]
 	public async Task AddUserPreferences_Down_RemovesUserPreferencesTable()

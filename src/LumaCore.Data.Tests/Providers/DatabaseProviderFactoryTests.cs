@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 LumaCoreTech
+// Copyright (c) 2026 LumaCoreTech
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
@@ -85,16 +85,34 @@ public sealed class DatabaseProviderFactoryTests
 			"sqlserver",
 			typeof(SqlServerProviderOperations),
 			DatabaseProviders.SqlServer
-		},
-
-		// MySQL
-		{
-			"MySQL",
-			"mysql",
-			typeof(MySqlProviderOperations),
-			DatabaseProviders.MySql
 		}
 	};
+
+	/// <summary>
+	/// Verifies that <see cref="DatabaseProviderFactory.GetProvider"/> hard-rejects
+	/// <see cref="DatabaseProviders.MySql"/> with a descriptive <see cref="InvalidOperationException"/>,
+	/// because <c>Pomelo.EntityFrameworkCore.MySql</c> has not yet released an EF Core 10 compatible
+	/// version. The error must point at the Pomelo tracker so operators have an actionable next step.
+	/// </summary>
+	/// <param name="scenario">A description of the test scenario for readability in test output.</param>
+	/// <param name="input">The MySQL provider name spelling to resolve (covers casing/whitespace).</param>
+	[Theory]
+	[InlineData("MySQL lowercase", "mysql")]
+	[InlineData("MySQL uppercase", "MYSQL")]
+	[InlineData("MySQL with whitespace", " mysql ")]
+	public void GetProvider_WhenMySql_ThrowsInvalidOperationException(string scenario, string input)
+	{
+		_ = scenario;
+
+		// Act + Assert
+		var ex = Assert.Throws<InvalidOperationException>(() => DatabaseProviderFactory.GetProvider(input));
+		Assert.Equal(
+			"MySQL/MariaDB support is temporarily unavailable. " +
+			"Pomelo.EntityFrameworkCore.MySql has not yet released an EF Core 10 compatible version. " +
+			"Please use SQLite, PostgreSQL, or SQL Server instead, or track progress at: " +
+			"https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues",
+			ex.Message);
+	}
 
 	/// <summary>
 	/// Verifies that <see cref="DatabaseProviderFactory.GetProvider"/> throws

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Definitions;
+
 namespace LumaCore.Data.Entities;
 
 /// <summary>
@@ -42,6 +44,12 @@ namespace LumaCore.Data.Entities;
 ///             via <see cref="ParticipantId"/>.
 ///             </description>
 ///         </item>
+///         <item>
+///             <description>
+///             <see cref="CreatedByParticipantId"/> is an optional FK to the <see cref="ParticipantEntity"/> that
+///             created this persona. <see langword="null"/> indicates a system-created persona (e.g. seeded defaults).
+///             </description>
+///         </item>
 ///     </list>
 ///     <para>
 ///     Database constraints, indexes, and delete behaviors are configured in <see cref="LumaCoreDbContext"/>.
@@ -49,6 +57,8 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public class PersonaEntity
 {
+	// --- 1. Primary key ---
+
 	/// <summary>
 	/// Gets or sets the internal unique identifier for database relationships.
 	/// </summary>
@@ -61,6 +71,10 @@ public class PersonaEntity
 	///     </para>
 	/// </remarks>
 	public PersonaId Id { get; set; }
+
+	// --- 2. Public identifier (none) ---
+
+	// --- 3. Foreign keys + Navigation properties ---
 
 	/// <summary>
 	/// Gets or sets the foreign key to the associated participant.
@@ -81,9 +95,6 @@ public class PersonaEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     This relationship is required at the database level via <see cref="ParticipantId"/>, but the navigation may be
 	///     <see langword="null"/> if it was not loaded.
 	///     </para>
@@ -92,6 +103,33 @@ public class PersonaEntity
 	///     </para>
 	/// </remarks>
 	public ParticipantEntity? Participant { get; set; }
+
+	/// <summary>
+	/// Gets or sets the foreign key to the participant that created this persona.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     Points to <see cref="ParticipantEntity.Id"/>.
+	///     <see langword="null"/> indicates a system-created persona (e.g. the default seed).
+	///     </para>
+	///     <para>
+	///     <b>Index:</b> Non-unique index to support filtering personas by creator.
+	///     </para>
+	/// </remarks>
+	public ParticipantId? CreatedByParticipantId { get; set; }
+
+	/// <summary>
+	/// Gets or sets the navigation property to the participant that created this persona.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     May be <see langword="null"/> if the creator is not loaded or if this is a system-created persona.
+	///     </para>
+	///     <para>
+	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
+	///     </para>
+	/// </remarks>
+	public ParticipantEntity? CreatedByParticipant { get; set; }
 
 	/// <summary>
 	/// Gets or sets the foreign key to the currently active system prompt.
@@ -119,9 +157,6 @@ public class PersonaEntity
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
-	///     <para>
 	///     May be <see langword="null"/> if no active prompt is configured.
 	///     </para>
 	///     <para>
@@ -130,27 +165,47 @@ public class PersonaEntity
 	/// </remarks>
 	public SystemPromptEntity? ActiveSystemPrompt { get; set; }
 
+	// --- 4. Timestamps ---
+
+	/// <summary>
+	/// Gets or sets the UTC timestamp when this persona was created.
+	/// </summary>
+	/// <remarks>
+	/// Stamped once on insert by the data layer and never modified afterwards. The data layer treats this column as
+	/// required so consumers can rely on a meaningful value without coalescing. Distinct from <see cref="UpdatedAtUtc"/>,
+	/// which tracks the most recent mutation; <see cref="CreatedAtUtc"/> supports audit, cohort, and "newly authored
+	/// personas" queries.
+	/// </remarks>
+	public DateTime CreatedAtUtc { get; set; }
+
+	/// <summary>
+	/// Gets or sets the UTC timestamp when this persona was last updated.
+	/// </summary>
+	/// <remarks>
+	/// Initialized to the persona's creation timestamp on insert and refreshed by every <c>Update*</c>
+	/// service method that mutates this entity (including system-prompt switches). The data layer treats
+	/// this column as required so consumers can rely on a meaningful value without coalescing.
+	/// </remarks>
+	public DateTime UpdatedAtUtc { get; set; }
+
+	// --- 5. Scalar domain fields ---
+
 	/// <summary>
 	/// Gets or sets the default model identifier for this persona.
 	/// </summary>
 	/// <remarks>
-	/// Specifies which LLM model to use by default when generating responses for this persona.
-	/// Can be overridden per conversation or message.
-	/// 
-	/// The database enforces a maximum length.
-	/// 
-	/// Examples: <c>mistral:7b</c>, <c>llama3.1:8b-instruct-q4_0</c>, <c>gpt-4</c>
+	///     <para>
+	///     Specifies which LLM model to use by default when generating responses for this persona.
+	///     Can be overridden per conversation or message.
+	///     </para>
+	///     <para>
+	///     Maximum length: <see cref="EntityLimits.ModelIdentifierMaxLength"/>.
+	///     </para>
+	///     <para>
+	///     Examples: <c>mistral:7b</c>, <c>llama3.1:8b-instruct-q4_0</c>, <c>gpt-4</c>
+	///     </para>
 	/// </remarks>
 	public string? DefaultModel { get; set; }
-
-	/// <summary>
-	/// Gets or sets a brief description of the persona's character and purpose.
-	/// </summary>
-	/// <remarks>
-	/// Provides a short human-readable description of the persona.
-	/// The database enforces a maximum length.
-	/// </remarks>
-	public string? Description { get; set; }
 
 	/// <summary>
 	/// Gets or sets whether this persona is currently active and available for conversations.
@@ -167,12 +222,25 @@ public class PersonaEntity
 	public bool IsActive { get; set; } = true;
 
 	/// <summary>
-	/// Gets the collection of system prompts associated with this persona.
+	/// Gets or sets the visibility scope of this persona.
 	/// </summary>
 	/// <remarks>
 	///     <para>
-	///     Navigation property for Entity Framework Core.
+	///     <see cref="PersonaVisibility.Private"/> personas are only visible to their creator.
+	///     <see cref="PersonaVisibility.Shared"/> personas are discoverable by all authenticated users.
 	///     </para>
+	///     <para>
+	///     The database stores this as an integer column with a default of <see cref="PersonaVisibility.Private"/>.
+	///     </para>
+	/// </remarks>
+	public PersonaVisibility Visibility { get; set; } = PersonaVisibility.Private;
+
+	// --- 6. Collection navigation properties ---
+
+	/// <summary>
+	/// Gets the collection of system prompts associated with this persona.
+	/// </summary>
+	/// <remarks>
 	///     <para>
 	///     Multiple prompts allow for versioning; the most recent active prompt is typically used for new conversations.
 	///     </para>
@@ -181,4 +249,24 @@ public class PersonaEntity
 	///     </para>
 	/// </remarks>
 	public ICollection<SystemPromptEntity> SystemPrompts { get; set; } = [];
+
+	/// <summary>
+	/// Gets the localized description translations for this persona.
+	/// </summary>
+	/// <remarks>
+	///     <para>
+	///     Each entry maps a BCP 47 culture code (e.g., "en", "de") to a translated description.
+	///     When displaying a persona, the UI selects the entry matching the user's locale.
+	///     </para>
+	///     <para>
+	///     Unlike <see cref="SystemPrompts"/>, this collection is included in full-fat Read API queries
+	///     despite being an <see cref="ICollection{T}"/>. The rationale: it is bounded by the number of
+	///     supported locales (typically 2–10 entries), has no nested navigations, and is essential for
+	///     displaying the persona description — without it the persona would appear incomplete.
+	///     </para>
+	///     <para>
+	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
+	///     </para>
+	/// </remarks>
+	public ICollection<PersonaDescriptionTranslationEntity> DescriptionTranslations { get; set; } = [];
 }

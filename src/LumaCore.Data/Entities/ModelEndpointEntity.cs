@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
+using LumaCore.Definitions;
+
 namespace LumaCore.Data.Entities;
 
 /// <summary>
@@ -38,6 +40,8 @@ namespace LumaCore.Data.Entities;
 /// </remarks>
 public class ModelEndpointEntity
 {
+	// --- 1. Primary key ---
+
 	/// <summary>
 	/// Gets or sets the internal unique identifier for database relationships.
 	/// </summary>
@@ -50,6 +54,8 @@ public class ModelEndpointEntity
 	///     </para>
 	/// </remarks>
 	public ModelEndpointId Id { get; set; }
+
+	// --- 2. Public identifier ---
 
 	/// <summary>
 	/// Gets or sets the public unique identifier for external references.
@@ -64,17 +70,38 @@ public class ModelEndpointEntity
 	/// </remarks>
 	public Guid PublicId { get; set; }
 
+	// --- 3. Foreign keys + Navigation properties (none) ---
+
+	// --- 4. Timestamps ---
+
 	/// <summary>
 	/// Gets or sets the UTC timestamp when this endpoint was created.
 	/// </summary>
 	public DateTime CreatedAtUtc { get; set; }
 
 	/// <summary>
+	/// Gets or sets the UTC timestamp when this endpoint was last updated.
+	/// </summary>
+	/// <remarks>
+	/// Initialized to <see cref="CreatedAtUtc"/> on insert and refreshed by every <c>Update*</c> service
+	/// method that mutates this entity. The data layer treats this column as required (no nullable,
+	/// no implicit fallback) so consumers can rely on a meaningful value without coalescing.
+	/// </remarks>
+	public DateTime UpdatedAtUtc { get; set; }
+
+	// --- 5. Scalar domain fields ---
+
+	/// <summary>
 	/// Gets or sets the endpoint type/protocol identifier.
 	/// </summary>
 	/// <remarks>
-	/// Examples: <c>ollama</c>, <c>openai-compatible</c>, <c>anthropic</c>.
-	/// Treat this value as immutable after creation.
+	///     <para>
+	///     Examples: <c>ollama</c>, <c>openai-compatible</c>, <c>anthropic</c>.
+	///     Treat this value as immutable after creation.
+	///     </para>
+	///     <para>
+	///     Maximum length: <see cref="EntityLimits.ModelEndpointProviderTypeMaxLength"/>.
+	///     </para>
 	/// </remarks>
 	public string ProviderType { get; set; } = string.Empty;
 
@@ -82,7 +109,12 @@ public class ModelEndpointEntity
 	/// Gets or sets the base URL of the endpoint.
 	/// </summary>
 	/// <remarks>
-	/// Treat this value as immutable after creation to preserve historical reproducibility.
+	///     <para>
+	///     Treat this value as immutable after creation to preserve historical reproducibility.
+	///     </para>
+	///     <para>
+	///     Maximum length: <see cref="EntityLimits.ModelEndpointBaseUrlMaxLength"/>.
+	///     </para>
 	/// </remarks>
 	public string BaseUrl { get; set; } = string.Empty;
 
@@ -90,13 +122,21 @@ public class ModelEndpointEntity
 	/// Gets or sets a human-friendly name for this endpoint.
 	/// </summary>
 	/// <remarks>
-	/// Cosmetic field shown in administration UIs.
+	///     <para>
+	///     Cosmetic field shown in administration UIs.
+	///     </para>
+	///     <para>
+	///     Maximum length: <see cref="EntityLimits.ModelEndpointNameMaxLength"/>.
+	///     </para>
 	/// </remarks>
 	public string Name { get; set; } = string.Empty;
 
 	/// <summary>
 	/// Gets or sets an optional description for this endpoint.
 	/// </summary>
+	/// <remarks>
+	/// Maximum length: <see cref="EntityLimits.ModelEndpointDescriptionMaxLength"/>.
+	/// </remarks>
 	public string? Description { get; set; }
 
 	/// <summary>
@@ -111,18 +151,22 @@ public class ModelEndpointEntity
 	/// Gets or sets encrypted credentials for authenticating to this endpoint.
 	/// </summary>
 	/// <remarks>
-	/// Stored encrypted so a database leak does not directly expose secrets.
-	/// The encryption key/material must be provided via configuration or environment variables.
+	///     <para>
+	///     Stored encrypted so a database leak does not directly expose secrets.
+	///     The encryption key/material must be provided via configuration or environment variables.
+	///     </para>
+	///     <para>
+	///     Maximum length: <see cref="EntityLimits.ModelEndpointEncryptedCredentialsMaxLength"/>.
+	///     </para>
 	/// </remarks>
 	public string? EncryptedCredentials { get; set; }
+
+	// --- 6. Collection navigation properties ---
 
 	/// <summary>
 	/// Gets the collection of generation metadata rows associated with this endpoint.
 	/// </summary>
 	/// <remarks>
-	///     <para>
-	///     Navigation property for Entity Framework Core.
-	///     </para>
 	///     <para>
 	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.
 	///     </para>

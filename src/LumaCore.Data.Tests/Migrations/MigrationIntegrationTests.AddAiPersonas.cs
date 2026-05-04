@@ -9,12 +9,13 @@ using Xunit;
 
 namespace LumaCore.Data.Tests.Migrations;
 
-// AddAiPersonas migration: verify that Up() adds Personas, SystemPrompts, and
-// MessageGenerationMetadata tables with their indexes, and Down() removes them.
+// AddAiPersonas migration: verify that Up() adds Personas, SystemPrompts,
+// MessageGenerationMetadata, and PersonaDescriptionTranslations tables with their indexes,
+// and Down() removes them.
 //
-//   1. Up — tables: applies InitialCreate + AddAiPersonas and asserts all 13 domain tables exist.
-//   2. Up — indexes: asserts all 28 explicitly-defined indexes exist (21 from InitialCreate + 7 new).
-//   3. Down — reverts to InitialCreate and asserts the 3 added tables are gone (back to 10 tables).
+//   1. Up — tables: applies InitialCreate + AddAiPersonas and asserts all domain tables exist.
+//   2. Up — indexes: asserts all explicitly-defined indexes exist.
+//   3. Down — reverts to InitialCreate and asserts the added tables are gone.
 //
 // Discovery-based assertions (same approach as InitialCreate): query the provider's system catalog for
 // the complete list of objects rather than checking individual names.
@@ -38,6 +39,7 @@ public sealed partial class MigrationIntegrationTests
 		"Messages",
 		"ModelEndpoints",
 		"Participants",
+		"PersonaDescriptionTranslations",
 		"Personas",
 		"RevokedJwts",
 		"Roles",
@@ -49,24 +51,25 @@ public sealed partial class MigrationIntegrationTests
 
 	/// <summary>
 	/// All explicit indexes after <see cref="AddAiPersonas.Up"/> has been applied, sorted alphabetically.
-	/// Extends <see cref="sInitialCreateExpectedIndexes"/> with 7 new indexes for the AI persona tables.
+	/// Extends <see cref="sInitialCreateExpectedIndexes"/> with 8 new indexes for the AI persona tables.
 	/// </summary>
 	private static readonly string[] sAddAiPersonasExpectedIndexes =
 	[
+		"IX_ConversationParticipants_LastReadMessageId",
 		"IX_ConversationParticipants_ParticipantId",
 		"IX_Conversations_PublicId",
 		"IX_Conversations_UpdatedAtUtc",
 		"IX_MessageGenerationMetadata_ModelEndpointId",
 		"IX_MessageGenerationMetadata_SystemPromptId",
-		"IX_Messages_ConversationId",
 		"IX_Messages_ConversationId_CreatedAtUtc",
-		"IX_Messages_CreatedAtUtc",
 		"IX_Messages_PublicId",
 		"IX_Messages_SenderId",
 		"IX_ModelEndpoints_IsActive",
 		"IX_ModelEndpoints_PublicId",
 		"IX_Participants_PublicId",
+		"IX_PersonaDescriptionTranslations_PersonaId_CultureCode",
 		"IX_Personas_ActiveSystemPromptId",
+		"IX_Personas_CreatedByParticipantId",
 		"IX_Personas_IsActive",
 		"IX_Personas_ParticipantId",
 		"IX_RevokedJwts_ExpiresAtUtc",
@@ -86,8 +89,9 @@ public sealed partial class MigrationIntegrationTests
 	// --- 1. Up — apply AddAiPersonas and verify tables ---
 
 	/// <summary>
-	/// Verifies that <see cref="AddAiPersonas.Up"/> adds <c>Personas</c>, <c>SystemPrompts</c>, and
-	/// <c>MessageGenerationMetadata</c> tables, bringing the total to 13 domain tables. Uses discovery-based
+	/// Verifies that <see cref="AddAiPersonas.Up"/> adds <c>Personas</c>, <c>SystemPrompts</c>,
+	/// <c>MessageGenerationMetadata</c>, and <c>PersonaDescriptionTranslations</c> tables,
+	/// bringing the total to 14 domain tables. Uses discovery-based
 	/// assertion (full table list from the system catalog).
 	/// </summary>
 	[Fact]
@@ -113,8 +117,8 @@ public sealed partial class MigrationIntegrationTests
 	// --- 2. Up — apply AddAiPersonas and verify indexes ---
 
 	/// <summary>
-	/// Verifies that <see cref="AddAiPersonas.Up"/> creates 7 additional explicit indexes for the AI persona
-	/// tables, bringing the total to 28. Uses discovery-based assertion (full index list from the system catalog).
+	/// Verifies that <see cref="AddAiPersonas.Up"/> creates the additional explicit indexes for the AI persona
+	/// tables. Uses discovery-based assertion (full index list from the system catalog).
 	/// </summary>
 	[Fact]
 	public async Task AddAiPersonas_Up_CreatesAllExpectedIndexes()
@@ -139,9 +143,9 @@ public sealed partial class MigrationIntegrationTests
 	// --- 3. Down — revert AddAiPersonas and verify tables are gone ---
 
 	/// <summary>
-	/// Verifies that <see cref="AddAiPersonas.Down"/> removes <c>Personas</c>, <c>SystemPrompts</c>, and
-	/// <c>MessageGenerationMetadata</c>, restoring the schema to the <see cref="InitialCreate"/> state
-	/// (10 domain tables).
+	/// Verifies that <see cref="AddAiPersonas.Down"/> removes <c>Personas</c>, <c>SystemPrompts</c>,
+	/// <c>MessageGenerationMetadata</c>, and <c>PersonaDescriptionTranslations</c>,
+	/// restoring the schema to the <see cref="InitialCreate"/> state.
 	/// </summary>
 	[Fact]
 	public async Task AddAiPersonas_Down_RemovesAiPersonaTables()

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 // Project: https://github.com/LumaCoreTech/LumaCore
 
-namespace LumaCore.Data.DataPort;
+namespace LumaCore.Data.Providers;
 
 /// <summary>
 /// Provides helper methods for quoting SQL identifiers across different database providers.

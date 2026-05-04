@@ -11,7 +11,6 @@ using LumaCore.Data.Security;
 using LumaCore.Data.Services;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -80,12 +79,6 @@ public static class ServiceRegistration
 			DatabaseOptions options = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
 			ConfigureProvider(dbContextOptions, options, serviceProvider);
 
-			// Strongly-typed ID converters registered via ConfigureConventions() change how the SQLite provider
-			// finalizes value generation metadata (Sqlite:Autoincrement is not implied for converter-backed
-			// columns). This creates an unavoidable mismatch between the snapshot model (no converters during
-			// finalization) and the runtime model (converters active). Downgrade from exception to logged warning.
-			dbContextOptions.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning));
-
 			// Add the connection interceptor to detect runtime disconnections
 			dbContextOptions.AddInterceptors(serviceProvider.GetRequiredService<DatabaseConnectionInterceptor>());
 		});
@@ -118,6 +111,20 @@ public static class ServiceRegistration
 		services.AddScoped<IMessageDataService>(sp => sp.GetRequiredService<ILumaCoreDataService>());
 		services.AddScoped<IModelEndpointDataService>(sp => sp.GetRequiredService<ILumaCoreDataService>());
 		services.AddScoped<IDataIntegrityService>(sp => sp.GetRequiredService<ILumaCoreDataService>());
+
+		// Resource file storage: options + local filesystem implementation.
+		// Singleton because the store holds only the resolved root path and a logger — no scoped state.
+		services.AddFeatureOptions<ResourceStoreOptions>(configuration, ResourceStoreOptions.SectionName);
+		services.AddSingleton<IResourceStore, LocalFileResourceStore>();
+
+		// Resource service: orchestrates upload (hashing, dedup, storage), download info resolution,
+		// and pre-CASCADE reference cleanup. Scoped because it depends on LumaCoreDbContext.
+		services.AddScoped<IResourceService, ResourceService>();
+
+		// Resource garbage collector: MARK orphaned resources → SWEEP (file delete + DB row delete).
+		// Runs as a background service with configurable interval, grace period, and batch size.
+		services.AddFeatureOptions<ResourceCleanupOptions>(configuration, ResourceCleanupOptions.SectionName);
+		services.AddHostedService<ResourceCleanupService>();
 
 		// Secret protection uses AES-GCM with HKDF domain separation. All protectors share the same
 		// EncryptionKey from configuration but derive cryptographically independent AES keys per domain.

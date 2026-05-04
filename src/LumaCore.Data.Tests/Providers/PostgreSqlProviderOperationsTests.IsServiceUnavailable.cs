@@ -207,7 +207,9 @@ public sealed partial class PostgreSqlProviderOperationsTests
 	/// </summary>
 	/// <param name="sqlState">The PostgreSQL SQLSTATE code, or <see langword="null"/>.</param>
 	/// <returns>An <see cref="NpgsqlException"/> with the specified SQLSTATE code.</returns>
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
 	private static NpgsqlException CreateNpgsqlException(string? sqlState) => new TestNpgsqlException(sqlState);
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
 
 	/// <summary>
 	/// A test-only subclass of <see cref="NpgsqlException"/> that allows setting the

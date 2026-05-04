@@ -40,7 +40,7 @@ public class Program
 			                          : builder.HostEnvironment.BaseAddress;
 
 		// Ensure the URL ends with a trailing slash so relative paths behave as expected.
-		if (!effectiveBaseUrl.EndsWith("/", StringComparison.Ordinal))
+		if (!effectiveBaseUrl.EndsWith('/'))
 		{
 			effectiveBaseUrl += "/";
 		}

@@ -9,7 +9,7 @@ using LumaCore.Data.DataPort.Models;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 
-using static LumaCore.Data.DataPort.SqlIdentifierHelper;
+using static LumaCore.Data.Providers.SqlIdentifierHelper;
 
 namespace LumaCore.Data.DataPort.Import.Implementations;
 

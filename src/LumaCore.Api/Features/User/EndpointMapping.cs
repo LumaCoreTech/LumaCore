@@ -69,14 +69,14 @@ static class EndpointMapping
 		user.MapGet(
 				"/preferences",
 				async (
-					ClaimsPrincipal      claimsPrincipal,
-					ILumaCoreDataService dataService,
-					CancellationToken    cancellationToken) =>
+					ClaimsPrincipal   claimsPrincipal,
+					IUserDataService  userDataService,
+					CancellationToken cancellationToken) =>
 				{
-					UserId userId = await ResolveUserIdAsync(claimsPrincipal, dataService, cancellationToken)
+					UserId userId = await ResolveUserIdAsync(claimsPrincipal, userDataService, cancellationToken)
 						                .ConfigureAwait(false);
 
-					string? json = await dataService
+					string? json = await userDataService
 						               .GetPreferencesJsonAsync(userId, cancellationToken)
 						               .ConfigureAwait(false);
 
@@ -106,17 +106,17 @@ static class EndpointMapping
 				async (
 					V1.UpdateUserPreferencesRequest request,
 					ClaimsPrincipal                 claimsPrincipal,
-					ILumaCoreDataService            dataService,
+					IUserDataService                userDataService,
 					CancellationToken               cancellationToken) =>
 				{
-					UserId userId = await ResolveUserIdAsync(claimsPrincipal, dataService, cancellationToken)
+					UserId userId = await ResolveUserIdAsync(claimsPrincipal, userDataService, cancellationToken)
 						                .ConfigureAwait(false);
 
 					// Serialize the typed request into a JSON blob for storage.
 					var preferences = new V1.UserPreferencesResponse(request.RecentEmojis);
 					string json = JsonSerializer.Serialize(preferences, sJsonOptions);
 
-					await dataService
+					await userDataService
 						.UpdatePreferencesJsonAsync(userId, json, cancellationToken)
 						.ConfigureAwait(false);
 
@@ -142,14 +142,14 @@ static class EndpointMapping
 	/// The authenticated user has no name claim or does not exist in the database.
 	/// </exception>
 	private static async Task<UserId> ResolveUserIdAsync(
-		ClaimsPrincipal      user,
-		ILumaCoreDataService dataService,
-		CancellationToken    cancellationToken)
+		ClaimsPrincipal   user,
+		IUserDataService  userDataService,
+		CancellationToken cancellationToken)
 	{
 		string username = user.Identity?.Name ??
 		                  throw new InvalidOperationException("Authenticated user has no name claim.");
 
-		UserEntity? dbUser = await dataService
+		UserEntity? dbUser = await userDataService
 			                     .GetUserByUsernameAsync(username, cancellationToken)
 			                     .ConfigureAwait(false);
 

@@ -15,6 +15,7 @@ namespace LumaCore.Data.Tests;
 /// <see cref="DatabaseOptions.UserDeletion"/>), default values, and the constant
 /// <see cref="DatabaseOptions.SectionName"/>.
 /// </remarks>
+[Trait("Category", "Options")]
 public sealed partial class DatabaseOptionsTests
 {
 	#region Constructor

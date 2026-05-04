@@ -4,6 +4,7 @@
 
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 
 using LumaCore.Core.Diagnostics;
 using LumaCore.Core.IO;
@@ -51,6 +52,12 @@ public sealed partial class DatabaseInitializerTests
 	private const string ThirdMigrationId = "20260329203940_AddUserPreferences";
 
 	/// <summary>
+	/// The full migration ID for the fourth migration (resource storage and references; includes
+	/// persona avatar storage via the resource system).
+	/// </summary>
+	private const string FourthMigrationId = "20260411201732_AddResources";
+
+	/// <summary>
 	/// All migration IDs in chronological order.
 	/// Update this array when adding new migrations.
 	/// </summary>
@@ -59,7 +66,8 @@ public sealed partial class DatabaseInitializerTests
 	[
 		FirstMigrationId,
 		SecondMigrationId,
-		ThirdMigrationId
+		ThirdMigrationId,
+		FourthMigrationId
 	];
 
 	/// <summary>
@@ -570,7 +578,7 @@ public sealed partial class DatabaseInitializerTests
 
 			// ShuttleFormatVersion must match the current version defined in SqliteShuttleSchema.
 			Assert.Equal(
-				SqliteShuttleSchema.CurrentShuttleFormatVersion.ToString(),
+				SqliteShuttleSchema.CurrentShuttleFormatVersion.ToString(CultureInfo.InvariantCulture),
 				metadata[SqliteShuttleSchema.ShuttleFormatVersionKey]);
 
 			// ShuttleId must be a valid GUID.
@@ -821,6 +829,10 @@ public sealed partial class DatabaseInitializerTests
 		// Data service + dependencies (matches production ServiceRegistration).
 		services.AddSingleton<ISecretProtector>(sp =>
 			new AesGcmSecretProtector(sp.GetRequiredService<IOptions<DatabaseOptions>>()));
+
+		// LumaCoreDataService now depends on IResourceService for avatar storage. The initializer tests do
+		// not exercise the resource system, so register a no-op implementation to satisfy the DI graph.
+		services.AddSingleton<IResourceService, LumaCoreDataServiceFactory.NoOpResourceService>();
 		services.AddScoped<ILumaCoreDataService, LumaCoreDataService>();
 
 		var fakeTimeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));

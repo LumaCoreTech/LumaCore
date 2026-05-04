@@ -7,8 +7,11 @@ using LumaCore.Data.Services;
 using LumaCore.Data.Tests.Infrastructure;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Time.Testing;
 
 using Xunit;
+
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
 namespace LumaCore.Data.Tests.Services;
 
@@ -22,8 +25,8 @@ public sealed partial class LumaCoreDataServiceTests
 	/// They focus on persisted behavior (what ends up stored in the database) and on domain guards
 	/// (e.g. membership requirements) rather than relying on database-level FK failures.
 	/// </remarks>
-	[Trait("Category", "Data")]
-	public sealed class Messages : TestBase
+	[Trait("Category", "Services")]
+	public sealed partial class Messages : TestBase
 	{
 		#region CreateMessageAsync
 
@@ -148,45 +151,65 @@ public sealed partial class LumaCoreDataServiceTests
 					         content: "Hello",
 					         utcNow: utcNow.AddMinutes(1)));
 			Assert.Matches(@"^Sender participant '.+' is not part of conversation '.+'\.$", ex.Message);
+
+			// Negative expectation: the failed transaction must roll back; no message should be persisted.
+			Assert.Empty(await Fixture.DbContext.Messages.AsNoTracking().ToListAsync());
 		}
 
 		/// <summary>
-		/// Verifies that <see cref="IMessageDataService.CreateMessageAsync"/> throws <see cref="ArgumentNullException"/>
-		/// when <c>content</c> is <c>null</c>.
+		/// Verifies that <see cref="IMessageDataService.CreateMessageAsync"/> accepts <see langword="null"/> content
+		/// for attachment-only messages. The content is stored as <see langword="null"/>.
 		/// </summary>
 		[Fact]
-		public async Task CreateMessageAsync_WhenContentNull_ThrowsArgumentNullException()
+		public async Task CreateMessageAsync_WhenContentNull_AcceptsNullContent()
 		{
 			// Arrange
 			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
+			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-			// Act + Assert
-			var ex = await Assert.ThrowsAsync<ArgumentNullException>(() =>
-				         service.CreateMessageAsync(
-					         conversationId: new ConversationId(1),
-					         senderParticipantId: new ParticipantId(1),
-					         content: null,
-					         utcNow: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)));
-			Assert.Equal("content", ex.ParamName);
+			ParticipantEntity participant = await CreateUserParticipantAsync("alice", "alice@example.test", utcNow);
+			ConversationEntity conversation = await service.CreateConversationAsync(
+				                                  title: "Conversation",
+				                                  creatorParticipantId: participant.Id,
+				                                  utcNow: utcNow);
+
+			// Act
+			MessageEntity message = await service.CreateMessageAsync(
+				                        conversationId: conversation.Id,
+				                        senderParticipantId: participant.Id,
+				                        content: null,
+				                        utcNow: utcNow.AddMinutes(1));
+
+			// Assert
+			Assert.Null(message.Content);
 		}
 
 		/// <summary>
-		/// Verifies that <see cref="IMessageDataService.CreateMessageAsync"/> throws for whitespace-only <c>content</c>.
+		/// Verifies that <see cref="IMessageDataService.CreateMessageAsync"/> normalizes whitespace-only content
+		/// to <see langword="null"/> (treated as an attachment-only message).
 		/// </summary>
 		[Fact]
-		public async Task CreateMessageAsync_WhenContentWhitespace_ThrowsArgumentException()
+		public async Task CreateMessageAsync_WhenContentWhitespace_NormalizesToNull()
 		{
 			// Arrange
 			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
+			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-			// Act + Assert
-			var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-				         service.CreateMessageAsync(
-					         conversationId: new ConversationId(1),
-					         senderParticipantId: new ParticipantId(1),
-					         content: "   ",
-					         utcNow: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)));
-			Assert.Equal("content", ex.ParamName);
+			ParticipantEntity participant = await CreateUserParticipantAsync("bob", "bob@example.test", utcNow);
+			ConversationEntity conversation = await service.CreateConversationAsync(
+				                                  title: "Conversation",
+				                                  creatorParticipantId: participant.Id,
+				                                  utcNow: utcNow);
+
+			// Act
+			MessageEntity message = await service.CreateMessageAsync(
+				                        conversationId: conversation.Id,
+				                        senderParticipantId: participant.Id,
+				                        content: "   ",
+				                        utcNow: utcNow.AddMinutes(1));
+
+			// Assert — whitespace is trimmed to empty, then normalized to null.
+			Assert.Null(message.Content);
 		}
 
 		/// <summary>
@@ -263,6 +286,9 @@ public sealed partial class LumaCoreDataServiceTests
 					         content: "Hello",
 					         utcNow: utcNow));
 			Assert.Matches(@"^Conversation '.+' does not exist\.$", ex.Message);
+
+			// Negative expectation: the failed transaction must roll back; no message should be persisted.
+			Assert.Empty(await Fixture.DbContext.Messages.AsNoTracking().ToListAsync());
 		}
 
 		/// <summary>
@@ -290,90 +316,72 @@ public sealed partial class LumaCoreDataServiceTests
 			var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
 				         service.CreateMessageAsync(conversation.Id, new ParticipantId(123456), "Hello", utcNow));
 			Assert.Matches(@"^Sender participant '.+' does not exist\.$", ex.Message);
+
+			// Negative expectation: the failed transaction must roll back; no message should be persisted.
+			Assert.Empty(await Fixture.DbContext.Messages.AsNoTracking().ToListAsync());
 		}
 
-		#endregion
-
-		#region ListMessagesByConversationAsync
-
 		/// <summary>
-		/// Verifies that <see cref="IMessageDataService.ListMessagesByConversationAsync"/> returns messages ordered by
-		/// ascending creation time.
+		/// Verifies that <see cref="IMessageDataService.CreateMessageAsync"/> uses the caller-provided
+		/// <c>publicId</c> instead of auto-generating one. This supports scenarios where the id is broadcast
+		/// to SignalR clients before the message is persisted.
 		/// </summary>
 		[Fact]
-		public async Task ListMessagesByConversationAsync_WhenMultipleMessagesExist_ReturnsInAscendingCreatedAtOrder()
+		public async Task CreateMessageAsync_WhenPublicIdProvided_UsesExplicitPublicId()
 		{
 			// Arrange
 			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
-
 			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-			ParticipantEntity participant = await CreateUserParticipantAsync("alice", "alice@example.test", utcNow);
+			ParticipantEntity participant =
+				await CreateUserParticipantAsync("alice", "alice@example.test", utcNow);
+
 			ConversationEntity conversation = await service.CreateConversationAsync(
 				                                  title: "Conversation",
 				                                  creatorParticipantId: participant.Id,
 				                                  utcNow: utcNow);
 
-			MessageEntity m2 = await service.CreateMessageAsync(
-				                   conversationId: conversation.Id,
-				                   senderParticipantId: participant.Id,
-				                   content: "Second",
-				                   utcNow: utcNow.AddSeconds(2));
-
-			MessageEntity m1 = await service.CreateMessageAsync(
-				                   conversationId: conversation.Id,
-				                   senderParticipantId: participant.Id,
-				                   content: "First",
-				                   utcNow: utcNow.AddSeconds(1));
+			var explicitId = Guid.NewGuid();
 
 			// Act
-			List<MessageEntity> messages =
-				await service.ListMessagesByConversationAsync(conversationId: conversation.Id);
+			MessageEntity message = await service.CreateMessageAsync(
+				                        conversationId: conversation.Id,
+				                        senderParticipantId: participant.Id,
+				                        content: "Hello",
+				                        utcNow: utcNow.AddMinutes(1),
+				                        publicId: explicitId);
+
 
 			// Assert
-			Assert.Equal(2, messages.Count);
-			Assert.Equal(m1.Id, messages[0].Id);
-			Assert.Equal(m2.Id, messages[1].Id);
+			Assert.Equal(explicitId, message.PublicId);
+
+			MessageEntity? reloaded = await Fixture.DbContext.Messages
+				                          .AsNoTracking()
+				                          .FirstOrDefaultAsync(m => m.Id == message.Id);
+			Assert.NotNull(reloaded);
+			Assert.Equal(explicitId, reloaded.PublicId);
 		}
 
 		/// <summary>
-		/// Verifies that <see cref="IMessageDataService.ListMessagesByConversationAsync"/> returns an empty list when
-		/// the conversation has no messages.
+		/// Verifies that <see cref="IMessageDataService.CreateMessageAsync"/> rejects
+		/// <see cref="Guid.Empty"/> as an explicit <c>publicId</c>.
 		/// </summary>
 		[Fact]
-		public async Task ListMessagesByConversationAsync_WhenNoMessages_ReturnsEmptyList()
-		{
-			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
-
-			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-			ParticipantEntity participant = await CreateUserParticipantAsync("alice", "alice@example.test", utcNow);
-			ConversationEntity conversation = await service.CreateConversationAsync(
-				                                  title: "Empty",
-				                                  creatorParticipantId: participant.Id,
-				                                  utcNow: utcNow);
-
-			// Act
-			List<MessageEntity> messages = await service.ListMessagesByConversationAsync(conversation.Id);
-
-			// Assert
-			Assert.Empty(messages);
-		}
-
-		/// <summary>
-		/// Verifies that <see cref="IMessageDataService.ListMessagesByConversationAsync"/> validates the conversation id
-		/// and throws <see cref="ArgumentOutOfRangeException"/> for non-positive ids.
-		/// </summary>
-		[Fact]
-		public async Task ListMessagesByConversationAsync_WhenConversationIdInvalid_ThrowsArgumentOutOfRangeException()
+		public async Task CreateMessageAsync_WhenPublicIdEmpty_ThrowsArgumentException()
 		{
 			// Arrange
 			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
 
 			// Act + Assert
-			var ex = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
-				         service.ListMessagesByConversationAsync(conversationId: new ConversationId(0)));
-			Assert.Equal("conversationId.Value", ex.ParamName);
+			var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+				         service.CreateMessageAsync(
+					         conversationId: new ConversationId(1),
+					         senderParticipantId: new ParticipantId(1),
+					         content: "Hello",
+					         utcNow: new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+					         publicId: Guid.Empty));
+			Assert.Equal("publicId", ex.ParamName);
+			Assert.Equal("Value must not be Empty. (Parameter 'publicId')", ex.Message);
 		}
 
 		#endregion
@@ -382,13 +390,22 @@ public sealed partial class LumaCoreDataServiceTests
 
 		/// <summary>
 		/// Verifies that <see cref="IMessageDataService.ListRecentMessagesByConversationAsync"/> returns the most recent
-		/// messages first and respects the provided limit.
+		/// messages first and respects the provided limit. The toggle parameter asserts the contract — both the
+		/// regular EF branch and the compiled hot-path branch must yield the same ordering and Sender-population.
 		/// </summary>
-		[Fact]
-		public async Task ListRecentMessagesByConversationAsync_WhenMultipleMessagesExist_ReturnsMostRecentMessages()
+		/// <param name="preferCompiledHotPathQueries">
+		/// Whether to enable <see cref="DatabaseOptions.PreferCompiledHotPathQueries"/> for this run.
+		/// </param>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task ListRecentMessagesByConversationAsync_WhenMultipleMessagesExist_ReturnsMostRecentMessages(
+			bool preferCompiledHotPathQueries)
 		{
 			// Arrange
-			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
+				Fixture.DbContext,
+				o => o.PreferCompiledHotPathQueries = preferCompiledHotPathQueries);
 
 			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -397,6 +414,15 @@ public sealed partial class LumaCoreDataServiceTests
 				                                  title: "Conversation",
 				                                  creatorParticipantId: participant.Id,
 				                                  utcNow: utcNow);
+
+			// Special: insert messages in non-chronological order so insertion order (Id) does NOT coincide with
+			// CreatedAtUtc order. A buggy implementation that orders by Id descending (instead of CreatedAtUtc
+			// descending) would return [m1, m2] and fail the assertions below.
+			MessageEntity m3 = await service.CreateMessageAsync(
+				                   conversationId: conversation.Id,
+				                   senderParticipantId: participant.Id,
+				                   content: "3",
+				                   utcNow: utcNow.AddSeconds(3));
 
 			MessageEntity m1 = await service.CreateMessageAsync(
 				                   conversationId: conversation.Id,
@@ -410,22 +436,23 @@ public sealed partial class LumaCoreDataServiceTests
 				                   content: "2",
 				                   utcNow: utcNow.AddSeconds(2));
 
-			MessageEntity m3 = await service.CreateMessageAsync(
-				                   conversationId: conversation.Id,
-				                   senderParticipantId: participant.Id,
-				                   content: "3",
-				                   utcNow: utcNow.AddSeconds(3));
-
 			// Act
-			List<MessageEntity> recent = await service.ListRecentMessagesByConversationAsync(
-				                             conversationId: conversation.Id,
-				                             limit: 2);
+			IReadOnlyList<MessageEntity> recent = await service.ListRecentMessagesByConversationAsync(
+				                                      conversationId: conversation.Id,
+				                                      limit: 2);
 
 			// Assert
 			Assert.Equal(2, recent.Count);
 			Assert.Equal(m3.Id, recent[0].Id);
 			Assert.Equal(m2.Id, recent[1].Id);
 			Assert.DoesNotContain(recent, m => m.Id == m1.Id);
+
+			// Sender navigation must be populated (regression guard for the Include in the recent-messages query;
+			// callers rendering the conversation rely on this to avoid N+1 lookups).
+			Assert.NotNull(recent[0].Sender);
+			Assert.Equal(participant.Id, recent[0].Sender!.Id);
+			Assert.NotNull(recent[1].Sender);
+			Assert.Equal(participant.Id, recent[1].Sender!.Id);
 		}
 
 		/// <summary>
@@ -446,7 +473,7 @@ public sealed partial class LumaCoreDataServiceTests
 				                                  utcNow: utcNow);
 
 			// Act
-			List<MessageEntity> recent =
+			IReadOnlyList<MessageEntity> recent =
 				await service.ListRecentMessagesByConversationAsync(conversation.Id, limit: 10);
 
 			// Assert
@@ -488,6 +515,107 @@ public sealed partial class LumaCoreDataServiceTests
 					         conversationId: new ConversationId(0),
 					         limit: 1));
 			Assert.Equal("conversationId.Value", ex.ParamName);
+		}
+
+		#endregion
+
+		#region GetMessageByPublicIdAsync
+
+		/// <summary>
+		/// Verifies that <see cref="IMessageDataService.GetMessageByPublicIdAsync"/> returns the matching
+		/// message with the <see cref="MessageEntity.Sender"/> navigation populated. The toggle parameter
+		/// asserts the contract — both the regular EF branch and the compiled hot-path branch must yield the
+		/// same observable result.
+		/// </summary>
+		/// <param name="preferCompiledHotPathQueries">
+		/// Whether to enable
+		/// <see cref="DatabaseOptions.PreferCompiledHotPathQueries"/> for this run.
+		/// </param>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task GetMessageByPublicIdAsync_WhenMessageExists_ReturnsMessageWithSender(
+			bool preferCompiledHotPathQueries)
+		{
+			// Arrange
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
+				Fixture.DbContext,
+				o => o.PreferCompiledHotPathQueries = preferCompiledHotPathQueries);
+
+			DateTime utcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+			ParticipantEntity participant = await CreateUserParticipantAsync("alice", "alice@example.test", utcNow);
+			ConversationEntity conversation = await service.CreateConversationAsync(
+				                                  title: "Conversation",
+				                                  creatorParticipantId: participant.Id,
+				                                  utcNow: utcNow);
+
+			MessageEntity created = await service.CreateMessageAsync(
+				                        conversationId: conversation.Id,
+				                        senderParticipantId: participant.Id,
+				                        content: "Hello",
+				                        utcNow: utcNow.AddMinutes(1));
+
+			// Act
+			MessageEntity? loaded = await service.GetMessageByPublicIdAsync(created.PublicId);
+
+			// Assert
+			Assert.NotNull(loaded);
+			Assert.Equal(created.Id, loaded.Id);
+			Assert.Equal(created.PublicId, loaded.PublicId);
+			Assert.Equal(conversation.Id, loaded.ConversationId);
+			Assert.Equal(participant.Id, loaded.SenderId);
+			Assert.Equal("Hello", loaded.Content);
+
+			// Sender-population contract: REST callers must be able to render the message without an N+1 lookup.
+			Assert.NotNull(loaded.Sender);
+			Assert.Equal(participant.Id, loaded.Sender.Id);
+			Assert.Equal(participant.DisplayName, loaded.Sender.DisplayName);
+		}
+
+		/// <summary>
+		/// Verifies that <see cref="IMessageDataService.GetMessageByPublicIdAsync"/> returns
+		/// <see langword="null"/> when no message with the given public id exists (standard lookup
+		/// semantics — a missing row is not an exceptional condition). The toggle parameter asserts that
+		/// both the regular EF branch and the compiled hot-path branch agree on the not-found contract.
+		/// </summary>
+		/// <param name="preferCompiledHotPathQueries">
+		/// Whether to enable <see cref="DatabaseOptions.PreferCompiledHotPathQueries"/> for this run.
+		/// </param>
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task GetMessageByPublicIdAsync_WhenMessageDoesNotExist_ReturnsNull(
+			bool preferCompiledHotPathQueries)
+		{
+			// Arrange
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(
+				Fixture.DbContext,
+				o => o.PreferCompiledHotPathQueries = preferCompiledHotPathQueries);
+
+			// Act
+			MessageEntity? loaded = await service.GetMessageByPublicIdAsync(Guid.NewGuid());
+
+			// Assert
+			Assert.Null(loaded);
+		}
+
+		/// <summary>
+		/// Verifies that <see cref="IMessageDataService.GetMessageByPublicIdAsync"/> rejects
+		/// <see cref="Guid.Empty"/> with an <see cref="ArgumentException"/> — an empty guid is never a valid
+		/// public id and indicates a caller bug rather than a legitimate "not found" lookup.
+		/// </summary>
+		[Fact]
+		public async Task GetMessageByPublicIdAsync_WhenPublicIdEmpty_ThrowsArgumentException()
+		{
+			// Arrange
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext);
+
+			// Act + Assert
+			var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+				         service.GetMessageByPublicIdAsync(Guid.Empty));
+			Assert.Equal("publicId", ex.ParamName);
+			Assert.Equal("Value must not be Empty. (Parameter 'publicId')", ex.Message);
 		}
 
 		#endregion
@@ -659,6 +787,17 @@ public sealed partial class LumaCoreDataServiceTests
 
 			// Assert
 			Assert.False(redacted);
+
+			// Negative expectation: a returning-false call must not mutate the message. Reload and verify the
+			// original content/redaction state is preserved.
+			MessageEntity? messageAfter = await Fixture.DbContext.Messages
+				                              .AsNoTracking()
+				                              .FirstOrDefaultAsync(m => m.Id == message.Id);
+
+			Assert.NotNull(messageAfter);
+			Assert.Equal("Hello", messageAfter.Content);
+			Assert.Null(messageAfter.RedactedAtUtc);
+			Assert.Null(messageAfter.RedactionReason);
 		}
 
 		/// <summary>
@@ -697,6 +836,16 @@ public sealed partial class LumaCoreDataServiceTests
 
 			// Assert
 			Assert.False(redacted2);
+
+			// Negative expectation: the second call must not overwrite the original Other reason/timestamp
+			// with UserRequestedDeletion. Verifies idempotency at the row level.
+			MessageEntity? messageAfter = await Fixture.DbContext.Messages
+				                              .AsNoTracking()
+				                              .FirstOrDefaultAsync(m => m.Id == message.Id);
+
+			Assert.NotNull(messageAfter);
+			Assert.Equal(MessageRedactionReason.Other, messageAfter.RedactionReason);
+			Assert.Equal(redactUtcNow, messageAfter.RedactedAtUtc);
 		}
 
 		/// <summary>
@@ -713,7 +862,7 @@ public sealed partial class LumaCoreDataServiceTests
 			bool ok = await service.RedactMessageByAuthorAsync(
 				          new MessageId(12345),
 				          new ParticipantId(1),
-				          DateTime.UtcNow);
+				          new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
 			// Assert
 			Assert.False(ok);
@@ -819,10 +968,11 @@ public sealed partial class LumaCoreDataServiceTests
 				                   utcNow: utcNow.AddSeconds(1));
 
 			// Act
+			DateTime bulkUtc = utcNow.AddMinutes(1);
 			int redacted = await service.RedactMessagesByParticipantAsync(
 				               participantId: participant.Id,
 				               reason: MessageRedactionReason.Moderation,
-				               utcNow: utcNow.AddMinutes(1));
+				               utcNow: bulkUtc);
 
 			// Assert
 			Assert.Equal(2, redacted);
@@ -839,7 +989,7 @@ public sealed partial class LumaCoreDataServiceTests
 				{
 					Assert.Null(m.Content);
 					Assert.Equal(MessageRedactionReason.Moderation, m.RedactionReason);
-					Assert.NotNull(m.RedactedAtUtc);
+					Assert.Equal(bulkUtc, m.RedactedAtUtc);
 				});
 		}
 
@@ -988,7 +1138,19 @@ public sealed partial class LumaCoreDataServiceTests
 				                                            .AsNoTracking()
 				                                            .FirstOrDefaultAsync(m => m.MessageId == message.Id);
 
-			// Assert
+			// Assert — the returned entity reflects the persisted state, including the service-assigned MessageId
+			// (CreateForMessage sets it from the messageId argument; the original source did not carry it).
+			Assert.Equal(message.Id, created.MessageId);
+			Assert.Equal(endpoint.Id, created.ModelEndpointId);
+			Assert.Equal("mistral:7b", created.Model);
+			Assert.Equal(100, created.PromptTokens);
+			Assert.Equal(50, created.CompletionTokens);
+			Assert.Equal(TimeSpan.FromMilliseconds(1500), created.ResponseTime);
+			Assert.Equal(2048, created.MaxTokens);
+			Assert.Equal(0.7, created.Temperature);
+			Assert.Equal(0.9, created.TopP);
+			Assert.Equal("System: You are helpful.\nUser: Hello", created.FullPrompt);
+
 			Assert.NotNull(reloaded);
 			Assert.Equal(message.Id, reloaded.MessageId);
 			Assert.Equal(endpoint.Id, reloaded.ModelEndpointId);
@@ -1153,6 +1315,220 @@ public sealed partial class LumaCoreDataServiceTests
 			var ex = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
 				         service.CreateMessageGenerationMetadataAsync(messageId, source));
 			Assert.Equal(expectedParamName, ex.ParamName);
+		}
+
+		#endregion
+
+		#region UTC clock fallback
+
+		/// <summary>
+		/// Verifies that <see cref="IMessageDataService.CreateMessageAsync"/> falls back to the injected
+		/// <see cref="TimeProvider"/> for both <see cref="MessageEntity.CreatedAtUtc"/> and the conversation's
+		/// <see cref="ConversationEntity.UpdatedAtUtc"/> when the optional <c>utcNow</c> argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c> and silently
+		/// captures wall-clock time instead.
+		/// </remarks>
+		[Fact]
+		public async Task CreateMessageAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext, timeProvider: clock);
+
+			DateTime seedNow = fixedNow.AddDays(-1);
+			ParticipantEntity participant = await CreateUserParticipantAsync(
+				                                "alice",
+				                                "alice@example.test",
+				                                seedNow);
+			ConversationEntity conversation = await service.CreateConversationAsync(
+				                                  title: "Conversation",
+				                                  creatorParticipantId: participant.Id,
+				                                  utcNow: seedNow);
+
+			// Act
+			MessageEntity message = await service.CreateMessageAsync(
+				                        conversationId: conversation.Id,
+				                        senderParticipantId: participant.Id,
+				                        content: "Hello");
+
+			// Assert
+			Assert.Equal(fixedNow, message.CreatedAtUtc);
+			ConversationEntity? reloaded = await Fixture.DbContext.Conversations
+				                               .AsNoTracking()
+				                               .FirstOrDefaultAsync(c => c.Id == conversation.Id);
+			Assert.NotNull(reloaded);
+			Assert.Equal(fixedNow, reloaded.UpdatedAtUtc);
+		}
+
+		/// <summary>
+		/// Verifies that <see cref="IMessageDataService.CreateSystemMessageAsync"/> falls back to the injected
+		/// <see cref="TimeProvider"/> for <see cref="MessageEntity.CreatedAtUtc"/> when the optional <c>utcNow</c>
+		/// argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c>.
+		/// </remarks>
+		[Fact]
+		public async Task CreateSystemMessageAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext, timeProvider: clock);
+
+			DateTime seedNow = fixedNow.AddDays(-1);
+			ParticipantEntity participant = await CreateUserParticipantAsync(
+				                                "alice",
+				                                "alice@example.test",
+				                                seedNow);
+			ConversationEntity conversation = await service.CreateConversationAsync(
+				                                  title: "Conversation",
+				                                  creatorParticipantId: participant.Id,
+				                                  utcNow: seedNow);
+
+			// Act
+			MessageEntity message = await service.CreateSystemMessageAsync(
+				                        conversationId: conversation.Id,
+				                        content: "System notice");
+
+			// Assert
+			Assert.Equal(fixedNow, message.CreatedAtUtc);
+		}
+
+		/// <summary>
+		/// Verifies that <see cref="IMessageDataService.RedactMessageAsync"/> falls back to the injected
+		/// <see cref="TimeProvider"/> for <see cref="MessageEntity.RedactedAtUtc"/> when the optional <c>utcNow</c>
+		/// argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c>.
+		/// </remarks>
+		[Fact]
+		public async Task RedactMessageAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext, timeProvider: clock);
+
+			DateTime seedNow = fixedNow.AddDays(-1);
+			ParticipantEntity participant = await CreateUserParticipantAsync(
+				                                "alice",
+				                                "alice@example.test",
+				                                seedNow);
+			ConversationEntity conversation = await service.CreateConversationAsync(
+				                                  title: "Conversation",
+				                                  creatorParticipantId: participant.Id,
+				                                  utcNow: seedNow);
+			MessageEntity message = await service.CreateMessageAsync(
+				                        conversationId: conversation.Id,
+				                        senderParticipantId: participant.Id,
+				                        content: "Hello",
+				                        utcNow: seedNow);
+
+			// Act
+			bool redacted = await service.RedactMessageAsync(
+				                message.Id,
+				                MessageRedactionReason.Moderation);
+
+			// Assert
+			Assert.True(redacted);
+			MessageEntity? reloaded = await Fixture.DbContext.Messages
+				                          .AsNoTracking()
+				                          .FirstOrDefaultAsync(m => m.Id == message.Id);
+			Assert.NotNull(reloaded);
+			Assert.Equal(fixedNow, reloaded.RedactedAtUtc);
+		}
+
+		/// <summary>
+		/// Verifies that <see cref="IMessageDataService.RedactMessageByAuthorAsync"/> falls back to the injected
+		/// <see cref="TimeProvider"/> for <see cref="MessageEntity.RedactedAtUtc"/> when the optional <c>utcNow</c>
+		/// argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c>.
+		/// </remarks>
+		[Fact]
+		public async Task RedactMessageByAuthorAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext, timeProvider: clock);
+
+			DateTime seedNow = fixedNow.AddDays(-1);
+			ParticipantEntity participant = await CreateUserParticipantAsync(
+				                                "alice",
+				                                "alice@example.test",
+				                                seedNow);
+			ConversationEntity conversation = await service.CreateConversationAsync(
+				                                  title: "Conversation",
+				                                  creatorParticipantId: participant.Id,
+				                                  utcNow: seedNow);
+			MessageEntity message = await service.CreateMessageAsync(
+				                        conversationId: conversation.Id,
+				                        senderParticipantId: participant.Id,
+				                        content: "Hello",
+				                        utcNow: seedNow);
+
+			// Act
+			bool redacted = await service.RedactMessageByAuthorAsync(message.Id, participant.Id);
+
+			// Assert
+			Assert.True(redacted);
+			MessageEntity? reloaded = await Fixture.DbContext.Messages
+				                          .AsNoTracking()
+				                          .FirstOrDefaultAsync(m => m.Id == message.Id);
+			Assert.NotNull(reloaded);
+			Assert.Equal(fixedNow, reloaded.RedactedAtUtc);
+		}
+
+		/// <summary>
+		/// Verifies that <see cref="IMessageDataService.RedactMessagesByParticipantAsync"/> falls back to the
+		/// injected <see cref="TimeProvider"/> for <see cref="MessageEntity.RedactedAtUtc"/> on bulk redaction when
+		/// the optional <c>utcNow</c> argument is omitted.
+		/// </summary>
+		/// <remarks>
+		/// Guards against a regression where the production code path bypasses <c>ResolveUtcNow()</c>.
+		/// </remarks>
+		[Fact]
+		public async Task RedactMessagesByParticipantAsync_WhenUtcNowIsNull_UsesInjectedTimeProvider()
+		{
+			// Arrange
+			DateTime fixedNow = new(2026, 3, 4, 5, 6, 7, DateTimeKind.Utc);
+			FakeTimeProvider clock = CreateClock(fixedNow);
+			LumaCoreDataService service = LumaCoreDataServiceFactory.Create(Fixture.DbContext, timeProvider: clock);
+
+			DateTime seedNow = fixedNow.AddDays(-1);
+			ParticipantEntity participant = await CreateUserParticipantAsync(
+				                                "alice",
+				                                "alice@example.test",
+				                                seedNow);
+			ConversationEntity conversation = await service.CreateConversationAsync(
+				                                  title: "Conversation",
+				                                  creatorParticipantId: participant.Id,
+				                                  utcNow: seedNow);
+			MessageEntity message = await service.CreateMessageAsync(
+				                        conversationId: conversation.Id,
+				                        senderParticipantId: participant.Id,
+				                        content: "Hello",
+				                        utcNow: seedNow);
+
+			// Act
+			int redactedCount = await service.RedactMessagesByParticipantAsync(
+				                    participant.Id,
+				                    MessageRedactionReason.UserDeleted);
+
+			// Assert
+			Assert.Equal(1, redactedCount);
+			MessageEntity? reloaded = await Fixture.DbContext.Messages
+				                          .AsNoTracking()
+				                          .FirstOrDefaultAsync(m => m.Id == message.Id);
+			Assert.NotNull(reloaded);
+			Assert.Equal(fixedNow, reloaded.RedactedAtUtc);
 		}
 
 		#endregion

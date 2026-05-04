@@ -318,7 +318,9 @@ public partial class LifecycleManagementTests
 		await sut.InitializeAsync();
 
 		// Act
+#pragma warning disable CS0618 // Type or member is obsolete
 		sut.Dispose();
+#pragma warning restore CS0618 // Type or member is obsolete
 
 		// Assert
 		AssertDisposedState(sut, expectedInitCount: 1, expectedShutdownCount: 1, expectedDisposeCount: 1);
