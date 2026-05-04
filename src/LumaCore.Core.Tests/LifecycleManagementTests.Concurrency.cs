@@ -320,10 +320,15 @@ public partial class LifecycleManagementTests
 
 		scope.Dispose();
 
-		await AwaitWithTimeoutAsync(shutdownTask, "Shutdown did not complete");
+		// CI runners are noticeably slower than local dev boxes; the default 1s timeout is tight when
+		// shutdown has to drain the operation and fire the shutdown callback in sequence. Five seconds
+		// is still well below the global xUnit safety net.
+		TimeSpan ciTimeout = TimeSpan.FromSeconds(5);
+
+		await AwaitWithTimeoutAsync(shutdownTask, "Shutdown did not complete", ciTimeout);
 
 		// Assert
-		await AwaitWithTimeoutAsync(shutdownCallbackInvoked.WaitAsync(), "Shutdown callback was not invoked");
+		await AwaitWithTimeoutAsync(shutdownCallbackInvoked.WaitAsync(), "Shutdown callback was not invoked", ciTimeout);
 		AssertShutdownState(sut, expectedInitCount: 1, expectedShutdownCount: 1);
 	}
 
@@ -361,10 +366,15 @@ public partial class LifecycleManagementTests
 
 		scope.Dispose();
 
-		await AwaitWithTimeoutAsync(disposeTask, "Disposal did not complete");
+		// CI runners are noticeably slower than local dev boxes; the default 1s timeout is tight when
+		// disposal has to drain the operation, fire the shutdown callback, and the disposal callback in
+		// sequence. Five seconds is still well below the global xUnit safety net.
+		TimeSpan ciTimeout = TimeSpan.FromSeconds(5);
+
+		await AwaitWithTimeoutAsync(disposeTask, "Disposal did not complete", ciTimeout);
 
 		// Assert
-		await AwaitWithTimeoutAsync(disposeCallbackInvoked.WaitAsync(), "Dispose callback was not invoked");
+		await AwaitWithTimeoutAsync(disposeCallbackInvoked.WaitAsync(), "Dispose callback was not invoked", ciTimeout);
 		AssertDisposedState(sut, expectedInitCount: 1, expectedShutdownCount: 1, expectedDisposeCount: 1);
 	}
 
