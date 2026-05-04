@@ -16,14 +16,16 @@ public sealed class DesignTimeFactoryTests
 {
 	/// <summary>
 	/// Verifies that the EF Core design-time factory exists and produces a <see cref="LumaCoreDbContext"/> configured
-	/// for SQLite.
+	/// for SQL Server.
 	/// </summary>
 	/// <remarks>
 	/// The factory is typically used only by EF tooling, so the test locates and invokes it via reflection to keep the
-	/// usage decoupled from runtime code paths.
+	/// usage decoupled from runtime code paths. SQL Server is used as the design-time provider because it is the
+	/// strictest of the supported providers — migrations scaffolded against it apply cleanly under the more permissive
+	/// providers (SQLite, PostgreSQL) at runtime, while the reverse is not true.
 	/// </remarks>
 	[Fact]
-	public void CreateDbContext_ReturnsConfiguredSqliteDbContext()
+	public void CreateDbContext_ReturnsConfiguredSqlServerDbContext()
 	{
 		// Arrange — locate the design-time factory via reflection to avoid a compile-time dependency on an
 		// implementation detail that is never referenced by runtime code.
@@ -39,8 +41,9 @@ public sealed class DesignTimeFactoryTests
 
 		try
 		{
-			// Assert — the factory defaults to SQLite so EF tooling can work without external infrastructure.
-			Assert.Equal("Microsoft.EntityFrameworkCore.Sqlite", context.Database.ProviderName);
+			// Assert — the factory defaults to SQL Server so EF tooling scaffolds migrations and the model snapshot
+			// against the strictest supported provider.
+			Assert.Equal("Microsoft.EntityFrameworkCore.SqlServer", context.Database.ProviderName);
 		}
 		finally
 		{

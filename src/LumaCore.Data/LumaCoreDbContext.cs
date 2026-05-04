@@ -172,18 +172,14 @@ public sealed partial class LumaCoreDbContext : DbContext
 	///     strongly-typed id converters mean the live model exposes <c>UserId</c> rather than
 	///     <see cref="long"/>, so the resolver returns
 	///     <see cref="Microsoft.EntityFrameworkCore.Metadata.SqliteValueGenerationStrategy.None"/>
-	///     and <c>SqliteAnnotationProvider.For(IColumn)</c> emits no <c>Sqlite:Autoincrement</c>. Migration
-	///     snapshots, however, serialize properties using the <i>provider</i> type
-	///     (<c>Property&lt;long&gt;("Id")</c>) — so when the differ rehydrates the previous model the resolver
-	///     <i>does</i> assign <see cref="Microsoft.EntityFrameworkCore.Metadata.SqliteValueGenerationStrategy.Autoincrement"/>
-	///     .
-	///     Without compensation the live model and the migration snapshot disagree on every PK column and
-	///     <c>dotnet ef migrations add</c> produces destructive <c>AlterColumn</c> calls that would
-	///     <i>remove</i> <c>AUTOINCREMENT</c> from existing tables. The custom
+	///     and <c>SqliteAnnotationProvider.For(IColumn)</c> emits no <c>Sqlite:Autoincrement</c>. Without
+	///     compensation, schemas built directly from the model on SQLite (e.g. <see cref="DatabaseFacade.EnsureCreatedAsync"/>
+	///     in tests) would lose <c>AUTOINCREMENT</c> on every PK column. The custom
 	///     <see cref="SqliteAutoincrementForValueConvertedPrimaryKeysConvention"/> registered below runs at
 	///     model-finalizing time and explicitly sets the autoincrement strategy on integer-backed PKs whose
-	///     value converter targets <see cref="long"/> or <see cref="int"/>, restoring symmetry with the
-	///     snapshot side of the differ.
+	///     value converter targets <see cref="long"/> or <see cref="int"/>. Migration-driven schemas are
+	///     unaffected either way because the migration source files carry <c>Sqlite:Autoincrement</c>
+	///     annotations explicitly.
 	///     </para>
 	/// </remarks>
 	protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

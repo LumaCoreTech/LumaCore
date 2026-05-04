@@ -36,8 +36,33 @@ namespace LumaCore.Data;
 ///     <para>
 ///     EF Core automatically discovers classes implementing <see cref="IDesignTimeDbContextFactory{TContext}"/> and
 ///     uses them instead of the DI container during design-time operations. This factory provides a minimal,
-///     deterministic <see cref="LumaCoreDbContext"/> backed by a local SQLite file — no external database server,
-///     no secrets, no configuration required.
+///     deterministic <see cref="LumaCoreDbContext"/> for migration scaffolding — no external database server,
+///     no secrets, no configuration required. EF Core does not open a database connection during
+///     <c>dotnet ef migrations add</c>; the connection string is never used.
+///     </para>
+///     <para>
+///         <b>Why SQL Server instead of SQLite</b>
+///     </para>
+///     <para>
+///     Every relational EF Core provider emits provider-specific <c>HasColumnType</c> strings into the scaffolded
+///     Designer files and the model snapshot — SQLite emits <c>"INTEGER"</c>/<c>"TEXT"</c>/<c>"REAL"</c>, SQL
+///     Server emits <c>"bigint"</c>/<c>"nvarchar(max)"</c>/<c>"datetime2"</c>, PostgreSQL emits <c>"bigint"</c>/
+///     <c>"text"</c>/<c>"timestamp with time zone"</c>. The snapshot is therefore inherently provider-flavoured.
+///     </para>
+///     <para>
+///     The relevant question is what happens when the scaffolded migration source files (<c>Up</c>/<c>Down</c>
+///     methods) are executed against a different provider at runtime. Migrations authored under SQLite tooling
+///     liberally emit <c>AlterColumn</c> operations on primary-key columns, because SQLite implements
+///     <c>ALTER COLUMN</c> as a transparent table-rebuild with foreign keys temporarily disabled. SQL Server
+///     refuses to alter a primary-key column while foreign keys reference it, so the same migration aborts in CI
+///     with errors such as <c>FK_Resources_Participants_CreatedByParticipantId</c> failing to apply.
+///     </para>
+///     <para>
+///     Using SQL Server as the design-time provider inverts the asymmetry: the migration differ produces
+///     migrations that satisfy the strictest supported provider, and the more permissive providers (SQLite,
+///     PostgreSQL) execute them at runtime without complaint. The provider-specific snapshot strings are never
+///     read at runtime — only the EF Core tooling and the in-process drift test consume the snapshot, and both
+///     run under the design-time provider.
 ///     </para>
 ///     <para>
 ///         <b>Runtime vs. design-time</b>
@@ -63,11 +88,13 @@ sealed class LumaCoreDbContextDesignTimeFactory : IDesignTimeDbContextFactory<Lu
 	{
 		var optionsBuilder = new DbContextOptionsBuilder<LumaCoreDbContext>();
 
-		optionsBuilder.UseSqlite(
-			"Data Source=lumacore.design-time.db",
-			sqliteOptions =>
+		// SQL Server is used here intentionally — see the class-level remarks for the full explanation.
+		// The connection string is never opened; EF Core only needs the provider to build the model.
+		optionsBuilder.UseSqlServer(
+			"Server=(local);Database=lumacore-design-time;Trusted_Connection=True;",
+			sqlServerOptions =>
 			{
-				sqliteOptions.MigrationsAssembly(typeof(LumaCoreDbContext).Assembly.FullName);
+				sqlServerOptions.MigrationsAssembly(typeof(LumaCoreDbContext).Assembly.FullName);
 			});
 
 		return new LumaCoreDbContext(optionsBuilder.Options);

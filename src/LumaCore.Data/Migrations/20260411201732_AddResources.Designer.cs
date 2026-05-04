@@ -23,26 +23,20 @@ namespace LumaCore.Data.Migrations
             modelBuilder.Entity("LumaCore.Data.Entities.ConversationEntity", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CreatedAtUtc");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(500);
 
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("PublicId");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(200);
 
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("UpdatedAtUtc");
 
                     b.HasKey("Id");
 
@@ -58,20 +52,15 @@ namespace LumaCore.Data.Migrations
 
             modelBuilder.Entity("LumaCore.Data.Entities.ConversationParticipantEntity", b =>
                 {
-                    b.Property<long>("ConversationId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("ConversationId");
 
-                    b.Property<long>("ParticipantId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("ParticipantId");
 
-                    b.Property<DateTime>("JoinedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("JoinedAtUtc");
 
-                    b.Property<long?>("LastReadMessageId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long?>("LastReadMessageId");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("INTEGER");
+                    b.Property<int>("Role");
 
                     b.HasKey("ConversationId", "ParticipantId");
 
@@ -87,32 +76,23 @@ namespace LumaCore.Data.Migrations
             modelBuilder.Entity("LumaCore.Data.Entities.MessageEntity", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Content")
-                        .HasColumnType("TEXT");
+                    b.Property<string>("Content");
 
-                    b.Property<long>("ConversationId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("ConversationId");
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CreatedAtUtc");
 
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("PublicId");
 
-                    b.Property<DateTime?>("RedactedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime?>("RedactedAtUtc");
 
-                    b.Property<int?>("RedactionReason")
-                        .HasColumnType("INTEGER");
+                    b.Property<int?>("RedactionReason");
 
-                    b.Property<long?>("SenderId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long?>("SenderId");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
+                    b.Property<int>("Type");
 
                     b.HasKey("Id");
 
@@ -131,40 +111,29 @@ namespace LumaCore.Data.Migrations
 
             modelBuilder.Entity("LumaCore.Data.Entities.MessageGenerationMetadataEntity", b =>
                 {
-                    b.Property<long>("MessageId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("MessageId");
 
-                    b.Property<int>("CompletionTokens")
-                        .HasColumnType("INTEGER");
+                    b.Property<int>("CompletionTokens");
 
-                    b.Property<string>("FullPrompt")
-                        .HasColumnType("TEXT");
+                    b.Property<string>("FullPrompt");
 
-                    b.Property<int?>("MaxTokens")
-                        .HasColumnType("INTEGER");
+                    b.Property<int?>("MaxTokens");
 
                     b.Property<string>("Model")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(100);
 
-                    b.Property<long>("ModelEndpointId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("ModelEndpointId");
 
-                    b.Property<int>("PromptTokens")
-                        .HasColumnType("INTEGER");
+                    b.Property<int>("PromptTokens");
 
-                    b.Property<TimeSpan>("ResponseTime")
-                        .HasColumnType("TEXT");
+                    b.Property<TimeSpan>("ResponseTime");
 
-                    b.Property<long?>("SystemPromptId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long?>("SystemPromptId");
 
-                    b.Property<double?>("Temperature")
-                        .HasColumnType("REAL");
+                    b.Property<double?>("Temperature");
 
-                    b.Property<double?>("TopP")
-                        .HasColumnType("REAL");
+                    b.Property<double?>("TopP");
 
                     b.HasKey("MessageId");
 
@@ -180,45 +149,35 @@ namespace LumaCore.Data.Migrations
             modelBuilder.Entity("LumaCore.Data.Entities.ModelEndpointEntity", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("BaseUrl")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(500);
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CreatedAtUtc");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(500);
 
                     b.Property<string>("EncryptedCredentials")
-                        .HasMaxLength(4000)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(4000);
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
                         .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(100);
 
                     b.Property<string>("ProviderType")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(50);
 
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("PublicId");
 
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("UpdatedAtUtc");
 
                     b.HasKey("Id");
 
@@ -235,19 +194,15 @@ namespace LumaCore.Data.Migrations
             modelBuilder.Entity("LumaCore.Data.Entities.ParticipantEntity", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CreatedAtUtc");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(100);
 
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("PublicId");
 
                     b.HasKey("Id");
 
@@ -261,40 +216,30 @@ namespace LumaCore.Data.Migrations
             modelBuilder.Entity("LumaCore.Data.Entities.PersonaEntity", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<long?>("ActiveSystemPromptId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long?>("ActiveSystemPromptId");
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CreatedAtUtc");
 
-                    b.Property<long?>("CreatedByParticipantId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long?>("CreatedByParticipantId");
 
                     b.Property<string>("DefaultModel")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(100);
 
                     b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(2000);
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
                         .HasDefaultValue(true);
 
-                    b.Property<long>("ParticipantId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("ParticipantId");
 
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("UpdatedAtUtc");
 
                     b.Property<int>("Visibility")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
                         .HasDefaultValue(0);
 
                     b.HasKey("Id");
@@ -318,30 +263,23 @@ namespace LumaCore.Data.Migrations
             modelBuilder.Entity("LumaCore.Data.Entities.ResourceEntity", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("ContentHash")
                         .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(64);
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CreatedAtUtc");
 
-                    b.Property<long?>("CreatedByParticipantId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long?>("CreatedByParticipantId");
 
-                    b.Property<int>("DeletionState")
-                        .HasColumnType("INTEGER");
+                    b.Property<int>("DeletionState");
 
-                    b.Property<long>("SizeBytes")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("SizeBytes");
 
                     b.Property<string>("StoragePath")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(100);
 
                     b.HasKey("Id");
 
@@ -364,11 +302,9 @@ namespace LumaCore.Data.Migrations
 
             modelBuilder.Entity("LumaCore.Data.Entities.ResourceGcStateEntity", b =>
                 {
-                    b.Property<int>("Id")
-                        .HasColumnType("INTEGER");
+                    b.Property<int>("Id");
 
-                    b.Property<DateTime>("LastRunAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("LastRunAtUtc");
 
                     b.HasKey("Id");
 
@@ -378,32 +314,24 @@ namespace LumaCore.Data.Migrations
             modelBuilder.Entity("LumaCore.Data.Entities.ResourceReferenceEntity", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("ContentType")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(255);
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CreatedAtUtc");
 
                     b.Property<string>("OriginalFileName")
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(255);
 
-                    b.Property<long>("OwnerId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("OwnerId");
 
-                    b.Property<int>("OwnerKind")
-                        .HasColumnType("INTEGER");
+                    b.Property<int>("OwnerKind");
 
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("PublicId");
 
-                    b.Property<long>("ResourceId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("ResourceId");
 
                     b.HasKey("Id");
 
@@ -423,24 +351,19 @@ namespace LumaCore.Data.Migrations
             modelBuilder.Entity("LumaCore.Data.Entities.RevokedJwtEntity", b =>
                 {
                     b.Property<string>("Jti")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(36);
 
-                    b.Property<DateTime>("ExpiresAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("ExpiresAtUtc");
 
                     b.Property<string>("Reason")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(100);
 
-                    b.Property<DateTime>("RevokedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("RevokedAtUtc");
 
                     b.Property<string>("Subject")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(50);
 
                     b.HasKey("Jti");
 
@@ -453,23 +376,18 @@ namespace LumaCore.Data.Migrations
             modelBuilder.Entity("LumaCore.Data.Entities.RoleEntity", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CreatedAtUtc");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(200);
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(50);
 
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("PublicId");
 
                     b.HasKey("Id");
 
@@ -487,24 +405,19 @@ namespace LumaCore.Data.Migrations
             modelBuilder.Entity("LumaCore.Data.Entities.SeedHistoryEntity", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<DateTime>("AppliedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("AppliedAtUtc");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(200);
 
                     b.Property<string>("SeedId")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(100);
 
-                    b.Property<int>("Version")
-                        .HasColumnType("INTEGER");
+                    b.Property<int>("Version");
 
                     b.HasKey("Id");
 
@@ -521,26 +434,20 @@ namespace LumaCore.Data.Migrations
             modelBuilder.Entity("LumaCore.Data.Entities.SystemPromptEntity", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                        .IsRequired();
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CreatedAtUtc");
 
                     b.Property<string>("Hash")
                         .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(64);
 
-                    b.Property<long>("PersonaId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("PersonaId");
 
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("PublicId");
 
                     b.HasKey("Id");
 
@@ -558,39 +465,30 @@ namespace LumaCore.Data.Migrations
             modelBuilder.Entity("LumaCore.Data.Entities.UserEntity", b =>
                 {
                     b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("CreatedAtUtc");
 
                     b.Property<string>("Email")
-                        .HasMaxLength(254)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(254);
 
-                    b.Property<DateTime?>("LastLoginAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime?>("LastLoginAtUtc");
 
-                    b.Property<DateTime?>("LastTokenRefreshAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime?>("LastTokenRefreshAtUtc");
 
-                    b.Property<long>("ParticipantId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("ParticipantId");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(255);
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(50);
 
                     b.Property<string>("UsernameNormalized")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(50);
 
                     b.HasKey("Id");
 
@@ -615,12 +513,10 @@ namespace LumaCore.Data.Migrations
 
             modelBuilder.Entity("LumaCore.Data.Entities.UserPreferencesEntity", b =>
                 {
-                    b.Property<long>("UserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("UserId");
 
                     b.Property<string>("PreferencesJson")
-                        .HasMaxLength(4000)
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(4000);
 
                     b.HasKey("UserId");
 
@@ -629,14 +525,11 @@ namespace LumaCore.Data.Migrations
 
             modelBuilder.Entity("LumaCore.Data.Entities.UserRoleEntity", b =>
                 {
-                    b.Property<long>("UserId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("UserId");
 
-                    b.Property<long>("RoleId")
-                        .HasColumnType("INTEGER");
+                    b.Property<long>("RoleId");
 
-                    b.Property<DateTime>("AssignedAtUtc")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime>("AssignedAtUtc");
 
                     b.HasKey("UserId", "RoleId");
 

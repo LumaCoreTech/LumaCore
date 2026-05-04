@@ -27,13 +27,14 @@ namespace LumaCore.Data.Tests.Migrations;
 // the SqliteAutoincrementForValueConvertedPrimaryKeysConvention silently stops working,
 // or a developer modifies the model without scaffolding a new migration.
 //
-// Provider scope: ModelSnapshot is provider-specific by design — column types
-// (`INTEGER`/`TEXT` vs `integer`/`text`/`timestamp with time zone`) and provider annotations
-// are baked into the snapshot at scaffold time. The same limitation applies to
-// `dotnet ef migrations has-pending-model-changes`. Our snapshot is authored under SQLite,
-// so the drift check is only meaningful when the live DbContext also uses SQLite. On
-// PostgreSQL/SQL Server the test is skipped (the differ would emit one AlterColumnOperation
-// per column simply because of the column-type mismatch, swamping any real drift signal).
+// Provider scope: ModelSnapshot is provider-specific by design — provider annotations
+// (e.g. SqlServer:Identity, Npgsql:ValueGenerationStrategy, Sqlite:Autoincrement) are baked
+// into the snapshot at scaffold time. The same limitation applies to
+// `dotnet ef migrations has-pending-model-changes`. Our snapshot is authored under SQL Server
+// (via LumaCoreDbContextDesignTimeFactory), so the drift check is only meaningful when the
+// live DbContext also uses SQL Server. On SQLite/PostgreSQL the test is skipped — the differ
+// would emit one AlterColumnOperation per column purely because of annotation mismatches,
+// swamping any real drift signal.
 public sealed partial class MigrationIntegrationTests
 {
 	// --- 1. Up — live model matches the most recent migration snapshot ---
@@ -58,10 +59,10 @@ public sealed partial class MigrationIntegrationTests
 	///     strategy resolver itself), this test fails with a non-empty diff naming the affected columns.
 	///     </para>
 	///     <para>
-	///     The check is gated on the live <see cref="DbContext"/> using the SQLite provider, because the
-	///     <c>LumaCoreDbContextModelSnapshot</c> is scaffolded against SQLite and bakes in SQLite column
-	///     types and annotations. On PostgreSQL/SQL Server the test is skipped — same provider-binding
-	///     limitation as <c>dotnet ef migrations has-pending-model-changes</c>.
+	///     The check is gated on the live <see cref="DbContext"/> using the SQL Server provider, because
+	///     <c>LumaCoreDbContextModelSnapshot</c> is scaffolded via <c>LumaCoreDbContextDesignTimeFactory</c>
+	///     which uses SQL Server. On SQLite/PostgreSQL the test is skipped — same provider-binding limitation
+	///     as <c>dotnet ef migrations has-pending-model-changes</c>.
 	///     </para>
 	/// </remarks>
 	[Fact]
@@ -71,16 +72,16 @@ public sealed partial class MigrationIntegrationTests
 		IntegrationTestHarness harness = await CreateHarnessAsync();
 		try
 		{
-			// The snapshot is authored under SQLite; on other providers the differ would report one
-			// AlterColumnOperation per column purely because of column-type/annotation mismatches,
-			// which is not a drift signal. Mirrors the provider-bound nature of
+			// The snapshot is authored under SQL Server (via LumaCoreDbContextDesignTimeFactory); on other
+			// providers the differ would report AlterColumnOperations purely because of annotation
+			// mismatches, which is not a drift signal. Mirrors the provider-bound nature of
 			// `dotnet ef migrations has-pending-model-changes`.
 			string? liveProvider = harness.DbContext.Database.ProviderName;
-			if (liveProvider != "Microsoft.EntityFrameworkCore.Sqlite")
+			if (liveProvider != "Microsoft.EntityFrameworkCore.SqlServer")
 			{
 				Assert.Skip(
-					$"NoDrift drift check is provider-bound: snapshot was scaffolded under SQLite, " +
-					$"but the live DbContext uses '{liveProvider}'. Run this test against SQLite.");
+					$"NoDrift drift check is provider-bound: snapshot was scaffolded under SQL Server, " +
+					$"but the live DbContext uses '{liveProvider}'. Run this test against SQL Server.");
 			}
 
 			IInfrastructure<IServiceProvider> infrastructure = harness.DbContext;
