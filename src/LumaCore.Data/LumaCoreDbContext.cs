@@ -374,10 +374,16 @@ public sealed partial class LumaCoreDbContext : DbContext
 
 			entity.Property(e => e.LastReadMessageId);
 
+			// NoAction (instead of SetNull) to avoid a SQL Server multi-cascade-path error:
+			// Conversation cascades into both ConversationParticipants and Messages, and SetNull on this
+			// secondary FK would form a second cascade path into ConversationParticipants. Safe in practice
+			// because messages are only deleted via the Conversation cascade — which also removes the
+			// dependent ConversationParticipants rows in the same operation, so no orphaned
+			// LastReadMessageId values can survive.
 			entity.HasOne(e => e.LastReadMessage)
 				.WithMany()
 				.HasForeignKey(e => e.LastReadMessageId)
-				.OnDelete(DeleteBehavior.SetNull);
+				.OnDelete(DeleteBehavior.NoAction);
 
 			entity.HasIndex(e => e.LastReadMessageId)
 				.HasDatabaseName("IX_ConversationParticipants_LastReadMessageId");

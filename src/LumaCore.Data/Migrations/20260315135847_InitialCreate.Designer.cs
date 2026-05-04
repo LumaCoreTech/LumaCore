@@ -440,7 +440,7 @@ namespace LumaCore.Data.Migrations
                     b.HasOne("LumaCore.Data.Entities.MessageEntity", "LastReadMessage")
                         .WithMany()
                         .HasForeignKey("LastReadMessageId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("LumaCore.Data.Entities.ParticipantEntity", "Participant")
                         .WithMany("ConversationParticipants")

@@ -128,8 +128,12 @@ public class ConversationParticipantEntity
 	///     by <see cref="ConversationId"/>.
 	///     </para>
 	///     <para>
-	///     <see langword="null"/> when the participant has not read any messages yet, or when the
-	///     referenced message was deleted (the foreign key uses <c>DeleteBehavior.SetNull</c>).
+	///     <see langword="null"/> when the participant has not read any messages yet. The foreign key
+	///     uses <c>DeleteBehavior.NoAction</c> (to avoid a SQL Server multi-cascade-path conflict with
+	///     the conversation cascade), so a stand-alone delete of the referenced message is blocked at
+	///     the database level. In practice, messages are only removed via the conversation cascade,
+	///     which removes the dependent <see cref="ConversationParticipantEntity"/> rows in the same
+	///     operation.
 	///     </para>
 	///     <para>
 	///     <b>Index:</b> Non-unique index to support filtering by read state.
@@ -143,7 +147,7 @@ public class ConversationParticipantEntity
 	/// <remarks>
 	///     <para>
 	///     This relationship is optional. <see cref="LastReadMessageId"/> may be <see langword="null"/> if
-	///     no message has been read or the referenced message was deleted.
+	///     no message has been read.
 	///     </para>
 	///     <para>
 	///     Load explicitly (e.g. via <c>Include(...)</c>) when required.

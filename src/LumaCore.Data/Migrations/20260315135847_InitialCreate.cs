@@ -249,7 +249,7 @@ public partial class InitialCreate : Migration
 			column: "LastReadMessageId",
 			principalTable: "Messages",
 			principalColumn: "Id",
-			onDelete: ReferentialAction.SetNull);
+			onDelete: ReferentialAction.NoAction);
 
 		// --- Indexes (alphabetical by index name) ---
 
