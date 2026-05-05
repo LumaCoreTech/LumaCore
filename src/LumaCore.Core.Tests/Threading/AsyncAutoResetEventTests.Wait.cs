@@ -95,22 +95,68 @@ public partial class AsyncAutoResetEventTests
 
 	/// <summary>
 	/// Verifies that <see cref="AsyncAutoResetEvent.Wait(CancellationToken)"/> throws
-	/// <see cref="OperationCanceledException"/> when the token is canceled before the event is set.
+	/// <see cref="OperationCanceledException"/> when the token is already canceled before <c>Wait()</c> is called.
 	/// </summary>
 	[Fact]
-	public async Task Wait_WithCancellationToken_WhenCanceled_ThrowsOperationCanceledException()
+	public void Wait_WithCancellationToken_WhenCanceledBeforeWait_ThrowsOperationCanceledException()
 	{
 		// Arrange
 		var are = new AsyncAutoResetEvent(false);
 		using var cts = new CancellationTokenSource();
 
-		// Schedule cancellation via timer — avoids thread pool dependency that causes flakiness on CI runners.
-		cts.CancelAfter(TimeSpan.FromMilliseconds(100));
+		cts.Cancel();
 
-		// Act + Assert - wrap synchronous Wait in Task.Run to prevent blocking test runner
-		Task waitTask = Task.Run(() => are.Wait(cts.Token));
-		Task assertion = Assert.ThrowsAnyAsync<OperationCanceledException>(() => waitTask);
-		await AwaitWithTimeoutAsync(assertion, "Cancellation did not throw OperationCanceledException");
+		// Act + Assert — a pre-canceled token causes task.Wait(ct) to throw immediately without blocking,
+		// so no Task.Run wrapper is needed here.
+		var ex = Assert.Throws<OperationCanceledException>(() => are.Wait(cts.Token));
+		Assert.Equal(cts.Token, ex.CancellationToken);
+	}
+
+	/// <summary>
+	/// Verifies that <see cref="AsyncAutoResetEvent.Wait(CancellationToken)"/> throws
+	/// <see cref="OperationCanceledException"/> when the token is canceled while the method is already
+	/// blocking — testing the cancellation callback path, not just the pre-canceled token guard.
+	/// </summary>
+	[Fact]
+	public async Task Wait_WithCancellationToken_WhenCanceledDuringWait_ThrowsOperationCanceledException()
+	{
+		// Arrange
+		var are = new AsyncAutoResetEvent(false);
+		using var cts = new CancellationTokenSource();
+		using var aboutToWait = new SemaphoreSlim(0, 1);
+
+		// Use a dedicated thread instead of Task.Run to avoid thread pool starvation on CI runners
+		// where parallel xUnit execution + limited cores may delay the lambda far past the cancellation.
+		// The thread signals via the semaphore that it is about to enter Wait() so cancellation fires
+		// while the thread is blocked. The tiny window between Release() and Wait(cts.Token) is harmless
+		// because a pre-canceled token also causes Wait() to throw immediately.
+		var completed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+		Exception? threadException = null;
+		var waitThread = new Thread(() =>
+		{
+			try
+			{
+				aboutToWait.Release();
+				are.Wait(cts.Token);
+				completed.SetResult();
+			}
+			catch (Exception ex)
+			{
+				threadException = ex;
+				completed.SetResult();
+			}
+		}) { IsBackground = true };
+		waitThread.Start();
+
+		await AwaitWithTimeoutAsync(aboutToWait.WaitAsync(), "Thread did not start");
+
+		// Act
+		cts.Cancel();
+		await AwaitWithTimeoutAsync(completed.Task, "Cancellation did not unblock Wait()");
+
+		// Assert
+		var ex = Assert.IsAssignableFrom<OperationCanceledException>(threadException);
+		Assert.Equal(cts.Token, ex.CancellationToken);
 	}
 
 	#endregion

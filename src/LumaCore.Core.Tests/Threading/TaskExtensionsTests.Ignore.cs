@@ -21,19 +21,15 @@ public partial class TaskExtensionsTests
 	/// when the task completes successfully.
 	/// </summary>
 	[Fact]
-	public async Task Ignore_WhenTaskSucceeds_DoesNotThrow()
+	public void Ignore_WhenTaskSucceeds_DoesNotThrow()
 	{
-		// Arrange
+		// Arrange - complete the task before calling Ignore() so the async void continuation runs
+		// synchronously on the calling thread; no Task.Delay synchronization needed.
 		var tcs = new TaskCompletionSource();
-
-		// Act
-		TaskExtensions.Ignore(tcs.Task);
 		tcs.SetResult();
 
-		// Give time for continuation to run
-		await Task.Delay(50);
-
-		// Assert - no exception thrown, test passes
+		// Act + Assert - no exception thrown
+		TaskExtensions.Ignore(tcs.Task);
 	}
 
 	/// <summary>
@@ -41,19 +37,15 @@ public partial class TaskExtensionsTests
 	/// when the task faults.
 	/// </summary>
 	[Fact]
-	public async Task Ignore_WhenTaskFaults_SwallowsException()
+	public void Ignore_WhenTaskFaults_SwallowsException()
 	{
-		// Arrange
+		// Arrange - complete the task before calling Ignore() so the async void continuation runs
+		// synchronously on the calling thread; no Task.Delay synchronization needed.
 		var tcs = new TaskCompletionSource();
-
-		// Act
-		TaskExtensions.Ignore(tcs.Task);
 		tcs.SetException(new InvalidOperationException("Test error"));
 
-		// Give time for continuation to run
-		await Task.Delay(50);
-
-		// Assert - exception was swallowed, test passes
+		// Act + Assert - exception was swallowed, no throw
+		TaskExtensions.Ignore(tcs.Task);
 	}
 
 	/// <summary>
@@ -61,21 +53,17 @@ public partial class TaskExtensionsTests
 	/// when the task is canceled.
 	/// </summary>
 	[Fact]
-	public async Task Ignore_WhenTaskCanceled_SwallowsCancellation()
+	public void Ignore_WhenTaskCanceled_SwallowsCancellation()
 	{
-		// Arrange
+		// Arrange - complete the task before calling Ignore() so the async void continuation runs
+		// synchronously on the calling thread; no Task.Delay synchronization needed.
 		var tcs = new TaskCompletionSource();
 		using var cts = new CancellationTokenSource();
 		cts.Cancel();
-
-		// Act
-		TaskExtensions.Ignore(tcs.Task);
 		tcs.SetCanceled(cts.Token);
 
-		// Give time for continuation to run
-		await Task.Delay(50);
-
-		// Assert - cancellation was swallowed, test passes
+		// Act + Assert - cancellation was swallowed, no throw
+		TaskExtensions.Ignore(tcs.Task);
 	}
 
 	#endregion
@@ -87,19 +75,15 @@ public partial class TaskExtensionsTests
 	/// when the task completes successfully.
 	/// </summary>
 	[Fact]
-	public async Task Ignore_Generic_WhenTaskSucceeds_DoesNotThrow()
+	public void Ignore_Generic_WhenTaskSucceeds_DoesNotThrow()
 	{
-		// Arrange
+		// Arrange - complete the task before calling Ignore() so the async void continuation runs
+		// synchronously on the calling thread; no Task.Delay synchronization needed.
 		var tcs = new TaskCompletionSource<int>();
-
-		// Act
-		TaskExtensions.Ignore(tcs.Task);
 		tcs.SetResult(42);
 
-		// Give time for continuation to run
-		await Task.Delay(50);
-
-		// Assert - no exception thrown, test passes
+		// Act + Assert - no exception thrown
+		TaskExtensions.Ignore(tcs.Task);
 	}
 
 	/// <summary>
@@ -107,19 +91,15 @@ public partial class TaskExtensionsTests
 	/// when the task faults.
 	/// </summary>
 	[Fact]
-	public async Task Ignore_Generic_WhenTaskFaults_SwallowsException()
+	public void Ignore_Generic_WhenTaskFaults_SwallowsException()
 	{
-		// Arrange
+		// Arrange - complete the task before calling Ignore() so the async void continuation runs
+		// synchronously on the calling thread; no Task.Delay synchronization needed.
 		var tcs = new TaskCompletionSource<int>();
-
-		// Act
-		TaskExtensions.Ignore(tcs.Task);
 		tcs.SetException(new InvalidOperationException("Test error"));
 
-		// Give time for continuation to run
-		await Task.Delay(50);
-
-		// Assert - exception was swallowed, test passes
+		// Act + Assert - exception was swallowed, no throw
+		TaskExtensions.Ignore(tcs.Task);
 	}
 
 	/// <summary>
@@ -127,21 +107,17 @@ public partial class TaskExtensionsTests
 	/// when the task is canceled.
 	/// </summary>
 	[Fact]
-	public async Task Ignore_Generic_WhenTaskCanceled_SwallowsCancellation()
+	public void Ignore_Generic_WhenTaskCanceled_SwallowsCancellation()
 	{
-		// Arrange
+		// Arrange - complete the task before calling Ignore() so the async void continuation runs
+		// synchronously on the calling thread; no Task.Delay synchronization needed.
 		var tcs = new TaskCompletionSource<int>();
 		using var cts = new CancellationTokenSource();
 		cts.Cancel();
-
-		// Act
-		TaskExtensions.Ignore(tcs.Task);
 		tcs.SetCanceled(cts.Token);
 
-		// Give time for continuation to run
-		await Task.Delay(50);
-
-		// Assert - cancellation was swallowed, test passes
+		// Act + Assert - cancellation was swallowed, no throw
+		TaskExtensions.Ignore(tcs.Task);
 	}
 
 	#endregion
