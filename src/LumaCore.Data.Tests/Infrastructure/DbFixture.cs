@@ -151,17 +151,11 @@ public sealed class DbFixture : IAsyncLifetime
 		// Special test utility: some tests need a *fresh* DbContext instance to reliably hit database constraint
 		// branches (e.g. DbUpdateException on UNIQUE constraints). Reusing the same DbContext can fail earlier with
 		// EF tracking errors (identity conflicts) and never reach the database.
-		if (mSettings?.Provider is DbProvider.Sqlite)
-		{
-			if (mDatabaseFolder is null)
-				throw new InvalidOperationException("Fixture database folder not initialized.");
-
-			DbContextOptions<LumaCoreDbContext> fileOptions = new DbContextOptionsBuilder<LumaCoreDbContext>()
-				.UseSqlite($"Data Source={mDatabaseFolder.GetFilePath("test.db")}")
-				.Options;
-
-			return new LumaCoreDbContext(fileOptions);
-		}
+		//
+		// SQLite (both file and in-memory): the new context reuses the fixture's shared connection so every
+		// context the fixture hands out participates in the same SQLite session. A new physical connection on
+		// the same file would deadlock on SQLite's file-level write lock the moment two contexts overlap a
+		// write transaction. The shared-connection branch at the bottom handles both SQLite providers.
 
 		if (mSettings?.Provider is DbProvider.PostgreSql)
 		{
@@ -188,7 +182,8 @@ public sealed class DbFixture : IAsyncLifetime
 		if (mConnection is null)
 			throw new InvalidOperationException("Fixture connection not initialized.");
 
-		// SQLite in-memory: create a new context using the shared connection to observe the same database state.
+		// SQLite (in-memory or file): create a new context using the shared connection so every context
+		// observes the same database state and avoids SQLite's file-level write-lock contention.
 		DbContextOptions<LumaCoreDbContext> sqliteOptions = new DbContextOptionsBuilder<LumaCoreDbContext>()
 			.UseSqlite(mConnection)
 			.Options;
@@ -257,19 +252,35 @@ public sealed class DbFixture : IAsyncLifetime
 	/// This provides closer-to-production SQLite behavior compared to in-memory: file I/O, locking, and
 	/// journaling are exercised. A <see cref="TemporaryFolder"/> contains the database file and its journal
 	/// files (WAL, SHM) so that disposal cleans up everything.
+	/// <para>
+	/// A single <see cref="SqliteConnection"/> is opened and shared by every <see cref="LumaCoreDbContext"/>
+	/// the fixture hands out — both <see cref="DbContext"/> and any context returned by
+	/// <see cref="CreateDbContext"/>. SQLite uses a file-level write lock, so opening a second physical
+	/// connection while the first one holds an open transaction immediately fails with
+	/// <c>SQLITE_BUSY</c> ("database is locked"). Tests that rely on cooperating contexts (e.g. a side
+	/// context inserting a race-winner row while the SUT is mid-upload under an ambient transaction)
+	/// would otherwise be unrunnable on the file-based provider.
+	/// </para>
 	/// </remarks>
 	private static DbFixture CreateSqliteFile(DbTestSettings settings)
 	{
 		var folder = new TemporaryFolder("lumacore-test");
 		string connectionString = $"Data Source={folder.GetFilePath("test.db")}";
 
+		// Open the connection once and reuse it for every DbContext the fixture hands out (mirroring the
+		// in-memory variant). A fresh-per-context connection would deadlock on SQLite's file-level write
+		// lock as soon as one context holds an open transaction and another tries to write.
+		var connection = new SqliteConnection(connectionString);
+		connection.Open();
+
 		DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
-			.UseSqlite(connectionString)
+			.UseSqlite(connection)
 			.Options;
 
 		var dbContext = new LumaCoreDbContext(options);
 		return new DbFixture
 		{
+			mConnection = connection,
 			mDatabaseFolder = folder,
 			mSettings = settings,
 			DbContext = dbContext
