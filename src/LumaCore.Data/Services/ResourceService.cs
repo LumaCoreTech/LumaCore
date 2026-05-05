@@ -414,10 +414,12 @@ public sealed class ResourceService : IResourceService
 
 		if (hasAmbientTransaction)
 		{
-			// Provider-agnostic savepoint name (alphanumeric, unique per upload). If
+			// Provider-agnostic savepoint name (alphanumeric, unique per upload). SQL Server limits
+			// identifiers to 32 chars, so we keep the prefix short and truncate the GUID to 16 hex chars
+			// (still 64 bits of entropy — collision-free within a single transaction). If
 			// CreateSavepointAsync throws, the compensation we registered above will fire on the outer
 			// compensating transaction's rollback — that is the entire point of the ambient path.
-			savepointName = $"sp_resource_upload_{Guid.NewGuid():N}";
+			savepointName = $"sp_rup_{Guid.NewGuid():N}"[..23];
 			await ambientTransaction!
 				.CreateSavepointAsync(savepointName, cancellationToken)
 				.ConfigureAwait(false);
