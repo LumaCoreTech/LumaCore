@@ -125,6 +125,7 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	private Channel<QueuedWorkItem>? mWorkChannel;
 	private CancellationTokenSource? mShutdownTokenSource;
 	private Task?                    mBackgroundTask;
+	private TaskCompletionSource?    mLoopStartedTcs;
 	private long                     mNextWorkItemId;
 
 	/// <summary>
@@ -281,7 +282,7 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	}
 
 	/// <inheritdoc/>
-	protected override Task OnInitializingAsync(ILifecycleContext context, CancellationToken cancellationToken)
+	protected override async Task OnInitializingAsync(ILifecycleContext context, CancellationToken cancellationToken)
 	{
 		// Create a bounded channel with configurable concurrency.
 		// The channel is fully async and doesn't block any threads.
@@ -299,15 +300,18 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 		mShutdownTokenSource = new CancellationTokenSource();
 		mNextWorkItemId = 0;
 		mRunningWorkItems.Clear();
+		mLoopStartedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
 		// Start the background processing task using Task.Run() (uses thread pool).
 		// No need for LongRunning - the async processing won't block threads.
 		mBackgroundTask = Task.Run(ProcessQueueAsync, CancellationToken.None);
 
-		// Log initialization complete.
-		Log.LogDebug("Processor started with max concurrency: {MaxConcurrency}", mMaxConcurrency);
+		// Wait until ProcessQueueAsync signals that it has reached its read loop. This fulfils the
+		// documented contract of InitializeAsync() — "ready to accept work items" — and eliminates a
+		// race where QueueWorkItem() enqueues an item before the loop has started reading the channel.
+		await mLoopStartedTcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-		return Task.CompletedTask;
+		Log.LogDebug("Processor started with max concurrency: {MaxConcurrency}", mMaxConcurrency);
 	}
 
 	/// <inheritdoc/>
@@ -625,6 +629,9 @@ public sealed class WorkQueueProcessor : LifecycleManagement, IWorkQueueProcesso
 	private async Task ProcessQueueAsync()
 	{
 		Log.LogDebug("Background processing task started");
+
+		// Signal OnInitializingAsync() that the loop is running and ready to read from the channel.
+		mLoopStartedTcs!.TrySetResult();
 
 		try
 		{
