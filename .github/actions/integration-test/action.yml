@@ -63,15 +63,17 @@ runs:
         $trxFile = Get-ChildItem -Path . -Filter "integration-${{ inputs.provider }}.trx" -Recurse | Select-Object -First 1
         if ($trxFile) {
           [xml]$trx = Get-Content $trxFile.FullName
-          $total = [int]$trx.TestRun.ResultSummary.Counters.total
-          $passed = [int]$trx.TestRun.ResultSummary.Counters.passed
+          $total   = [int]$trx.TestRun.ResultSummary.Counters.total
+          $passed  = [int]$trx.TestRun.ResultSummary.Counters.passed
+          $skipped = [int]$trx.TestRun.ResultSummary.Counters.skipped
 
-          # Use total-minus-passed instead of the "failed" counter alone — TRX distinguishes
-          # "failed" (assertion) from "error" (fixture/infrastructure), and ignoring "error"
-          # would keep the badge green when fixtures throw (e.g., database connection issues).
-          $notPassed = $total - $passed
+          # Count only genuine failures (failed + error), not skipped tests.
+          # TRX distinguishes "failed" (assertion) from "error" (fixture/infrastructure);
+          # both indicate real problems. Skipped tests are intentional (e.g. NoDrift skips
+          # on non-SQL Server providers) and must not turn the badge yellow.
+          $notPassed = $total - $passed - $skipped
           $color = if ($notPassed -eq 0) { "brightgreen" } elseif ($notPassed -lt 3) { "yellow" } else { "red" }
-          $message = "$passed/$total passed"
+          $message = if ($skipped -gt 0) { "$passed/$total passed, $skipped skipped" } else { "$passed/$total passed" }
 
           $badge = @{
             schemaVersion = 1
