@@ -46,7 +46,12 @@ namespace LumaCore.Data.Tests.Services;
 [Trait("Category", "Resources")]
 public sealed partial class ResourceServiceTests : IAsyncLifetime
 {
-	private readonly DbFixture mFixture = DbFixture.CreateSqliteInMemory();
+	// Must follow the configured provider (not hardcoded SQLite): ResourceService.UploadAsync executes the
+	// static EF.CompileAsyncQuery delegates in ResourceQueries (GetActiveByContentHash, GetDeletionStateById).
+	// Those delegates bind to whichever model first invokes them. Hardcoding SQLite here would poison the
+	// static cache and cause "compiled query was executed with a different model" errors in the SQL Server
+	// CompiledQueryRegressionTests lane. See CompiledQueryRegressionTests.cs for the full rationale.
+	private readonly DbFixture mFixture = DbFixture.Create();
 
 	/// <summary>
 	/// Initializes the database schema for the test instance.

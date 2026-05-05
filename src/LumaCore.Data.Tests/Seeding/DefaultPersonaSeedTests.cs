@@ -33,7 +33,11 @@ namespace LumaCore.Data.Tests.Seeding;
 [Trait("Category", "Seeding")]
 public sealed class DefaultPersonaSeedTests : IAsyncLifetime
 {
-	private readonly DbFixture mFixture = DbFixture.CreateSqliteInMemory();
+	// Must follow the configured provider (not hardcoded SQLite) to stay consistent with the rest of the
+	// test suite and to avoid binding any incidentally-triggered EF.CompileAsyncQuery delegate to a
+	// SQLite model. See CompiledQueryRegressionTests.cs for the full rationale on compiled-query model
+	// affinity and why provider hardcoding poisons the static query cache.
+	private readonly DbFixture mFixture = DbFixture.Create();
 
 	/// <summary>
 	/// Initializes the database schema for the test instance.
