@@ -210,7 +210,7 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 
 				DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
 					.UseSqlite(connectionString)
-					.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning))
+					.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))
 					.Options;
 				dbContext = new LumaCoreDbContext(options);
 				break;
@@ -224,7 +224,7 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 
 				DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
 					.UseSqlite(connectionString)
-					.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning))
+					.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))
 					.Options;
 				dbContext = new LumaCoreDbContext(options);
 				break;
@@ -249,7 +249,7 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 
 				DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
 					.UseNpgsql(connectionString)
-					.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning))
+					.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))
 					.Options;
 				dbContext = new LumaCoreDbContext(options);
 				break;
@@ -272,7 +272,7 @@ sealed class IntegrationTestHarness : IAsyncDisposable
 
 				DbContextOptions<LumaCoreDbContext> options = new DbContextOptionsBuilder<LumaCoreDbContext>()
 					.UseSqlServer(connectionString)
-					.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning))
+					.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))
 					.Options;
 				dbContext = new LumaCoreDbContext(options);
 				break;

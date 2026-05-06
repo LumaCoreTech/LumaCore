@@ -72,6 +72,26 @@ namespace LumaCore.Data;
 ///     <see cref="ServiceRegistration"/> based on <see cref="DatabaseOptions"/> (supporting SQLite, PostgreSQL,
 ///     and SQL Server). This factory is <b>never</b> used at runtime — it exists solely for EF Core tooling.
 ///     </para>
+///     <para>
+///         <b>Runtime drift detection</b>
+///     </para>
+///     <para>
+///     Because the snapshot is provider-flavoured (SQL Server) but runtime providers may differ, EF Core's
+///     built-in <c>RelationalEventId.PendingModelChangesWarning</c> would produce false positives on
+///     <c>MigrateAsync()</c> for non-SQL-Server runtime providers. <see cref="ServiceRegistration"/>
+///     therefore suppresses that warning at runtime, and the test harness mirrors the suppression so the
+///     <c>MigrationIntegrationTests</c> can exercise <c>MigrateAsync()</c> against every supported provider
+///     without spurious failures.
+///     </para>
+///     <para>
+///     The trade-off: structural drift that is visible only on a non-SQL-Server provider (for example a
+///     change to the SQLite branch of <see cref="LumaCoreDbContext.OnModelCreating"/>'s provider-specific
+///     <c>Users.Email</c> filtered unique index) is <b>not</b> caught by any automated test. The
+///     <c>NoDrift_LiveModelMatchesLatestSnapshot</c> test catches drift that is visible to the SQL Server
+///     differ; the per-provider <c>MigrationIntegrationTests</c> validate that migrations execute against
+///     real database engines but do not re-enable the drift check. Provider-specific model branches must
+///     be reviewed manually when introduced.
+///     </para>
 /// </remarks>
 sealed class LumaCoreDbContextDesignTimeFactory : IDesignTimeDbContextFactory<LumaCoreDbContext>
 {

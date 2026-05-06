@@ -11,6 +11,7 @@ using LumaCore.Data.Security;
 using LumaCore.Data.Services;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -170,6 +171,24 @@ public static class ServiceRegistration
 		{
 			dbContextOptions.UseLoggerFactory(loggerFactory);
 		}
+
+		// Suppress PendingModelChangesWarning at runtime. The migration snapshot is intentionally
+		// scaffolded under SQL Server (see LumaCoreDbContextDesignTimeFactory) because it is the
+		// strictest supported provider for ALTER COLUMN semantics. Provider-specific annotations
+		// (Sqlite:Autoincrement, SqlServer:Identity, Npgsql:ValueGenerationStrategy, HasColumnType
+		// strings) are baked into the snapshot at scaffold time, so the runtime differ inevitably
+		// reports false-positive drift whenever the runtime provider differs from the design-time
+		// provider — which is the normal case for SQLite and PostgreSQL deployments. Letting the
+		// warning escalate to an exception would block MigrateAsync() on every non-SQL-Server
+		// runtime, even when the model is structurally identical to the snapshot.
+		//
+		// Drift detection is delegated to MigrationIntegrationTests.NoDrift_LiveModelMatchesLatest-
+		// Snapshot, which runs the differ in-memory under SQL Server (matching the snapshot's
+		// provider). Trade-off: drift visible only on non-SQL-Server providers (e.g. inside a
+		// provider-specific branch of OnModelCreating) is NOT caught automatically and must be
+		// reviewed manually — see LumaCoreDbContextDesignTimeFactory's "Runtime drift detection"
+		// remarks for the full rationale.
+		dbContextOptions.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
 
 		string provider = options.Provider.ToLowerInvariant();
 
