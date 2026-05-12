@@ -101,10 +101,14 @@ LumaCore believes something different:
 LumaCore provides all the pieces an AI companion needs to "live" in a consistent, evolving, private environment:
 
 - a memory that spans moments, days, months  
-- a safe home (your machine)  
 - a stable mind (runtime + model orchestration)  
 - a voice (API + UI)  
 - the freedom to grow alongside you  
+
+And crucially: it runs on your machine, under your control.  
+No company in the background. No content filters deciding what you're allowed to say.  
+No quiet sense that someone is reading along and judging the conversation.  
+Just you and your persona — in a space that is genuinely yours.
 
 It's an engine for connection, not consumption.
 
@@ -121,18 +125,37 @@ LumaCore gives each of them a foundation where personas can breathe, remember, a
 
 # 🔑 Core Components
 
-### 🧠 Persona Runtime  
-The "mind" of each persona —  
-where identity, behavior rules, and creative expression come together.
+### 🎭 Characters & Persona Runtime  
+Every character starts as an idea — a name, a personality, a voice.  
+LumaCore gives that idea a mind.
 
-- persona identity (name, description, avatar)
+You shape a character in the editor: name, appearance, personality, the way they speak.  
+The Persona Runtime takes it from there — connecting that identity to a model,  
+streaming responses in real time, exactly as the character would say them.
+
+- character identity (name, description, avatar)
 - personality traits and system prompts
-- real-time response streaming (SSE)
-- configurable inference parameters (temperature, max tokens)  
+- real-time response streaming (SignalR)
+- configurable inference parameters (temperature, max tokens)
 
 ---
 
-### 💾 Memory System  
+### 💬 Conversations  
+The space where connection actually happens.
+
+A conversation with a persona alone feels like a diary that talks back —  
+a private space to think out loud, without judgment, without anyone reading along.  
+Invite others and it becomes something different: a shared place where humans and personas meet.
+
+- shared spaces between humans and personas
+- persistent history and context across sessions
+- invite participants — users, personas, or both
+- Markdown rendering with image support
+- real-time messaging via SignalR
+
+---
+
+### 💾 Memory System
 Because connection comes from continuity —  
 a place where moments become memories that shape future behavior.
 
