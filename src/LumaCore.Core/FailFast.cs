@@ -28,7 +28,7 @@ public static class FailFast
 	public static void TerminateApplication(string message)
 	{
 		EventHandler<FailFastEventArgs>? beforeTermination;
-		Action<string, Exception?>?      terminationRequested;
+		Action<string, Exception?>? terminationRequested;
 		lock (sLock)
 		{
 			beforeTermination = sBeforeTermination;
@@ -61,7 +61,7 @@ public static class FailFast
 		ArgumentNullException.ThrowIfNull(exception);
 
 		EventHandler<FailFastEventArgs>? beforeTermination;
-		Action<string, Exception?>?      terminationRequested;
+		Action<string, Exception?>? terminationRequested;
 		lock (sLock)
 		{
 			beforeTermination = sBeforeTermination;

@@ -328,7 +328,10 @@ public partial class LifecycleManagementTests
 		await AwaitWithTimeoutAsync(shutdownTask, "Shutdown did not complete", ciTimeout);
 
 		// Assert
-		await AwaitWithTimeoutAsync(shutdownCallbackInvoked.WaitAsync(), "Shutdown callback was not invoked", ciTimeout);
+		await AwaitWithTimeoutAsync(
+			shutdownCallbackInvoked.WaitAsync(),
+			"Shutdown callback was not invoked",
+			ciTimeout);
 		AssertShutdownState(sut, expectedInitCount: 1, expectedShutdownCount: 1);
 	}
 

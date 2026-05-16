@@ -115,13 +115,15 @@ public sealed partial class MetricsContributorRegistryTests
 			})
 			{
 				IsBackground = true,
-				Name         = $"RegistryConcurrencyTest-{i}"
+				Name = $"RegistryConcurrencyTest-{i}"
 			};
 			threads[i].Start();
 		}
 
 		foreach (Thread thread in threads)
+		{
 			thread.Join();
+		}
 
 		// Assert
 		IEnumerable<string> expected = Enumerable
@@ -175,13 +177,15 @@ public sealed partial class MetricsContributorRegistryTests
 			})
 			{
 				IsBackground = true,
-				Name         = $"RegistryRaceTest-{i}"
+				Name = $"RegistryRaceTest-{i}"
 			};
 			threads[i].Start();
 		}
 
 		foreach (Thread thread in threads)
+		{
 			thread.Join();
+		}
 
 		// Assert
 		Assert.Equal(1, winners);

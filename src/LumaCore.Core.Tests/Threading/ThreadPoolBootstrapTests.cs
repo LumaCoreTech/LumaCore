@@ -44,7 +44,7 @@ public sealed class ThreadPoolBootstrapTests
 
 			// Assert
 			Assert.False(raised);
-			ThreadPool.GetMinThreads(out int newWorker, out _);
+			ThreadPool.GetMinThreads(out int newWorker, out var _);
 			Assert.Equal(originalWorker, newWorker);
 		}
 		finally
@@ -71,8 +71,9 @@ public sealed class ThreadPoolBootstrapTests
 
 			// Assert
 			Assert.True(raised);
-			ThreadPool.GetMinThreads(out int newWorker, out _);
-			Assert.True(newWorker >= target,
+			ThreadPool.GetMinThreads(out int newWorker, out var _);
+			Assert.True(
+				newWorker >= target,
 				$"Expected new minimum worker threads ({newWorker}) to be >= target ({target}).");
 		}
 		finally
@@ -98,7 +99,7 @@ public sealed class ThreadPoolBootstrapTests
 			ThreadPoolBootstrap.EnsureMinWorkerThreads(target);
 
 			// Assert
-			ThreadPool.GetMinThreads(out _, out int newIo);
+			ThreadPool.GetMinThreads(out var _, out int newIo);
 			Assert.Equal(originalIo, newIo);
 		}
 		finally
@@ -118,8 +119,7 @@ public sealed class ThreadPoolBootstrapTests
 	public void EnsureMinWorkerThreads_WhenMinWorkerThreadsIsNotPositive_ThrowsArgumentOutOfRangeException(int value)
 	{
 		// Act
-		ArgumentOutOfRangeException ex = Assert.Throws<ArgumentOutOfRangeException>(
-			() => ThreadPoolBootstrap.EnsureMinWorkerThreads(value));
+		var ex = Assert.Throws<ArgumentOutOfRangeException>(() => ThreadPoolBootstrap.EnsureMinWorkerThreads(value));
 
 		// Assert
 		Assert.Equal("minWorkerThreads", ex.ParamName);
@@ -134,8 +134,11 @@ public sealed class ThreadPoolBootstrapTests
 /// <see cref="ThreadPool"/> mutations from racing each other.
 /// </summary>
 [CollectionDefinition(Name, DisableParallelization = true)]
-[SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix",
-	Justification = "The 'Collection' suffix matches xUnit's CollectionDefinition / Collection terminology and is the established naming convention for non-parallel test groupings.")]
+[SuppressMessage(
+	"Naming",
+	"CA1711:Identifiers should not have incorrect suffix",
+	Justification =
+		"The 'Collection' suffix matches xUnit's CollectionDefinition / Collection terminology and is the established naming convention for non-parallel test groupings.")]
 public sealed class ThreadPoolBootstrapTestCollection
 {
 	/// <summary>

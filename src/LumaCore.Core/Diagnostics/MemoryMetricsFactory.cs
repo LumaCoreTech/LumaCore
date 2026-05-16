@@ -502,11 +502,11 @@ public static class MemoryMetricsFactory
 	/// <remarks>See the BSD <c>sysctlbyname(3)</c> man page for details.</remarks>
 	[DllImport(
 		"libSystem.dylib",
-		CallingConvention      = CallingConvention.Cdecl,
-		CharSet                = CharSet.Ansi,
-		BestFitMapping         = false,
-		ThrowOnUnmappableChar  = true,
-		ExactSpelling          = true)]
+		CallingConvention = CallingConvention.Cdecl,
+		CharSet = CharSet.Ansi,
+		BestFitMapping = false,
+		ThrowOnUnmappableChar = true,
+		ExactSpelling = true)]
 	private static extern int sysctlbyname(
 		[MarshalAs(UnmanagedType.LPStr)] string name,
 		out                              long   oldp,
@@ -519,12 +519,12 @@ public static class MemoryMetricsFactory
 	/// </summary>
 	[DllImport(
 		"libSystem.dylib",
-		EntryPoint             = "sysctlbyname",
-		CallingConvention      = CallingConvention.Cdecl,
-		CharSet                = CharSet.Ansi,
-		BestFitMapping         = false,
-		ThrowOnUnmappableChar  = true,
-		ExactSpelling          = true)]
+		EntryPoint = "sysctlbyname",
+		CallingConvention = CallingConvention.Cdecl,
+		CharSet = CharSet.Ansi,
+		BestFitMapping = false,
+		ThrowOnUnmappableChar = true,
+		ExactSpelling = true)]
 	private static extern int sysctlbyname(
 		[MarshalAs(UnmanagedType.LPStr)] string name,
 		out                              int    oldp,

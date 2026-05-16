@@ -75,7 +75,11 @@ public sealed class TemporaryFolder : ITemporaryFolder
 	/// Optional logger that receives diagnostic entries about best-effort cleanup failures during
 	/// <see cref="Dispose"/>. May be <see langword="null"/> to opt out of logging.
 	/// </param>
-	internal TemporaryFolder(TemporaryFolderManager manager, string basePath, string? prefix, ILogger? logger = null)
+	internal TemporaryFolder(
+		TemporaryFolderManager manager,
+		string                 basePath,
+		string?                prefix,
+		ILogger?               logger = null)
 	{
 		mManager = manager;
 		mLogger = logger;
